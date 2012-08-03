@@ -1,0 +1,156 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function miniToDo_run($params = '') {
+	global $myPid;
+
+	foreach (proc('getProcessTable') as $process) {
+		if ($process['appName'] == 'miniToDo' && $process['pid'] != $myPid) {
+			eyex('messageBox', array('content' => 'miniToDo is already running!'));
+			return proc('end');
+		}
+	}
+
+	$myWindow = new Window(array(
+		'father' => 'eyeWidgets',
+		'name' => 'miniToDo_WND',
+		'width' => 420,
+		'height' => 225,
+		'title' => 'miniToDo',
+		'removeFatherPid' => 1,
+		'type'=>WIN_IMAGE_DRAGGABLE_NOTLISTED,
+		'background'=>'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/miniApps/miniToDo/bg.png',
+		'forceSavePosition'=>1,
+	));
+	$myWindow->show();
+	/**
+	*@Todo if Windows Widget gets class fix this
+	*/
+	eyeX('rawjs',array('js'=>
+		'document.getElementById("'.$myPid.'_' . $myWindow->name . '").className = "miniWND";
+		document.getElementById("'.$myPid.'_' . $myWindow->name . '_Content").className = "miniWND";
+		'
+	));
+
+	$myLabel = new Label(array(
+		'name' => 'Launch',
+		'father' => 'miniToDo_WND_Content',
+		'x' => 25,
+		'y' => 1,
+		'text' => 'To Do',
+		'disablemsg' => 0
+	));
+	$myLabel->show();
+
+	$myImage = new Imagebox(array(
+		'name' => 'imgClose',
+		'father' => 'miniToDo_WND_Content',
+		'horiz' => 1,
+		'x' => 13,
+		'y' => 5,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/desktop/close.png',
+		'disableMsg' => 0,
+		'signal' => 'Close'
+	));
+	$myImage->show();
+	$myImage->setCss(array('cursor' => 'Pointer'));
+
+	$mySortabletable = new Sortabletable(array(
+		'father' => 'miniToDo_WND_Content',
+		'name' => 'miniToDo_Sortabletable',
+		'dblsignal' => 'viewNoteSignal',
+		'height' => 180,
+		'sortypes' => array('Hidden', 'String', 'Number'),
+		'theader' => array('ID','Title','Priority'),
+		'width' => 408,
+		'x' => 5,
+		'y' => 15,
+		'master' => 0
+	));
+	$mySortabletable->show();
+
+	$y = 7;
+
+	$myButton = new Button(array(
+		'name' => 'miniToDo_add_btn',
+		'father' => 'miniToDo_WND_Content',
+		'signal' => 'addNoteSignal',
+		'caption' => 'Add',
+		'vert' => 1,
+		'width' => 80,
+		'x' => 5,
+		'y' => $y,
+	));
+	$myButton->show();
+
+	$myButton1 = new Button(array(
+		'name' => 'miniToDo_view_btn',
+		'father' => 'miniToDo_WND_Content',
+		'signal' => 'viewNoteSignal',
+		'caption' => 'View',
+		'width' => 80,
+		'vert' => 1,
+		'x' => $myButton->width - -15,
+		'y' => $y,
+	));
+	$myButton1->addFriend($myLabel);
+	$myButton1->addFriend($mySortabletable);
+	$myButton1->show();
+
+	$myButton3 = new Button(array(
+		'name' => 'miniToDo_delete_btn',
+		'father' => 'miniToDo_WND_Content',
+		'signal' => 'deleteNoteSignal',
+		'caption' => 'Delete',
+		'width' => 80,
+		'horiz' => 1,
+		'vert' => 1,
+		'x' => 5,
+		'y' => $y,
+	));
+	$myButton3->addFriend($mySortabletable);
+	$myButton3->show();
+
+	$path = um('getCurrentUserDir') .'/'. CONF_USER_DIR .'/miniToDo/';
+	if(!file_exists($path)){
+		vfs('real_mkDir', array($path));
+	}
+
+	$config = eyeXML('getXMLconfig',array('miniToDo','notes.xml'));
+
+	if($config){
+		foreach($config['notes'][0]['note'] as $note) {
+			$mySortabletable->addRow(array($note['id'][0],$note['title'][0],$note['priority'][0]));
+		}
+	}
+
+	//set class for title
+	eyex('rawjs',array('js' =>
+		'document.getElementById("' . $myPid . '_' . $myLabel->name . '").className = "miniAppTitle";
+		'
+	));
+
+	//CSS
+	eyex('loadCss',array(
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/miniApps/miniApps.css&type=css',
+		'id' => 'miniApps'
+	));
+}
+
+function miniToDo_end($params=null) {
+	eyeWidgets('unserialize');
+}
+?>

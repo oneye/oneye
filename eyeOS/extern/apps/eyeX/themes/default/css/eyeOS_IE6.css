@@ -1,0 +1,272 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+.activeWindow, .eyeWindowTitle, .inactiveWindow {
+	background: url();
+	background-color: #8cb4de;
+	border-bottom: 1px solid #80b5ff;
+	border-left: 0px;
+	border-right: 0px;
+	border-top: 1px solid #80b5ff;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/bg_top.png', sizingMethod='scale');
+	height: 23px;
+	left: 5px;
+	right: 5px;
+	top: 0;
+	width: expression(this.parentNode.offsetWidth - 0 - 0 - 0);
+}
+
+.activeWindow_center, .inactiveWindow_center, .eyeWindowTitle_center {
+	height: 4px;
+	top: 0;
+	width: 100%;
+	z-index: 1;
+}
+
+.activeWindow_border_left, .activeWindow_border_right, .inactiveWindow_border_left, .inactiveWindow_border_right, .eyeWindowTitle_border_left, .eyeWindowTitle_border_right {
+	height: 22px;
+	top: 0;
+	width: 5px;
+	z-index: 2;
+}
+
+.activeWindow_border_left {
+	background: url();
+	background-repeat: no-repeat;
+	border-bottom: 1px solid #80b5ff;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/topTitleLeft_a.png', sizingMethod='scale');
+	height: 23px;
+	left: -5px;
+	top: -1px;
+}
+
+.activeWindow_border_right {
+	background: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/topTitleRight_a.png', sizingMethod='scale');
+	background-repeat: no-repeat;
+	border-bottom: 1px solid #80b5ff;
+	height: 23px;
+	right: -5px;
+	top: -1px;
+}
+
+.blockbarItem,.blockbarItem_right, .blockbarItemPress, .blockbarItemPress_right {
+	border: 1px solid #eeeeee;
+	cursor: pointer;
+	margin-top: 5px;
+	padding: 2px 4px 3px;
+	text-align: center;
+	width: auto;
+}
+
+.blockbarItem:hover, .blockbarItem_right:hover, .blockbarItemPress, .blockbarItemPress_right {
+	border-style: solid;
+	border-width: 1px;
+}
+
+.blockbarItem:hover, .blockbarItem_right:hover {
+	background-color: #f1f1f1;
+	border-color: #80b5ff;
+}
+
+.blockbarItemPress, .blockbarItemPress_right {
+	background-color: #f1f1f1;
+	border-color: #dddddd;
+}
+/*
+.activeWindow, .eyeWindowTitle, .inactiveWindow {
+	background: url();
+	border: 1px solid #214e79;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/bg_top.png', sizingMethod='scale');
+	height: 23px;
+	left: 0px;
+	position: absolute;
+	right: 0px;
+	top: 0;
+	width: expression(this.parentNode.offsetWidth - 0 - 0 - 0);
+}
+
+.activeWindow_border_left {}
+.activeWindow_border_right {}
+*/
+.eyeCheckbox, .eyeCheckbox:hover, .eyeRadio input , .eyeRadio:hover input {
+	border: 0px;
+}
+
+.eyeBarItemsText {
+	width: 155px;
+	height: 22px !important;
+}
+
+.eyeBoxBottCent {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/widgets/bg_bottom_center.png', sizingMethod='scale');
+	height: 17px !important;
+}
+
+.eyeBoxSupCent {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/widgets/boxbg.png', sizingMethod='scale');
+	border-bottom: 1px solid #acacac;
+	height: 21px !important;
+	width: 100%;
+}
+
+.eyeBoxTable {}
+
+.eyeBoxText {
+	background: transparent;
+	border: 0px;
+}
+
+.eyeButtonClass {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/widgets/buttonbg.png', sizingMethod='scale');
+}
+
+
+
+.eyeDesk_iconsOver, .eyeFiles_icons {
+	border: 0;
+}
+/*
+*
+*/
+/* all */
+
+.eyeDock_bottom, .eyeDock_left, .eyeDock_right, .eyeDock_top {
+	color: #ffffff;
+	font-weight: bold;
+	position: absolute;
+	text-shadow: 0px 0px 0px;
+	white-space: nowrap;
+	left: 0px;right: 0px;
+	width: 1000px;
+	height: 32px !important;
+	float: none;
+	width: expression(this.parentNode.offsetWidth - 0 - 0 - 0);
+}
+
+/*
+*
+*/
+
+.eyeMessageBoxText {
+	width: 280px !important;
+}
+
+.eyeSplitter_horizontal {
+	border-top: 1px dashed #acacac;
+	margin-top: 2px;
+}
+
+.eyeSplitter_vertical {
+	border-left: 1px dashed #acacac;
+	margin-left: 2px;
+}
+
+.eyeWindowCloseButton {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/close_x.png', sizingMethod='crop');
+}
+
+.eyeWindowContent, .eyeWindowMainDrag {
+	background: #ffffff repeat-x scroll bottom;
+	border-color: #80b5ff; border-style: solid; border-width: 0px 1px 1px;
+}
+
+.eyeWindowContent {
+	height: expression(this.parentNode.offsetHeight - 24);
+	width: expression(this.parentNode.offsetWidth - 0);
+}
+
+.eyeWindowContentInvisible {
+	height: expression(this.parentNode.offsetHeight);
+	width: expression(this.parentNode.offsetWidth) - 2;
+}
+
+.eyeWindowMainDrag {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/eyefilesbg.png', sizingMethod='crop');
+}
+
+.eyeWindowMaxButton {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/max_x.png', sizingMethod='crop');
+	padding-right: 31px;
+	right: 100px;
+}
+
+.eyeWindowMinimizeButton {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/min_x.png', sizingMethod='crop');
+	padding-right: 37px;
+}
+
+.eyeWindowResizeButton {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/resizebutton.png', sizingMethod='crop');
+}
+
+.eyeWindowTitle {/*look at .activeWindow*/}
+
+.eyeWindowTitle_text {
+	background: transparent url('') no-repeat right;
+	cursor: move;
+	font-weight: 600;
+	height: 18px;
+	overflow: hidden;
+	padding: 3px 0px 0 7px;
+	white-space: nowrap;
+	width: auto;
+	height: 24px !important;
+}
+
+.inactiveWindow {
+	background: url();
+	border: 1px solid #acacac;
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/windows/bg_top_x.png', sizingMethod='scale');
+}
+
+.inactiveWindow_border_left {
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/topTitleLeft_i.png');
+	background-repeat: no-repeat;
+	border-bottom: 1px solid #acacac;
+	left: -5px;
+	top: -1px;
+}
+
+.inactiveWindow_border_right {
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/topTitleRight_i.png');
+	background-repeat: no-repeat;
+	border-bottom: 1px solid #acacac;
+	right: -5px;
+	top: -1px;
+}
+
+.shadowLayer {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/widgets/bg.png', sizingMethod='scale');
+}
+
+.sort-arrow.ascending {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/widgets/upsimple.png', sizingMethod='scale');
+}
+
+.sort-arrow.descending {
+	background-image: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/widgets/downsimple.png', sizingMethod='scale');
+}

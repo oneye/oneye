@@ -1,0 +1,53 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeVideo_run($params = '') {
+	global $checknum;
+	global $myPid;
+	if ($params[0]) {
+		$myWindow = new Window(array(
+			'cent' => 1,
+			'father' => 'eyeApps',
+			'height' => 374,
+			'name' => 'eyeVideo_Window',
+			'savePosition' => 1,
+			'title' => basename($params[0]) . ' - eyeVideo',
+			'style' => TITLE + MIN + LISTED + CLOSE,
+			'width' => 470
+		));
+		$myWindow->show();
+		eyex('rawjs',array('js' => 'var e = document.getElementById("' . $myPid . '_eyeVideo_Window_Content"); e.style.display = "block"; e.style.height = "350px"; e.style.width = "468px";'));
+		$myHidden = new Hidden(array(
+			'father' => 'eyeVideo_Window',
+			'name' => 'eyeVideo_Hidden',
+			'text' => $params[0]
+		));
+		$myHidden->show();
+		eyex('loadScript',array('url' => 'index.php?extern=apps/eyeVideo/flowplayer.min.js&type=text'));
+		
+		addShortUrl($myPid . '_eyeVideo','getFile');
+		eyex('rawjs',array('js' => 'var func = function () { if (typeof flowplayer === "function") { flowplayer("' . $myPid . '_eyeVideo_Window_Content", {src: "index.php?extern=apps/eyeVideo/flowplayer.swf", wmode: "opaque"}, "index.php/' . $myPid . '_eyeVideo"); } else { setTimeout(func, 100); } }; func();'));
+	} else {
+		proc('end');
+	}
+}
+
+function eyeVideo_end($params = '') {
+	global $myPid;
+	delShortUrl($myPid . '_eyeVideo');
+	eyeWidgets('unserialize',$params);
+}
+?>

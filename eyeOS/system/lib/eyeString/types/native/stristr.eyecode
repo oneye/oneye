@@ -1,0 +1,11 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_stristr($haystack, $needle, $before_needle = false) {
+	if (is_string($needle) === false) {
+		$needle = utf8_chr($needle);
+	}
+	return strstr(utf8_strtolower($haystack), utf8_strtolower($needle), $before_needle);
+}
+?>

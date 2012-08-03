@@ -1,0 +1,91 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+.eyeCatch_ion_player, .eyeCatch_ion_enemy1, .eyeCatch_ion_enemy2, .eyeCatch_ion_enemy3, .eyeCatch_ion_enemy4 {
+	background-color: #dddddd;
+	background-image: url('index.php?theme=USERTHEME&extern=icons/48x48/public.png');
+	border: 1px solid #cccccc;
+	position: absolute;
+}
+
+.eyeCatch_ion_field {
+	background-color: #eeeeee;
+	overflow: hidden;
+	position: absolute;
+}
+
+.eyeCatch_ion_hole_bottom_center, .eyeCatch_ion_hole_bottom_left, .eyeCatch_ion_hole_bottom_right, .eyeCatch_ion_hole_center, .eyeCatch_ion_hole_top_center, .eyeCatch_ion_hole_top_left, .eyeCatch_ion_hole_top_right, .eyeCatch_ion_hole, .eyeCatch_ion_hole_left_bottom, .eyeCatch_ion_hole_left_top, .eyeCatch_ion_hole_right_bottom, .eyeCatch_ion_hole_right_top {
+	background-color: #333333;
+	position: absolute;
+}
+
+.eyeCatch_ion_hole_bottom_left, .eyeCatch_ion_field {
+	-moz-border-radius-bottomleft: 10px;
+	-webkit-border-bottom-left-radius: 10px;
+	border-bottom-left-radius: 10px;
+}
+
+.eyeCatch_ion_hole_bottom_right, .eyeCatch_ion_field {
+	-moz-border-radius-bottomright: 10px;
+	-webkit-border-bottom-right-radius: 10px;
+	border-bottom-right-radius: 10px;
+}
+
+.eyeCatch_ion_hole_center {
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.eyeCatch_ion_hole_top_left, .eyeCatch_ion_field {
+	-moz-border-radius-topleft: 10px;
+	-webkit-border-top-left-radius: 10px;
+	border-top-left-radius: 10px;
+}
+
+.eyeCatch_ion_hole_top_right, .eyeCatch_ion_field {
+	-moz-border-radius-topright: 10px;
+	-webkit-border-top-right-radius: 10px;
+	border-top-right-radius: 10px;
+}
+
+.eyeCatch_ion_hole_bottom_right, .eyeCatch_ion_hole_left_bottom, .eyeCatch_ion_hole_right_bottom, .eyeCatch_ion_enemy1, .eyeCatch_ion_enemy2, .eyeCatch_ion_enemy3, .eyeCatch_ion_enemy4, .eyeCatch_ion_player {
+	-moz-border-radius-topleft: 3px;
+	-webkit-border-top-left-radius: 3px;
+	border-top-left-radius: 3px;
+}
+
+.eyeCatch_ion_hole_bottom_left, .eyeCatch_ion_hole_left_bottom, .eyeCatch_ion_hole_right_bottom, .eyeCatch_ion_enemy1, .eyeCatch_ion_enemy2, .eyeCatch_ion_enemy3, .eyeCatch_ion_enemy4, .eyeCatch_ion_player {
+	-moz-border-radius-topright: 3px;
+	-webkit-border-top-right-radius: 3px;
+	border-top-right-radius: 3px;
+}
+
+.eyeCatch_ion_hole_top_right, .eyeCatch_ion_hole_left_top, .eyeCatch_ion_hole_right_top, .eyeCatch_ion_enemy1, .eyeCatch_ion_enemy2, .eyeCatch_ion_enemy3, .eyeCatch_ion_enemy4, .eyeCatch_ion_player {
+	-moz-border-radius-bottomleft: 3px;
+	-webkit-border-bottom-left-radius: 3px;
+	border-bottom-left-radius: 3px;
+}
+
+.eyeCatch_ion_hole_top_left, .eyeCatch_ion_hole_left_top, .eyeCatch_ion_hole_right_top, .eyeCatch_ion_enemy1, .eyeCatch_ion_enemy2, .eyeCatch_ion_enemy3, .eyeCatch_ion_enemy4, .eyeCatch_ion_player {
+	-moz-border-radius-bottomright: 3px;
+	-webkit-border-bottom-right-radius: 3px;
+	border-bottom-right-radius: 3px;
+}
+
+.eyeCatch_ion_player {
+	background-image: url('index.php?theme=USERTHEME&extern=icons/48x48/upload.png');
+	position: absolute;
+}

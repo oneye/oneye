@@ -1,0 +1,11 @@
+<package>
+	<name>Spreadsheet</name>
+	<category>Office</category>
+	<version>1.9</version>
+	<description>Utility to edit spreadsheets</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeSheets.png</icon>
+	<openWith>1</openWith>
+</package>

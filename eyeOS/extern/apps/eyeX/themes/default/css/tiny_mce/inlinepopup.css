@@ -1,0 +1,233 @@
+.clearlooks2, .clearlooks2 div, .clearlooks2 span, .clearlooks2 a {
+	background: transparent none repeat scroll 0 0;
+	border: 0 none;
+	color: #000000;
+	display: block;
+	font-family: Arial,Verdana;
+	font-size: 11px;
+	font-weight: normal;
+	height: auto;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+	text-align: left;
+	text-decoration: none;
+	vertical-align: baseline;
+	width: auto;
+}
+
+.clearlooks2 {
+	-moz-border-radius: 6px;
+	-webkit-border-radius: 6px;
+	background-color: #ffffff;
+	border-bottom: 1px solid #acacac;
+	border-left: 1px solid #acacac;
+	border-radius: 6px;
+	border-right: 1px solid #acacac;
+	direction: ltr;
+	position: absolute;
+}
+
+.clearlooks2 .mceWrapper {
+	position: static;
+}
+
+/*TODO what is this pics for ?*/
+.mceEventBlocker {
+	background: transparent url(img/horizontal.gif) no-repeat scroll 0 -75px;
+	height: 100%;
+	left: 0;
+	position: fixed;
+	top: 0;
+	width: 100%;
+}
+
+.clearlooks2 .mcePlaceHolder {
+	background-color: #a1bfe6;
+	border: 1px solid #dddddd;
+	filter: alpha(opacity=70);
+	left: 0;
+	opacity: 0.7;
+	top: 0;
+}
+
+.clearlooks2_modalBlocker { background-color: #000000; display: none; height: 100%; left: 0; opacity: 0.1; position: fixed; top: 0; width: 100%; }
+.clearlooks2 .mceTop, .clearlooks2 .mceTop div { height: 23px; left: 0; top: 0; width: 100%; }
+
+.clearlooks2 .mceTop .mceLeft {}
+
+.clearlooks2 .mceTop .mceCenter, .clearlooks2 .mceFocus .mceTop .mceCenter {
+	-moz-border-radius-topleft: 6px;
+	-moz-border-radius-topright: 6px;
+	-webkit-border-top-left-radius: 6px;
+	-webkit-border-top-right-radius: 6px;
+	background: #8cb4de url('index.php?theme=USERTHEME&extern=images/windows/bg_top.png') repeat-x;
+	border: 1px solid #80b5ff;
+	border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+	color: #0968B0;
+	height: 21px;
+	width: 99.5%;
+}
+
+.clearlooks2 .mceTop .mceRight {}
+
+.clearlooks2 .mceTop span { font-weight: bold; line-height: 23px; padding-left: 10px; padding-top: 2px; text-align: left; vertical-align: middle; width: 100%; }
+.clearlooks2 .mceFocus .mceTop .mceCenter {}
+
+.clearlooks2 .mceFocus .mceTop span {
+	color: #0968B0;
+	text-shadow: 1px 1px 1px #ffffff;
+}
+
+.clearlooks2 .mceMiddle, .clearlooks2 .mceMiddle div { top: 0; }
+.clearlooks2 .mceMiddle { clip: rect(23px, auto, auto, auto); height: 100%; width: 100%; }
+.clearlooks2 .mceMiddle .mceLeft { height: 100%; left: 0; width: 5px; }
+.clearlooks2 .mceMiddle span { background: #ffffff none repeat scroll 0 0; height: 100%; left: 5px; top: 23px; width: 100%; }
+.clearlooks2 .mceMiddle .mceRight { height: 100%; right: 0; width: 5px; }
+.clearlooks2 .mceBottom, .clearlooks2 .mceBottom div { height: 6px; }
+.clearlooks2 .mceBottom { bottom: 0; left: 0; width: 100%; }
+.clearlooks2 .mceBottom div { top: 0; }
+.clearlooks2 .mceBottom .mceLeft, .clearlooks2 .mceBottom .mceCenter, .clearlooks2 .mceBottom .mceRight, .clearlooks2 .mceBottom span, .clearlooks2 .mceResizable .mceMin, .clearlooks2 .mceMax, .clearlooks2 .mceMaximized .mceMax { display: none; }
+.clearlooks2 .mceStatusbar .mceBottom, .clearlooks2 .mceStatusbar .mceBottom div { height: 23px; }
+
+/*TODO what are this three pics for ?*/
+.clearlooks2 .mceStatusbar .mceBottom .mceLeft {
+	background: transparent url(img/corners.gif) repeat scroll -29px 0;
+}
+
+.clearlooks2 .mceStatusbar .mceBottom .mceCenter {
+	background: transparent url(img/horizontal.gif) repeat scroll 0 -52px;
+}
+
+.clearlooks2 .mceStatusbar .mceBottom .mceRight {
+	background: transparent url(img/corners.gif) repeat scroll -24px 0;
+}
+/*  */
+
+.clearlooks2 .mceStatusbar .mceBottom span { display: block; font-family: Arial,Verdana; font-size: 11px; left: 7px; line-height: 23px; } .clearlooks2 a { height: 16px; top: 3px; width: 29px; }
+
+/*TODO what is this pics for ?*/
+.clearlooks2 .mceMove {
+	background: transparent url(img/corners.gif) no-repeat scroll -100px -100px;
+	cursor: move;
+	display: none;
+	width: 100%;
+}
+
+.clearlooks2 .mceClose, .clearlooks2 .mceFocus .mceClose, .clearlooks2 .mceMin, .clearlooks2 .mceFocus .mceMin, .clearlooks2 .mceMed, .clearlooks2 .mceFocus .mceMed, .clearlooks2 .mceMax, .clearlooks2 .mceFocus .mceMax, .clearlooks2 .mceFocus .mceClose:hover,  .clearlooks2 .mceFocus .mceMin:hover, .clearlooks2 .mceFocus .mceMed:hover, .clearlooks2 .mceFocus .mceMax:hover {
+	top: 1px;
+	width: 23px;
+}
+
+.clearlooks2 .mceClose, .clearlooks2 .mceFocus .mceClose {
+	background: url(index.php?theme=USERTHEME&extern=images/windows/close.png) no-repeat;
+	right: 6px;
+}
+
+.clearlooks2 .mceMin, .clearlooks2 .mceFocus .mceMin {
+	background: url(index.php?theme=USERTHEME&extern=images/windows/min.png) no-repeat;
+	right: 50px;
+}
+
+.clearlooks2 .mceMed, .clearlooks2 .mceFocus .mceMed, .clearlooks2 .mceMax, .clearlooks2 .mceFocus .mceMax {
+	background: url(index.php?theme=USERTHEME&extern=images/windows/max.png) no-repeat;
+	right: 28px;
+}
+
+.clearlooks2 .mceFocus .mceClose:hover {
+	background: url(index.php?theme=USERTHEME&extern=images/windows/close_x.png) no-repeat;
+	right: 6px;
+}
+
+.clearlooks2 .mceFocus .mceMin:hover {
+	background: url(index.php?theme=USERTHEME&extern=images/windows/min_x.png) no-repeat;
+	right: 50px;
+}
+
+.clearlooks2 .mceFocus .mceMed:hover, .clearlooks2 .mceFocus .mceMax:hover {
+	background: url(index.php?theme=USERTHEME&extern=images/windows/max_x.png) no-repeat;
+	right: 28px;
+}
+
+/*TODO what is this pics for ?*/
+.clearlooks2 .mceResize {
+	background: transparent url(img/horizontal.gif) no-repeat scroll 0 -75px;
+	display: none;
+	height: 5px;
+	left: auto;
+	top: auto;
+	width: 5px;
+}
+/*  */
+
+.clearlooks2 .mceMovable .mceMove, .clearlooks2 .mceResizable .mceResize, .clearlooks2 .mceMinimizable .mceMin, .clearlooks2 .mceMaximizable .mceMax, .clearlooks2 .mceMaximized .mceMed { display: block; } .clearlooks2 a.mceResizeN, .clearlooks2 a.mceResizeNW, .clearlooks2 a.mceResizeW { left: 0; top: 0; } .clearlooks2 a.mceResizeN { cursor: n-resize; width: 100%; } .clearlooks2 a.mceResizeNW { cursor: nw-resize; } .clearlooks2 a.mceResizeNE { cursor: ne-resize; right: 0; top: 0; } .clearlooks2 a.mceResizeW { cursor: w-resize; height: 100%; } .clearlooks2 a.mceResizeE { cursor: e-resize; height: 100%; right: 0; top: 0; } .clearlooks2 a.mceResizeS { bottom: 0; cursor: s-resize; left: 0; width: 100%; } .clearlooks2 a.mceResizeSW { bottom: 0; cursor: sw-resize; left: 0; } .clearlooks2 a.mceResizeSE { bottom: 0; cursor: se-resize; right: 0; }
+
+.clearlooks2 .mceButton {
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	background-color: #ffffff;
+	background: url(index.php?theme=USERTHEME&extern=images/widgets/buttonbg.png)repeat-x top;
+	border-bottom: 1px solid #7f7f7f;
+	border-left: 1px solid #aeaeae;
+	border-radius: 3px;
+	border-right: 1px solid #7f7f7f;
+	border-top: 1px solid #aeaeae;
+	cursor: pointer;
+	font-size: 11px;
+	padding: 1px;
+	bottom: 10px;
+	text-align: center;
+	vertical-align: middle;
+	width: 80px;
+}
+
+.clearlooks2 .mceMiddle .mceIcon {
+	height: 32px;
+	left: 15px;
+	top: 35px;
+	width: 32px;
+}
+
+.clearlooks2 .mceAlert .mceMiddle span, .clearlooks2 .mceConfirm .mceMiddle span {
+	background: transparent none repeat scroll 0 0;
+	font-family: Verdana,Arial,sans-serif,FreeSans;
+	font-size: 11px;
+	height: 50px;
+	left: 70px;
+	overflow: auto;
+	top: 35px;
+	white-space: normal;
+	width: 320px;
+}
+
+.clearlooks2 a:hover {
+	font-weight: italic;
+}
+
+.clearlooks2 .mceAlert .mceMiddle, .clearlooks2 .mceConfirm .mceMiddle {}
+
+.clearlooks2 .mceAlert .mceOk {
+	left: 50%;
+	margin-left: -40px;
+	top: auto;
+}
+
+.clearlooks2 .mceAlert .mceIcon {
+	background: transparent url(index.php?theme=USERTHEME&extern=icons/48x48/e.png) repeat scroll 0 0;
+	height: 48px;
+	width: 48px;
+}
+
+.clearlooks2 .mceConfirm .mceOk { left: 50%; margin-left: -90px; top: auto; } .clearlooks2 .mceConfirm .mceCancel { left: 50%; top: auto; }
+
+.clearlooks2 .mceConfirm .mceIcon {
+	background: transparent url(index.php?theme=USERTHEME&extern=icons/48x48/q.png) repeat scroll 0 0;
+	height: 48px;
+	width: 48px;
+}
+
+#insert, #cancel, input.button, .updateButton {
+	width: 80px;
+}

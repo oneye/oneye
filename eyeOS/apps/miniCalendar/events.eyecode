@@ -1,0 +1,101 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function miniCalendar_on_Message($params) {
+	eyeWidgets('updateContent', $params);
+}
+
+function miniCalendar_on_Close($params=null) {
+	proc('end');
+}
+
+function miniCalendar_on_Launch($params=null) {
+	$messagesPid = proc('findPidByName', array('eyeCalendar'));
+
+	if($messagesPid == false) {
+		proc('launch', array('eyeCalendar'));
+	}
+}
+
+function miniCalendar_on_changeDate($params=null){
+	$date = $params['date'][0]/1000;
+	$year = date('Y',$date);
+	$month= date('n',$date);
+	$day  = date('j',$date);
+
+	miniCalendar_dayNotes($year, $month, $day);
+}
+
+function miniCalendar_on_today($params=null) {
+	$year = date('Y');
+	$month = date('n');
+	$day = date('j');
+
+	miniCalendar_dayNotes($year, $month, $day);
+}
+
+function miniCalendar_dayNotes($year, $month, $day) {
+	global $myPid;
+
+	$num = eyeCalendar('getDayNotes', array('year' => $year, 'month' => $month, 'mday' => $day));
+	eyeX('setDiv', array('name' => 'miniCalendarInnerRight', 'content' => ' '));
+
+	if(is_array($num)) {
+		$gCounter = 0;
+		$Yoffset = 4;
+		$text = '';
+		foreach($num as $event) {
+			$cname = eyeCalendar('getCalendarName', array($event['note'][0]['calendar'][0]));
+
+			$text = base64_decode($event['note'][0]['title'][0]);
+			if(!empty($text)) {
+				$myLabel = new Label(array(
+					'name' => 'cal_label_'.$gCounter,
+					'father' => 'miniCalendarInnerRight',
+					'x' => 10,
+					'y' => $Yoffset,
+					'text' => $cname
+				));
+				$myLabel->show();
+				eyeX('rawjs', array('js' => 'document.getElementById("'.$myPid.'_cal_label_'.$gCounter.'_Container").className="cal'.$event['note'][0]['calendar'][0].'";'));
+
+				$myLabel1 = new Label(array(
+					'name' => 'hour'.$gCounter,
+					'father' => 'miniCalendarInnerRight',
+					'x' => 103,
+					'y' => $Yoffset,
+					'text' => $event['note'][0]['hourFrom'][0].':'.$event['note'][0]['minFrom'][0]
+				));
+				$myLabel1->show();
+				$myLabel1->setCss(array('font-weight' => 'bold'));
+
+				$myLabel2 = new Label(array(
+					'name' => 'content'.$gCounter,
+					'father' => 'miniCalendarInnerRight',
+					'x' => 145,
+					'y' => $Yoffset,
+					'text' => $text
+				));
+				$myLabel2->show();
+			}
+
+			$Yoffset += 25;
+			$gCounter++;
+		}
+	}
+}
+
+?>

@@ -1,0 +1,72 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_box_label($params = '') {
+	foreach($params as $key => $value) {
+		if ( /* utf8 */ stripos($key, 'eyeControl_box_hiddenCAT_') !== false) {
+			$key = substr($key, strlen('eyeControl_box_hiddenCAT_') - strlen($key)); // utf8
+			eyeControl_lib_loadContent($GLOBALS['eyeControl_box_hiddenCAT_' . $key]->text,$GLOBALS['eyeControl_box_hiddenNAME_' . $key]->text);
+		}
+	}
+}
+
+function eyeControl_on_box_cat_label($params = '') {
+	foreach($params as $key => $value) {
+		if ( /* utf8 */ stripos($key, 'eyeControl_box_hiddenCAT_') !== false) {
+			$key = substr($key, strlen('eyeControl_box_hiddenCAT_') - strlen($key)); // utf8
+			eyeControl_lib_loadContent($GLOBALS['eyeControl_box_hiddenCAT_' . $key]->text);
+		}
+	}
+}
+
+function eyeControl_on_selectUser($params = '') {
+	global $myPid;
+	if ($params['selected'][0] != $_SESSION['eyeControl'][$myPid]['user'] && $params['selected'][0] != '[---]') {
+		if ($params['selected'][0] == ROOTUSER || $params['selected'][0] == '[skel]') {
+			proc('launch',array('eyeControl',array('user' => $params['selected'][0])));
+			proc('end');
+		} else {
+			eyex('messageBox',array(
+				'buttons' => array(array('selectUser_select','Select'),array('selectUser_cancel','Cancel')),
+				'content' => 'Please type the username here:',
+				'father' => 'eyeControl_window',
+				'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/eyeGroups.png',
+				'textbox_event' => 'selectUser_select',
+				'textbox_name' => 'eyeControl_searchuser_textbox',
+				'title' => 'Search user...',
+				'type' => 3,
+				'win_name' => 'eyeControl_searchuser_window',
+				'win_removepid' => 0,
+				'win_style' => TITLE + CLOSE
+			));
+		}
+	}
+}
+
+function eyeControl_on_selectUser_select($params = '') {
+	$user = $GLOBALS['eyeControl_searchuser_textbox']->text;
+	if ($user == '[skel]' || um('userExist',array($user))) {
+		proc('launch',array('eyeControl',array('user' => $user)));
+		proc('end');
+	} else {
+		eyex('messageBox',array('content' => 'That user does not exist.'));
+	}
+}
+
+function eyeControl_on_selectUser_cancel($params = '') {
+	$GLOBALS['eyeControl_searchuser_window']->close();
+}
+?>

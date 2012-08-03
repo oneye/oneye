@@ -1,0 +1,71 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function restoreTrash_on_Close($params = '') {
+	proc('end');
+}
+
+function restoreTrash_on_Do($params = '') {
+	if ($GLOBALS['restoreTrash_Hidden_To']->text) {
+		$to = eyeFiles('cleanPath',array($GLOBALS['restoreTrash_Hidden_To']->text));
+	}
+	$file = substr($GLOBALS['restoreTrash_Hidden_Path']->text, 0, -strlen('.' . EYEOS_TRASH_EXT)); // utf8
+	$path = um('getCurrentUserDir') . '/' . TRASH_USER_DIR . '/';
+	$xml = eyeXML('getXMLfile',array($path . '/' . $file . '.' . EYEOS_TRASH_EXT));
+	if ($xml['eyeTrash'][0]['type'][0] == 'dir') {
+		if ($to) {
+			if ($to[1] == 'real') {
+				eyex('messageBox',array('content' => 'You cannot restore "%s" to a real folder!','tokens' => array($xml['eyeTrash'][0]['lastname'][0])));
+			} elseif (vfs('restoreDir',array($path . $file,$to[0] . '/' . basename($xml['eyeTrash'][0]['restorePoint'][0])))) {
+				$path = $to[1] . '://' . $to[2];
+			} else {
+				eyex('messageBox',array('content' => '"%s" could not be restored!','tokens' => array($xml['eyeTrash'][0]['lastname'][0])));
+			}
+		} elseif (vfs('restoreDir',array($path . $file,$xml['eyeTrash'][0]['restorePoint'][0]))) {
+			$path = substr(trim($xml['eyeTrash'][0]['restorePoint'][0], '/\\'), 0, -strlen(basename($xml['eyeTrash'][0]['restorePoint'][0]))); // utf8
+		} elseif (vfs('restoreDir',array($path . $file,um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . basename($xml['eyeTrash'][0]['restorePoint'][0])))) {
+			eyex('messageBox',array('content' => '"%s" has been restored to your home folder!','tokens' => array($xml['eyeTrash'][0]['lastname'][0])));
+			$path = 'home:///';
+		} else {
+			eyex('messageBox',array('content' => '"%s" could not be restored!','tokens' => array($xml['eyeTrash'][0]['lastname'][0])));
+		}
+	} elseif ($to) {
+		if ($to[1] == 'real') {
+			eyex('messageBox',array('content' => 'You cannot restore "%s" to a real folder!','tokens' => array($xml['eyeTrash'][0]['lastname'][0])));
+		} elseif (vfs('restore',array($path . $file . '.' . EYEOS_TRASH_EXT,$to[0] . '/' . basename($xml['eyeTrash'][0]['restorePoint'][0])))) {
+			$path = $to[1] . '://' . $to[2];
+		} else {
+			eyex('messageBox',array('content' => '"%s" could not be restored!','tokens' => array($xml['eyeTrash'][0]['lastname'][0])));
+		}
+	} elseif (vfs('restore',array($path . $file,$xml['eyeTrash'][0]['restorePoint'][0]))) {
+		$path = substr(trim($xml['eyeTrash'][0]['restorePoint'][0], '/\\'), 0, -strlen(basename($xml['eyeTrash'][0]['restorePoint'][0]))); // utf8
+	} elseif (vfs('restore',array($path . $file,um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . basename($xml['eyeTrash'][0]['restorePoint'][0])))) {
+		eyex('messageBox',array('content' => '"%s" has been restored to your home folder!','tokens' => array($xml['eyeTrash'][0]['lastname'][0])));
+		$path = 'home:///';
+	} else {
+		eyex('messageBox',array('content' => '"%s" could not be restored!','tokens' => array($xml['eyeTrash'][0]['lastname'][0])));
+	}
+	if ($GLOBALS['restoreTrash_Hidden_Callback']->text) {
+		eyex('rawjs',array('js' => $GLOBALS['restoreTrash_Hidden_Callback']->text));
+	}
+	eyeFiles('update',array($path,'trash:///'));
+	proc('end');
+}
+
+function restoreTrash_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+?>

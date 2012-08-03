@@ -1,0 +1,191 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeDocs_saveFile($content) {
+	global $myPid;
+	$file = $GLOBALS['filePath']->text;
+	//split the path into different parts
+	$info = pathinfo($file);
+	//get the extension, see http://www.php.net/pathinfo for more information
+	$extension = /* utf8 */ strtolower($info['extension']);
+
+	if($extension == 'doc' || $extension == 'odt') {
+		$tempFile = um('getCurrentUserDir').'/tmp/'.$myPid.'_new.html';
+		$pos = /* utf8 */ strpos($content, '--&gt;</p>');
+		if(!$pos) {
+			$pos = -10;
+		}
+		if(is_object($GLOBALS['fileHeader'])) {
+			$realContent = $GLOBALS['fileHeader']->text . '<BODY>' . /* utf8 */ substr($content, $pos + 10) . '</BODY></HTML>';
+		} else {
+			$realContent = eyeDocs_getHeader() . /* utf8 */ substr($content,$pos + 10) . '</BODY></HTML>';
+		}
+		vfs('real_putFileContent',array($tempFile,$realContent));
+		if($extension == 'odt') {
+			$format = 'writerglobal8_writer';
+		} else {
+			$format = 'MS Word 97';
+		}
+		if(!vfs('fileExists',array($file))) {
+			vfs('create',array($file,'eyeDocs'));
+		}
+
+		eyeConverter('convert',array($tempFile,vfs('getRealName',array($file)),$format,1));
+	} else {
+		$pos = /* utf8 */ strpos($content,'--&gt;</p>');
+		if(!$pos) {
+			$pos = -10;
+		}
+		$realContent = /* utf8 */ substr($content, $pos + 10);
+		if(!vfs('fileExists',array($file))) {
+			if(!vfs('create',array($file,'eyeDocs'))) {
+				eyex('messageBox',array('content' => 'Error creating file.'));
+				return false;
+			}
+		}
+		$fp = vfs('open',array($file,'w'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'Error saving file.'));
+			return false;
+		}
+
+		if (fwrite($fp, $realContent) !== /* utf8 */ strlen($realContent)) {
+			eyex('messageBox',array('content' => 'Error saving file.'));
+			return false;
+		}
+		fclose($fp);
+	}
+
+	$myHiddenMD5 = new Hidden(array(
+		'name'=>'fileMD5',
+		'father'=>'eyeApps',
+		'text'=>md5($content)
+	));
+	eyeWidgets('serialize',array($myHiddenMD5));
+
+	eyex('messageBox',array('content' => 'Document saved successfully.'));
+	return true;
+}
+
+function eyeDocs_openFile($file) {
+	global $myPid;
+	//split the path into different parts
+	$info = pathinfo($file);
+	//get the extension, see http://www.php.net/pathinfo for more information
+	$extension = /* utf8 */ strtolower(basename($info['extension']));
+
+	if($extension == 'doc' || $extension == 'odt') {
+		$tCheckNum = proc('findChecknumByName',array('eyeX'));
+		$nfile = um('getCurrentUserDir').'tmp/'.$myPid.'.'.$info['extension'];
+		$myHTML = um('getCurrentUserDir').'tmp/'.$myPid.'_new.html';
+		$real = vfs('getRealName',array($file));
+
+		if(!vfs('checkPermissions',array($file))) {
+			eyeX('messageBox',array('content'=>'Sorry, you do not have sufficient permissions!'));
+			return false;
+		}
+
+		copy($real,$nfile);
+		$to = 'HTML (StarWriter)';
+		eyeConverter('convert',array($nfile,$myHTML,$to,1));
+		$fp = vfs('real_open',array($myHTML,'r'));
+		if(!$fp) {
+			eyeX('messageBox',array('content'=>'Sorry, you need to enable OpenOffice Support to view this document.'));
+			return false;
+		}
+		$content = fread($fp,vfs('real_filesize',array($myHTML)));
+		fclose($fp);
+
+		$content = str_replace('<IMG SRC="','<IMG SRC="index.php?checknum='.$tCheckNum.'&msg=viewTempImg&params=',$content);
+
+		$pos = /* utf8 */ strpos($content, '</HEAD>');
+		$header = /* utf8 */ substr($content, 0, $pos + 7);
+
+		$myHiddenHeader = new Hidden(array(
+			'name'=>'fileHeader',
+			'father'=>'eyeApps',
+			'text'=>$header
+		));
+		eyeWidgets('serialize',array($myHiddenHeader));
+	} else {
+		$fp = vfs('open',array($file,'r'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'File not found.'));
+			return false;
+		}
+
+		$size = vfs('filesize',array($file));
+		$content = fread($fp,$size);
+		fclose($fp);
+	}
+
+	eyeDocs_setCurrentFile($file);
+	//we will use the extension for office formats and eyeConverter
+
+	//saving the md5 of the opened file
+	//so we can compare to the md5 of the file
+	//when closing, and know if we have to ask for saving
+	$myHiddenMD5 = new Hidden(array(
+		'name'=>'fileMD5',
+		'father'=>'eyeApps',
+		'text'=>md5($content)
+	));
+	eyeWidgets('serialize',array($myHiddenMD5));
+
+	return $content;
+}
+
+function eyeDocs_updateServerContent() {
+	global $checknum;
+	$sync = $GLOBALS['fileContent']->getSyncString();
+	$js = 'sendMsg('.$checknum.',"updateContent",'.$sync.');';
+	eyeX('rawjs',array('js'=>$js));
+}
+
+function eyeDocs_setCurrentFile($file) {
+	$myHiddenPath = new Hidden(array(
+		'name'=>'filePath',
+		'father'=>'eyeApps',
+		'text'=>$file
+	));
+	eyeWidgets('serialize',array($myHiddenPath));
+}
+
+function eyeDocs_getHeader() {
+	return '<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+	<META HTTP-EQUIV="CONTENT-TYPE" CONTENT="text/html; charset=iso-8859-1">
+	<TITLE>ddwdwdw</TITLE>
+	<META NAME="GENERATOR" CONTENT="OpenOffice.org 2.0  (Unix)">
+	<META NAME="AUTHOR" CONTENT="oneye">
+	<META NAME="CREATED" CONTENT="20090604;18060000">
+	<META NAME="CHANGEDBY" CONTENT="oneye">
+	<META NAME="CHANGED" CONTENT="20090604;18060000">
+	<STYLE TYPE="text/css">
+	<!--
+		@page { size: 8.27in 11.69in; margin-right: 1.18in; margin-top: 0.98in; margin-bottom: 0.98in }
+		P { margin-bottom: 0.08in; direction: ltr; color: #000000; text-align: left; widows: 2; orphans: 2
+ }
+		P.western { font-family: "Times New Roman", serif; font-size: 12pt; so-language: es-ES }
+		P.cjk { font-family: "Times New Roman", serif; font-size: 12pt; so-language:  }
+		P.ctl { font-family: "Times New Roman", serif; font-size: 12pt; so-language: ar-SA }
+	-->
+	</STYLE>
+</HEAD>
+<BODY>';
+}
+?>

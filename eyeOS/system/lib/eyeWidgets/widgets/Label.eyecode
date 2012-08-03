@@ -1,0 +1,200 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Label widget abstraction
+*/
+
+class Label {
+	//pid controller
+
+	var $creatorPid;
+
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//generic widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+
+	var $showed = 0;
+
+	//custom widget options
+	var $color;
+	var $visible;
+	var $text;
+	var $tokens;
+	//var $allowHTML; ==> TODO!
+
+	//friends abstraction
+	var $friends="''";
+
+	//event handling
+	var $disableMsg = 0;
+	var $signal;
+
+	//function Label($name,$content,$father,$cent=0,$x=40,$y=40,$horiz=0,$vert=0,$visible=1,$color="") {
+	function Label($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 10;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 10;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+
+		//especific label options
+		isset($params['color']) ? $this->color = $params['color'] : $this->color = false;
+		isset($params['text']) ? $this->text = $params['text'] : $this->text = '';
+		isset($params['tokens']) ? $this->tokens = $params['tokens'] : $this->tokens = 0;
+		isset($params['visible']) ? $this->visible = $params['visible'] : $this->visible = 1;
+		isset($params['signal']) ? $this->signal = $params['signal'] : $this->signal = $this->name;
+		isset($params['disablemsg']) ? $this->disableMsg = $params['disablemsg'] : $this->disableMsg = 1;
+		if (isset($params['disableMsg'])) {
+			$this->disableMsg = $params['disableMsg'];
+		}
+	}
+
+
+	function show($noserialize=1) {
+		if(empty($this->text)) {
+			$this->text = ' '; //javascript need it
+		} else {
+			$this->text = i18n('translate',array($this->text,$this->tokens));
+		}
+
+		$widgetsparams = array(
+			'color' => $this->color,
+			'visible' => $this->visible,
+			'text' => utf8_htmlspecialchars($this->text, ENT_QUOTES),
+			'sync' => $this->friends,
+			'disablemsg' => $this->disableMsg,
+			'signal' => $this->signal
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$myLabel = array(
+			'name' => $this->name,
+			'x' => $this->x,
+			'y' => $this->y,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'father' => $this->father,
+			'widgetname' => 'Label',
+			'params' => $widgetsparams,
+			'center' => $this->cent
+		);
+		eyex('createWidget',$myLabel);
+		$this->showed=1;
+		if($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	//friends handler
+	function addFriend($friend) {
+		if(method_exists($friend,'getSyncString')) {
+			if($this->friends == "''") {
+				$this->friends = $friend->getSyncString();
+			} else {
+				$this->friends .= '+'.$friend->getSyncString();
+			}
+		}
+	}
+
+	//set property functions
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="none"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="block"'));
+	}
+
+	function setColor($color = '') {
+		global $myPid;
+		eyex('runjs', array(
+			'js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.color = %s;',
+			'tokens' => array($color)
+		));
+	}
+
+	function setText($newText,$newTokens = null) {
+		global $myPid;
+		$this->text = i18n('translate',array($newText,$newTokens));
+		eyex('runjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").innerHTML=""'));
+		$tokens[] = $this->text;
+		eyex('runjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").appendChild(document.createTextNode( %s ));','tokens'=>$tokens));
+	}
+
+	function setValue($newValue) {
+		$this->text = $newValue;
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.top="'.$this->y.'px";'));
+	}
+
+	function remove() {
+		global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+}
+
+?>

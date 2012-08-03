@@ -1,0 +1,17 @@
+<menu>
+	<entry>
+		<icon>restore</icon>
+		<text>Restore</text>
+		<action>restoreTrash</action>
+	</entry>
+	<entry>
+		<icon>delete</icon>
+		<text>Delete</text>
+		<action>emptyTrash</action>
+	</entry>
+	<entry>
+		<icon>properties</icon>
+		<text>Properties</text>
+		<action>eyeProperties</action>
+	</entry>
+</menu>

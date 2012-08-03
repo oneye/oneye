@@ -1,0 +1,10 @@
+<package>
+	<name>Help</name>
+	<category>Utilities</category>
+	<version>1.9</version>
+	<description>oneye help system</description>
+	<author>DanielRS</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/q.png</icon>
+</package>

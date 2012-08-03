@@ -1,0 +1,247 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeHelp_run($params=null) {
+	global $checknum,$myPid;
+	global $currentUser;
+
+	include_once(EYE_ROOT.'/'.APP_DIR.'/eyeHelp/events'.EYE_CODE_EXTENSION);
+	//This checks if there were passed any params (can be APP_NAME or APP_NAME.eyeHelp)
+	if($params[0]!=''){
+		if (strtolower(strrchr($params[0], '.')) === '.eyehelp') { // utf8
+			$params[0] = /* utf8 */ substr($params[0], 0, -8);
+		}
+		$folder = eyeHelp_getFolder(array(basename($params[0])));
+	}else{
+		$folder = eyeHelp_getFolder(array(''));
+	}
+
+	//Main window
+	$myWindow = new Window(array(
+		'title'=>'Help Console',
+		'name'=>'WND_1',
+		'father' => 'eyeApps',
+		'type'=>1,
+		'y'=>35,
+		'x'=>0,
+		'cent'=>2,
+		'width'=>800,
+		'height'=>500,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'Resize',
+	));
+	$myWindow->show();
+
+	//The toolbar
+	$myToolbar = new Toolbar(array(
+		'name'=>'myBar',
+		'father'=>'WND_1_Content'
+	));
+	$myToolbar->show();
+	$myToolbar->addItem('SendMessage',eyex('getThemeImage',array('images/toolbar/sendmessage.png',1)),'Ask for help');
+	if($currentUser == ROOTUSER){
+		$myToolbar->addLine();
+		$myToolbar->addItem('pref',eyex('getThemeImage',array('images/toolbar/lin_agt_wrench.png',1)),'Preferences');
+	}
+
+	$y = 60;
+	//Text window
+	$myWindow2 = new Window(array(
+		'name'=>'WND_2',
+		'father' => 'WND_1_Content',
+		'type'=> 100,
+		'width'=> $myWindow->width - 215,
+		'height'=> $myWindow->height - $y - 28,
+		'x'=> 208,
+		'y'=> $y
+	));
+	$myWindow2->show();
+
+	//Tree window
+	$myWindow3 = new Window(array(
+		'name'=>'WND_3',
+		'father'=>'WND_1_Content',
+		'type'=> 100,
+		'width'=> 200,
+		'height'=> $myWindow2->height,
+		'x'=> 3,
+		'y'=> $y
+	));
+	$myWindow3->show();
+
+	//Topics box
+	$myBox1 = new Box(array(
+		'name'=>'BOX_1',
+		'father'=>'WND_3_Content',
+		'x'=>0,
+		'y'=>0,
+		'width'=>198,
+		'height'=> $myWindow3->height,
+		'title'=>'Topics'
+	));
+	$myBox1->show(0);
+
+	//Topics window, needed for scrolling
+	$myWindow4 = new Window(array(
+		'name'=>'WND_BOX_1',
+		'father' => 'BOX_1',
+		'y'=>25,
+		'x'=>3,
+		'width'=>192,
+		'height'=>$myWindow3->height - 29,
+		'type'=>100
+	));
+	$myWindow4->show();
+
+	/**
+	*@Todo if Windows Widget gets class fix this
+	*/
+
+	eyeX('rawjs',array('js'=>
+		'
+		document.getElementById("'.$myPid.'_' . $myWindow2->name . '").className = "invisWND";
+		document.getElementById("'.$myPid.'_' . $myWindow2->name . '_Content").style.top = "0";
+		document.getElementById("'.$myPid.'_' . $myWindow3->name . '").className = "invisWND";
+		document.getElementById("'.$myPid.'_' . $myWindow3->name . '_Content").className = "invisWND";
+		document.getElementById("'.$myPid.'_' . $myWindow4->name . '").className = "miniWND";
+		document.getElementById("'.$myPid.'_' . $myWindow4->name . '_Content").style.top = "0";
+		'
+	));
+	
+	//Get the title of the main topic
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$myDir = $folder;
+	if ( /* utf8 */ substr($myDir, -1) !== '/') {
+		$myDir .= '/';
+	}
+	$myInfoFile = $myDir.'info.xml';
+	if (file_exists($myDir . $_SESSION['lang'] . '.xml') === true) {
+		$myInfoFile = $myDir . $_SESSION['lang'] . '.xml';
+	}
+	$size = vfs('real_filesize',array($myInfoFile));
+	if ($size > 0) {
+		$fp = vfs('real_open',array($myInfoFile,'r'));
+		$InfoContent = fread($fp,$size);
+		fclose($fp);
+	}
+	$currentUser = $oldUser;
+
+	$info = eyeXML('xml2array',array($InfoContent));
+	$info = $info['eyeHelp'][0];
+
+	$title = /* utf8 */ trim($info['title'][0]);
+	$myDir2 = /* utf8 */ substr($myDir, 0, -1);
+	if($title=="")$title = basename($myDir2);
+
+	//Show the title of the main topic above the tree
+	$myLabel2 = new Label(array(
+		'name'=>'label2',
+		'father'=>'WND_BOX_1_Content',
+		'y'=>6,
+		'x'=>6,
+		'text'=>''
+	));
+	$myLabel2->show(0);
+	$label2_text = '<span style="color:black; cursor:pointer;" onclick="sendMsg(\''.$checknum.'\',\'open\',\'/\');">'.$title.'</span>';
+	eyeX('concatDiv',array('name'=>$myPid.'_label2','value'=>$label2_text));
+
+	//The tree
+	$myTree = new Tree(array(
+		'name'=>'Tree',
+		'father'=>'WND_BOX_1_Content',
+		'width'=>$myWindow4->width - 22,
+		'x'=>0,
+		'y'=>14,
+		'clickTree'=>1,
+		'signal'=>'goto'
+	));
+	$myTree->show();
+
+	$myUdir = $folder;
+	drawTree($myTree,'Tree',$myUdir);
+	$myTree->processList();
+
+	//The label where the content will be shown
+	$myLabel1 = new Label(array(
+		'name'=>'label1',
+		'father'=>'WND_2_Content',
+		'y'=>0,
+		'x'=>0,
+		'width'=>$myWindow2->width,
+		'height'=>$myWindow2->height,
+		'text'=>''
+	));
+	$myLabel1->show(0);
+	$GLOBALS['label1'] = $myLabel1;
+
+	eyeHelp_on_goto(array($folder));
+
+	//CSS
+	eyex('loadCss',array(
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/eyeHelp/eyeHelp.css&type=css',
+		'id' => 'eyeHelp.css'
+	));
+}
+
+function eyeHelp_end($params=null) {
+	eyeWidgets('unserialize');
+}
+
+function drawTree($object,$tree,$dir) {
+	global $currentUser;
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$content = vfs('getDirContent',array($dir));
+	$currentUser = $oldUser;
+	if(is_array($content)){
+		foreach($content as $value){
+			if(is_dir($value)){
+				$oldUser = $currentUser;
+				$myDir = $value;
+				if ( /* utf8 */ substr($myDir, -1) !== '/') {
+					$myDir .= '/';
+				}
+				$currentUser = ROOTUSER;
+				$myInfoFile = $myDir.'info.xml';
+				if (file_exists($myDir . $_SESSION['lang'] . '.xml') === true) {
+					$myInfoFile = $myDir . $_SESSION['lang'] . '.xml';
+				}
+				$size = vfs('real_filesize',array($myInfoFile));
+				if ($size > 0) {
+					$fp = vfs('real_open',array($myInfoFile,'r'));
+					$InfoContent = fread($fp,$size);
+					fclose($fp);
+				}
+				$currentUser = $oldUser;
+
+				$info = eyeXML('xml2array',array($InfoContent));
+				$info = $info['eyeHelp'][0];
+//				$treeImg = '<img src="' . str_replace('theme=USERTHEME', 'theme=' . $_SESSION['usertheme'], $info['img'][0]) . '" alt="" />';
+				$title = /* utf8 */ trim($info['title'][0]);
+//				$fulltitle = $treeImg . $title;
+				$myDir2 = /* utf8 */ substr($myDir, 0, -1);
+				if($title=="")$title = basename($myDir2);
+
+				$object->addSubList('item_'.$dir,'list_'.$dir);
+				$object->addItem($tree,'item_'.$value,$title);
+				drawTree($object,'list_'.$value,$value);
+			}
+		}
+	}
+	$currentUser = $oldUser;
+}
+?>

@@ -1,0 +1,423 @@
+<?php // utf8
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $checknum;
+global $currentUser;
+global $myPid;
+
+$config = eyeControl_lib_getXMLconfig(array('eyeDesk', 'conf.xml'));
+
+$myTab = new Tab(array(
+	'name' => 'eyeControl_desktop_tab',
+	'father' => $eyeContainer,
+	'width' => 550,
+	'height' => 405,
+	'tabwidth' => 100,
+	'x' => 0,
+	'y' => 0
+));
+$myTab->show();
+
+if (eyeControl_lib_getConfigUser() == $currentUser) {
+	$wallpaperTab = $myTab->addTab('Wallpaper',1);
+	$iconsTab = $myTab->addTab('Settings',1);
+	if (is_array($contentParams) && $contentParams[0]) {
+		$myTab->selectByName($contentParams[0]);
+	} else {
+		$myTab->selectByName('Wallpaper');
+	}
+} else {
+	$iconsTab = $myTab->addTab('Settings',1);
+}
+
+if (isset($config['eyeDesk'][0]['bgColor']) === false) {
+	$config['eyeDesk'][0]['bgColor'] = null;
+}
+if (eyeControl_lib_getConfigUser() == $currentUser) {
+	$ContentY = 20;
+	if (isset($config['eyeDesk'][0]['wallpaper']) === false) {
+		$config['eyeDesk'][0]['wallpaper'] = null;
+	}
+	$path = str_replace(eyeControl_lib_getConfigUserPath() . '/' . FILES_USER_DIR . '/','',$config['eyeDesk'][0]['wallpaper'][0]);
+	if (is_array($path)) {
+		$path = '';
+	}
+
+	if ($config['eyeDesk'][0]['wallpaper'][0] && is_string($config['eyeDesk'][0]['wallpaper'][0])) {
+		$cw = 1;
+	} else {
+		$cw = 0;
+	}
+	if ($config['eyeDesk'][0]['bgColor'][0] && is_string($config['eyeDesk'][0]['bgColor'][0])) {
+		$cc = 1;
+	} else {
+		$cc = 0;
+	}
+	if (isset($config['eyeDesk'][0]['wallpaperRepeat']) === true && $config['eyeDesk'][0]['wallpaperRepeat'][0] == '1') {
+		$repeat = 1;
+		$repeatUrl = 'index.php?extern=apps/eyeControl/gfx/repeat.png';
+	} else {
+		$repeat = 0;
+		$repeatUrl = 'index.php?extern=apps/eyeControl/gfx/norepeat.png';
+	}
+	if (isset($config['eyeDesk'][0]['wallpaperCenter']) === true && $config['eyeDesk'][0]['wallpaperCenter'][0] == '0') {
+		$center = 0;
+		$centerHeight = 0;
+		$centerWidth = 60;
+	} else {
+		$center = 1;
+		$centerHeight = 33;
+		$centerWidth = 104;
+	}
+
+	// Use a custom wallpaper
+	$myCheckbox_use = new Checkbox(array(
+		'name' => 'eyeControl_desktop_checkbox_use',
+		'father' => $wallpaperTab,
+		'x' => 20,
+		'y' => $ContentY,
+		'text' => 'Use a custom wallpaper',
+		'checked' => $cw
+	));
+	$myCheckbox_use->show();
+	$myCheckbox_use->focus();
+	$ContentY += 30;
+	// New wallpaper
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_desktop_label_select',
+		'father' => $wallpaperTab,
+		'x' => 60,
+		'y' => $ContentY + 3,
+		'text' => 'New Wallpaper'
+	));
+	$myLabel->show();
+	$myTextbox = new Textbox(array(
+		'name' => 'eyeControl_desktop_textbox_select',
+		'father' => $wallpaperTab,
+		'width' => 220,
+		'x' => 160,
+		'y' => $ContentY + 2,
+		'text' => $path
+	));
+	$myTextbox->show();
+	// Select a file...
+	$myButton = new Button(array(
+		'name' => 'eyeControl_dektop_select',
+		'father' => $wallpaperTab,
+		'x' => 400,
+		'y' => $ContentY,
+		'caption' => 'Select a file...',
+		'signal' => 'desktop_select'
+	));
+	$myButton->show();
+	$ContentY += 40;
+	// $myImagebox
+	$myImagebox = new Imagebox(array(
+		'name' => 'eyeControl_desktop_imagebox',
+		'father' => $wallpaperTab,
+		'width' => 160,
+		'height' => 120,
+		'x' => 60,
+		'y' => $ContentY,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=screenshot.png'
+	));
+	$myImagebox->show();
+	$myImagebox = new Imagebox(array(
+		'name' => 'eyeControl_desktop_imagebox_wallpaper',
+		'father' => $wallpaperTab,
+		'x' => $centerWidth,
+		'y' => $ContentY + $centerHeight,
+		'url' => $repeatUrl
+	));
+	$myImagebox->show();
+	$ContentY += 20;
+	// Repeat wallpaper
+	$myCheckbox_repeat = new Checkbox(array(
+		'name' => 'eyeControl_desktop_checkbox_repeat',
+		'father' => $wallpaperTab,
+		'x' => 245,
+		'y' => $ContentY,
+		'text' => 'Repeat Wallpaper',
+		'checked' => $repeat
+	));
+	$myCheckbox_repeat->show();
+	$myCheckbox_repeat->addEvent('onclick','if (this.checked) { document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper").src = "index.php?extern=apps/eyeControl/gfx/repeat.png"; } else { document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper").src = "index.php?extern=apps/eyeControl/gfx/norepeat.png"; } fixPNG("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper");');
+	$ContentY += 60;
+	// Center wallpaper
+	$myCheckbox_center = new Checkbox(array(
+		'name' => 'eyeControl_desktop_checkbox_center',
+		'father' => $wallpaperTab,
+		'x' => 245,
+		'y' => $ContentY,
+		'text' => 'Center Wallpaper',
+		'checked' => $center
+	));
+	$myCheckbox_center->show();
+	$myCheckbox_center->addEvent('onclick','if (this.checked) { document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper_Container").style.left = "104px"; document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper_Container").style.top = "103px"; } else { document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper_Container").style.left = "60px"; document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper_Container").style.top = "70px"; }');
+	$ContentY += 60;
+	// Use a custom background color
+	$myCheckbox_use_color = new Checkbox(array(
+		'name' => 'eyeControl_desktop_checkbox_use_color',
+		'father' => $wallpaperTab,
+		'x' => 20,
+		'y' => $ContentY,
+		'text' => 'Use a custom background color',
+		'checked' => $cc
+	));
+	$myCheckbox_use_color->show();
+	$ContentY += 30;
+	// Background color
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_desktop_label_color',
+		'father' => $wallpaperTab,
+		'x' => 60,
+		'y' => $ContentY + 3,
+		'text' => 'Background Color'
+	));
+	$myLabel->show();
+	$myTextbox_color = new Textbox(array(
+		'name' => 'eyeControl_desktop_textbox_color',
+		'father' => $wallpaperTab,
+		'width' => 220,
+		'x' => 180,
+		'y' => $ContentY + 2,
+		'text' => $config['eyeDesk'][0]['bgColor'][0]
+	));
+	$myTextbox_color->show();
+	$myTextbox_color->setCss(array('text-shadow' => 'none'));
+	// INIT
+	eyex('rawjs', array('js' => 'var e = document.getElementById("' . $myPid . '_eyeControl_desktop_textbox_color");
+	e.style.backgroundColor = "#ffffff";
+	e.style.backgroundColor = e.value;
+	var bgColor = xParseColor(xGetComputedStyle(e, "background-color"));
+	if (bgColor.s !== "#000000" && bgColor.s !== "#ffffff" && (e.value.length !== 4 || e.value.substr(0, 1) !== "#") || e.value.toLowerCase() === "black" || e.value.toLowerCase() === "white") {
+		e.value = bgColor.s;
+	}
+	if (e.style.backgroundColor === "transparent") {
+		e.style.backgroundColor = "#ffffff";
+	}
+	e.style.color = "rgb(" + String(288 - bgColor.r) + ", " + String(288 - bgColor.g) + ", " + String(288 - bgColor.b) + ")";'));
+	// CHANGE
+	$myTextbox_color->addEvent('onchange', 'if (this.value == "" || this.value.toLowerCase() === "transparent") {
+		document.getElementById("' . $myPid . '_eyeControl_desktop_checkbox_use_color").checked = false;
+	} else {
+		document.getElementById("' . $myPid . '_eyeControl_desktop_checkbox_use_color").checked = true;
+	}');
+	// KEYUP
+	$myTextbox_color->addEvent('onkeyup', 'if (this.value == "" || this.value.toLowerCase() === "transparent") {
+		document.getElementById("' . $myPid . '_eyeControl_desktop_checkbox_use_color").checked = false;
+	} else {
+		document.getElementById("' . $myPid . '_eyeControl_desktop_checkbox_use_color").checked = true;
+	}
+	this.style.backgroundColor = "#ffffff";
+	this.style.backgroundColor = this.value;
+	var bgColor = xParseColor(xGetComputedStyle(this, "background-color"));
+	if (bgColor.s !== "#000000" && bgColor.s !== "#ffffff" && (this.value.length !== 4 || this.value.substr(0, 1) !== "#") || this.value.toLowerCase() === "black" || this.value.toLowerCase() === "white") {
+		this.value = bgColor.s;
+	}
+	if (this.value.toLowerCase() === "transparent") {
+		this.style.backgroundColor = "#ffffff";
+		this.style.color = "#000000";
+	} else {
+		this.style.color = "rgb(" + String(288 - bgColor.r) + ", " + String(288 - bgColor.g) + ", " + String(288 - bgColor.b) + ")";
+	}');
+	// JSCOLOR
+	eyex('jscolor', array($myPid . '_eyeControl_desktop_textbox_color'));
+	$ContentY += 60;
+	// Save Changes
+	$myButton = new Button(array(
+		'name' => 'eyeControl_dektop_save',
+		'father' => $wallpaperTab,
+		'x' => 20,
+		'y' => $ContentY,
+		'caption' => 'Save Changes',
+		'signal' => 'desktop_save'
+	));
+	$myButton->addFriend($myCheckbox_use);
+	$myButton->addFriend($myCheckbox_use_color);
+	$myButton->addFriend($myTextbox);
+	$myButton->addFriend($myTextbox_color);
+	$myButton->addFriend($myCheckbox_repeat);
+	$myButton->addFriend($myCheckbox_center);
+	$myButton->show();
+}
+
+// Windows
+$ContentY = 20;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_desktop_label_windows',
+	'father' => $iconsTab,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Windows'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+
+// Save window positions
+$ContentY += 25;
+$xml = eyeControl_lib_getXMLconfig(array('eyex','eyeX.xml'));
+$myCheckbox = new Checkbox(array(
+	'name' => 'eyeControl_desktop_checkbox_savewinpos',
+	'father' => $iconsTab,
+	'x' => 50,
+	'y' => $ContentY,
+	'text' => 'Save window positions',
+	'checked' => $xml['eyex'][0]['saveWindowPositions'][0] != '0'
+));
+$myCheckbox->show();
+$myCheckbox->addEvent('onclick','if (this.checked) { document.getElementById("' . $myPid . '_eyeControl_dektop_reset_windows_Container").style.display = "block"; } else { document.getElementById("' . $myPid . '_eyeControl_dektop_reset_windows_Container").style.display = "none"; } sendMsg(' . $checknum . ',"desktop_savewinpos",eyeParam("selected",this.checked));');
+
+// Reset window positions
+$ContentY += 30;
+$myButton = new Button(array(
+	'name' => 'eyeControl_dektop_reset_windows',
+	'father' => $iconsTab,
+	'x' => 75,
+	'y' => $ContentY,
+	'width' => 400,
+	'caption' => 'Reset window positions',
+	'signal' => 'desktop_reset_windows',
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/refresh.png'
+));
+$myButton->show();
+
+// Desktop icons
+$ContentY += 30;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_desktop_label_icons',
+	'father' => $iconsTab,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Desktop Icons'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+
+// Fixed
+$ContentY += 25;
+$myRadio = new Radio(array(
+	'checked' => isset($config['eyeDesk'][0]['loadIconPositions'][0]) === true && $config['eyeDesk'][0]['loadIconPositions'][0] === '0',
+	'father' => $iconsTab,
+	'group' => 'Icons',
+	'name' => 'eyeControl_desktop_Radio_Fixed',
+	'text' => 'Fixed: Icons cannot be moved',
+	'x' => 50,
+	'y' => $ContentY
+));
+$myRadio->show();
+$myRadio->addEvent('onclick', 'sendMsg(' . $checknum . ', "desktop_save_icons", eyeParam("selected", "fixed"));');
+
+// Smooth
+$ContentY += 25;
+$myRadio = new Radio(array(
+	'checked' => isset($config['eyeDesk'][0]['loadIconPositions'][0]) === false || ($config['eyeDesk'][0]['loadIconPositions'][0] !== '0' && $config['eyeDesk'][0]['loadIconPositions'][0] !== '2'),
+	'father' => $iconsTab,
+	'group' => 'Icons',
+	'name' => 'eyeControl_desktop_Radio_Smooth',
+	'text' => 'Smooth: Icons can be moved anywhere',
+	'x' => 50,
+	'y' => $ContentY
+));
+$myRadio->show();
+$myRadio->addEvent('onclick', 'sendMsg(' . $checknum . ', "desktop_save_icons", eyeParam("selected", "smooth"));');
+
+// Fielded
+$ContentY += 25;
+$myRadio = new Radio(array(
+	'checked' => isset($config['eyeDesk'][0]['loadIconPositions'][0]) === true && $config['eyeDesk'][0]['loadIconPositions'][0] === '2',
+	'father' => $iconsTab,
+	'group' => 'Icons',
+	'name' => 'eyeControl_desktop_Radio_Fielded',
+	'text' => 'Fielded: Icons are aligned automatically',
+	'x' => 50,
+	'y' => $ContentY
+));
+$myRadio->show();
+$myRadio->addEvent('onclick', 'sendMsg(' . $checknum . ', "desktop_save_icons", eyeParam("selected", "fielded"));');
+
+// Reset icon positions
+$ContentY += 30;
+$myButton = new Button(array(
+	'name' => 'eyeControl_dektop_reset_icons',
+	'father' => $iconsTab,
+	'x' => 75,
+	'y' => $ContentY,
+	'width' => 300,
+	'caption' => 'Reset icon positions',
+	'signal' => 'desktop_reset_icons',
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/refresh.png'
+));
+$myButton->show();
+
+// Mouse
+$ContentY += 30;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_desktop_label_mouse',
+	'father' => $iconsTab,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Mouse'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+$ContentY += 25;
+// Use doubleclicks
+$xml = eyeControl_lib_getXMLconfig(array('eyeFiles','conf.xml'));
+$myCheckbox = new Checkbox(array(
+	'name' => 'eyeControl_desktop_checkbox_usedblclicks',
+	'father' => $iconsTab,
+	'x' => 50,
+	'y' => $ContentY,
+	'text' => 'Use Doubleclicks',
+	'checked' => $xml['eyeFiles'][0]['clickMethod'][0] == '2'
+));
+$myCheckbox->show();
+$myCheckbox->addEvent('onclick','sendMsg(' . $checknum . ',"desktop_savedblclicks",eyeParam("selected",this.checked));');
+
+// System Sound
+$ContentY += 30;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_desktop_label_System_Sound',
+	'father' => $iconsTab,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'System Sound'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+$ContentY += 25;
+// on/off
+$xml = eyeControl_lib_getXMLconfig(array('eyeDesk','conf.xml'));
+$myCheckbox = new Checkbox(array(
+	'name' => 'eyeControl_desktop_checkbox_Soundclicks',
+	'father' => $iconsTab,
+	'x' => 50,
+	'y' => $ContentY,
+	'text' => 'Turn system sound off',
+	'checked' => (isset($xml['eyeDesk'][0]['systemSounds'][0]) && !$xml['eyeDesk'][0]['systemSounds'][0])
+));
+$myCheckbox->show();
+$myCheckbox->addEvent('onclick','sendMsg(' . $checknum . ',"desktop_Soundclicks",eyeParam("selected",this.checked));');
+?>

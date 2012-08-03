@@ -1,0 +1,10 @@
+<package>
+	<name>eyeManageApps</name>
+	<category>Utilities</category>
+	<version>1.9</version>
+	<description>Utility to manage the dock</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/desktop.png</icon>
+</package>

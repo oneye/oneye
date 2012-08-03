@@ -1,0 +1,126 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $currentUser;
+
+if ($currentUser != ROOTUSER && !um('checkMaintainer',array(eyeControl_lib_getConfigUser()))) {
+	eyex('messageBox',array('content' => 'You are not allowed to manage groups!'));
+	eyeControl_lib_loadContent();
+	return;
+} elseif (um('checkMaintainer',array(eyeControl_lib_getConfigUser()))) {
+	$myUserXml = um('retrieveUser',array(eyeControl_lib_getConfigUser()));
+}
+
+// $myTable
+$sortypes = array('String');
+$theader = array('Groupname');
+
+$myTable = new Sortabletable(array(
+	'name' => 'eyeControl_groups_sortabletable',
+	'father' => $eyeContainer,
+	'sortypes' => $sortypes,
+	'theader' => $theader,
+	'x' => 0,
+	'y' => 30,
+	'width' => 560,
+	'height' => 375,
+	'dblsignal' => 'groups_edit'
+));
+$myTable->show();
+if (um('checkMaintainer',array(eyeControl_lib_getConfigUser()))) {
+	foreach ($myUserXml['eyeUser'][0]['maintain'] as $value) {
+		$path = EYE_ROOT . '/' . GROUPS_DIR . '/' . $value . '/';
+		if ($value && vfs('real_fileExists',array($path)) && vfs('isdir',array($path))) {
+			$myTable->addRow(array($value));
+		}
+	}
+} else {
+	$dir = EYE_ROOT . '/' . GROUPS_DIR . '/';
+	$nGroups = 0;
+	$openDir = vfs('real_getDirContent',array($dir));
+	foreach ($openDir as $folder) {
+		if (vfs('isdir',array($folder))) {
+			$folder = basename($folder);
+			$nGroups++;
+			$myTable->addRow(array($folder));
+		}
+	}
+}
+// New
+$myButton = new Button(array(
+	'name' => 'eyeControl_groups_button_new',
+	'father' => $eyeContainer,
+	'signal' => 'groups_new',
+	'caption' => 'New',
+	'width' => 80,
+	'x' => 10,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/new.png'
+));
+$myButton->show();
+// Edit
+$myButton = new Button(array(
+	'name' => 'eyeControl_groups_button_edit',
+	'father' => $eyeContainer,
+	'signal' => 'groups_edit',
+	'caption' => 'Edit',
+	'width' => 80,
+	'x' => 90,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/paste.png'
+));
+$myButton->addFriend($myTable);
+$myButton->show();
+// Delete
+$myButton = new Button(array(
+	'name' => 'eyeControl_groups_button_delete',
+	'father' => $eyeContainer,
+	'signal' => 'groups_delete',
+	'caption' => 'Delete',
+	'width' => 80,
+	'x' => 170,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/delete.png'
+));
+$myButton->addFriend($myTable);
+$myButton->show();
+if (eyeControl_lib_getConfigUser() == ROOTUSER) {
+	// Set as default
+	$myButton = new Button(array(
+		'name' => 'eyeControl_groups_button_default',
+		'father' => $eyeContainer,
+		'signal' => 'groups_default',
+		'caption' => 'Set as default',
+		'width' => 100,
+		'x' => 250,
+		'y' => 0,
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/save.png'
+	));
+	$myButton->addFriend($myTable);
+	$myButton->show();
+	$xml = eyeXML('getXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/system.xml'));
+	// Default group: x | x group(s)
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_account_label_groups',
+		'father' => $eyeContainer,
+		'horiz' => 1,
+		'y' => 2,
+		'text' => 'Default: %s | %s group(s)',
+		'tokens' => array($xml['CONFIG'][0]['DEFAULT_GROUP'][0],$nGroups)
+	));
+	$myLabel->show();
+}
+?>

@@ -1,0 +1,130 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeIframize_on_Close($params = ''){
+	proc('end');
+}
+
+function eyeIframize_on_Do($params = '') {
+	global $checknum,$myPid;
+	if (is_object($GLOBALS['eyeIframize_Textbox'])) {
+		$url = $GLOBALS['eyeIframize_Textbox']->text;
+		$GLOBALS['eyeIframize_Window']->close();
+	} else {
+		$url = $params[0];
+		$title = 'eyeIframize';
+	}
+	if (strtolower(substr($url, 0, 6)) !== 'ftp://' && strtolower(substr($url, 0, 7)) !== 'http://' && strtolower(substr($url, 0, 8)) !== 'https://') { // utf8
+		$file = basename($url);
+		$path = eyeFiles('cleanPath', array(substr(trim($url, '/\\'), 0, -strlen($file)))); // utf8
+		if (vfs('fileExists',array($path[0] . '/' . $file)) || $path[1] == 'real' && vfs('real_fileExists',array($path[0] . '/' . $file))) {
+			$myHidden = new Hidden(array(
+				'father' => 'eyeIframize_Window_Content',
+				'name' => 'eyeIframize_Hidden',
+				'text' => $path[1] . '://' . $path[2] . '/' . $file
+			));
+			$myHidden->show();
+			$title = $file . ' - eyeIframize';
+			$url = 'index.php?checknum=' . $checknum . '&msg=getFile';
+		} else {
+			$url = 'http://' . $url;
+		}
+	}
+	
+	if (!empty($params[1])) {
+		$window_title = $params[1];
+	} else {
+		$window_title = $title;
+	}
+	if (!empty($params[2])) {
+		$window_width = $params[2];
+	} else {
+		$window_width = $_SESSION['SCREEN']['eyeApps']['width']*0.75;
+	}
+	if (!empty($params[3])) {
+		$window_height = $params[3];
+	} else {
+		$window_height = $_SESSION['SCREEN']['eyeApps']['height']*0.75;
+	}
+	if (isset($params[4]) && $params[4] == 1) {
+		$start_maximized = TRUE;
+	} else {
+		$start_maximized = FALSE;
+	}
+	
+	$myWindow = new Window(array(
+		'x' => 0,
+		'y' => 0,
+		'father' => 'eyeApps',
+		'height' => $window_height,
+		'name' => 'eyeIframize_Window',
+		'savePosition' => 0,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'Resize',
+		'title' => $window_title,
+		'width' => $window_width
+	));
+	$myWindow->show();
+	if ($start_maximized == TRUE) {
+		eyex('runjs', array('js' => "Windows.Maximize('".$myPid."_".$myWindow->name."');"));
+	}
+	
+	$myIframe = new Iframe(array(
+		'father' => 'eyeIframize_Window_Content',
+		'name' => 'eyeIframize_Iframe',
+		'height' => $myWindow->height - 24,
+		'url' => $url,
+		'width' => $myWindow->width - 3,
+		'x' => 0,
+		'y' => 0
+	));
+	$myIframe->show();
+	$myIframe->focus();
+}
+
+function eyeIframize_on_getFile($params = '') {
+	$url = $GLOBALS['eyeIframize_Hidden']->text;
+	$file = basename($url);
+	$path = eyeFiles('cleanPath', array(substr(trim($url, '/\\'), 0, -strlen($file)))); // utf8
+	if (strtolower(substr($file, -4)) == '.swf') { // utf8
+		header('Content-type: application/x-shockwave-flash');
+	}
+	if ($path[1] == 'real') {
+		header('Content-Length: ' . vfs('real_filesize',array($path[0] . '/' . $file)));
+	} else {
+		header('Content-Length: ' . vfs('filesize',array($path[0] . '/' . $file)));
+	}
+	header('Accept-Ranges: bytes');
+	if ($path[1] == 'real') {
+		vfs('printFile',array($path[0] . '/' . $file));
+	} else {
+		vfs('readFile',array($path[0] . '/' . $file));
+	}
+	exit;
+}
+
+function eyeIframize_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeIframize_on_Resize($params = '') {
+	$GLOBALS['eyeIframize_Window']->width = intval($params['arg'][0]);
+	$GLOBALS['eyeIframize_Window']->height = intval($params['arg'][1]);
+	$GLOBALS['eyeIframize_Iframe']->setHeight($GLOBALS['eyeIframize_Window']->height - 24);
+	$GLOBALS['eyeIframize_Iframe']->setWidth($GLOBALS['eyeIframize_Window']->width - 3);
+}
+
+?>

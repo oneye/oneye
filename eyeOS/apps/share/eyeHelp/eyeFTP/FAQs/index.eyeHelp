@@ -1,0 +1,31 @@
+[b]Why do I have this ugly display when using Internet Explorer?[/b]
+
+Because as many softwares Microsoft provides, Internet Explorer meets Microsoft's and not W3C standards.So the PNG icons often have a grey background instead of a transparent one, and the space layouts are not well respected.I advise you to use Mozilla Firefox (or Opera, even if some problems could appear with it) to use eyeFTP, oneye, and most generally to browse the Web.
+
+However, despite those display-related problems, you can use all the features provided by eyeFTP from Internet Explorer.
+
+[b]I tried to download (or upload) a "big" file from/to a FTP server with eyeFTP but after a while nothing happens or I get an error message. Why?[/b]
+
+This question is quite pertinent and I need to bring some light on it.
+
+("TECHNICAL" EXPLANATIONS FOLLOW, BE ADVISED)
+As you could suppose, eyeFTP runs on the server holding oneye, which is an HTTP server (Apache in most cases), well. This server, when you browse an FTP server, plays the role of a kind of proxy. So every action you make to the FTP server from your browser with eyeFTP, actually this is the HTTP server which really makes it for you, including transfers.In this connection, the transfer processings are made twice, for instance in the case of an upload: once from your computer to the HTTP server, then from the HTTP server to the FTP server. This explains why transfers are longer than with a classic FTP client.From the last example, the second transfer is handled by the HTTP server through PHP. But this one has a security protection which makes that an operation (a request you make) cannot last more than a defined time (30 seconds by default). After this time, the operation is stopped, even if the process (your transfer) has not finished yet.
+(END OF "TECHNICAL" EXPLANATIONS)
+
+So, to sum up, the different problems that could lead a transfer to fail are:
+
+- your file is bigger than the limit the HTTP/PHP server can handle (2 MBytes by default, can be changed in the configuration file) [UPLOAD]
+
+- the HTTP/PHP server does not have time enough to perform entirely the operation because of the security protection (see above) [DOWNLOAD/UPLOAD]
+
+- other reasons can be that the PHP server is not authorized to create temporary files big enough to hold your data [DOWNLOAD/UPLOAD]
+
+[b] Why do I have problems to transfer files with names containing special characters when using my oneye server running under Windows?[/b]
+
+This is a character encoding problem. A lot of (public) FTP servers run under *NIX so they use a standard called UTF-8. If your oneye server is installed on a Windows platform (using ISO-8859-1 standard encoding for example), you may encouter problems with accents and other special characters when trying to download files from FTP to your oneye because of the encoding differences.
+
+There is no real solution except of course to avoid using accents and non-ASCII characters in filenames.
+
+[b] Why the problem I encountered is not solved here?[/b]
+
+Because there is so many little troubles that could happen that I did not experienced them all.You are free to send me an e-mail with its description so I can try to fix it or explain in this section why it may happen.

@@ -1,0 +1,38 @@
+/*
+// GPL
+*/
+
+body,table,div {
+	font-family: Verdana,Arial,sans-serif,FreeSans; /* oneye */
+  font-size: 13px;
+  font-weight: normal;
+}
+body,input,textarea,div,table {
+  margin: 0px;
+  padding: 0px;
+}
+#table {
+  border-left: 1px solid #666666;
+  border-top: 1px solid #666666;
+}
+th {
+  color: #666666;
+  background-color: #EFEFEF;
+  border-right: 1px solid #666666;
+  border-bottom: 1px solid #666666;
+}
+th div {
+  padding: 1px;
+  font-size: 11px;
+  font-weight: normal;
+}
+td {
+  border-right: 1px solid #CCCCCC;
+  border-bottom: 1px solid #CCCCCC;
+  height: 18px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+#spacer {
+  display: none;
+}

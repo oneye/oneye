@@ -1,0 +1,309 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeDesk_run($params = '') {
+	global $checknum;
+	global $currentUser;
+
+	eyex('runjs',array('js' => 'document.title = %s; window.onbeforeunload = function() { return ""; };','tokens' => array($currentUser . '@' . EYEOS_HOSTNAME)));
+
+	$userDir = um('getCurrentUserDir');
+	if (!vfs('real_fileExists',array($userDir . '/tmp/'))) {
+		vfs('real_mkdir',array($userDir . '/tmp/'));
+	}
+
+	$config = '/' . CONF_USER_DIR . '/eyeDesk/conf.xml';
+	if (!vfs('real_fileExists',array($userDir . $config))) {
+		copy(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/skel/' . $config,$userDir . $config);
+	}
+
+	$xml = eyeXML('getXMLconfig',array('eyeDesk', 'conf.xml'));
+	$share = getConfig('eyeDesk','conf.xml');
+	if (check_versions($xml['eyeDesk'][0]['confVersion'][0], EYEOS_VERSION) === 2) {
+		// miniActions
+		if ($xml['eyeDesk'][0]['restoreDock'][0]) {
+			if ($xml['eyeDesk'][0]['restoreDock'][0] < 3) {
+				if (array_search('miniActions', $xml['eyeDesk'][0]['autolaunch']) === false) {
+					$xml['eyeDesk'][0]['autolaunch'][] = 'miniActions';
+				}
+			}
+			unset($xml['eyeDesk'][0]['restoreDock'][0]);
+		}
+		
+		// eyeos 1.9.0.0preview1
+		if (check_versions($xml['eyeDesk'][0]['confVersion'][0], '1.9.0.0preview1') === 2) {
+			foreach ($xml['eyeDesk'][0]['autolaunch'] as $key => $value) {
+				if (in_array($value, array('eyeBar', 'eyeDesk_extras', 'eyeDockText'))) {
+					unset($xml['eyeDesk'][0]['autolaunch'][$key]);
+				}
+			}
+			if (array_search('eyeDock', $xml['eyeDesk'][0]['autolaunch']) === false) {
+				$xml['eyeDesk'][0]['autolaunch'][] = 'eyeDock';
+			}
+			copy(EYE_ROOT . '/' . SYSTEM_DIR . '/' . CONF_USER_DIR . '/skel/' . CONF_USER_DIR . '/eyeDock/conf.xml', $userDir . '/' . CONF_USER_DIR . '/eyeDock/conf.xml');
+
+			$navXml = eyeXML('getXMLconfig', array('eyeNav', 'conf.xml'));
+			$bookmarks = array();
+			$id = 0;
+			foreach ($navXml['eyeNav'][0]['bookmarks'][0]['category'] as $category) {
+				$bookmark = array();
+				$id++;
+				$bookmark['id'][0] = $id;
+				$bookmark['name'][0] = $category['name'][0];
+				$bookmark['type'][0] = 'folder';
+				foreach ($category['link'] as $link) {
+					$linkmark = array();
+					$id++;
+					$linkmark['id'][0] = $id;
+					$linkmark['name'][0] = $link['name'][0];
+					$linkmark['type'][0] = 'url';
+					$linkmark['url'][0] = $link['url'][0];
+					$bookmark['bookmark'][] = $linkmark;
+				}
+				$bookmarks[] = $bookmark;
+			}
+			unset($navXml['eyeNav'][0]['bookmarks'][0]['category']);
+			$navXml['eyeNav'][0]['bookmarks'][0]['bookmark'] = $bookmarks;
+			eyeXML('setXMLconfig', array('eyeNav', 'conf.xml', $navXml));
+		}
+		
+		// oneye 0.8.0
+		if (check_versions($xml['eyeDesk'][0]['confVersion'][0], '1.10.0.0') === 2) {
+			if ($xml['eyeDesk'][0]['theme'][0] === 'default') {
+				$xml['eyeDesk'][0]['theme'][0] = 'defaultPlus';
+			}
+			$dockXml = eyeXML('getXMLconfig', array('eyeDock', 'conf.xml'));
+			foreach ($dockXml['eyeDock'][0] as $k1 => $v1) {
+				foreach ($v1[0] as $k2 => $v2) {
+					foreach ($v2[0] as $k3 => $v3) {
+						if (is_string($v3[0]['image'][0]) === true) {
+							$dockXml['eyeDock'][0][$k1][0][$k2][0][$k3][0]['image'][0] = str_replace('version=EXTERN_CACHE_VERSION&theme=1', 'theme=USERTHEME', $v3[0]['image'][0]);
+						}
+						foreach ($v3[0]['entries'][0] as $k4 => $v4) {
+							if (is_string($v4[0]['image'][0]) === true) {
+								$dockXml['eyeDock'][0][$k1][0][$k2][0][$k3][0]['entries'][0][$k4][0]['image'][0] = str_replace('version=EXTERN_CACHE_VERSION&theme=1', 'theme=USERTHEME', $v4[0]['image'][0]);
+							}
+						}
+					}
+				}
+			}
+			eyeXML('setXMLconfig', array('eyeDock', 'conf.xml', $dockXml));
+		}
+		
+		// oneye 0.8.1
+		if (check_versions($xml['eyeDesk'][0]['confVersion'][0], '1.10.1.0') === 2) {
+			$dockXml = eyeXML('getXMLconfig', array('eyeDock', 'conf.xml'));
+			foreach ($dockXml['eyeDock'][0] as $k1 => $v1) {
+				foreach ($v1[0] as $k2 => $v2) {
+					foreach ($v2[0] as $k3 => $v3) {
+						foreach ($v3[0]['entries'][0] as $k4 => $v4) {
+							if (is_string($v4[0]['text'][0]) === true) {
+								$dockXml['eyeDock'][0][$k1][0][$k2][0][$k3][0]['entries'][0][$k4][0]['text'][0] = /* utf8 */ str_ireplace('eyeos', 'oneye', $v4[0]['text'][0]);
+							}
+						}
+					}
+				}
+			}
+			eyeXML('setXMLconfig', array('eyeDock', 'conf.xml', $dockXml));
+		}
+		
+		$xml['eyeDesk'][0]['confVersion'][0] = EYEOS_VERSION;
+		eyeXML('setXMLconfig',array('eyeDesk', 'conf.xml', $xml));
+	}
+
+	$theme = basename($xml['eyeDesk'][0]['theme'][0]);
+	if ($theme != $_SESSION['usertheme']) {
+		$path = EYE_ROOT . '/' . EXTERN_DIR . '/' . APP_DIR . '/eyeX/themes/';
+		foreach ($_SESSION['eyeLogin']['removeCss'] as $key => $value) {
+			eyex('removeCSS', array('id' => $value));
+			unset($_SESSION['eyeLogin']['removeCss'][$key]);
+		}
+
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		$themexml = eyeXML('getXMLfile', array($path . $theme . '/conf/theme.xml'));
+		$currentUser = $oldUser;
+		if ($themexml['theme'][0]['cssBase'][0]) {
+			eyex('loadCSS',array(
+				'id' => 'eyeOS2Css',
+				'url' => 'index.php?theme=' . $theme . '&extern=../' . $themexml['theme'][0]['cssBase'][0] . '/css/eyeOS.css&type=css'
+			));
+			if (IE) {
+				eyex('loadCSS',array(
+					'id' => 'eyeOS2IE' . IE . 'Css',
+					'url' => 'index.php?theme=' . $theme . '&extern=../' . $themexml['theme'][0]['cssBase'][0] . '/css/eyeOS_IE' . IE . '.css&type=css'
+				));
+			} else if (stripos($_SERVER['HTTP_USER_AGENT'], 'webkit') !== false && stripos($_SERVER['HTTP_USER_AGENT'], 'chrome') !== false) { // utf8
+				eyex('loadCSS',array(
+					'id' => 'eyeOS2chromeCss',
+					'url' => 'index.php?theme=' . $theme . '&extern=../' . $themexml['theme'][0]['cssBase'][0] . '/css/eyeOS_chrome.css&type=css'
+				));
+			} else if ( /* utf8 */ stripos($_SERVER['HTTP_USER_AGENT'], 'webkit') !== false) {
+				eyex('loadCSS',array(
+					'id' => 'eyeOS2safariCss',
+					'url' => 'index.php?theme=' . $theme . '&extern=../' . $themexml['theme'][0]['cssBase'][0] . '/css/eyeOS_safari.css&type=css'
+				));
+			} else if ( /* utf8 */ stripos($_SERVER['HTTP_USER_AGENT'], 'presto') !== false) {
+				eyex('loadCSS',array(
+					'id' => 'eyeOS2operaCss',
+					'url' => 'index.php?theme=' . $theme . '&extern=../' . $themexml['theme'][0]['cssBase'][0] . '/css/eyeOS_opera.css&type=css'
+				));
+			} else if ( /* utf8 */ stripos($_SERVER['HTTP_USER_AGENT'], 'gecko') !== false) {
+				eyex('loadCSS',array(
+					'id' => 'eyeOS2firefoxCss',
+					'url' => 'index.php?theme=' . $theme . '&extern=../' . $themexml['theme'][0]['cssBase'][0] . '/css/eyeOS_firefox.css&type=css'
+				));
+			} else if ( /* utf8 */ stripos($_SERVER['HTTP_USER_AGENT'], 'khtml') !== false) {
+				eyex('loadCSS',array(
+					'id' => 'eyeOS2khtmlCss',
+					'url' => 'index.php?theme=' . $theme . '&extern=../' . $themexml['theme'][0]['cssBase'][0] . '/css/eyeOS_khtml.css&type=css'
+				));
+			}
+		}
+		eyex('loadCSS',array(
+			'id' => 'eyeOSCss',
+			'url' => 'index.php?theme=' . $theme . '&extern=css/eyeOS.css&type=css'
+		));
+		if (IE) {
+			eyex('loadCSS',array(
+				'id' => 'eyeOSIE' . IE . 'Css',
+				'url' => 'index.php?theme=' . $theme . '&extern=css/eyeOS_IE' . IE . '.css&type=css'
+			));
+		} else if (stripos($_SERVER['HTTP_USER_AGENT'], 'webkit') !== false && stripos($_SERVER['HTTP_USER_AGENT'], 'chrome') !== false) { // utf8
+			eyex('loadCSS',array(
+				'id' => 'eyeOSchromeCss',
+				'url' => 'index.php?theme=' . $theme . '&extern=css/eyeOS_chrome.css&type=css'
+			));
+		} else if ( /* utf8 */ stripos($_SERVER['HTTP_USER_AGENT'], 'webkit') !== false) {
+			eyex('loadCSS',array(
+				'id' => 'eyeOSsafariCss',
+				'url' => 'index.php?theme=' . $theme . '&extern=css/eyeOS_safari.css&type=css'
+			));
+		} else if ( /* utf8 */ stripos($_SERVER['HTTP_USER_AGENT'], 'presto') !== false) {
+			eyex('loadCSS',array(
+				'id' => 'eyeOSoperaCss',
+				'url' => 'index.php?theme=' . $theme . '&extern=css/eyeOS_opera.css&type=css'
+			));
+		} else if ( /* utf8 */ stripos($_SERVER['HTTP_USER_AGENT'], 'gecko') !== false) {
+			eyex('loadCSS',array(
+				'id' => 'eyeOSfirefoxCss',
+				'url' => 'index.php?theme=' . $theme . '&extern=css/eyeOS_firefox.css&type=css'
+			));
+		} else if ( /* utf8 */ stripos($_SERVER['HTTP_USER_AGENT'], 'khtml') !== false) {
+			eyex('loadCSS',array(
+				'id' => 'eyeOSkhtmlCss',
+				'url' => 'index.php?theme=' . $theme . '&extern=css/eyeOS_khtml.css&type=css'
+			));
+		}
+		eyex('rawjs',array('js' => 'xGetElementById("background").style.backgroundImage = "url(index.php?theme=' . $theme . '&extern=images/wallpapers/default.jpg)";'));
+	}
+	eyeSessions('setVar', array('usertheme', $theme));
+	eyex('runjs',array('js' => 'USERTHEME = %s;','tokens' => array($theme)));
+
+	if (isset($xml['eyeDesk'][0]['wallpaper']) === true && $xml['eyeDesk'][0]['wallpaper'][0] && vfs('fileExists',array($xml['eyeDesk'][0]['wallpaper'][0]))) {
+		eyex('setWallpaper',array('path' => 'index.php?checknum=' . $checknum . '&msg=getWallpaper','repeat' => $xml['eyeDesk'][0]['wallpaperRepeat'][0],'center' => $xml['eyeDesk'][0]['wallpaperCenter'][0]));
+	}
+
+	include_once(EYE_ROOT . '/' . APP_DIR . '/eyeDesk/events' . EYE_CODE_EXTENSION);
+	eyeDesk_on_OpenPath();
+
+	eyex('messageBox', array('content' => 'Welcome to %s, %s.', 'sound' => false, 'tokens' => array(EYEOS_HOSTNAME,'<strong>' . $currentUser . '</strong>')));
+
+	addListenerLibraryCall('onEvent','eyeFiles','update');
+	addListenerServiceCall('onResized','eyex','resizedBrowser',1);
+
+	if ($params[0] == 'autorun') {
+		foreach ($xml['eyeDesk'][0]['autolaunch'] as $value) {
+			$pid = proc('findPidByName',array($value));
+			if ($pid) {
+				proc('getTask',array($pid));
+			} else {
+				proc('launch',array($value));
+			}
+		}
+		$x = 0;
+		if (isset($xml['eyeDesk'][0]['nextlaunch']) === true && is_array($xml['eyeDesk'][0]['nextlaunch'])) {
+			foreach ($xml['eyeDesk'][0]['nextlaunch'] as $value) {
+				$pid = proc('findPidByName',array($value));
+				if ($pid) {
+					proc('getTask',array($pid));
+				} else {
+					proc('launch',array($value));
+				}
+				unset($xml['eyeDesk'][0]['nextlaunch'][$x]);
+				$x++;
+			}
+			eyeXML('setXMLfile',array($userDir . $config,$xml));
+		}
+	} else {
+		foreach (proc('getProcessTable') as $key => $value) {
+			if (in_array( /* utf8 */ strtolower($value['appName']), array('eyedesk', 'eyex')) === false) {
+				proc('getTask',array($key));
+			}
+		}
+	}
+}
+
+function check_version($one) {
+	$a = array(0, 0, 0, 0, 0, 0);
+	if ( /* utf8 */ strrchr($one, 'preview')) {
+		$a[5] = substr(strrchr($one, 'preview'), 7); // utf8
+		$one = substr($one, 0, -strlen(strrchr($one, 'preview'))); // utf8
+	} elseif (!$a[5]) {
+		$a[5] = 9999;
+	}
+	if ( /* utf8 */ strrpos($one,'-') !== false) {
+		$a[4] = substr(strrchr($one, '-'), 1); // utf8
+		$one = substr($one, 0, -strlen(strrchr($one, '-'))); // utf8
+	}
+	$one .= '.';
+	if ( /* utf8 */ strpos($one,'.') !== false) {
+		$a[0] = substr($one, 0, strpos($one, '.')); // utf8
+		$one = substr($one, 1 + strpos($one, '.')); // utf8
+	}
+	if ( /* utf8 */ strpos($one,'.') !== false) {
+		$a[1] = substr($one, 0, strpos($one, '.')); // utf8
+		$one = substr($one, 1 + strpos($one, '.')); // utf8
+	}
+	if ( /* utf8 */ strpos($one,'.') !== false) {
+		$a[2] = substr($one, 0, strpos($one, '.')); // utf8
+		$one = substr($one, 1 + strpos($one, '.')); // utf8
+	}
+	$a[3] = $one;
+	for ($i = 0;$i < 6;$i++) {
+		if ($a[$i] == 'x') {
+			$a[$i] = 9999;
+		} else {
+			$a[$i] = floatval($a[$i]);
+		}
+	}
+	ksort($a);
+	return $a;
+}
+
+function check_versions($one,$two) {
+	$one = check_version($one);
+	$two = check_version($two);
+	for ($i = 0;$i < 6;$i++) {
+		if (intval($one[$i]) > intval($two[$i])) {
+			return 1;
+		} elseif (intval($one[$i]) < intval($two[$i])) {
+			return 2;
+		}
+	}
+	return 0;
+}
+?>

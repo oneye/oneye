@@ -1,0 +1,161 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/**
+ * Example
+ * $params = array('host'=>'127.0.0.1','login'=>'test','password'=>'test','dbname'=>'test');
+	$db = eyeSimpleDb('newDb',$params);
+	if(!$db){
+		$error = errorCodes('getErrorCode');
+		if($error == DB_NO_DRIVER){
+			$GLOBALS['eyeString_TxtA2']->setText('No Driver disponible en oneye');
+		}elseif($error == DB_NO_SUPPORT){
+			$GLOBALS['eyeString_TxtA2']->setText('No Driver disponible en php');
+		}
+	}
+	$query = 'SELECT * FROM news where title = ?';
+	$params = array('query'=>$query,'values'=>array('\'foo\''));
+	$query = eyeSimpleDb('parseQuery',$params);
+
+	$result = $db->query(array('query'=>$query,'type'=>'select'));
+ *
+ */
+//defines for default options
+define('DB_DEFAULT_TYPE','mysql');
+define('DRIVER_FOLDER','db_drivers');
+
+//Defines, for all db drivers
+define('DB_NO_SUPPORT',10000);
+define('DB_NO_CONNECT',10001);
+define('DB_NO_SELECTDB',10002);
+define('DB_NO_QUERY',10003);
+
+define('DB_NO_DRIVER',10004);
+
+/*
+ * Public function for get the object
+*/
+function lib_eyeSimpleDb_newDb($params){
+	//If other type is defined set it
+	if(!$params['type']){
+		$dbType = DB_DEFAULT_TYPE;
+	}else{
+		$dbType = basename($params['type']);//it is needed?
+	}
+
+	//Including the driver
+	$driverPath = EYE_ROOT.'/'.SYSTEM_DIR.'/'.LIB_DIR.'/eyeSimpleDb/'.DRIVER_FOLDER.'/'.$dbType.'_driver'.EYE_CODE_EXTENSION;
+	if(!is_readable($driverPath)){
+		errorCodes('setErrorCode',array(DB_NO_DRIVER));
+		return FALSE;
+	}
+	include_once($driverPath);
+
+	//Checking if public function exists
+	if(!function_exists('get_db_object')){
+		errorCodes('setErrorCode',array(DB_NO_DRIVER));
+		return FALSE;
+	}
+
+	//Instancing generic db wrapper and return it
+	$dbDriver = get_db_object();//Get the object
+	if(errorCodes('getErrorCode') == DB_NO_SUPPORT){
+		return FALSE;
+	}
+	//Instancing the class
+	$sql = new simpleDb($params,$dbDriver);
+	//Return the instanced object
+	return $sql;
+}
+
+class simpleDb{
+	var $dbDriver;
+	function simpleDb($params,$dbDriver){
+		$this->dbDriver = $dbDriver;
+		if($params['host'] && $params['login']){
+			$this->connect($params);
+			if($params['dbname']){
+				$this->selectDb($params);
+			}
+		}
+	}
+
+	//Functions wrappers, only call the driver function
+	function connect($params){
+		return $this->dbDriver->connect($params);
+	}
+
+	function selectDb($params){
+		return $this->dbDriver->select_db($params);
+	}
+
+	function query($params){
+		return $this->dbDriver->query($params);
+	}
+	//Close the conection
+	function close(){
+		$this->dbDriver->close();
+	}
+	//Get error string if it exists
+	function getError(){
+		return $this->dbDriver->error;
+	}
+}
+
+/*
+*Public function for parse a query
+*/
+//TODO: put this function in driver?
+function lib_eyeSimpleDb_parseQuery($params){
+	if (is_string($params['query']) === false) {
+		return false;
+	}
+	if (is_array($params['values']) === false) {
+		$params['values'] = array();
+	}
+	$queryString = $params['query'];
+	$arrayValues = $params['values'];
+
+	//If count is not set calcule it automaticaly
+	if(!$params['count']){
+		$count = /* utf8 */ substr_count($queryString, '?');
+	}
+	if(count($arrayValues) < $count){
+		return FALSE;
+	}
+
+	foreach($arrayValues as $value){
+		//Parsing the value
+		$value = parseValue($value);
+		//replace ? for value
+
+		$tokenPos = /* utf8 */ strpos($queryString, '?'); // token position
+		$query .= /* utf8 */ substr($queryString, 0, $tokenPos); // safe part
+		$queryString = substr($queryString, $tokenPos + 1, strlen($queryString)); // next part to be parsed // utf8
+		$query .= "\"$value\"";//Adding value
+	}
+	$query .= $queryString;//rest of query
+	return $query;
+}
+
+//Internal function.
+function parseValue($value){
+	$value = str_replace('\\','\\\\',$value);
+	$value = str_replace("'","\'",$value);
+	$value = str_replace('"','\"',$value);
+	return $value;
+}
+?>

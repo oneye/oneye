@@ -1,0 +1,204 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+include(EYE_ROOT.'/'.APP_DIR.'/eyeMedia/lib'.EYE_CODE_EXTENSION);
+
+// $users_home_dir = um('getCurrentUserDir');
+// eyex('messageBox',array('content'=>'This is a message', 'sound' => ''));
+
+function eyeMedia_on_Message($params="") {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeMedia_on_tlbToolbar_Fullscreen(){
+	global $myPid;
+	$GLOBALS['eyeMedia_WND']->setFullScreen();
+}
+
+function eyeMedia_on_Select_Folder($params=null) {
+	$folder = $params['arg'][0];
+	if ($folder) {
+		$files = vfs('getDirContent',array(um('getCurrentUserDir').FILES_USER_DIR.$folder));
+		if ($files) {
+			foreach($files as $curfile) {
+				$GLOBALS['eyeMedia_tblPlaylist']->addRow(array(str_replace(um('getCurrentUserDir').FILES_USER_DIR, "", $curfile)));
+			}
+			eyex('messageBox',array('content'=>'Successfully opened: %s','tokens' => array($folder), 'sound' => ''));
+		} else {
+			eyex('messageBox',array('content'=>'Error opening: %s','tokens' => array($folder), 'sound' => ''));
+		}
+	} else {
+		eyex('messageBox',array('content'=>'No folder selected.', 'sound' => ''));
+	}
+}
+
+function eyeMedia_on_Select_File($params=null) {
+	$file = $params['arg'][0];
+	if ($file) {
+		if (vfs('fileExists',array(um('getCurrentUserDir').FILES_USER_DIR.$file)))
+		{
+			$GLOBALS['eyeMedia_tblPlaylist']->addRow(array($file));
+			eyex('messageBox',array('content'=>'Successfully opened: %s','tokens' => array($file), 'sound' => ''));
+		} else {
+			eyex('messageBox',array('content'=>'Error opening: %s','tokens' => array($file), 'sound' => ''));
+		}
+	} else {
+		eyex('messageBox',array('content'=>'No file selected.', 'sound' => ''));
+	}
+}
+
+function eyeMedia_on_tlbToolbar_Open_Folder($params=null) {
+	global $checknum;
+	$options = array(
+		2,
+		'Select_Folder',
+		$checknum,
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+
+function eyeMedia_on_tlbToolbar_Add_File($params=null) {
+	global $checknum;
+	$options = array(
+		0,
+		'Select_File',
+		$checknum,
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+
+function eyeMedia_on_tlbToolbar_Remove_File($params=null) {
+	$Selected_Row = $GLOBALS['eyeMedia_tblPlaylist']->selected;
+	if ($Selected_Row)
+	{
+		$GLOBALS['eyeMedia_tblPlaylist']->delRow($Selected_Row);
+	} else {
+		eyex('messageBox',array('content'=>'No file selected.', 'sound' => ''));
+	}
+}
+
+function eyeMedia_on_tlbToolbar_Clear($params=null) {
+	eyeMedia_Stop($params);
+	$GLOBALS['eyeMedia_tblPlaylist']->delAllRows();
+}
+
+function eyeMedia_on_tlbToolbar_Play($params=null) {
+	eyeMedia_PlayPause($params);
+}
+
+function eyeMedia_on_tlbToolbar_Stop($params=null) {
+	eyeMedia_Stop($params);
+}
+
+function eyeMedia_on_tlbToolbar_Previous($params=null) {
+	eyeMedia_Previous($params);
+}
+
+function eyeMedia_on_tlbToolbar_Next($params=null) {
+	eyeMedia_Next($params);
+}
+
+function eyeMedia_on_tlbToolbar_Repeat($params=null) {
+	global $myPid;
+	$Current_Value = $GLOBALS['eyeMedia_hdnRepeat']->text;
+	if ($Current_Value)
+	{
+		$GLOBALS['eyeMedia_hdnRepeat']->setText('0');
+		eyeX('rawjs',array('js'=>"if(document.getElementById('".$myPid."_tlbToolbar_Repeat_Container').className == 'blockbarItemPress') {document.getElementById('".$myPid."_tlbToolbar_Repeat_Container').className = 'blockbarItem';}"));
+		//eyex('messageBox',array('content'=>'Repeat is off now.', 'sound' => ''));
+	} else {
+		$GLOBALS['eyeMedia_hdnRepeat']->setText('1');
+		eyeX('rawjs', array('js' => "document.getElementById('".$myPid."_tlbToolbar_Repeat_Container').className = 'blockbarItemPress';"));
+		//eyex('messageBox',array('content'=>'Repeat is on now.', 'sound' => ''));
+	}
+}
+
+function eyeMedia_on_tlbToolbar_Shuffle($params=null) {
+	global $myPid;
+	$Current_Value = $GLOBALS['eyeMedia_hdnShuffle']->text;
+	if ($Current_Value)
+	{
+		$GLOBALS['eyeMedia_hdnShuffle']->setText('0');
+		eyeX('rawjs',array('js'=>"if(document.getElementById('".$myPid."_tlbToolbar_Shuffle_Container').className == 'blockbarItemPress') {document.getElementById('".$myPid."_tlbToolbar_Repeat_Container').className = 'blockbarItem';}"));
+		//eyex('messageBox',array('content'=>'Shuffle is off now.', 'sound' => ''));
+	} else {
+		$GLOBALS['eyeMedia_hdnShuffle']->setText('1');
+		eyeX('rawjs', array('js' => "document.getElementById('".$myPid."_tlbToolbar_Shuffle_Container').className = 'blockbarItemPress';"));
+		//eyex('messageBox',array('content'=>'Shuffle is on now.', 'sound' => ''));
+	}
+}
+
+function eyeMedia_on_tblPlaylist_Click($params=null) {
+	//$Selected_Row = $GLOBALS['eyeMedia_tblPlaylist']->selected;
+}
+
+function eyeMedia_on_tblPlaylist_DblClick($params=null) {
+	eyeMedia_Stop($params);
+	//$Selected_Row = $GLOBALS['eyeMedia_tblPlaylist']->selected;
+	eyeMedia_PlayPause($params);
+}
+
+function eyeMedia_on_getFile($params = '') {
+	eyeWidgets('updateContent',$params);
+	$Selected_Row = $GLOBALS['eyeMedia_tblPlaylist']->selected;
+	header('Content-Type: audio/mpeg');
+	header('Content-Length: ' . vfs('filesize',array(um('getCurrentUserDir').FILES_USER_DIR.$Selected_Row,1)));
+	header('Accept-Ranges: bytes');
+	vfs('readfile',array(um('getCurrentUserDir').FILES_USER_DIR.$Selected_Row));
+	exit;
+}
+
+function eyeMedia_on_Sound_Finished($params=null) {
+	eyeMedia_Next();
+}
+
+function eyeMedia_on_WNDResize($params=null) {
+	$width = intval($params['arg'][0]);
+	$height = intval($params['arg'][1]);
+
+	$widthDiff = $GLOBALS['eyeMedia_WND']->width - $width;
+	$heightDiff = $GLOBALS['eyeMedia_WND']->height - $height;
+	$GLOBALS['eyeMedia_WND']->setWidth($width);
+	$GLOBALS['eyeMedia_WND']->setHeight($height);
+
+	//Reusing  the var because we don't need it anymore
+	// Doesn't work. Containers can't be resized for some reason.
+	// Fixed in 1.8! :D
+	$width = $GLOBALS['eyeMedia_conContainer']->width - $widthDiff;
+	$height = $GLOBALS['eyeMedia_conContainer']->height - $heightDiff;
+	//$GLOBALS['eyeMedia_conContainer']->width = $width;
+	$GLOBALS['eyeMedia_conContainer']->setWidth($width);
+	//$GLOBALS['eyeMedia_conContainer']->height = $height;
+	$GLOBALS['eyeMedia_conContainer']->setHeight($height);
+
+	$width = $GLOBALS['eyeMedia_txtStatus']->width - $widthDiff;
+	//$GLOBALS['eyeMedia_txtStatus']->width = $width;
+	$GLOBALS['eyeMedia_txtStatus']->setWidth($width);
+
+	$width = $GLOBALS['eyeMedia_tblPlaylist']->width - $widthDiff;
+	$height = $GLOBALS['eyeMedia_tblPlaylist']->height - $heightDiff;
+	//$GLOBALS['eyeMedia_tblPlaylist']->width = $width;
+	$GLOBALS['eyeMedia_tblPlaylist']->setWidth($width);
+	//$GLOBALS['eyeMedia_tblPlaylist']->height = $height;
+	$GLOBALS['eyeMedia_tblPlaylist']->setHeight($height);
+}
+
+function eyeMedia_on_Close($params=null) {
+	eyeMedia_Stop();
+	proc('end');
+}
+
+?>

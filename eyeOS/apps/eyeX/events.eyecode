@@ -1,0 +1,111 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeX_on_baseapp($params = '') {
+	global $procInfo;
+	$_SESSION['SCREEN']['eyeApps']['touch'] = $params['touch'][0] ? 1 : 0;
+	$_SESSION['SCREEN']['eyeApps']['height'] = 0;
+	$_SESSION['SCREEN']['eyeApps']['width'] = 0;
+	$_SESSION['SCREEN']['eyeApps']['x'] = 0;
+	$_SESSION['SCREEN']['eyeApps']['y'] = 0;
+	$_SESSION['SCREEN']['height'] = 0;
+	$_SESSION['SCREEN']['width'] = 0;
+	eyeX_on_resizedBrowser($params);
+	$_SESSION['SCREEN']['flash'] = $params['flash'][0];
+	$_SESSION['SCREEN']['flash_version'] = $params['flashmajor'][0];
+	$_SESSION['SCREEN']['oggVorbisSupported'] = $params['oggVorbisSupported'][0];
+	if (!isset($_SESSION['SCREEN']['refresh'])) {
+		$_SESSION['SCREEN']['refresh'] = 0;
+	} else {
+		$_SESSION['SCREEN']['refresh']++;
+	}
+
+	//eyeX should be the first tty, if not, get a new one, because we don't have one already.
+	if($procInfo['tty'] < 1) {
+		$tty = proc('newTty');
+	} else {
+		$tty = $procInfo['tty'];
+	}
+
+	eyex('createDiv',array('class' => 'systemConsole','father' => 'eyeApps','name' => $tty.'_tty','nopid' => 1,'removepid' => 1));
+	eyeX('updateCss',array('name'=> $tty.'_tty','property'=>'display','value'=>'none'));
+	eyex('rawjs',array('js' => 'xGetElementById("eyex-info").style.display = "none"; xGetElementById("eyex-powered").style.display = "none";'));
+	$pid = proc('findPidByName',array(BASE_APP));
+	if ($pid) {
+		proc('getTask',array($pid));
+	} else {
+		proc('launch',array(BASE_APP));
+	}
+}
+
+function eyeX_on_resizedBrowser($params = '') {
+	if(!is_array($params) || !isset($params['height']) || !isset($params['width'])){
+ 		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+ 		return false;
+ 	}
+	// Set width
+	$width = intval($params['width'][0]);
+	if ($width < 500) {
+		$width = 500;
+	}
+	// Set height
+	$height = intval($params['height'][0]);
+	if ($height < 400) {
+		$height = 400;
+	}
+	$diffHeight = $_SESSION['SCREEN']['height'] - $height;
+	$diffWidth = $_SESSION['SCREEN']['width'] - $width;
+	$appHeight = $_SESSION['SCREEN']['eyeApps']['height'] - $diffHeight;
+	$appWidth = $_SESSION['SCREEN']['eyeApps']['width'] - $diffWidth;
+	eyex('resizedBrowser',array('height' => $height,'width' => $width,'appWidth' => $appWidth,'appHeight' => $appHeight));
+	eyex('rawjs', array('js' => 'var e = document.getElementById("eyeApps"); e.style.height = "' . $_SESSION['SCREEN']['eyeApps']['height'] . 'px"; e.style.width = "' . $_SESSION['SCREEN']['eyeApps']['width'] . 'px";'));
+}
+
+function eyeX_on_viewTempImg($params = '') {
+	$path = um('getCurrentUserDir') . '/tmp/' . basename($params);
+	$info = @getimagesize($path);
+	if ($info !== false) {
+		header('Content-Type: ' . $info['mime']);
+		header('Accept-Ranges: bytes');
+		vfs('printFile',array($path));
+	}
+	exit;
+}
+
+function eyeX_on_saveWinPosition($params = '') {
+	// X and Y
+	$x = intval($params['left'][0]);
+	$y = intval($params['top'][0]);
+
+	// $app, $pid and $name
+	$app = proc('findNameByChecknum', array($params['appChecknum'][0]));
+	$pid = substr($params['winName'][0], 0, strpos($params['winName'][0], '_')); // utf8
+	$name = substr($params['winName'][0], 1 + strlen($pid)); // utf8
+	
+	if (is_object($_SESSION[WTABLE][$pid][$name])) {
+		// Update PHP object
+		$_SESSION[WTABLE][$pid][$name]->x = $x;
+		$_SESSION[WTABLE][$pid][$name]->y = $y;
+		// Update XML file
+		$xml = eyeXML('getXMLconfig',array('eyex',$app . '.xml'));
+		$xml[$name][0]['left'][0] = $x;
+		$xml[$name][0]['top'][0] = $y;
+		eyeXML('setXMLconfig',array('eyex',$app . '.xml',$xml));
+	} else {
+		eyex('messageBox',array('content' => 'Unable to save position!'));
+	}
+}
+?>

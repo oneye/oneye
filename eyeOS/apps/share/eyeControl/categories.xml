@@ -1,0 +1,231 @@
+<eyeControl>
+	<index>
+		<display>Main</display>
+		<name>index</name>
+		<permissions>all</permissions>
+	</index>
+	<cat_content>
+		<name>category</name>
+		<permissions>all</permissions>
+	</cat_content>
+	<category>
+		<display>Personal</display>
+		<name>account</name>
+		<permissions>all</permissions>
+		<content>
+			<description>Update your system's profile</description>
+			<display>About me</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/aboutme.png</img>
+			<name>account</name>
+			<permissions>only_real</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Change your current password</description>
+			<display>Password</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/password.png</img>
+			<name>password</name>
+			<permissions>only_real</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Change your preferred language</description>
+			<display>Language</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/language.png</img>
+			<name>lang</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+		</content>
+	</category>
+	<category>
+		<display>Look &amp; Feel</display>
+		<name>look_and_feel</name>
+		<permissions>all</permissions>
+		<content>
+			<description>Change your desktop wallpaper</description>
+			<display>Desktop</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/desktop.png</img>
+			<name>desktop</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Change your current theme</description>
+			<display>Theme</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/theme.png</img>
+			<name>theme</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+		</content>
+	</category>
+	<category>
+		<display>Administration</display>
+		<name>only_root</name>
+		<permissions>root</permissions>
+		<content>
+			<description>Add, edit or remove your Access Control List settings</description>
+			<display>Access Control</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/e.png</img>
+			<name>eyeACL</name>
+			<permissions>root</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Create an ACL rule for your oneye system</description>
+			<display>Create ACL</display>
+			<name>newacl</name>
+			<permissions>root</permissions>
+			<show>no</show>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Add an ACL target to your oneye system</description>
+			<display>Create Target</display>
+			<name>newtarget</name>
+			<permissions>root</permissions>
+			<show>no</show>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Remove temporary files and folders from your oneye system</description>
+			<display>Clean oneye</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/editClean.png</img>
+			<name>cleantemp</name>
+			<permissions>root</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Manage your system's filetypes</description>
+			<display>Filetypes</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/filetypes/eyeProject.png</img>
+			<name>filetypes</name>
+			<permissions>root</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Add a new filetype to your oneye system</description>
+			<display>New Filetypes</display>
+			<name>newfiletype</name>
+			<permissions>root</permissions>
+			<show>no</show>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Edit the chosen filetype</description>
+			<display>Edit Filetype</display>
+			<name>editfiletype</name>
+			<permissions>root</permissions>
+			<show>no</show>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Manage your system's users</description>
+			<display>Manage Users</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/manageusers.png</img>
+			<name>users</name>
+			<permissions>maintainer</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Manage your system's groups</description>
+			<display>Manage Groups</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/managegroups.png</img>
+			<name>groups</name>
+			<permissions>maintainer</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Add a new user to your oneye system</description>
+			<display>New User</display>
+			<name>newuser</name>
+			<permissions>maintainer</permissions>
+			<show>no</show>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Edit the chosen user</description>
+			<display>Edit User</display>
+			<name>edituser</name>
+			<permissions>maintainer</permissions>
+			<show>no</show>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Manage the packages repositories</description>
+			<display>Repositories</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/software.png</img>
+			<name>eyesoft</name>
+			<permissions>root</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Manage your system's SMTP settings</description>
+			<display>SMTP</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeMail.png</img>
+			<name>smtp</name>
+			<permissions>root</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Update your system's settings</description>
+			<display>System</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/logo.png</img>
+			<name>system</name>
+			<permissions>root</permissions>
+			<title>yes</title>
+		</content>
+	</category>
+	<category>
+		<display>System</display>
+		<name>system</name>
+		<permissions>all</permissions>
+		<content>
+			<description>Choose the rendering method for PDF files</description>
+			<display>PDF Reader</display>
+			<name>eyePdf</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/filetypes/pdf.png</img>
+        </content>
+		<content>
+			<description>Customize the Image Viewer</description>
+			<display>Image Viewer</display>
+			<name>eyePictures</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeImages.png</img>
+        </content>
+		<content>
+			<description>Manage your autorun commands</description>
+			<display>Autorun Commands</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/autorun.png</img>
+			<name>eyedesk</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Manage your security settings</description>
+			<display>Security</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/password.png</img>
+			<name>security</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Change your eyeBoard settings</description>
+			<display>oneye Board</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeBoard.png</img>
+			<name>eyeboard</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+		</content>
+		<content>
+			<description>Manage the navigator's startpage, bookmarks and search engines</description>
+			<display>Navigator</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/webbrowser.png</img>
+			<name>eyenav</name>
+			<permissions>all</permissions>
+			<title>yes</title>
+		</content>
+	</category>
+</eyeControl>

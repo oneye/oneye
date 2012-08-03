@@ -1,0 +1,7 @@
+<module>
+	<hideImage>0</hideImage>
+	<hideText>1</hideText>
+	<image>index.php?theme=USERTHEME&amp;extern=icons/22x22/desktop.png</image>
+	<text>Show Desktop</text>
+	<type>showdesktop</type>
+</module>

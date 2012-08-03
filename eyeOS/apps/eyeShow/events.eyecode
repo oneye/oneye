@@ -1,0 +1,260 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeShow_on_Message($params="") {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeShow_on_Resize($params=null) {
+	$width = $params['arg'][0];
+	$height = $params['arg'][1];
+	$width = intval($width);
+	$height = intval($height);
+
+	$GLOBALS['eyeShowFrame']->setWidth($width - 2);
+	$GLOBALS['eyeShowFrame']->setHeight($height - 24);
+}
+
+// Saving Event
+
+function eyeShow_on_Save($params=null) {
+	global $checknum;
+	$options = array(
+		1,
+		'SelectFileSave',
+		$checknum,
+	);
+
+	$arg = $params['arg1'][0];
+	$arg = str_replace("\n","",base64_decode($arg));
+	$arg = str_replace($checknum,"##checknum##",$arg) ;
+
+	$myHidden = new Hidden(array('name'=>'showContent','father'=>'eyeShowWND','text'=>$arg));
+	eyeWidgets('serialize',array($myHidden));
+
+//	eyex('rawjs',array('js'=>'alert(\''.$GLOBALS['ShowPath']->text.'\')')) ;
+
+	if(is_object($GLOBALS['ShowPath']) && $GLOBALS['ShowPath']->text) {
+		$info = pathinfo($GLOBALS['ShowPath']->text);
+			$fp = vfs('open',array($GLOBALS['ShowPath']->text,'w'));
+			if(!$fp) {
+				eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+				return;
+			}
+			fwrite($fp,$arg);
+			fclose($fp);
+		eyex('messageBox',array('content'=>'Document saved successfully.'));
+	} else {
+		proc('launch',array('eyeDialog',$options));
+	}
+}
+
+// Saving As Event - Open eyeDialog
+
+function eyeShow_on_SaveAs($params=null) {
+	global $checknum;
+
+	$arg = $params['arg1'][0];
+	$arg = str_replace("\n","",base64_decode($arg));
+	$arg = str_replace($checknum,"##checknum##",$arg) ;
+
+	$myHidden = new Hidden(array('name'=>'showContent','father'=>'eyeShowWND','text'=>$arg));
+	eyeWidgets('serialize',array($myHidden));
+
+	$options = array(
+		1,
+		'SelectFileSave',
+		$checknum,
+	);
+	proc('launch', array('eyeDialog',$options));
+}
+
+// Saving Event - Response to eyeDialog
+
+function eyeShow_on_SelectFileSave($params=null) {
+	global $checknum;
+	$file = $params['arg'][0];
+	if($file) {
+		$file = um('getCurrentUserDir') . FILES_USER_DIR . '/' . $file;
+			if (strtolower(substr($file, -8)) !== '.eyeshow') { // utf8
+				$file = $file.'.eyeshow';
+			}
+			vfs('create',array($file,'eyeShow'));
+			$fp = vfs('open',array($file,'w'));
+			if(!$fp) {
+				eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+				return;
+			}
+			fwrite($fp,$GLOBALS['showContent']->text);
+			fclose($fp);
+			$myHidden = new Hidden(array('name'=>'ShowPath','father'=>'eyeShowWND','text'=>$file));
+			eyeWidgets('serialize',array($myHidden));
+			eyex('messageBox',array('content'=>'Document saved successfully.'));
+
+	}
+}
+
+// Open a file , open eyeDialog
+
+function eyeShow_on_openFile($params=null) {
+	global $checknum;
+	$options = array(
+		0,
+		'SelectFileOpen',
+		$checknum,
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+
+// Response to eyeDialog
+
+function eyeShow_on_SelectFileOpen($params=null) {
+	global $myPid;
+	global $checknum;
+	$file = $params['arg'][0];
+	if($file) {
+		$file = um('getCurrentUserDir').FILES_USER_DIR.'/'.$file;
+		$fp = vfs('open',array($file,'r'));
+		if(!$fp) {
+			eyeX('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+			return;
+		}
+		fclose($fp);
+		proc('launch',array('eyeShow',$file));
+		proc('end');
+	}
+}
+
+// Create a new file
+
+function eyeShow_on_NewFile($params=null) {
+		proc('launch',array('eyeShow'));
+		proc('end');
+}
+
+// Open eyeDialog, to insert an image from oneye
+
+function eyeshow_on_Insert_eyeos_Image($params=null) {
+	global $checknum;
+	$options = array(
+		0,
+		'SelectInsertImage',
+		$checknum,
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+
+// Response to eyeDialog
+
+function eyeShow_on_SelectInsertImage($params=null) {
+global $checknum ;
+global $currentUser;
+$params = $params['arg'][0];
+$myUdir = um('getCurrentUserDir').'/'.FILES_USER_DIR.'/';
+$file = "./".$myUdir."/".$params;
+$rfile = vfs('getRealName',array($file));
+$info = @getimagesize($rfile);
+$ratio = $info[0]/$info[1];
+$width = 40 ;
+$height = 40/$ratio ;
+
+eyex('rawjs',array('js'=>'callback.call(scope, \'index.php?checknum='.$checknum.'&msg=getImageShow&params='.$params.'\',\''.$width.'%\',\''.$height.'%\')')) ;
+}
+
+// Display the image in the presentations
+
+function eyeShow_on_getImageShow($params=null) {
+
+	global $currentUser;
+	$myUdir = um('getCurrentUserDir').'/'.FILES_USER_DIR.'/';
+	$file = "./".$myUdir."/".$params;
+	$len = vfs('filesize',array($file));
+	$rfile = vfs('getRealName',array($file));
+	$info = @getimagesize($rfile);
+	if ($info !== false) {
+		$fp = vfs('open',array($file,'r'),1);
+		if(!$fp) {
+			return;
+		}
+		header('Content-Type: '.$info['mime']);
+		header("Content-Length: $len");
+		header("Accept-Ranges: bytes");
+		$content = fread($fp,$len);
+		echo $content;
+		fclose($fp);
+	}
+	exit;
+
+}
+
+// Open a file or create a new file
+
+function eyeShow_on_open($params=null) {
+	global $checknum;
+	
+	if (isset($GLOBALS['ShowPath']) === false) {
+		$content = '<div class="slide"><div style="font-size: 200%; font-weight: bold; font-family: sans-serif; position: absolute; left: 30%; top: 0%;">' . i18n('Translate', array('new slideshow')) . '</div></div><div class="slide"><div style="font-size: 200%; font-weight: bold; font-family: sans-serif; position: absolute; left: 30%; top: 0%;">' . i18n('Translate', array('second slide')) . '</div></div>' ;
+	} else {
+		$file = $GLOBALS['ShowPath']->text;
+		$fp = vfs('open',array($file,'r'));
+		$content = fread($fp,vfs('fileSize',array($file)));
+		$content = str_replace("##checknum##",$checknum,$content) ;
+		$content = str_replace("'","\'",$content);
+		fclose($fp);
+	}
+global $myPid;
+global $checknum;
+
+
+extern('getContent', array('<html><head>
+	<title>Slimey</title>
+	<script type="text/javascript">var USERTHEME = "' . $_SESSION['usertheme'] . '";</script>
+	<script src="index.php?extern=apps/eyeShow/lang.eyecode&amp;type=dynamic" type="text/javascript"></script>
+	<script src="index.php?extern=apps/eyeShow/getjs.eyecode&amp;type=dynamic&amp;params[]='.$myPid.'&amp;params[]='.$checknum.'&amp;params[]=slimey" type="text/javascript"></script>
+	<script type="text/javascript">
+		Slimey.includeScripts();
+		Slimey.preloadImages();
+	</script>
+	<link rel="stylesheet" href="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=css/apps/eyeShow/eyeShow.css" />
+</head>
+
+<body style="margin: 0px; padding-top: 0px;" onbeforeunload="return \'Unsaved changes will be lost.\'">
+
+<div id="slimey">
+</div>
+
+<script type="text/javascript">
+	new Slimey({
+		container: \'slimey\',
+		rootDir: \'index.php?extern=apps/eyeShow/\',
+		imagesDir: \'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/eyeShow/\',
+		filename: \'\',
+		slimContent: escapeSLIM(\'' . $content . '\'),
+		saveUrl: \'save.php\'
+	});
+	getMyFile();
+</script>
+
+</body>
+
+</html>', 'html'));
+}
+
+function eyeShow_on_Close() {
+	proc('end');
+}
+
+?>

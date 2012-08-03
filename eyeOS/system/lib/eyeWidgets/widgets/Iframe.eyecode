@@ -1,0 +1,172 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Iframe widget abstraction
+*/
+
+class Iframe {
+	//pid controller
+
+	var $creatorPid;
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//generic widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+	var $visible;
+
+	var $showed = 0;
+
+	//custom widget options
+	var $url;
+	var $width;
+	var $height;
+	var $scroll;
+
+	function iFrame($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
+		isset($params['visible']) ? $this->visible = $params['visible'] : $this->visible = 1;
+
+		//especific window options
+		isset($params['url']) ? $this->url = $params['url'] : $this->url = '';
+		isset($params['width']) ? $this->width = $params['width'] : $this->width = 200;
+		isset($params['height']) ? $this->height = $params['height'] : $this->height = 200;
+		isset($params['scroll']) ? $this->scroll = $params['scroll'] : $this->scroll = 1;
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function show($noserialize=0) {
+		$widgetsparams = array(
+			'height' => $this->height,
+			'width' => $this->width,
+			'visible' => $this->visible,
+			'url' => $this->url,
+			'scroll' => $this->scroll
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$myFrame = array(
+			'name' => $this->name,
+			'x' => $this->x,
+			'y' => $this->y,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'father' => $this->father,
+			'widgetname' => 'Iframe',
+			'params' => $widgetsparams,
+			'center' => $this->cent
+		);
+		$this->showed=1;
+		eyex('createWidget',$myFrame);
+		if($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	function setWidth($width) {
+		global $myPid;
+		$this->width = intval($width);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.width="'.$this->width.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.width="'.$this->width.'px";'));
+	}
+
+	function setHeight($height) {
+		global $myPid;
+		$this->height = intval($height);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.height="'.$this->height.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.height="'.$this->height.'px";'));
+	}
+
+	function setUrl($url) {
+		global $myPid;
+		$this->url = $url;
+		$tokens[] = $this->url;
+		eyex('runjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").src= %s ;','tokens'=>$tokens));
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.top="'.$this->y.'px";'));
+	}
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="none"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="block"'));
+	}
+
+	function remove() {
+		global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+	
+	function focus() {
+		global $myPid;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").focus();'));
+	}
+
+}
+?>

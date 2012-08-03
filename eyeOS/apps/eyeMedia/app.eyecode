@@ -1,0 +1,164 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeMedia_run($params=null) {
+	global $checknum;
+	global $myPid;
+
+	$wndMediaVault = new Window(array(
+		'name'=>'eyeMedia_WND',
+		'title'=>'Media Player',
+		'father'=>'eyeApps',
+		'type'=>NORMAL_WINDOW,
+		'sendResizeMsg'=>1,
+		'sigResize'=>'WNDResize',
+		'width'=>650,
+		'height'=>300,
+		'x'=>20,
+		'y'=>20,
+		'cent'=>1,
+		'savePosition'=>1
+	));
+	$wndMediaVault->show();
+
+	$conContainer = new Container(array(
+		'name'=>'eyeMedia_conContainer',
+		'father'=>'eyeMedia_WND_Content',
+		'width'=>$wndMediaVault->width-15,
+		'height'=>$wndMediaVault->height-100,
+		'x'=>5,
+		'y'=>65
+	));
+	$conContainer->show();
+
+	$hdnStatus = new Hidden(array(
+		'name'=>'eyeMedia_hdnStatus',
+		'father'=>'eyeMedia_conContainer',
+		'text'=>'null'
+	));
+	$hdnStatus->show();
+
+	$hdnShuffle = new Hidden(array(
+		'name'=>'eyeMedia_hdnShuffle',
+		'father'=>'eyeMedia_conContainer',
+		'text'=>'0'
+	));
+	$hdnShuffle->show();
+
+	$hdnRepeat = new Hidden(array(
+		'name'=>'eyeMedia_hdnRepeat',
+		'father'=>'eyeMedia_conContainer',
+		'text'=>'0'
+	));
+	$hdnRepeat->show();
+
+	$hdnPid = new Hidden(array(
+		'name'=>'eyeMedia_hdnPid',
+		'father'=>'eyeMedia_conContainer',
+		'text'=>$myPid
+	));
+	$hdnPid->show();
+
+	//This is used to store the random number that will be used as a
+	//short URL to fetch the current file.
+	$hdnCurFile = new Hidden(array(
+		'name'=>'eyeMedia_hdnCurFile',
+		'father'=>'eyeMedia_conContainer',
+		'text'=>'null'
+	));
+	$hdnCurFile->show();
+
+	/*
+	$btnVolDown = new Button(array(
+		'name'=>'eyeMedia_btnVolDown',
+		'father'=>'eyeMedia_conContainer',
+		'caption'=>'-',
+		'horiz'=>1,
+		'height'=>18,
+		'x'=>1,
+		'y'=>5
+	));
+	$btnVolDown->show();
+	*/
+
+	$txtStatus = new Label(array(
+		'name'=>'eyeMedia_txtStatus',
+		'father'=>'eyeMedia_conContainer',
+		'x'=>5,
+		'y'=>5
+	));
+	$txtStatus->setText('Nothing Playing.');
+	$txtStatus->show(0);
+
+	$sortypes = array("String");
+	$myHeader = array('Filename');
+	$tblPlaylist = new Sortabletable(array(
+		'name'=>'eyeMedia_tblPlaylist',
+		'father'=>'eyeMedia_conContainer',
+		'sortypes'=>$sortypes,
+		'theader'=>$myHeader,
+		'master' => 0,
+		'width'=>$conContainer->width - 8,
+		'height' => $conContainer->height - 25, // - $txtStatus->height
+		'x'=>5,
+		'y' => $txtStatus->y + 20, // + $txtStatus->height
+		'signal'=>'tblPlaylist_Click',
+		'dblsignal'=>'tblPlaylist_DblClick'
+	));
+	$tblPlaylist->show();
+	// The table won't resize properly without explicitly initializing these values.
+	// Fixed in 1.8! :D
+	//$GLOBALS['eyeMedia_tblPlaylist']->setWidth($tblPlaylist->width);
+	//$GLOBALS['eyeMedia_tblPlaylist']->setHeight($tblPlaylist->height);
+
+	$tlbToolbar = new Toolbar(array(
+		'name'=>'eyeMedia_tlbToolbar',
+		'father'=>'eyeMedia_WND_Content'
+	));
+	$tlbToolbar->show();
+	$tlbToolbar->addItem('tlbToolbar_Open_Folder','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/newfolder.png','Add Folder');
+	$tlbToolbar->addItem('tlbToolbar_Add_File','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/edit_add.png','Add File');
+	$tlbToolbar->addItem('tlbToolbar_Remove_File','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/edit_remove.png','Remove File', $tblPlaylist);
+	$tlbToolbar->addItem('tlbToolbar_Clear','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/editclear.png','Clear List');
+	$tlbToolbar->addLine();
+	$tlbToolbar->addItem('tlbToolbar_Play','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/1rightarrow.png','Play', $txtStatus);
+	$tlbToolbar->addItem('tlbToolbar_Stop','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/button_cancel.png','Stop', $txtStatus);
+	$tlbToolbar->addItem('tlbToolbar_Previous','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/previous.png','Previous', $tblPlaylist);
+	$tlbToolbar->addItem('tlbToolbar_Next','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/next.png','Next', $tblPlaylist);
+	$tlbToolbar->addLine();
+	$tlbToolbar->addItem('tlbToolbar_Repeat','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/refresh.png','Repeat');
+	$tlbToolbar->addItem('tlbToolbar_Shuffle','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/edit-undo.png','Shuffle');
+	$tlbToolbar->addItem('tlbToolbar_Fullscreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+
+	eyex('loadScript', array('url' => 'index.php?extern=apps/eyeMedia/js/eyeMedia' . EYE_CODE_EXTENSION . '&type=dynamic'));
+
+	if (isset($params[0]) === true) {
+		include(EYE_ROOT.'/'.APP_DIR.'/eyeMedia/events'.EYE_CODE_EXTENSION);
+		$Open_File = str_replace(um('getCurrentUserDir').'files/', '/', $params[0]);
+		$Open_File = str_replace('//', '/', $Open_File);
+		// If more needs to be done when opening a file later on...
+		//eyeMedia_on_Select_File(array('arg'=>array($Open_File)));
+		$GLOBALS['eyeMedia_tblPlaylist']->addRow(array($Open_File));
+		eyeX('rawjs',array('js'=>'setTimeout("eyeMedia_SelectFirst(' . $myPid . ', 1, ' . $checknum . ')",500);'));
+	}
+
+}
+
+function eyeMedia_end($params=null) {
+	eyeWidgets('unserialize');
+}
+
+?>

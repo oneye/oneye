@@ -1,0 +1,63 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeDelete_run($params = '') {
+	if ($params[0]) {
+		$file = basename($params[0]);
+		$path = eyeFiles('cleanPath', array(substr(trim($params[0], '/\\'), 0, -strlen($file)))); // utf8
+		if ($path[1] != 'real' && vfs('fileExists',array($path[0] . '/' . $file))) {
+			if (vfs('delete',array($path[0] . '/' . $file,1))) {
+				eyeFiles('update',array('trash:///',$path[1] . '://' . $path[2]));
+				eyex('messageBox',array('content' => '"%s" moved to trash successfully.','tokens' => array($file)));
+			} else {
+				$error = 1;
+			}
+		} else {
+			if ($path[1] !== 'real' && strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT)) { // utf8
+				$xmlLink = eyeXML('getXMLfile',array($path[0] . '/' . $file));
+			}
+			if (vfs('real_delete',array($path[0] . '/' . $file))) {
+				eyeFiles('update',array('trash://',$path[1] . '://' . $path[2]));
+				eyex('messageBox',array('content' => '"%s" has been removed successfully.','tokens' => array($file)));
+			} else {
+				$error = 1;
+			}
+		}
+		if ($error) {
+			eyex('messageBox',array('content' => 'Error deleting file!'));
+		} else {
+			if ($xmlLink) {
+				$file = $xmlLink['eyeLink'][0]['content'][0];
+			}
+			if ($path[1] === 'home' && /* utf8 */ strtolower(basename($path[2])) === 'desktop') {
+				$xml = eyeXML('getXMLconfig',array('eyeDesk','icons.xml'));
+				if (is_array($xml['icon'])) {
+					foreach ($xml['icon'] as $key => $value) {
+						if ($value['name'][0] == $file) {
+							unset($xml['icon'][$key]);
+						}
+					}
+					eyeXML('setXMLconfig',array('eyeDesk','icons.xml',$xml));
+				}
+			}
+			if ($params[1]) {
+				eyex('rawjs',array('js' => $params[1]));
+			}
+		}
+	}
+	proc('end');
+}
+?>

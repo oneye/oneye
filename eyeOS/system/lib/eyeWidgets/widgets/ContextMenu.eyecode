@@ -1,0 +1,99 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+class ContextMenu {
+	//pid controller
+
+	var $creatorPid;
+	//global widgets options without default
+	var $name;
+	var $father;
+	var $showed = 0;
+	var $sFather;
+	var $mFather;
+
+	function ContextMenu($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		isset($params['searchFather']) ? $this->sFather = $params['searchFather'] : $this->sFather = 0;
+		//Checking if other fathers are set, if it are a layer.
+
+		if (isset($params['mfather']) === true && $params['mfather']) {
+			$isLayer = eyex('isLayer',array('name'=>$params['mfather']));
+			if($isLayer){
+				$this->mFather = $params['mfather'];
+			}else{
+				$this->mFather = $myPid.'_'.$params['mfather'];
+			}
+		}
+		//generic widget options with default
+		$this->horiz = 0;
+		$this->vert = 0;
+		$this->cent = 0;
+		$this->x = 20;
+		$this->y = 20;
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function show($noserialize=1) {
+		global $myPid;
+		$widgetsparams = array(
+			'sFather' => $this->sFather,
+			'mFather' => $this->mFather
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$myContextMenu = array(
+			'name' => $this->name,
+			'x' => $this->x,
+			'y' => $this->y,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'father' => $this->father,
+			'widgetname' => 'ContextMenu',
+			'params' => $widgetsparams,
+			'center' => $this->cent
+		);
+		$this->showed=1;
+		if($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+		eyex('createWidget',$myContextMenu);
+	}
+
+	function addEntry($text,$Ename,$signal,$params="",$imgId = '') {
+		global $checknum;
+		global $myPid;
+		$tokens = array($text,$params,$imgId);
+		$js = "addContextEntry('".$myPid.'_'.$this->name."', %s ,'".$myPid.'_'.$Ename."','".$signal."',".$checknum.", %s , %s );";
+		eyeX('runjs',array('js'=>$js,'tokens'=>$tokens));
+	}
+}
+
+?>

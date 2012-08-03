@@ -1,0 +1,62 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_substr($string, $start, $length = null) {
+	$pattern = '^';
+	$strlen = utf8_strlen($string);
+	
+	// Start
+	$start = intval($start);
+	if ($start < 0) {
+		$start += $strlen;
+		if ($start < 0) {
+			$start = 0;
+		}
+	}
+	if ($start > $strlen) {
+		return false;
+	}
+	if ($start > 0) {
+		$pattern .= '(?:' . private_lib_eyeString_substr($start) . ')';
+	}
+	
+	// Length
+	if ($length !== null) {
+		$length = intval($length);
+		if ($length < -$strlen) {
+			return false;
+		}
+		if ($length >= $strlen - $start) {
+			$length = null;
+		}
+	}
+	if ($length === 0) {
+		return '';
+	} else if ($length < 0) {
+		$pattern .= '(.*)(?:' . private_lib_eyeString_substr(-$length) . ')$';
+	} else if ($length > 0) {
+		$pattern .= '(' . private_lib_eyeString_substr($length) . ')';
+	} else {
+		$pattern .= '(.*)$';
+	}
+	
+	// Return
+	if (preg_match('/' . $pattern . '/su', $string, $matches) === 1) {
+		return $matches[1];
+	}
+	return '';
+}
+
+/*
+ * PRIVATE
+ */
+function private_lib_eyeString_substr($int) {
+	$pattern = '';
+	$div = intval($int / 65535);
+	if ($div !== 0) {
+		$pattern = '(?:.{65535}){' . strval($div) . '}';
+	}
+	return $pattern . '.{' . strval($int % 65535) . '}';
+}
+?>

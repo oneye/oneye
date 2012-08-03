@@ -1,0 +1,190 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+JSLint
+======
+Date: 16th April 2012
+Path: docs/libraries/JSLint
+Repository: https://github.com/douglascrockford/JSLint
+Website: http://jslint.com/
+
+node.js
+=======
+Date: 4th May 2012
+Path: docs/libraries/node.js
+Version: 0.6.17
+Website: http://nodejs.org/
+
+OptiPNG
+=======
+Date: 19th March 2012
+Path: docs/libraries/OptiPNG
+Version: 0.7.1
+Website: http://optipng.sourceforge.net/
+
+UglifyJS
+========
+Date: 8th May 2012
+Path: docs/libraries/UglifyJS
+Repository: https://github.com/mishoo/UglifyJS
+
+YUI Compressor
+==============
+Date: 14th November 2011
+Path: docs/libraries/YUI Compressor
+Version: 2.4.7
+Website: http://yuilibrary.com/download/yuicompressor/
+
+SimplePie
+=========
+Date: 14th October 2011
+Path: eyeOS/apps/eyeFeeds/simplepie.eyecode
+Version: 1.2.1
+Website: http://simplepie.org/
+
+unoconv
+=======
+Date: 28th April 2012
+Path: eyeOS/extras/unoconv
+Repository: https://github.com/dagwieers/unoconv
+
+Flowplayer
+==========
+Date: 20th April 2012
+Path: eyeOS/extern/apps/eyeVideo
+Version: 3.2.10
+Website: http://flowplayer.org/
+
+xLibrary
+========
+Date: 14th May 2011
+Path: eyeOS/extern/libs/x.js
+Version: 4.23
+Website: http://cross-browser.com/
+
+Base64 encode / decode
+======================
+Path: eyeOS/extern/libs/x.js
+Website: http://www.webtoolkit.info/javascript-base64.html
+
+html_entity_decode
+==================
+Path: eyeOS/extern/libs/x.js
+Version: 1109.2015
+Website: http://phpjs.org/functions/html_entity_decode
+
+htmlspecialchars
+================
+Path: eyeOS/extern/libs/x.js
+Version: 1109.2015
+Website: http://phpjs.org/functions/htmlspecialchars
+
+get_html_translation_table
+==========================
+Path: eyeOS/extern/libs/x.js
+Version: 1109.2015
+Website: http://phpjs.org/functions/get_html_translation_table
+
+md5
+===
+Path: eyeOS/extern/libs/x.js
+Version: 1109.2015
+Website: http://phpjs.org/functions/md5
+
+encode
+===========
+Path: eyeOS/extern/libs/x.js
+Version: 1109.2015
+Website: http://phpjs.org/functions/encode
+
+Flash Detect
+============
+Date: 24th January 2009
+Path: eyeOS/extern/libs/x.js
+Version: 1.0.4
+Website: http://featureblend.com/javascript-flash-detection-library.html
+
+JSColor
+=======
+Date: 5th January 2012
+Path: eyeOS/extern/libs/eyeWidgets/jscolor
+Version: 1.3.12
+Website: http://jscolor.com/
+
+PEAR
+====
+INCLUDE, REQUIRE
+Date: 7th July 2011
+Path: eyeOS/system/lib/eyePear
+Version: 1.9.4
+Website: http://pear.php.net/
+
+Package             | Version   | Date                |
+--------------------|-----------|---------------------|---------------
+Contact_Vcard_Build |    1.32.0 | 21st September 2009 |
+Contact_Vcard_Parse |     1.1.2 |       1st July 2009 |
+Crypt_RC42          |     0.9.0 |    4th October 2010 |
+Crypt_XXTEA         |     0.9.0 |      6th March 2008 |
+File_Archive        |     1.5.5 |     13th April 2012 | MARKED
+HTTP_Request2       |     2.1.1 |      8th April 2012 |
+MIME_Type           |     1.3.1 |  25th February 2012 |
+Net_URL2            |     2.0.0 |   20th October 2011 |
+Numbers_Roman       |     1.0.2 |   14th October 2007 |
+System_Command      |     1.0.8 |  15th February 2012 |
+System_SharedMemory | 0.9.0 RC1 |   10th January 2006 | COMPAT, MARKED
+
+PclZip
+======
+MARKED
+Date: 30th September 2009
+Path: eyeOS/system/lib/eyeZip/main.eyecode
+Version: 2.8.2
+Website: http://phpconcept.net/pclzip/index.en.php
+
+zipfile (GFM package)
+=====================
+Date: 5th October 2008
+Path: eyeOS/system/lib/simpleZip/main.eyecode
+Version: 1.0
+Website: http://gamingg.net/downloads.php
+
+XML-RPC
+=======
+Date: 5th September 2009
+Path: eyeOS/xml-rpc
+Version: 3.0.0 Beta
+Website: http://phpxmlrpc.sf.net/
+
+iui
+===
+Date: 5th October 2009
+Path: iphone/eyeOs_files
+Version: 0.31
+Website: http://code.google.com/p/iui/
+
+PATH                                                      | NAME                                | VERSION        | WEB ADDRESS                                                     | MAINTAINED | CHANGES
+==========================================================|=====================================|================|=================================================================|============|========
+eyeOS/apps/eyeMail/                                       | PHPMailer                           | 5.1            | http://phpmailer.sf.net/                                        | 08/2009    |
+eyeOS/apps/eyeSoft/libCompress.eyecode                    | PclTar (Mambo package)              | 4.6.5          | http://mambo-foundation.org/                                    | no         | utf8, marked
+eyeOS/extern/apps/eyeMp3/swf/webplayer.swf                | WebMinster WebPlayer                | 2.0.1          | http://webminster.org/                                          | no         |
+eyeOS/extern/apps/eyeShow/                                | Slimey                              | 0.2            | http://slimey.sourceforge.net/                                  | 04/2009    | yes, marked
+eyeOS/extern/apps/eyeSheets/                              | Simple Spreadsheet                  | 0.541          | http://simple-groupware.de/                                     | 10/2009    | yes
+eyeOS/extern/libs/eyeSound/                               | SoundManager 2                      | 2.97a.20101221 | http://schillmania.com/projects/soundmanager2/                  | 02/2010    | marked
+eyeOS/extern/libs/eyeWidgets/tiny_mce/                    | TinyMCE                             | 3.4.9          | http://tinymce.moxiecode.com/                                   | 04/2011    | yes
+eyeOS/extern/libs/eyeWidgets/codepress/                   | CodePress                           | 0.9.6          | http://codepress.sf.net/                                        | no         | yes
+eyeOS/system/lib/eyeCompress/main.eyecode                 | PclTar (PhpZip package)             | 2.8.2          | http://phpconcept.net/phpzip/index.en.php                       | no         | utf8, marked, ["TrFctEnd", "TrFctMessage", "TrFctStart"]
+eyeOS/system/lib/eyeSmtp/plain_sasl_client.eyecode        | Plain SASL Client                   | 2004-11-22     | http://phpclasses.org/browse/package/1888.html                  | no         | utf8
+eyeOS/system/lib/eyeSmtp/sasl.eyecode                     | SASL                                | 2005-10-31     | http://phpclasses.org/browse/package/1888.html                  | no         | utf8
+eyeOS/system/lib/eyeSmtp/smtp.eyecode                     | SMTP E-mail sending class           | 2009-04-11     | http://phpclasses.org/browse/package/14.html                    | 08/2009    | utf8

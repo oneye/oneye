@@ -1,0 +1,39 @@
+﻿[list=1][*]goto: [goto=/]This link opens eyeHelp codes list[/goto] and [goto=/../eyeDesk]this one goes to the page "Your screen's parts"[/goto], which is outside of eyeHelp's topic.
+The codes used were: &#91;goto=/]This link opens eyeHelp codes list&#91;/goto] and &#91;goto=/../eyeDesk]this one goes to the page "Your screen's parts"&#91;/goto], which is outside of eyeHelp's topic.
+
+[*]url: [url=http://lars-sh.de/]This opens a link to the oneye website[/url], as does this one: [url]http://lars-sh.de/[/url].
+The codes used were: &#91;url=http://lars-sh.de/]This opens a link to the oneye website&#91;/url] and &#91;url]http://lars-sh.de/&#91;/url]
+
+[*]mail: [mail=danielrs12345@gmail.com]This sends an e-mail to the developer[/mail], as does this one: [mail]danielrs12345@gmail.com[/mail].
+The codes used were: &#91;mail=danielrs12345@gmail.com]This sends an e-mail to the developer&#91;/mail] and &#91;mail]danielrs12345@gmail.com&#91;/mail]
+
+[*]b: [b]This is bolded text[/b].
+The code used was: &#91;b]This is bolded text&#91;/b]
+
+[*]i: [i]This is italic text[/i].
+The code used was: &#91;i]This is italic text&#91;/i]
+
+[*]u: [u]This is underlined text[/u].
+The code used was: &#91;u]This is underlined text&#91;/u]
+
+[*]s: [s]This is text with a line through[/s].
+The code used was: &#91;s]This is text with a line through&#91;/s]
+
+[*]o: [o]This is overlined text text[/o].
+The code used was: &#91;o]This is overlined text text&#91;/o]
+
+[*]color: [color=red]This is red text[/color].
+The code used was: &#91;color=red]This is red text&#91;/color]
+
+[*]size: [size=24]This is big text[/size] and [size=8]this is small text[/size].
+The code used was: &#91;size=24]This is big text&#91;/size] and &#91;size=8]this is small text&#91;/size]
+[/list]
+
+[h]This is a header[/h]
+The code used was: &#91;h]This is a header&#91;/h]
+
+[code]This is a code box.[/code]
+The code used was: &#91;code]This is a code box.&#91;/code]
+
+[quote]This is a box with a quote.[/quote]
+The code used was: &#91;quote]This is a box quote.&#91;/quote][list=1]

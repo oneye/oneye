@@ -1,0 +1,71 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyePresentation_run($params=null) {
+	$myWindow = new Window(array('name'=>'presentationWND','father'=>'eyeApps',
+		'cent'=>1,'width'=>680,'height'=>590,'title'=>'Presentations','sendResizeMsg'=>1,'sigResize'=>'Resize','savePosition' => 1));
+	$myWindow->show();
+	$myToolbar = new Toolbar(array('name'=>'myToolbar','father'=>'presentationWND_Content'));
+	$myToolbar->show();
+	$myToolbar->addItem('open','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fileopen.png','Open');
+	$myToolbar->addLine();
+	$myToolbar->addItem('back','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/previous.png','Back');
+	$myToolbar->addItem('next','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/next.png','Next');
+	$myToolbar->addLine();
+	$myToolbar->addItem('fullscreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+
+	$myFrame = new Iframe(array('name'=>'imgFrame','father'=>'presentationWND_Content','x'=>5,
+		'y'=>55,'height'=>$myWindow->height-90,'width'=>$myWindow->width-15, 'url'=>"about:blank",'scroll'=>1));
+	$myFrame->show();
+	$myFrame->focus();
+	if($params[0]) {
+		$file = $params[0];
+		$fp = vfs('open',array($file,'r'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+			return;
+		}
+		fclose($fp);
+		$myHidden = new Hidden(array('name'=>'filepath','father'=>'presentationWND','text'=>$file));
+		eyeWidgets('serialize',array($myHidden));
+		$GLOBALS['filepath'] = $myHidden;
+		include(EYE_ROOT.'/'.APP_DIR.'/eyePresentation/events.eyecode');
+		gotoSlide(0);
+		global $checknum;
+		$myFrame->setUrl("index.php?checknum=".$checknum."&msg=getSlide&anticache=".md5(uniqid(time())));
+	}
+	$myHidden = new Hidden(array('name'=>'fullscreen','father'=>'presentationWND','text'=>1));
+	eyeWidgets('serialize',array($myHidden));
+}
+
+function eyePresentation_end($params=null) {
+	global $myPid;
+	$dir = um('getCurrentUserDir').'/tmp/';
+	if ($handle = opendir($dir)) {
+	    while (false !== ($file = readdir($handle))) {
+			if ( /* utf8 */ substr($file, 0, 1) !== '.') {
+	        	$pid = /* utf8 */ substr($file, 0, 5);
+	        	if(intval($pid) == $myPid) {
+	           		vfs('real_delete',array($dir.$file));
+	        	}
+	        }
+	    }
+	    closedir($handle);
+	}
+	eyeWidgets('unserialize');
+}
+
+?>

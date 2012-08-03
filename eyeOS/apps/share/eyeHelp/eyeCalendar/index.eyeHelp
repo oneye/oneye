@@ -1,0 +1,14 @@
+	eyeCalendar is the oneye simple calendar. With eyeCalendar you can create events in a very visual and intuitive way, and move them along the time. To navigate to a specific date, just use the small calendar on the top right part of the application to move between months. When you're on the month you want, click on the day you're interested in and the displayed week will change to the selected one.
+
+[b]Add An Event[/b]
+		To add an event to a specific date, just scroll to the hour and day you want to get it started, and click, without leaving the mouse button, to the start time. Then just drag the new bubble to the end time and leave the mouse button when you're done.
+
+		When you have created the event, just click on it and write the text for it. When you are done, simply click anywhere in the application to save the note. Note that if you click inside the week, another event will be created, so it's recommended to click out of the calendar area.
+
+
+[b]Moving an event[/b]
+		If you want to move an event to another day on the same week, just click and drag it's header to the new date and/or time.
+
+
+[b]Editing an event[/b]
+		To edit an existing event, just click on it's text, and modify it. When you are done, click anywhere outside the calendar area to get it saved.

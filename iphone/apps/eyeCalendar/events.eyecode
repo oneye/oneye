@@ -1,0 +1,241 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+include_once(IPHONE_PATH.'lib/message.eyecode');
+function eyeCalendar_viewNotes() {
+	if (!isset($_POST['date'])) {
+		return false;
+	}
+	$thedate = $_POST['date']/1000;
+	$theday = date('j',$thedate);
+	$themonth = date('n', $thedate);
+	$theyear = date('o', $thedate);
+	$normalDate = date('j/n/o',$thedate);
+	$notes = eyeCalendar('getDayNotes',array('year' => $theyear, 'month' => $themonth, 'mday' => $theday));
+	echo 'xGetElementById("events").innerHTML="Events at '.$normalDate.'";xGetElementById("timevalue").value='.$thedate.';';
+	$js = 'xGetElementById("notesContainer").style.visibility="hidden";xGetElementById("notes").innerHTML ="";';
+	$js2 = '';
+	$html = '';
+	if ($notes!='') {
+		foreach($notes as $key=>$value) {
+			$hour = $value['note'][0]['hourFrom'][0].':'.$value['note'][0]['minFrom'][0].' - '.$value['note'][0]['hourEven'][0].':'.$value['note'][0]['minEven'][0].' ';
+			$html .= "<label>$hour</label>";
+			if  ($value['note'][0]['title'][0]=='') {
+				$html .= "<h3>Without text</h3>";
+			} else {
+				$title = base64_decode($value['note'][0]['title'][0]);
+				$html .= "<h3>$title</h3>";
+			}
+ 			$html .= "<img id='".$value['note'][0]['dateInt'][0]."' src='apps/eyeCalendar/remove.png' style='cursor: pointer;margin-right:25px;'>";
+			$js2 .= "var ele = xGetElementById('".$value['note'][0]['dateInt'][0]."').onclick = function(){
+						sendMsg('eyeCalendar','delnotes',eyeParam('time','".$value['note'][0]['dateInt'][0]."')+eyeParam('calendar','".$value['note'][0]['calendar'][0]."'));
+					};
+				";
+		}
+		$js = 'xGetElementById("notesContainer").style.visibility="visible"; xGetElementById("notes").innerHTML = "'.$html.'";';
+		$js .= $js2;
+	} else {
+		echo 'document.getElementById("day_'.$theday.'").style.backgroundImage="none";';
+	}
+	echo $js;
+}
+
+function eyeCalendar_realsave() {
+	if (!isset($_POST['hourfrom']) || !isset($_POST['minfrom']) || !isset($_POST['hourto']) || !isset($_POST['minto']) || !isset($_POST['note']) || !isset($_POST['thetime'])) {
+		return false;
+	}
+	if ($_POST['hourfrom']>$_POST['hourto'] || ($_POST['hourfrom']==$_POST['hourto'] && $_POST['minfrom']>=$_POST['minto'])) {
+		msgIphone(array('title'=>'Error','content'=>'Incorrect time interval.','caption'=>'Return','link'=>'index.php?action=eyeCalendar&noPropagate=2'));
+		return false;
+	}
+	$time = $_POST['thetime'];
+	$aInfo = getdate($time);
+	$rInfo = getdate(time());
+	$time = mktime($_POST['hourfrom'],$_POST['minfrom'],$rInfo['seconds'],$aInfo['mon'],$aInfo['mday'],$aInfo['year']);
+	$params = array();
+	$params['hourFrom'][0] = $_POST['hourfrom'];
+	$params['minFrom'][0] = $_POST['minfrom'];
+	$params['hourEven'][0] = $_POST['hourto'];
+	$params['minEven'][0] = $_POST['minto'];
+	$params['title'][0] = $_POST['note'];
+	$params['time'][0] = $time;
+	$params['day'][0] = $aInfo['mday'];
+	$params['wday'][0] = $aInfo['wday'];
+	$params['month'][0] = $aInfo['mon'];
+	$params['year'][0] = $aInfo['year'];
+	$params['calendar'][0] = eyeCalendar('getCurrentCalendar');
+	eyeCalendar('saveNote',$params);
+	msgIphone(array(
+		'title' => 'Completed',
+		'content' => 'The note has been created. Click the button to continue.',
+		'caption' => 'Continue',
+		'link' => 'index.php?action=eyeCalendar&noPropagate=2'
+	));
+}
+
+function eyeCalendar_newnote() {
+	// if (!isset($_GET['time']) || empty($_GET['time'])) {
+		// msgIphone(array('title'=>'Error','content'=>'Please select a day.','caption'=>'Return','link'=>'index.php?action=eyeCalendar&noPropagate=2'));
+		// return false;
+	// }
+	$thetime = $_GET['time'];
+	echo '<div id="newnote" title="Add note" class="panel" selected="true">
+		<form method="post" action="index.php?action=eyeCalendar&do=realsave" class="panel">
+		<input type="hidden" name="thetime" value="'.$thetime.'"/>
+		<h2>New Event</h2>
+			<fieldset>
+				<div class="info">
+					<label>From:</label>Hour:<select name="hourfrom">
+							<option value="00">00</option>
+							<option value="01">01</option>
+							<option value="02">02</option>
+							<option value="03">03</option>
+							<option value="04">04</option>
+							<option value="05">05</option>
+							<option value="06">06</option>
+							<option value="07">07</option>
+							<option value="08">08</option>
+							<option value="09">09</option>
+							<option value="10">10</option>
+							<option value="11">11</option>
+							<option value="12">12</option>
+							<option value="13">13</option>
+							<option value="14">14</option>
+							<option value="15">15</option>
+							<option value="16">16</option>
+							<option value="17">17</option>
+							<option value="18">18</option>
+							<option value="19">19</option>
+							<option value="20">20</option>
+							<option value="21">21</option>
+							<option value="22">22</option>
+							<option value="23">23</option>
+						</select>Minutes:
+						<select name="minfrom">
+							<option value="00">00</option>
+							<option value="15">15</option>
+							<option value="30">30</option>
+							<option value="45">45</option>
+						</select>
+				</div>
+				<div class="info">
+					<label>To:</label>Hour:<select name="hourto">
+							<option value="00">00</option>
+							<option value="01">01</option>
+							<option value="02">02</option>
+							<option value="03">03</option>
+							<option value="04">04</option>
+							<option value="05">05</option>
+							<option value="06">06</option>
+							<option value="07">07</option>
+							<option value="08">08</option>
+							<option value="09">09</option>
+							<option value="10">10</option>
+							<option value="11">11</option>
+							<option value="12">12</option>
+							<option value="13">13</option>
+							<option value="14">14</option>
+							<option value="15">15</option>
+							<option value="16">16</option>
+							<option value="17">17</option>
+							<option value="18">18</option>
+							<option value="19">19</option>
+							<option value="20">20</option>
+							<option value="21">21</option>
+							<option value="22">22</option>
+							<option value="23">23</option>
+						</select>Minutes:
+						<select name="minto">
+							<option value="00">00</option>
+							<option value="15">15</option>
+							<option value="30">30</option>
+							<option value="45">45</option>
+						</select>
+				</div>
+				<div class="row">
+					<label>Note</label><input type="text" style="padding:12px 10px 0 163px;" name="note" value=""/>
+				</div>
+			</fieldset>
+			<input id="lgbt" name="saveNote" value="Save" type="submit">
+			</form>
+	</div>';
+
+}
+
+function eyeCalendar_delnotes() {
+	if (!isset($_POST['time']) || !isset($_POST['calendar'])) {
+		return false;
+	}
+
+	eyeCalendar('deleteNote',array('dateInt'=>$_POST['time'],'calendar'=>$_POST['calendar']));
+	$_POST['date'] = $_POST['time']*1000;
+	eyeCalendar_viewNotes();
+}
+
+function eyeCalendar_changeMonth($params = null) {
+	if (!isset($_REQUEST['newmonth']) && !isset($_REQUEST['newyear'])) {
+		return false;
+	}
+	$themonth = $_REQUEST['newmonth']+1;
+	$theyear = $_REQUEST['newyear'];
+	switch ($themonth) {
+		case 1:
+			$monthname = 'January';
+			break;
+		case 2:
+			$monthname = 'February';
+			break;
+		case 3:
+			$monthname = 'March';
+			break;
+		case 4:
+			$monthname = 'April';
+			break;
+		case 5:
+			$monthname = 'May';
+			break;
+		case 6:
+			$monthname = 'June';
+			break;
+		case 7:
+			$monthname = 'July';
+			break;
+		case 8:
+			$monthname = 'August';
+			break;
+		case 9:
+			$monthname = 'September';
+			break;
+		case 10:
+			$monthname = 'October';
+			break;
+		case 11:
+			$monthname = 'November';
+			break;
+		case 12:
+			$monthname = 'December';
+			break;
+	}
+	$thetime = strtotime("1 $monthname $theyear");
+	$numberdays = date('t',$thetime);
+	for ($i=1; $i<=$numberdays; $i++) {
+		$notes = eyeCalendar('getDayNotes',array('year' => $theyear, 'month' => $themonth, 'mday' => $i));
+		if (is_array($notes)) {
+			echo 'document.getElementById("day_'.$i.'").style.backgroundImage="url(\'apps/eyeCalendar/event.png\')";';
+		}
+	}
+}
+?>

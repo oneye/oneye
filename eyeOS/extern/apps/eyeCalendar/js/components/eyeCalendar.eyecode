@@ -1,0 +1,33 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function get_dynamic_content($params = '') {
+	header('Content-type: text/javascript; charset=UTF-8');
+	$path_compressed = EYE_ROOT . '/' . EXTERN_DIR . '/' . APP_DIR . '/eyeCalendar/js/components/eyeCalendar.min.js';
+	$path_uncompressed = EYE_ROOT . '/' . EXTERN_DIR . '/' . APP_DIR . '/eyeCalendar/js/components/eyeCalendar.js';
+	if (USE_COMPRESSED && is_readable($path_compressed) && filemtime($path_compressed) >= filemtime($path_uncompressed)) {
+		$content = file_get_contents($path_compressed);
+	} else {
+		$content = file_get_contents($path_uncompressed);
+	}
+	i18n('loadLang',array('eyeCalendar'));
+	$content = str_replace('$lang:Delete', utf8_htmlspecialchars(i18n('translate', array('Delete')), ENT_QUOTES), $content);
+	$content = str_replace('$lang:Text for this event:', utf8_htmlspecialchars(i18n('translate', array('Text for this event:')), ENT_QUOTES), $content);
+	$content = str_replace('$lang:Accept', utf8_htmlspecialchars(i18n('translate', array('Accept')), ENT_QUOTES), $content);
+	$content = str_replace('$lang:Cancel', utf8_htmlspecialchars(i18n('translate', array('Cancel')), ENT_QUOTES), $content);
+	return $content;
+}
+?>

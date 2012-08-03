@@ -1,0 +1,36 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_str_ireplace($search, $replace, $subject, &$count = null) {
+	global $lib_eyeString;
+	
+	$count = 0;
+	if (is_array($search) === true) {
+		foreach ($search as $key => $value) {
+			if (is_array($replace) === true) {
+				if (isset($replace[$key]) === true) {
+					$subject = utf8_str_ireplace($search[$key], $replace[$key], $subject, $count2);
+				} else {
+					$subject = utf8_str_ireplace($search[$key], '', $subject, $count2);
+				}
+			} else {
+				$subject = utf8_str_ireplace($search[$key], $replace, $subject, $count2);
+			}
+			$count += $count2;
+		}
+		return $subject;
+	}
+	$lib_eyeString['str_ireplace'] = $replace;
+	return preg_replace_callback('/' . preg_quote($search, '/') . '/iu', 'private_lib_eyeString_str_ireplace', $subject, -1, $count);
+}
+
+/*
+ * PRIVATE
+ */
+function private_lib_eyeString_str_ireplace() {
+	global $lib_eyeString;
+	
+	return $lib_eyeString['str_ireplace'];
+}
+?>

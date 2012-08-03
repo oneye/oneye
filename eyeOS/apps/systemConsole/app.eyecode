@@ -1,0 +1,62 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function systemConsole_run($params=null) {
+	global $myPid;
+
+	$myWindow = new Window(array(
+		'father' => 'eyeApps',
+		'name' => 'Window',
+		'title' => 'System console log',
+		'width' => 500,
+		'height' => 400,
+		'cent' => 1,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'Resize'
+	));
+	$myWindow->show();
+
+	$myToolbar = new Toolbar(array(
+		'name' => 'toolbar',
+		'father' => 'Window_Content'
+	));
+	$myToolbar->show();
+
+	$myBox = new Container(array(
+		'name' => 'consoleContent',
+		'father' => 'Window_Content',
+		'width' => $myWindow->width-25,
+		'height' => $myWindow->height-87,
+		'x' => 5,
+		'y' => 60,
+	));
+	$myBox->show(1);
+
+	$js = 'var content = document.getElementById("1_tty").innerHTML;';
+	$js .= 'document.getElementById("'.$myPid.'_consoleContent").innerHTML = content;';
+	eyeX('rawjs',array('js'=>$js));
+
+	$myToolbar->addItem('clean','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/button_cancel.png','Clean');
+
+	addListenerServiceCall('onPrint','eyex','print',1);
+}
+
+function systemConsole_end($params=null) {
+	removeListenerServiceCall('eyex','print',1);
+	eyeWidgets('unserialize');
+}
+
+?>

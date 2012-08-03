@@ -1,0 +1,10 @@
+<package>
+	<name>Navigator</name>
+	<category>Networking</category>
+	<version>1.9</version>
+	<description>Application to browse the web</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeNav.png</icon>
+</package>

@@ -1,0 +1,75 @@
+* 0.5 - 16/4/2012
+- Improve handling of LD_LIBRARY_PATH (Paul Polak)
+- Change to how -o/--output/--outputpath works (can now output to filenames too)
+- Added LibreOffice support (Hans de Graaff)
+- Replaced OpenOffice by LibreOffice in source code and documentation
+- Automatically look for installed LibreOffice and OpenOffice binaries/libraries
+- Switch to LibreOffice python binary to load matching pyuno library
+- Show Office location when using -v -v
+- Fix a problem when not using UNO_PATH and LibreOffice (Daniel Díaz)
+- Improvements to Windows support (Miklos Vajna)
+- Improvements to MacOS X support (Troels Knak-Nielsen)
+- Improvements to OpenBSD support
+- Improvements to Gentoo support (David E. Narváez)
+- Added -n/--no-launch option to prevent lanuching new office instance (Alexander Oryol)
+- Fix for LibreOffice double-hyphen options since LibreOffice >= 3.4 (Lars Knickrehm)
+- Deal with integer values in export filters (Steven Davidson)
+
+* 0.4 - released 20/10/2010
+- Now properly check if there is a GUI attached and terminate() or -unaccept instance
+- Added official OpenOffice path '/opt/openoffice*/program'
+- Added support for OpenOffice on Windows (Fernando Lucas Rodriguez)
+- Added --pipe option to communicate with UNO pipe (Fernando Lucas Rodriguez)
+- Added -o/--outputpath option to modify the output path (Fernando Lucas Rodriguez)
+- Added support for MediaWiki output (txt)
+- Added OpenOffice path to LD_LIBRARY_PATH env var
+- Added -nofirstwizard to ooffice invocations
+- Improved the unoconv manpage
+- Added proper exitcode (Alan D. Salewski)
+- Fixed the license conflict between COPYING and header, the license is GPL, not LGPL
+- Give a proper error when a library was found, but failed to get imported
+- Make errors somewhat more identifiable
+- Added -T/--timeout to try to connect every 0.5 second until timeout has reached default: 3 secs)
+- Fixed a typo in bydoctype() (Hugo Lopes)
+- Updated filter list based on OpenOffice 3.1
+- Added Unified Office Format (uot/uos/uop) support
+- Update indexes when converting (Winfried Rohr)
+- Find soffice.bin binary (once) similarly to finding uno library
+- Use soffice.bin binary instead of soffice wrapper so we can more reliable terminate the process
+- Added -e/--export to set export filter options (eg. PageRange, Quality, UseLosslessCompression, ...)
+- Added -i/--import to set import filter options (eg. utf8)
+- Use subprocess module instead of os.spawnvp for better Windows compatibility
+- Added docs/filters.txt with information about import and export filters
+- Added official OpenOffice path for MacOSX (Jeff Harmon)
+- First update links, then indexes (Nicolae Mihalache)
+- More improvements to OpenOffice support on Windows (Fernando Lucas Rodriguez)
+- Improve terminating OpenOffice on Windows (Fernando Lucas Rodriguez)
+- Support OpenOffice installations on Windows on drive-letters other than C: (Fernando Lucas Rodriguez)
+- Allow to apply a style template during conversion
+- Improvements to stdout and stderr messages consistency
+- Updated documentation
+
+* 0.3 - released 31/08/2007
+- Determine doctype from input filename (if not specified)
+- Created a seperate class and allow to use as a library (like DocumentConverter.py)
+- Makefile now adds symlinks for different ODF formats like eg, odt2pdf or odp2pdf
+- Added MacOSX NeoOffice path '/Applications/NeoOffice.app/Contents/program' (Peter Stevens)
+- Added OpenSUSE 10 OpenOffice path '/usr/lib*/ooo*/program' (Leo Eraly)
+- Start and stop OpenOffice automatically when needed (Matthieu Moy)
+- Added --listener option to make OpenOffice accept client requests (Matthieu Moy)
+- Changed -b option to -f option to match a2x options
+- Add unoconv manual page
+
+* 0.2 - released 20/05/2007
+- Added support for almost 100 graphics, presentation and spreadsheet documents
+- Added -d/--doctype option to specify the document type
+- Added -v/--verbose to show more information
+- Added Gentoo oofice path '/usr/lib/openoffice/program' (Peter Draho)
+- Show proper error when file does not exist (Peter Draho)
+- Make long options work :)
+- If format is not recognized, scan by extension
+- Use glob to find possible location of pyuno
+- Option -d/--doctype now affects -l/--list
+
+* 0.1 - released 19/05/2007
+- Initial release

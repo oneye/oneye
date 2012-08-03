@@ -1,0 +1,9 @@
+	oneye comes with support to open and edit Office Documents like doc, odt, odp, ppt, ods, xls and other popular Office File formats.
+
+	By default, this feature is not enabled, because it needs some configurations at the server where oneye is installed. If you don't configure it, your oneye will not be able to open Office files.
+To get office support, follow these simple steps [i](on the server; clients don't need any special configuration)[/i]
+
+Please select your servers Operating System.
+
+[goto=/Microsoft Windows]Microsoft Windows[/goto]
+[goto=/Unix based] Unix based Linux, Solaris, Unix... [/goto]

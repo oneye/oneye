@@ -1,0 +1,10 @@
+<package>
+	<name>Close Session</name>
+	<category>System</category>
+	<version>1.9</version>
+	<description>Utility to logout</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon />
+</package>

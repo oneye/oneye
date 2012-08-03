@@ -1,0 +1,10 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+if (function_exists('mb_stristr') === true) {
+	function utf8_stristr($haystack, $needle, $before_needle = false) {
+		return mb_stristr($haystack, $needle, $before_needle, 'UTF-8');
+	}
+}
+?>

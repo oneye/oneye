@@ -1,0 +1,361 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeMessages_run($params=null) {
+	global $myPid, $checknum;
+	//Check if the user has the needed directories
+	if(!vfs('isdir', array(um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/'))) {
+		eyeMessages('start');
+	}
+
+	if($params['action'] == 'new') {
+		proc('launch', array('newMessage', array('to' => $params['to'], 'subject' => $params['subject'])));
+		proc('end');
+		return;
+	}
+
+	$myWindow = new Window(array(
+		'name'=> 'eyeMessagesWND',
+		'father'=> 'eyeApps',
+		'cent'=> 1,
+		'width'=> 700,
+		'height'=> 500,
+		'title'=> 'Internal Messaging',
+		'savePosition' => 1,
+		'sigResize'=>'mainResize',
+		'sendResizeMsg'=>1
+	));
+	$myWindow->show();
+	eyeX('updateCSS', array('name' => $myPid.'_'.$myWindow->name.'_Content', 'property' => 'overflow', 'value' => 'hidden'));
+
+	$myLine = new Line(array(
+		'name'=> 'verticalPanel',
+		'father'=>'eyeMessagesWND_Content',
+		'x'=>140,
+		'y'=>59,
+		'width'=>1,
+		'height'=>$myWindow->height-83
+	));
+	$myLine->show(0);
+	
+	//left menu inbox
+	$inboxcontainer = new Container(array(
+		'name' => 'inbox_container',
+		'father' => 'eyeMessagesWND_Content',
+		'x' => 10,
+		'y' => 80,
+		'width' => 129,
+		'height' => 20
+	));
+	$inboxcontainer->show();
+	
+	$inboxicon = new Imagebox(array(
+		'name' => 'inbox_img',
+		'father' => 'inbox_container',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/inbox.png',
+		'alt' => 'inbox folder',
+		'x' => 5,
+		'y' => 2
+	));
+	$inboxicon->show();
+	
+	$inboxlbl = new Label(array(
+		'name' => 'inbox_lbl',
+		'father' => 'inbox_container',
+		'text' => 'Inbox',
+		'x' => 25,
+		'y' => 2
+	));
+	$inboxlbl->show();
+	
+	eyeX('rawjs',array('js'=>
+		'var e = document.getElementById("'. $myPid .'_' . $inboxcontainer->name . '");
+		e.style.cursor = "pointer";
+		e.onmouseover = function(){
+			e = document.getElementById("'. $myPid .'_' . $inboxcontainer->name . '");
+			if(e.className != "eyeHighlighted") {
+				e.style.backgroundColor="#E9E9E9";
+			}
+		};
+		e.onmouseout = function(){
+			e = document.getElementById("'. $myPid .'_' . $inboxcontainer->name . '");
+			if (e.className != "eyeHighlighted") {
+				e.style.backgroundColor="transparent";
+			}
+		};
+		e.onclick = function(){
+			sendMsg('.$checknum.', "gotosection", eyeParam("section", "inbox"));
+		}'
+	));
+
+	//left menu unread
+	$unreadcontainer = new Container(array(
+		'name' => 'unread_container',
+		'father' => 'eyeMessagesWND_Content',
+		'x' => 10,
+		'y' => 100,
+		'width' => 129,
+		'height' => 20
+	));
+	$unreadcontainer->show();
+
+	$unreadicon = new Imagebox(array(
+		'name' => 'unread_img',
+		'father' => 'unread_container',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/unread.png',
+		'x' => 5,
+		'y' => 2,
+		'alt' => 'unread folder'
+	));
+	$unreadicon->show();
+
+	$unreadlbl = new Label(array(
+		'name' => 'unread_lbl',
+		'father' => 'unread_container',
+		'x' => 25,
+		'y' => 2,
+		'text' => 'Unread'
+	));
+	$unreadlbl->show();
+
+	eyeX('rawjs',array('js'=>
+		'var e = document.getElementById("'. $myPid .'_' . $unreadcontainer->name . '");
+		e.style.cursor = "pointer";
+		e.onmouseover = function(){
+			e = document.getElementById("'. $myPid .'_' . $unreadcontainer->name . '");
+			if(e.className != "eyeHighlighted") {
+				e.style.backgroundColor="#E9E9E9";
+			}
+		};
+		e.onmouseout = function(){
+			e = document.getElementById("'. $myPid .'_' . $unreadcontainer->name . '");
+			if (e.className != "eyeHighlighted") {
+				e.style.backgroundColor="transparent";
+			}
+		};
+		e.onclick = function(){
+			sendMsg('.$checknum.', "gotosection", eyeParam("section", "unread"));
+		}'
+	));
+
+	//left menu
+	$readcontainer = new Container(array(
+		'name' => 'read_container',
+		'father' => 'eyeMessagesWND_Content',
+		'x' => 10,
+		'y' => 120,
+		'width' => 129,
+		'height' => 20
+	));
+	$readcontainer->show();
+
+	$readicon = new Imagebox(array(
+		'name' => 'read_img',
+		'father' => 'read_container',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/read.png',
+		'x' => 5,
+		'y' => 2,
+		'alt' => 'read folder'
+	));
+	$readicon->show();
+
+	$readlbl = new Label(array(
+		'name' => 'read_lbl',
+		'father' => 'read_container',
+		'x' => 25,
+		'y' => 2,
+		'text' => 'Read'
+	));
+	$readlbl->show();
+
+	eyeX('rawjs',array('js'=>
+		'var e = document.getElementById("'. $myPid .'_' . $readcontainer->name . '");
+		e.style.cursor = "pointer";
+		e.onmouseover = function(){
+			e = document.getElementById("'. $myPid .'_' . $readcontainer->name . '");
+			if(e.className != "eyeHighlighted") {
+				e.style.backgroundColor="#E9E9E9";
+			}
+		};
+		e.onmouseout = function(){
+			e = document.getElementById("'. $myPid .'_' . $readcontainer->name . '");
+			if (e.className != "eyeHighlighted") {
+				e.style.backgroundColor="transparent";
+			}
+		};
+		e.onclick = function(){
+			sendMsg('.$checknum.', "gotosection", eyeParam("section", "read"));
+		}'
+	));
+
+	//left menu
+	$sentcontainer = new Container(array(
+		'name' => 'sent_container',
+		'father' => 'eyeMessagesWND_Content',
+		'x' => 10,
+		'y' => 140,
+		'width' => 129,
+		'height' => 20
+	));
+	$sentcontainer->show();
+
+	$senticon = new Imagebox(array(
+		'name' => 'sent_img',
+		'father' => 'sent_container',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/sent.png',
+		'x' => 5,
+		'y' => 2,
+		'alt' => 'sent folder'
+	));
+	$senticon->show();
+
+	$sentlbl = new Label(array(
+		'name' => 'sent_lbl',
+		'father' => 'sent_container',
+		'x' => 25,
+		'y' => 2,
+		'text' => 'Sent'
+	));
+	$sentlbl->show();
+
+	eyeX('rawjs',array('js'=>
+		'var e = document.getElementById("'. $myPid .'_' . $sentcontainer->name . '");
+		e.style.cursor = "pointer";
+		e.onmouseover = function(){
+			e = document.getElementById("'. $myPid .'_' . $sentcontainer->name . '");
+			if(e.className != "eyeHighlighted") {
+				e.style.backgroundColor="#E9E9E9";
+			}
+		};
+		e.onmouseout = function(){
+			e = document.getElementById("'. $myPid .'_' . $sentcontainer->name . '");
+			if (e.className != "eyeHighlighted") {
+				e.style.backgroundColor="transparent";
+			}
+		};
+		e.onclick = function(){
+			sendMsg('.$checknum.', "gotosection", eyeParam("section", "sent"));
+		}'
+	));
+
+	//left menu
+	$trashcontainer = new Container(array(
+		'name' => 'trash_container',
+		'father' => 'eyeMessagesWND_Content',
+		'x' => 10,
+		'y' => 160,
+		'width' => 129,
+		'height' => 20
+	));
+	$trashcontainer->show();
+
+	$trashicon = new Imagebox(array(
+		'name' => 'trash_img',
+		'father' => 'trash_container',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/message_trash.png',
+		'x' => 5,
+		'y' => 2,
+		'alt' => 'trash folder'
+	));
+	$trashicon->show();
+
+	$trashlbl = new Label(array(
+		'name' => 'trash_lbl',
+		'father' => 'trash_container',
+		'x' => 25,
+		'y' => 2,
+		'text' => 'Trash'
+	));
+	$trashlbl->show();
+
+	eyeX('rawjs',array('js'=>
+		'var e = document.getElementById("'. $myPid .'_' . $trashcontainer->name . '");
+		e.style.cursor = "pointer";
+		e.onmouseover = function(){
+			e = document.getElementById("'. $myPid .'_' . $trashcontainer->name . '");
+			if(e.className != "eyeHighlighted") {
+				e.style.backgroundColor="#E9E9E9";
+			}
+		};
+		e.onmouseout = function(){
+			e = document.getElementById("'. $myPid .'_' . $trashcontainer->name . '");
+			if (e.className != "eyeHighlighted") {
+				e.style.backgroundColor="transparent";
+			}
+		};
+		e.onclick = function(){
+			sendMsg('.$checknum.', "gotosection", eyeParam("section", "trash"));
+		}'
+	));
+
+	$myContainer = new Container(array(
+		'name' => 'msgContainer',
+		'father' => 'eyeMessagesWND_Content',
+		'x' => 142,
+		'y' => 60,
+		'width' => 555,
+		'height' => 415
+	));
+	$myContainer->show();
+	eyeX('rawjs',array('js' => 'document.getElementById("'.$myPid.'_msgContainer_Container").style.overflowX="hidden";document.getElementById("'.$myPid.'_msgContainer_Container").style.overflowY="auto";'));
+
+	//Initialize section by default to the Inbox
+	$myHidden = new Hidden(array(
+		'name' => 'section',
+		'father' => 'eyeMessagesWND',
+		'text' => 'inbox'
+	));
+	eyeWidgets('serialize', array($myHidden));
+
+	$sortypes = array("String","String","Date","Hidden");
+	$myHeader = array('From','Subject','Date','hash');
+
+	$myTable = new Sortabletable(array(
+		'name'=>'table_1',
+		'father'=>'msgContainer',
+		'sortypes'=>$sortypes,
+		'theader'=>$myHeader,
+		'x'=>0,
+		'y'=>0,
+		'width'=>554,
+		'height'=>414,
+		'master' => 3,
+		'dblsignal' => 'open',
+		'border' => 0
+	));
+	$myTable->show();
+
+	$myToolbar = new Toolbar(array('name'=>'myBar','father'=>'eyeMessagesWND_Content'));
+	$myToolbar->show();
+	$myToolbar->addItem('new','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/message_new.png','New');
+	$myToolbar->addItem('open','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/message_open.png','(do) Read',array($myTable));
+	$myToolbar->addLine();
+	$myToolbar->addItem('gotosection', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/message_refresh.png', 'Refresh');
+	$myToolbar->addLine();
+	$myToolbar->addItem('delete','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/message_delete.png','Delete', array($myTable));
+	$myToolbar->addItem('empty','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/trash_full.png','Empty', array($myTable));
+	$myToolbar->addItem('fullscreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+	$myToolbar->addItem('restore', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/message_restore.png', 'Restore', array($myTable));
+	addListenerServiceCall('fullResized','eyex','resizedbrowser');
+	eyeX('sendMessage', array('msg' => 'gotosection'));
+}
+
+function eyeMessages_end($params=null) {
+	removeListenerServiceCall('eyex','resizedbrowser');
+	eyeWidgets('unserialize');
+}
+
+?>

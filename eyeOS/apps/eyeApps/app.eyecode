@@ -1,0 +1,139 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeApps_run($params = '') {
+	global $checknum;
+	global $currentUser;
+	global $myPid;
+	addListenerServiceCall('fullResized','eyex','resizedbrowser');
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => 430,
+		'name' => 'eyeApps_Window',
+		'title' => 'Applications',
+		'savePosition' => 1,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'Resize',
+		'width' => 660
+	));
+	$myWindow->show();
+	$GLOBALS['eyeApps_Window'] = $myWindow;
+
+	$myToolbar = new Toolbar(array(
+		'father' => $myWindow->name . '_Content',
+		'name' => 'eyeApps_Toolbar'
+	));
+	$myToolbar->show();
+	$myToolbar->addItem('ManageDock','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/lin_agt_wrench.png','Manage Dock');
+	if ($currentUser == ROOTUSER) {
+		$myToolbar->addItem('InstallApps','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/installapps.png','Install Apps');
+	}
+	$myToolbar->addItem('fullscreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+
+	$myLine = new Line(array(
+		'name' => 'eyeApps_Line',
+		'father' => $myWindow->name . '_Content',
+		'x' => 140,
+		'y' => 57,
+		'width' => 1,
+		'height' => $myWindow->height - 82
+	));
+	$myLine->show(0);
+	$GLOBALS['eyeApps_Line'] = $myLine;
+
+	$myMenuContainer = new Container(array(
+		'father' => $myWindow->name . '_Content',
+		'height' => $myWindow->height - 82,
+		'name' => 'eyeApps_MenuContainer',
+		'width' => $myLine->x + 1,
+		'x' => 0,
+		'y' => 57
+	));
+	$myMenuContainer->show();
+	$myMenuContainer->setCss(array(
+		'overflow-x' => 'hidden',
+		'overflow-y' => 'auto',
+		'position' => 'absolute'
+	));
+	
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeApps/events' . EYE_CODE_EXTENSION;
+	$i = 0;
+	foreach (eyeApps_lib_GetCategories() as $category => $action) {
+		$myContainer = new Container(array(
+			'father' => $myMenuContainer->name,
+			'height' => 30,
+			'name' => $category . '_Container',
+			'width' => $myLine->x + 1,
+			'x' => 0,
+			'y' => 5 + $i * 30
+		));
+		$myContainer->show();
+		
+		$myImagebox = new Imagebox(array(
+			'father' => $myContainer->name,
+			'name' => $category . '_Imagebox',
+			'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/' . eyeApps_lib_GetCategoryIcon($category) . '.png',
+			'x' => 5,
+			'y' => 3,
+		));
+		$myImagebox->show();
+		
+		$myLabel = new Label(array(
+			'father' => $myContainer->name,
+			'name' => $category . '_Label',
+			'text' => $category,
+			'x' => 33,
+			'y' => 6
+		));
+		$myLabel->show();
+		
+		eyex('rawjs', array('js' =>
+			'var e = document.getElementById("' . $myPid . '_' . $myContainer->name . '");
+			e.style.cursor = "pointer";
+			e.style.zIndex = "1";
+			e.onclick = function() {
+				sendMsg(' . $checknum . ', "Action", eyeParam("category", "' . $action . '"));
+			};
+			e.onmouseover = function() {
+				e = document.getElementById("' . $myPid . '_' . $myContainer->name . '");
+				if (e.className != "eyeHighlighted") {
+					e.style.backgroundColor = "#e9e9e9";
+				}
+			};
+			e.onmouseout = function() {
+				e = document.getElementById("' . $myPid . '_' . $myContainer->name . '");
+				if (e.className != "eyeHighlighted") {
+					e.style.backgroundColor = "transparent";
+				}
+			};'
+		));
+		$i++;
+	}
+	
+	if (isset($params[0])) {
+		eyeApps_lib_ShowApps($params[0]);
+	} else {
+		$xml = eyeXML('getXMLconfig', array('eyeApps', 'conf.xml'));
+		eyeApps_lib_ShowApps($xml['eyeApps'][0]['category'][0]);
+	}
+}
+
+function eyeApps_end($params = '') {
+	removeListenerServiceCall('eyex','resizedbrowser');
+	eyeWidgets('unserialize',$params);
+}
+?>

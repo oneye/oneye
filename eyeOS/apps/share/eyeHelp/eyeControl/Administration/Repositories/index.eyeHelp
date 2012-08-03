@@ -1,0 +1,21 @@
+Allow you to install applications from the eyeSoft application automatically, without need to download or upload anything into your system. By default the official repository is already entered for us.
+
+[b]New[/b]
+
+	If you have an oneye repository URL and would like to add it ust click on the button and type the new repository URL.
+
+
+[b]Edit[/b]
+
+	Select the repository from the list and press edit to change the URL
+
+
+[b]Test[/b]
+
+	Select the repository from the list and press test to see if the link is active
+
+
+[b]Delete[/b]
+
+	Select the repository from the list and press Delete to remove that repository
+

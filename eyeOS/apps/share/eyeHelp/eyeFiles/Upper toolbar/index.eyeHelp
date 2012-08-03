@@ -1,0 +1,14 @@
+﻿On the uppar toolbar, you can find 3 divisions (the root user sees 4).
+
+On the first, you can see the navigation buttons. There you can find a back botton, which opens the parent folder, and a refresh button, which will reload your files and folders.
+
+On the second there is three button:
+[list][*]Home: Which displays your files
+[*]Groups: Which displays your groups and their files
+[*]Trash: Where you can find the files you deleted[/list]
+
+The third, which is only for the root user, there are two extra buttons:
+[list][*]Users: Which will show the files of every user
+[*]Real: This one shows all the system files[/list]
+
+On the las division, you find some general actions.

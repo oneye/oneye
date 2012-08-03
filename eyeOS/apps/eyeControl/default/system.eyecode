@@ -1,0 +1,405 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $checknum;
+global $myPid;
+
+$myTab = new Tab(array(
+	'name' => 'eyeControl_system_tab',
+	'father' => $eyeContainer,
+	'width' => 550,
+	'height' => 405,
+	'tabwidth' => 100,
+	'x' => 0,
+	'y' => 0
+));
+$myTab->show();
+
+$systemTab = $myTab->addTab('System',1);
+$permissionsTab = $myTab->addTab('Permissions',1);
+$officeTab = $myTab->addTab('Office Support',1);
+if ($currentUser == REAL_ROOTUSER) {
+	$uninstallTab = $myTab->addTab('Uninstall',1);
+}
+
+if (is_array($contentParams) && $contentParams[0]) {
+	$myTab->selectByName($contentParams[0]);
+} else {
+	$myTab->selectByName('System');
+}
+
+// systemTab
+
+$ContentY = 20;
+// Systemname
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_system_label_hostname',
+	'father' => $systemTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'System Name'
+));
+$myLabel->show();
+$myTextbox_hostname = new Textbox(array(
+	'name' => 'eyeControl_system_system_textbox_hostname',
+	'father' => $systemTab,
+	'x' => 200,
+	'y' => $ContentY,
+	'text' => EYEOS_HOSTNAME
+));
+$myTextbox_hostname->show();
+$ContentY += 40;
+// Select default language
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_system_label_language',
+	'father' => $systemTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Default Language'
+));
+$myLabel->show();
+$mySelect_language = new Select(array(
+	'name' => 'eyeControl_system_system_select_language',
+	'father' => $systemTab,
+	'width' => 118,
+	'x' => 200,
+	'y' => $ContentY,
+));
+$mySelect_language->show();
+$mySelect_language->addOption('English','en');
+$openDir = vfs('real_getDirContent',array(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/i18n/'));
+if (is_array($openDir)) {
+	foreach ($openDir as $file) {
+		if ( /* utf8 */ substr($file, -4) === '.xml') {
+			$lang = basename($file,'.xml');
+			if ($lang == DEFAULT_LANGUAGE) {
+				$select = 1;
+			} else {
+				$select = 0;
+			}
+			$LangXML = eyeXML('getXMLfile',array($file));
+			$display = $LangXML['lang'][0]['name'][0];
+			if ($LangXML['lang'][0]['name2'][0]) {
+				$display .= ' (' . $LangXML['lang'][0]['name2'][0] . ')';
+			}
+			$mySelect_language->addOption($display,$lang,$select);
+		}
+	}
+}
+$ContentY += 40;
+// User quota
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_label_quota',
+	'father' => $systemTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Default User Quota'
+));
+$myLabel->show();
+$quota = DEFAULT_QUOTA;
+$selected = array(1,0);
+if (!is_numeric($quota) || $quota <= 0){
+	$selected = array(0,1);
+	$quota = 0;
+	$temp_sel['GB'] = 1;
+} elseif ($quota / 1024 / 1024 / 1024 >= 1 && round($quota / 1024 / 1024 / 1024) * 1024 * 1024 * 1024 == $quota) {
+	$quota = $quota / 1024 / 1024 / 1024;
+	$temp_sel['GB'] = 1;
+} elseif ($quota / 1024 / 1024 >= 1 && round($quota / 1024 / 1024) * 1024 * 1024 == $quota) {
+	$quota = $quota / 1024 / 1024;
+	$temp_sel['MB'] = 1;
+} elseif ($quota / 1024 >= 1 && round($quota / 1024) * 1024 == $quota) {
+	$quota = $quota / 1024;
+	$temp_sel['KB'] = 1;
+} else {
+	$temp_sel['B'] = 1;
+}
+$myTextbox_quota = new Textbox(array(
+	'name' => 'eyeControl_system_textbox_quota_value',
+	'father' => $systemTab,
+	'x' => 359,
+	'y' => $ContentY,
+	'text' => ($quota == 0) ? '' : $quota,
+	'width' => 50,
+));
+$myTextbox_quota->show();
+if ($quota == 0) {
+	$myTextbox_quota->setCss(array('display' => 'none'));
+}
+$mySelect_quota = new Select(array(
+	'name' => 'eyeControl_system_select_quota_unit',
+	'father' => $systemTab,
+	'x' => 424,
+	'y' => $ContentY,
+	'width' => 80,
+));
+$mySelect_quota->show();
+if ($quota == 0) {
+	$mySelect_quota->setCss(array('display' => 'none'));
+}
+$mySelect_quota->addOption('Bytes','B',$temp_sel['B']);
+$mySelect_quota->addOption('KBytes','KB',$temp_sel['KB']);
+$mySelect_quota->addOption('MBytes','MB',$temp_sel['MB']);
+$mySelect_quota->addOption('GBytes','GB',$temp_sel['GB']);
+$mySelect_quota_type = new Select(array(
+	'name' => 'eyeControl_system_select_quota_type',
+	'father' => $systemTab,
+	'width' => 125,
+	'x' => 200,
+	'y' => $ContentY,
+	'width' => 145
+));
+$mySelect_quota_type->show();
+$mySelect_quota_type->addOption('Set value:', 'custom', $selected[0]);
+$mySelect_quota_type->addOption('Unlimited', 'unlimited', $selected[1]);
+$mySelect_quota_type->addEvent('onchange','
+if (this.value == "custom") {
+	document.getElementById("' . $myPid . '_eyeControl_system_textbox_quota_value").style.display = "block";
+	document.getElementById("' . $myPid . '_eyeControl_system_select_quota_unit").style.display = "block";
+} else {
+	document.getElementById("' . $myPid . '_eyeControl_system_textbox_quota_value").style.display = "none";
+	document.getElementById("' . $myPid . '_eyeControl_system_select_quota_unit").style.display = "none";
+}');
+$ContentY += 40;
+// Create thumbnails
+$xml = getConfig('eyeFiles','conf.xml');
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_system_label_thumbnails',
+	'father' => $systemTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Create Thumbnails'
+));
+$myLabel->show();
+$myCheckbox_thumbnails = new Checkbox(array(
+	'name' => 'eyeControl_system_system_checkbox_thumbnails',
+	'father' => $systemTab,
+	'x' => 160,
+	'y' => $ContentY,
+	'text' => ' ',
+	'checked' => $xml['eyeFiles'][0]['CreateThumbnails'][0] != '0'
+));
+$myCheckbox_thumbnails->show();
+$ContentY += 40;
+// Save Changes
+$myButton = new Button(array(
+	'name' => 'eyeControl_system_system_button_save',
+	'father' => $systemTab,
+	'x' => 40,
+	'y' => $ContentY,
+	'caption' => 'Save Changes',
+	'signal' => 'system_system'
+));
+$myButton->addFriend($myTextbox_hostname);
+$myButton->addFriend($mySelect_language);
+$myButton->addFriend($myTextbox_quota);
+$myButton->addFriend($mySelect_quota);
+$myButton->addFriend($mySelect_quota_type);
+$myButton->addFriend($myCheckbox_thumbnails);
+$myButton->show();
+
+// permissionsTab
+
+$ContentY = 20;
+// Allow user registration
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_permissions_label_registration',
+	'father' => $permissionsTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Allow user registration'
+));
+$myLabel->show();
+$myCheckbox_registration = new Checkbox(array(
+	'name' => 'eyeControl_system_permissions_checkbox_registration',
+	'father' => $permissionsTab,
+	'x' => 320,
+	'y' => $ContentY,
+	'text' => ' ',
+	'checked' => ALLOW_USER_REGISTER
+));
+$myCheckbox_registration->show();
+$ContentY += 40;
+// Allow public dirs
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_permissions_label_publicdirs',
+	'father' => $permissionsTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Allow public dirs'
+));
+$myLabel->show();
+$myCheckbox_publicdirs = new Checkbox(array(
+	'name' => 'eyeControl_system_permissions_checkbox_publicdirs',
+	'father' => $permissionsTab,
+	'x' => 320,
+	'y' => $ContentY,
+	'text' => ' ',
+	'checked' => ALLOW_PUBLIC_DIRS
+));
+$myCheckbox_publicdirs->show();
+$ContentY += 40;
+// Allow web upload
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_permissions_label_webupload',
+	'father' => $permissionsTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Allow web upload'
+));
+$myLabel->show();
+$myCheckbox_webupload = new Checkbox(array(
+	'name' => 'eyeControl_system_permissions_checkbox_webupload',
+	'father' => $permissionsTab,
+	'x' => 320,
+	'y' => $ContentY,
+	'text' => ' ',
+	'checked' => WEB_UPLOAD
+));
+$myCheckbox_webupload->show();
+$ContentY += 40;
+// Save Changes
+$myButton = new Button(array(
+	'name' => 'eyeControl_system_permissions_button_save',
+	'father' => $permissionsTab,
+	'x' => 40,
+	'y' => $ContentY,
+	'caption' => 'Save Changes',
+	'signal' => 'system_permissions'
+));
+$myButton->addFriend($myCheckbox_registration);
+$myButton->addFriend($myCheckbox_publicdirs);
+$myButton->addFriend($myCheckbox_webupload);
+$myButton->show();
+
+// officeTab
+
+$ContentY = 20;
+if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) {
+	$title = 'Configure the office support on a Windows server';
+	$text = i18n('translate',array('Please follow the instructions at %s.',array('<span onclick="sendMsg(' . $checknum . ',\'system_office_howtowindows\',\'\');" style="cursor: pointer; font-style: italic;">Help Console</span>')));
+} else {
+	$title = 'Configure the office support on a Linux server';
+	$text = i18n('translate',array('Please follow the instructions at %s.',array('<span onclick="sendMsg(' . $checknum . ',\'system_office_howtolinux\',\'\');" style="cursor: pointer; font-style: italic;">Help Console</span>')));
+}
+// Configure the office support
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_office_label_title',
+	'father' => $officeTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => $title
+));
+$myLabel->show();
+$myLabel->setCss(array('font-weight' => 'bold'));
+$ContentY += 50;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_office_label_text',
+	'father' => $officeTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => ''
+));
+$myLabel->show();
+eyex('runjs',array('js' => 'document.getElementById("' . $myPid . '_eyeControl_system_office_label_text").innerHTML = %s;','tokens' => array($text)));
+if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) {
+	$ContentY += 50;
+	// OpenOffice.org program folder
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_system_office_label_folder',
+		'father' => $officeTab,
+		'x' => 20,
+		'y' => $ContentY + 3,
+		'text' => 'OpenOffice program folder:'
+	));
+	$myLabel->show();
+	$ContentY += 20;
+	$myTextbox = new Textbox(array(
+		'name' => 'eyeControl_system_office_textbox_folder',
+		'father' => $officeTab,
+		'x' => 60,
+		'y' => $ContentY + 2,
+		'text' => OFFICE_COMMAND,
+		'width' => 240
+	));
+	$myTextbox->show();
+	$ContentY += 50;
+	$myButton = new Button(array(
+		'name' => 'eyeControl_system_office_button_folder',
+		'father' => $officeTab,
+		'x' => 40,
+		'y' => $ContentY,
+		'caption' => 'Save Changes',
+		'signal' => 'system_office'
+	));
+	$myButton->addFriend($myTextbox);
+	$myButton->show();
+}
+
+// uninstallTab
+
+if ($currentUser == REAL_ROOTUSER) {
+	$ContentY = 20;
+	// Used version
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_system_uninstall_label_version',
+		'father' => $uninstallTab,
+		'x' => 20,
+		'y' => $ContentY + 3,
+		'text' => 'Used Version'
+	));
+	$myLabel->show();
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_system_uninstall_label_version_2',
+		'father' => $uninstallTab,
+		'x' => 160,
+		'y' => $ContentY + 3,
+		'text' => ONEYE_VERSION
+	));
+	$myLabel->show();
+	$ContentY += 40;
+	// Root password
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_system_uninstall_label_password',
+		'father' => $uninstallTab,
+		'x' => 20,
+		'y' => $ContentY + 3,
+		'text' => 'Root Password'
+	));
+	$myLabel->show();
+	$myTextbox_password = new Textbox(array(
+		'name' => 'eyeControl_system_uninstall_textbox_password',
+		'father' => $uninstallTab,
+		'x' => 160,
+		'y' => $ContentY + 2,
+		'password' => 2
+	));
+	$myTextbox_password->show();
+	$myTextbox_password->addEnterEventMsg('system_uninstall');
+	$ContentY += 40;
+	// Uninstall oneye
+	$myButton = new Button(array(
+		'name' => 'eyeControl_system_uninstall_button_uninstall',
+		'father' => $uninstallTab,
+		'x' => 40,
+		'y' => $ContentY,
+		'caption' => 'Uninstall oneye',
+		'signal' => 'system_uninstall'
+	));
+	$myButton->addFriend($myTextbox_password);
+	$myButton->show();
+}
+?>

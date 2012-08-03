@@ -1,0 +1,15 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strrpos($haystack, $needle, $offset = 0) {
+	if ($offset < 0) {
+		$haystack = iconv_substr($haystack, 0, $offset + 1, 'UTF-8');
+	}
+	$return = iconv_strrpos($haystack, $needle, 'UTF-8');
+	if ($return === false || $offset > 0 && $return < $offset) {
+		return false;
+	}
+	return $return;
+}
+?>

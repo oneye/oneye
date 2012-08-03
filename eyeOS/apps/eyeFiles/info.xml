@@ -1,0 +1,10 @@
+<package>
+	<name>File Manager</name>
+	<category>File Management</category>
+	<version>1.9</version>
+	<description>Application to browse files</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/home.png</icon>
+</package>

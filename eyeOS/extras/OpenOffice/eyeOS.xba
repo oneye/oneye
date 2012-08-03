@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="eyeOS" script:language="StarBasic">
+&apos;thanks to DannyB from http://www.oooforum.org/forum/ for this idea and code
+&apos;distributed under the terms of GNU Affero General Public License (AGPL) (c) eyeOS 2007-2008
+Sub ConvertAny(cFile,newName,myFilter)
+On Error Resume Next 
+   cURL = ConvertToURL( cFile )
+   oDoc = StarDesktop.loadComponentFromURL( cURL, &quot;_blank&quot;, 0, Array(_
+            MakePropertyValue( &quot;Hidden&quot;, True ),_
+            ) )
+
+   cURL = ConvertToURL( newName )
+   oDoc.storeToURL( cURL, Array(_
+            MakePropertyValue( &quot;FilterName&quot;, myFilter ),_
+            )
+   
+   oDoc.close( True )
+End Sub
+
+Sub SplitSlides( cImpressDocToSplit, newName )
+   On Error Resume Next 
+   &apos; Open the document to find out how many pages it has.
+   oDoc = StarDesktop.LoadComponentFromURL( ConvertToURL( cImpressDocToSplit ), &quot;_blank&quot;, 0, Array(MakePropertyValue( &quot;Hidden&quot;, True )) )
+   
+   nNumPages = oDoc.getDrawPages().getCount()
+   
+   &apos; Now that we know how many pages it has, close it.
+   oDoc.close( True )
+   
+   &apos; Now loop once for each page.
+   nHighestPageNumber = nNumPages-1
+&apos;   nPageToSave = 2
+   For nPageToSave = 0 To nHighestPageNumber
+   
+      &apos; Open the document.
+      oDoc = StarDesktop.LoadComponentFromURL( ConvertToURL( cImpressDocToSplit ), &quot;_blank&quot;, 0, Array(MakePropertyValue( &quot;Hidden&quot;, True )) )
+      
+      &apos; Delete all pages except the one we&apos;re interested in keeping
+      &apos;  on this loop.
+      DeleteAllPagesExcept( oDoc, nPageToSave )
+
+      &apos; Save it as a JPEG.
+      oDoc.storeToUrl( ConvertToURL( newName + &quot;_&quot; + nPageToSave + &quot;.png&quot; ), _
+         Array( MakePropertyValue( &quot;FilterName&quot;, &quot;impress_png_Export&quot; ) ) )
+      
+      &apos; Close the document without saving it.
+      oDoc.close( True )
+   Next
+   
+End Sub
+
+Sub getSingleSlide(cName,myNumber,newName) 
+On Error Resume Next 
+      oDoc = StarDesktop.LoadComponentFromURL( ConvertToURL( cName ), &quot;_blank&quot;, 0, Array(MakePropertyValue( &quot;Hidden&quot;, True )) )
+      nNumPages = oDoc.getDrawPages().getCount()
+      &apos; Delete all pages except the one we&apos;re interested in keeping
+      &apos;  on this loop.
+      Dim cNumber as Integer
+      cNumber = myNumber
+      If cNumber &lt; nNumPages Then
+	      DeleteAllPagesExcept( oDoc, cNumber )
+	
+	      &apos; Save it as a JPEG.
+	      oDoc.storeToUrl( ConvertToURL( newName + &quot;_&quot; + myNumber + &quot;.png&quot;  ), _
+	         Array( MakePropertyValue( &quot;FilterName&quot;, &quot;impress_png_Export&quot; ) ) )
+	      
+	      &apos; Close the document without saving it.	
+      EndIf
+
+      oDoc.close( True )
+
+End Sub
+
+Function DeleteAllPagesExcept( oDoc, nPageToKeep )
+On Error Resume Next 
+   nNumPages = oDoc.getDrawPages().getCount()
+   nHighestPageNumber = nNumPages-1
+   
+   &apos; Delete the last page, then the page before that,
+   &apos;  then the page before that, until we get to the
+   &apos;  page to keep.
+   &apos; This deletes all pages AFTER the page to keep.
+   nPageToDelete = nHighestPageNumber
+   Do while nPageToDelete &gt; nPageToKeep
+      &apos; Get the page.
+      oPage = oDoc.getDrawPages().getByIndex( nPageToDelete )
+      &apos; Tell the document to remove it.
+      oDoc.getDrawPages().remove( oPage )
+      
+      nPageToDelete = nPageToDelete - 1
+   Loop
+   
+   &apos; Delete all the pages before the page to keep.
+   For i = 0 To nPageToKeep - 1
+      &apos; Delete the first page.
+      nPageToDelete = 0
+      &apos; Get the page.
+      oPage = oDoc.getDrawPages().getByIndex( nPageToDelete )
+      &apos; Tell the document to remove it.
+      oDoc.getDrawPages().remove( oPage )
+   Next
+End Function
+
+
+Function MakePropertyValue( Optional cName As String, Optional uValue ) As com.sun.star.beans.PropertyValue
+On Error Resume Next 
+   Dim oPropertyValue As New com.sun.star.beans.PropertyValue
+   If Not IsMissing( cName ) Then
+      oPropertyValue.Name = cName
+   EndIf
+   If Not IsMissing( uValue ) Then
+      oPropertyValue.Value = uValue
+   EndIf
+   MakePropertyValue() = oPropertyValue
+End Function 
+
+</script:module>

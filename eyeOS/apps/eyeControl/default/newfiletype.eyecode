@@ -1,0 +1,110 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+$ContentY = 10;
+// Filetype
+$myLabel = new Label(array(
+	'name' => 'eyeControl_newfiletype_label_filetype',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Filetype'
+));
+$myLabel->show();
+$myTextbox_filetype = new Textbox(array(
+	'name' => 'eyeControl_newfiletype_textbox_filetype',
+	'father' => $eyeContainer,
+	'x' => 160,
+	'y' => $ContentY
+));
+$myTextbox_filetype->show();
+$myTextbox_filetype->focus();
+$ContentY += 30;
+// Title
+$myLabel = new Label(array(
+	'name' => 'eyeControl_newfiletype_label_title',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Title'
+));
+$myLabel->show();
+$myTextbox_title = new Textbox(array(
+	'name' => 'eyeControl_newfiletype_textbox_title',
+	'father' => $eyeContainer,
+	'x' => 160,
+	'y' => $ContentY
+));
+$myTextbox_title->show();
+$ContentY += 30;
+// Application
+$myLabel = new Label(array(
+	'name' => 'eyeControl_newfiletype_label_application',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Application'
+));
+$myLabel->show();
+$mySelect = new Select(array(
+	'name' => 'eyeControl_newfiletype_select_application',
+	'father' => $eyeContainer,
+	'width' => 118,
+	'x' => 160,
+	'y' => $ContentY
+));
+$mySelect->show();
+foreach (vfs('real_getDirContent', array(EYE_ROOT . '/' . APP_DIR . '/')) as $application) {
+	if (is_dir($application)) {
+		$application = basename($application);
+		if ($application != 'share') {
+			$mySelect->addOption($application, $application, ($application == $xml['fileType'][0]['app'][0]));
+		}
+	}
+}
+$ContentY += 30;
+// Description
+$myLabel = new Label(array(
+	'name' => 'eyeControl_newfiletype_label_description',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Description'
+));
+$myLabel->show();
+$myTextbox_description = new Textbox(array(
+	'name' => 'eyeControl_newfiletype_textbox_description',
+	'father' => $eyeContainer,
+	'x' => 160,
+	'y' => $ContentY
+));
+$myTextbox_description->show();
+$ContentY += 30;
+// Create filetype
+$myButton = new Button(array(
+	'name' => 'eyeControl_newfiletype_button_save',
+	'father' => $eyeContainer,
+	'x' => 40,
+	'y' => $ContentY,
+	'caption' => 'Create Filetype',
+	'signal' => 'newfiletype_save'
+));
+$myButton->addFriend($myTextbox_filetype);
+$myButton->addFriend($myTextbox_title);
+$myButton->addFriend($mySelect);
+$myButton->addFriend($myTextbox_description);
+$myButton->show();
+?>

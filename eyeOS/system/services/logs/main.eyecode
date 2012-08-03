@@ -1,0 +1,166 @@
+<?php
+global $service_logs;
+$service_logs = array(
+	'enabled' => false,
+	'functions' => array(),
+	'global' => 0,
+	'handler' => false,
+	'microtime' => 0,
+	'quantity' => 0,
+	'sub' => 0
+);
+
+/*
+ * FUNCTIONS
+ */
+function service_logs_TimerStart($function) {
+	global $service_logs;
+	
+	if ($service_logs['enabled'] === true) {
+		private_service_logs_WriteLog( /* utf8 */ str_pad('', $service_logs['sub'], "\t") . $function . "\n");
+		$service_logs['sub'] += 1;
+		return array(
+			'function' => $function,
+			'global' => $service_logs['global'],
+			'microtime' => microtime(true)
+		);
+	}
+	return false;
+}
+
+function service_logs_TimerStop($object) {
+	global $service_logs;
+	
+	if ($service_logs['enabled'] === true) {
+		$function = $object['function'];
+		$microtime = microtime(true) - $object['microtime'];
+		$microtime -= $service_logs['global'] - $object['global'];
+		
+		if (isset($service_logs['functions'][$function]) === false) {
+			$service_logs['functions'][$function] = array(
+				'quantity' => 0,
+				'microtime' => 0
+			);
+		}
+		$service_logs['functions'][$function]['microtime'] += $microtime;
+		$service_logs['functions'][$function]['quantity']++;
+		$service_logs['global'] += $microtime;
+		$service_logs['quantity']++;
+		$service_logs['sub'] -= 1;
+	}
+}
+
+function service_logs_Start() {
+	global $service_logs;
+	
+	if ($service_logs['enabled'] === false) {
+		$service_logs['enabled'] = true;
+		$service_logs['functions'] = array();
+		$service_logs['global'] = 0;
+		$service_logs['handler'] = false;
+		$service_logs['microtime'] = microtime(true);
+		$service_logs['quantity'] = 0;
+		$service_logs['sub'] = 0;
+	}
+}
+
+function service_logs_Stop() {
+	global $service_logs;
+	
+	if ($service_logs['enabled'] === true) {
+		$service_logs['enabled'] = false;
+		
+		$microtime = ceil((microtime(true) - $service_logs['microtime']) * 1000000);
+		$global = ceil($service_logs['global'] * 1000000);
+		$percent = $global / $microtime * 100;
+		
+		$report = "\n" . 'Statistics' . "\n" . '==========' . "\n";
+		$report .= 'Quantity : ' . /* utf8 */ str_pad(strval($service_logs['quantity']), 7, ' ', STR_PAD_LEFT) . ' x' . "\n";
+		$report .= 'Kernel   : ' . str_pad(strval($microtime - $global), 7, ' ', STR_PAD_LEFT) . ' ms (' . str_pad(number_format(100 - $percent, 2), 5, ' ', STR_PAD_LEFT) . ' %)' . "\n"; // utf8
+		$report .= 'Services : ' . str_pad(strval($global), 7, ' ', STR_PAD_LEFT) . ' ms (' . str_pad(number_format($percent, 2), 5, ' ', STR_PAD_LEFT) . ' %)' . "\n"; // utf8
+		$report .= 'Total    : ' . /* utf8 */ str_pad(strval($microtime), 7, ' ', STR_PAD_LEFT) . ' ms' . "\n";
+		
+		$report .= "\n" . 'By average microtime' . "\n" . '====================' . "\n";
+		uasort($service_logs['functions'], 'private_service_logs_SortByAverageMicrotime');
+		foreach ($service_logs['functions'] as $function => $object) {
+			$value = strval(ceil($object['microtime'] / $object['quantity'] * 1000000));
+			$report .= str_pad($function, 40) . ' ' . str_pad($value, 5, ' ', STR_PAD_LEFT) . ' ms (' . str_pad(strval($object['quantity']), 5, ' ', STR_PAD_LEFT) . ' x)' . "\n"; // utf8
+		}
+		
+		$report .= "\n" . 'By total microtime' . "\n" . '==================' . "\n";
+		uasort($service_logs['functions'], 'private_service_logs_SortByTotalMicrotime');
+		foreach ($service_logs['functions'] as $function => $object) {
+			$value = strval(ceil($object['microtime'] * 1000000));
+			$percent = /* utf8 */ number_format($object['microtime'] / $service_logs['global'] * 100, 2);
+			$report .= str_pad($function, 40) . ' ' . str_pad($value, 5, ' ', STR_PAD_LEFT) . ' ms (' . str_pad($percent, 5, ' ', STR_PAD_LEFT) . ' %)' . "\n"; // utf8
+		}
+		
+		$report .= "\n" . 'By quantity' . "\n" . '===========' . "\n";
+		uasort($service_logs['functions'], 'private_service_logs_SortByQuantity');
+		foreach ($service_logs['functions'] as $function => $object) {
+			$value = strval($object['quantity']);
+			$percent = /* utf8 */ number_format($object['quantity'] / $service_logs['quantity'] * 100, 2);
+			$report .= str_pad($function, 40) . ' ' . str_pad($value, 5, ' ', STR_PAD_LEFT) . ' x  (' . str_pad($percent, 5, ' ', STR_PAD_LEFT) . ' %)' . "\n"; // utf8
+		}
+		
+		private_service_logs_WriteLog($report);
+		fclose(private_service_logs_GetHandler());
+	}
+}
+
+/*
+ * PRIVATE
+ */
+function private_service_logs_WriteLog($content) {
+	global $service_logs;
+	
+	fwrite(private_service_logs_GetHandler(), $content);
+	fflush(private_service_logs_GetHandler());
+}
+
+function private_service_logs_GetHandler() {
+	global $service_logs;
+	
+	if ($service_logs['handler'] === false) {
+		$time = microtime(true);
+		$time = floor(($time - floor($time)) * 100000);
+		do {
+			$path = EYE_ROOT . '/' . LOG_DIR . '/' . date('Y-m-d-H-i-s') . '-' . /* utf8 */ str_pad(strval($time), 5, '0', STR_PAD_LEFT) . '.txt';
+		} while (file_exists($path) === true);
+		$service_logs['handler'] = fopen($path, 'ab');
+		$protocol = substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/')); // utf8
+		private_service_logs_WriteLog('Request : ' . /* utf8 */ strtolower($protocol) . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . "\n\n");
+	}
+	return $service_logs['handler'];
+}
+
+function private_service_logs_SortByAverageMicrotime($a, $b) {
+	if ($a['microtime'] / $a['quantity'] < $b['microtime'] / $b['quantity']) {
+		return 1;
+	}
+	if ($a['microtime'] / $a['quantity'] > $b['microtime'] / $b['quantity']) {
+		return -1;
+	}
+	return 0;
+}
+
+function private_service_logs_SortByQuantity($a, $b) {
+	if ($a['quantity'] < $b['quantity']) {
+		return 1;
+	}
+	if ($a['quantity'] > $b['quantity']) {
+		return -1;
+	}
+	return 0;
+}
+
+function private_service_logs_SortByTotalMicrotime($a, $b) {
+	if ($a['microtime'] < $b['microtime']) {
+		return 1;
+	}
+	if ($a['microtime'] > $b['microtime']) {
+		return -1;
+	}
+	return 0;
+}
+?>

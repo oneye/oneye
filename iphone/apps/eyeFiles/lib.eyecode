@@ -1,0 +1,105 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function cleanTmp() {
+	$udir = um('getCurrentUserDir').'/tmp/';
+	$filesToClean = vfs('real_getDircontent',array($udir,'*iFiles*'));
+	foreach($filesToClean as $file){
+		vfs('real_delete',array($file));
+	}
+}
+
+function eyeFiles_openLocation($file) {
+	$show = utf8_htmlentities(basename($file), ENT_QUOTES);
+	if(is_dir($file)) {
+		$content = vfs('getDirContent',array($file));
+		echo '<ul id="eyeFiles_'.md5($file).'" title="'.$show.'" selected="true">';
+		$path = 'index.php?action=eyeFiles&do=getIcon&icon=';
+		foreach($content as $value) {
+			$info = pathinfo($value);
+			$info = /* utf8 */ strtolower($info['extension']);
+
+			if(is_dir($value)) {
+				$icon = 'folder.png';
+				echo '<li><a href="index.php?action=eyeFiles&do=open&file='.$value.'"><img style="padding-right:7px;" src="'.$path.$icon.'">'.basename($value).'</a></li>';
+			} else if($info == 'png' || $info == 'jpg' || $info == 'jpeg' || $info == 'bmp' || $info == 'gif') {
+				$icon = 'photo.png';
+				echo '<li><a href="index.php?action=eyeFiles&noPropagate=1&do=open&file='.$value.'"><img style="padding-right:7px;" src="'.$path.$icon.'">'.basename($value).'</a></li>';
+			} elseif($info == 'odt' || $info == 'doc' || $info == 'xls' || $info == 'ods') {
+				$icon = 'document.png';
+				echo '<li><a href="index.php?action=eyeFiles&noPropagate=1&do=open&file='.$value.'"><img style="padding-right:7px;" src="'.$path.$icon.'">'.basename($value).'</a></li>';
+			} elseif($info == 'mp3' || $info == 'ogg' || $info == 'wav') {
+				$icon = 'music.png';
+				echo '<li><a href="index.php?action=eyeFiles&do=open&file='.$value.'"><img style="padding-right:7px;" src="'.$path.$icon.'">'.basename($value).'</a></li>';
+			} elseif($info == 'avi' || $info == 'mpg' || $info == 'ogm' || $info == 'mkv' || $info == 'mov') {
+				$icon = 'video.png';
+				echo '<li><a href="index.php?action=eyeFiles&do=open&file='.$value.'"><img style="padding-right:7px;" src="'.$path.$icon.'">'.basename($value).'</a></li>';
+			} elseif($info != 'eyelink') {
+				$icon = 'file.png';
+				echo '<li><a href="index.php?action=eyeFiles&do=open&file='.$value.'"><img style="padding-right:7px;" src="'.$path.$icon.'">'.basename($value).'</a></li>';
+			}
+		}
+		echo '</ul>';
+	} else {
+		$info = pathinfo($file);
+		$info = /* utf8 */ strtolower($info['extension']);
+
+		if($info == 'txt') {
+			$fp = vfs('open',array($file,'r'));
+			$content = stream_get_contents($fp);
+			fclose($fp);
+			echo '<div id="eyeFiles_'.md5($file).'" title="'.$show.'" selected="true">';
+			echo '<pre>'.$content.'</pre>';
+			echo '</div>';
+		} elseif($info == 'png' || $info == 'jpg' || $info == 'jpeg' || $info == 'bmp' || $info == 'gif') {
+			$rfile = vfs('getRealName',array($file));
+			$mime = @getimagesize($rfile);
+			if(!$mime) {
+				exit;
+			}
+			$fp = vfs('open',array($file,'r'),1);
+			if(!$fp) {
+				return;
+			}
+			$len = vfs('filesize',array($file));
+			header('Content-Type: '.$mime['mime']);
+			header('Content-Length: '.$len);
+			header('Accept-Ranges: bytes');
+			$content = fread($fp,$len);
+			echo $content;
+			fclose($fp);
+			exit;
+		} elseif($info == 'odt' || $info == 'doc' || $info == 'xls' || $info == 'ods') {
+			$real = vfs('getRealName',array($file));
+			$theid = md5(uniqid(rand(), true));
+			$nfile = um('getCurrentUserDir').'tmp/iFiles'.$theid.'.'.$info;
+			$myHTML = um('getCurrentUserDir').'tmp/iFiles'.$theid.'_new.tmp';
+			copy($real,$nfile);
+			if ($info == 'xls' || $info == 'ods') {
+				$to = 'HTML (StarCalc)';
+			} else {
+				$to = 'HTML (StarWriter)';
+			}
+			eyeConverter('convert',array($nfile,$myHTML,$to,1));
+			$fp = vfs('real_open',array($myHTML,'r'));
+			$content = fread($fp,vfs('real_filesize',array($myHTML)));
+			fclose($fp);
+			$content = str_replace('<IMG SRC="','<IMG SRC="index.php?action=eyeFiles&do=viewTempImg&params=',$content);
+			echo $content;
+		}
+	}
+}
+?>

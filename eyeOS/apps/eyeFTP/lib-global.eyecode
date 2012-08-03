@@ -1,0 +1,318 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*********************************************************************************************/
+/*********************************************************************************************/
+/*					TOOLS FUNCTIONS															 */
+/*********************************************************************************************/
+/*********************************************************************************************/
+
+/**
+ * NOTE ABOUT THIS FUNCTION:
+ * The following procedure is used for connection and download/upload operations.
+ * It makes possible to update the interface BEFORE performing an operation which can take some
+ * time to achieve, so we can inform the user that a process has started and he has to wait.
+ *
+ * @param array $params An array with at least the following content:
+ *                      array('__signal' => the_name_of_the_signal_to_send)
+ */
+function eyeFTP_bounceRequest($params=null) {
+	global $checknum;
+
+	$sendMsgParams = '';
+	foreach($params as $key => $value) {
+		if ($key != '__signal')
+			$sendMsgParams .= 'eyeParam("'.$key.'","'.$value.'")+';
+	}
+	$sendMsgParams .= 'eyeParam("__bounce","1")';
+
+	eyeX('rawjs',array('js' => 'sendMsg('.$checknum.',"'.$params['__signal'].'",'.$sendMsgParams.');'));
+}
+
+/**
+ * Checks if the calling function was called from a "bounced" request
+ *
+ * @param mixed $params Arguments given to the calling function when called
+ * @return boolean TRUE if the arguments indicate that the function is called from a "bounced" request,
+ *                 FALSE otherwise
+ */
+function eyeFTP_isFromBouncedRequest($params=null) {
+	return (is_array($params) && $params['__bounce'][0] == 1);
+}
+
+/**
+ * @return array The current running state of the application
+ */
+function eyeFTP_getConf() {
+	$conf = array();
+
+	$conf['isConnectionActive'] = $GLOBALS['eyeFTP_isFTPConnectionActive_HID']->text;
+	$conf['host'] = $GLOBALS['eyeFTP_host_TXTBOX']->text;
+	$conf['port'] = $GLOBALS['eyeFTP_port_TXTBOX']->text;
+	$conf['username'] = $GLOBALS['eyeFTP_username_TXTBOX']->text;
+	$conf['password'] = $GLOBALS['eyeFTP_password_TXTBOX']->text;
+	$conf['passiveMode'] = $GLOBALS['eyeFTP_passiveMode_CHKBOX']->checked;
+
+	$conf['currentLocalDir'] = $GLOBALS['eyeFTP_currentLocalDir_HID']->text;
+	$conf['currentRemoteDir'] = $GLOBALS['eyeFTP_currentRemoteDir_HID']->text;
+	$conf['displayedCurrentRemoteDir'] = $GLOBALS['eyeFTP_currentRemoteDir_HID']->text;
+
+	$conf['listedLocalFilesData'] = unserialize($GLOBALS['eyeFTP_serializedLocalFilesData_HID']->text);
+	$conf['listedRemoteFilesData'] = unserialize($GLOBALS['eyeFTP_serializedRemoteFilesData_HID']->text);
+
+	$conf['selectedView'] = $GLOBALS['eyeFTP_selectedView_HID']->text;
+
+	if ($GLOBALS['eyeFTP_localFiles_TAB']->selected)
+		$conf['selectedLocalFile'] = $conf['listedLocalFilesData'][$GLOBALS['eyeFTP_localFiles_TAB']->selected];
+	else
+		$conf['selectedLocalFile'] = false;
+	if ($GLOBALS['eyeFTP_remoteFiles_TAB']->selected)
+		$conf['selectedRemoteFile'] = $conf['listedRemoteFilesData'][$GLOBALS['eyeFTP_remoteFiles_TAB']->selected];
+	else
+		$conf['selectedRemoteFile'] = false;
+
+	return $conf;
+}
+
+/**
+ * Checks whether a connection is active to the server or not, and trys to reconnect if necessary.
+ *
+ * @return boolean TRUE if connection is already active or established successfully, FALSE otherwise
+ */
+function eyeFTP_autoConnect() {
+	$conf = eyeFTP_getConf();
+	if (! $GLOBALS['eyeFTP_ftpConnectionResource']) {
+		if (! eyeFTP_ftpConnect($conf['host'],$conf['port'],$conf['username'],$conf['password'],$conf['passiveMode'],true)) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/**
+ * Removes double slashes when present and returns result string.
+ *
+ * @param string $dir The path to format
+ * @return string The path formated
+ */
+function eyeFTP_getFormatedDirPath($dir) {
+	if ($dir == '' || $dir == '//') {
+		return '/';
+	}
+	else {
+		return str_replace('//','/',$dir);
+	}
+}
+
+/**
+ * Adds text to log console
+ *
+ * @param string $text The text to append to the console
+ * @param array $tokens Tokens for i18n
+ * @param string $type Message type (normal, success, warning, ... See defined constants in events.eyecode)
+ * @param boolean $debug Debug mode (do a print_r() on the $text argument when displaying it)
+ */
+function eyeFTP_logConsole($text, $tokens=null, $type=EYEFTP_LOGSTYLE_NORMAL, $debug=false) {
+	$type = ($type == null)? EYEFTP_LOGSTYLE_NORMAL : $type;
+	if ( $debug === true) {
+		$text = print_r($text,true);
+		$debug = 'true';
+	}
+	else {
+		$debug = 'false';
+	}
+
+	global $myPid;
+	$text_b64 = base64_encode(i18n('translate',array($text,$tokens)));
+	eyeX('rawjs',array('js' => 'eyeFTP_logConsole("'.$myPid.'","'.$text_b64.'",100,"'.$type.'",'.$debug.')'));
+}
+
+function eyeFTP_clearLogConsole() {
+	global $myPid;
+	eyeX('rawjs',array('js' => 'eyeFTP_clearConsole("'.$myPid.'")'));
+}
+
+/**
+ * Updates interface elements states according to the argument passed.
+ *
+ * @param boolean $active Specifies whether the connection is active (TRUE), or inactive (FALSE)
+ */
+function eyeFTP_setConnectionActive($active=true) {
+	if ($active) {
+		$GLOBALS['eyeFTP_host_TXTBOX']->disable();
+		$GLOBALS['eyeFTP_port_TXTBOX']->disable();
+		$GLOBALS['eyeFTP_username_TXTBOX']->disable();
+		$GLOBALS['eyeFTP_password_TXTBOX']->disable();
+		$GLOBALS['eyeFTP_passiveMode_CHKBOX']->disable();
+
+		$GLOBALS['eyeFTP_isFTPConnectionActive_HID']->setText('1');
+		$GLOBALS['eyeFTP_WND']->setTitle($GLOBALS['eyeFTP_username_TXTBOX']->text.'@'.$GLOBALS['eyeFTP_host_TXTBOX']->text.' - '.i18n('translate',array('FTP Client')));
+	}
+	else {
+		$GLOBALS['eyeFTP_host_TXTBOX']->enable();
+		$GLOBALS['eyeFTP_port_TXTBOX']->enable();
+		$GLOBALS['eyeFTP_username_TXTBOX']->enable();
+		$GLOBALS['eyeFTP_password_TXTBOX']->enable();
+		$GLOBALS['eyeFTP_passiveMode_CHKBOX']->enable();
+
+		$GLOBALS['eyeFTP_isFTPConnectionActive_HID']->setText('0');
+		$GLOBALS['eyeFTP_WND']->setTitle(i18n('translate',array('Disconnected - FTP Client')));
+		eyeFTP_emptyRemoteFilesTable();
+	}
+}
+
+/**
+ * This procedure is called when the user clicks on one of the two tables.
+ * The next actions (create folder, rename, download, etc.) will be applied to the latest view clicked
+ * (local or remote).
+ *
+ * @param string $view Sets the active view for actions ('local' or 'remote')
+ */
+function eyeFTP_setActiveView($view) {
+	switch($view) {
+		case 'remote':
+			$GLOBALS['eyeFTP_selectedView_HID']->setText('remote');
+			$GLOBALS['eyeFTP_remoteFiles_TAB']->setContainerCss(array('border' => 'thin solid #19427f'));
+			$GLOBALS['eyeFTP_localFiles_TAB']->setContainerCss(array('border' => 'thin solid #FFFFFF'));
+			return;
+
+		default:
+			$GLOBALS['eyeFTP_selectedView_HID']->setText('local');
+			$GLOBALS['eyeFTP_localFiles_TAB']->setContainerCss(array('border' => 'thin solid #19427f'));
+			$GLOBALS['eyeFTP_remoteFiles_TAB']->setContainerCss(array('border' => 'thin solid #FFFFFF'));
+			return;
+	}
+}
+
+/**
+ * Parses strings returned by the ftp_rawlist() function and put each file's information in
+ * a dedicated named cell in a PHP array for better future processings.
+ *
+ * -- Source: php.net / Google :)
+ * -- Adaptation: Nanawel (nanawel@eyeos.org)
+ *
+ * @param array $array The array to parse
+ * @return arrat An array in the form of (filename => array(fileInformations))
+ */
+function parse_rawlist($array, $addParent=true) {
+	$filesData = array();
+
+	if ($addParent) {
+		//Note: Some FTP servers always return the parent folder entry (".."),
+		//and others don't. So we skip the folder entry in parsing and always
+		//add one here to ensure it will always appear in the list.
+
+		//special: parent folder
+		$fileInfo = array(
+			'type'=>'d',
+			'perms'=>' ',
+			'number'=>' ',
+			'owner'=>' ',
+			'group'=>' ',
+			'size'=>' ',
+			'month'=>' ',
+			'day'=>' ',
+			'year-time'=>' ',
+			'name'=>'..',
+			'displayedName'=>'..'
+		);
+		$filesData[] = $fileInfo;
+	}
+
+	foreach ($array as $currentFile) {
+		//eyeFTP_logConsole($currentFile, null, true);
+		$matches = array();
+		//            type   permissions   number     owner            group          size      month            day                     time/year       name
+		preg_match("/([-dl])([rwxst-]+).* ([0-9])+ ([a-zA-Z0-9]+).* ([a-zA-Z0-9]+).* ([0-9]*) ([a-zA-Z]{3}).? ([0-9]{1,2}) ([0-9]{2}:[0-9]{2}| [0-9]{4}) (.+)/", $currentFile, $matches); // utf8
+
+		$fileInfo = array();
+		$fileInfo['type'] = $matches[1];
+		$fileInfo['perms'] = $matches[2];
+		$fileInfo['number'] = $matches[3];
+		$fileInfo['owner'] = $matches[4];
+		$fileInfo['group'] = $matches[5];
+		$fileInfo['size'] = $matches[6];
+		$fileInfo['month'] = $matches[7];
+		$fileInfo['day'] = $matches[8];
+		$fileInfo['year-time'] = $matches[9];
+		$fileInfo['name'] = $matches[10];
+		$fileInfo['displayedName'] = $fileInfo['name'];	//originally was there because of encoding problems
+
+		//eyeFTP_logConsole($fileInfo, null, true);
+		if ($fileInfo['name'] != '.' && $fileInfo['name'] != '..' && $fileInfo['name'] != '') {
+			$filesData[] = $fileInfo;
+		}
+	}
+
+	//sort data (parent folder, other folders, then files)
+	usort($filesData, 'eyeFTP_compareFilesData');
+	$return = array();
+	$i = 1;
+	foreach($filesData as $fileData) {
+		$return[$i++] = $fileData;
+	}
+	return $return;
+}
+
+/**
+ * Sort files list processed by parse_rawlist() in order to put the folders on top
+ * of the list.
+ * AUTOMATICALLY CALLED BY parse_rawlist()
+ *
+ * @param array $a
+ * @param array $b
+ * @return int A negative value if $a must be placed before $b, a positive value otherwise
+ */
+function eyeFTP_compareFilesData($a, $b) {
+	if ($a['type'] == $b['type']) {
+		if ($a['name'] == '..')
+			return -1;
+
+		if ($b['name'] == '..')
+			return 1;
+
+		return strcmp($a['name'],$b['name']);
+	}
+	if ($a['type'] == 'd' && $b['type'] != 'd')
+		return -1;
+	if ($a['type'] != 'd' && $b['type'] == 'd')
+		return 1;
+}
+
+function eyeFTP_prepareLongExecution() {
+	@ini_set('max_execution_time',0);
+	@set_time_limit(0);
+}
+
+/**
+ * @return string The current version extracted from the info.xml
+ */
+function eyeFTP_getVersionFromInfoXML() {
+	$file = EYE_ROOT.'/'.APP_DIR.'/eyeFTP/info.xml';
+	if(vfs('real_fileExists',array($file))) {
+		$content = file_get_contents($file);
+		$content = eyeXML('xml2array',array($content));
+
+		if (is_array($content['package'])
+			&& is_array($content['package'][0])
+			&& is_array($content['package'][0]['version'])) {
+				return $content['package'][0]['version'][0];
+		}
+	}
+	return '(unknown)';
+}
+
+?>

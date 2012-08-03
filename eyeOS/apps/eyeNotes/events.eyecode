@@ -1,0 +1,284 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeNotes_on_Message($params="") {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeNotes_on_Open($params=null) {
+	global $checknum;
+	$options = array(
+		EYEDIALOG_TYPE_OPENFILE,
+		'SelectFileOpen',
+		$checknum,
+		'',
+		array(
+			'Text files' => '*.txt',
+			'All files' => '*'
+		)
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+
+function eyeNotes_on_Resize($params=null) {
+	$width = $params['arg'][0];
+	$height = $params['arg'][1];
+	$width = intval($width);
+	$height = intval($height);
+	$GLOBALS['eyeNotesWND']->width = $width;
+	$GLOBALS['eyeNotesWND']->height = $height;
+	$width = $width - 8;
+	$height = $height - 84;
+	$GLOBALS['noteContent']->setWidth($width);
+	$GLOBALS['noteContent']->setHeight($height);
+}
+
+function eyeNotes_on_fullScreen() {
+	$GLOBALS['eyeNotesWND']->setFullScreen();
+}
+
+function eyeNotes_on_Save($params=null) {
+	global $checknum;
+	$options = array(
+		EYEDIALOG_TYPE_SAVEFILE,
+		'SelectFileSave',
+		$checknum,
+		'',
+		array(
+			'Text files' => '*.txt',
+			'All files' => '*.*'
+		)
+	);
+	if(is_object($GLOBALS['notePath']) && $GLOBALS['notePath']->text) {
+		$fp = vfs('open',array($GLOBALS['notePath']->text,'w'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+			return;
+		}
+		fwrite($fp,$GLOBALS['noteContent']->text);
+		fclose($fp);
+		eyex('messageBox',array('content'=>'File saved successfully.'));
+		$myHiddenContent = new Hidden(array(
+			'name' => 'textAreaContent',
+			'father' => 'eyeNotesWND_Content',
+			'text' => $GLOBALS['noteContent']->text
+		));
+		eyeWidgets('serialize',array($myHiddenContent));
+	} else {
+		proc('launch',array('eyeDialog',$options));
+	}
+}
+
+function eyeNotes_on_SaveAs($params=null) {
+	global $checknum;
+	$options = array(
+		1,
+		'SelectFileSave',
+		$checknum,
+		'',
+		array(
+			'Text files' => '*.txt',
+			'All files' => '*.*'
+		)
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+
+
+function eyeNotes_on_SelectFileSave($params=null) {
+	$file = $params['arg'][0];
+	if($file) {
+		if ( /* utf8 */ strpos($file, '.') === false) {
+			$file .= '.txt';
+		}
+		$file = um('getCurrentUserDir').FILES_USER_DIR.'/'.$file;
+		if(!vfs('create',array($file,'eyeNotes'))) {
+			eyex('messageBox',array('content'=>'Unable to create file'));
+			return;
+		}
+		$fp = vfs('open',array($file,'w'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+			return;
+		}
+		fwrite($fp,$GLOBALS['noteContent']->text);
+		fclose($fp);
+		$myHidden = new Hidden(array('name'=>'notePath','father'=>'eyeNotesWND','text'=>$file));
+		eyeWidgets('serialize',array($myHidden));
+		eyeFiles('update',array(dirname($file)));
+		eyex('messageBox',array('content'=>'File saved successfully.'));
+		$myHiddenContent = new Hidden(array(
+			'name' => 'textAreaContent',
+			'father' => 'eyeNotesWND_Content',
+			'text' => $GLOBALS['noteContent']->text
+		));
+		eyeWidgets('serialize',array($myHiddenContent));
+		$GLOBALS['eyeNotesWND']->setTitle(basename($file.' - '.i18n('translate',array('Text Editor'))));
+	}
+}
+
+function eyeNotes_on_SelectFileOpen($params=null) {
+	$file = $params['arg'][0];
+	if($file) {
+		$file = um('getCurrentUserDir').FILES_USER_DIR.'/'.$file;
+		$info = pathinfo($file);
+		$ext = /* utf8 */ strtolower($info['extension']);
+		if($ext == 'asp') {
+			$lang = 'asp';
+		} else if($ext == 'cs') {
+			$lang = 'csharp';
+		} else if($ext == 'css') {
+			$lang = 'css';
+		} else if($ext == 'html') {
+			$lang = 'html';
+		} else if($ext == 'java') {
+			$lang = 'java';
+		} else if($ext == 'js') {
+			$lang = 'javascript';
+		} else if($ext == 'pl') {
+			$lang = 'perl';
+		} else if($ext == 'php') {
+			$lang = 'php';
+		} else if($ext == 'rb') {
+			$lang = 'ruby';
+		} else if($ext == 'sql') {
+			$lang = 'sql';
+		} else if($ext == 'vbs') {
+			$lang = 'vbscript';
+		} else if($ext == 'xsl') {
+			$lang = 'xsl';
+		} else if($ext == 'c' || $ext == 'cc' || $ext == 'cpp') {
+			$lang = 'c';
+		} else if($ext == 'eyecode') {
+			$lang = 'eyecode';
+		} else {
+			$lang = 'text';
+		}
+		$fp = vfs('open',array($file,'r'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+			return;
+		}
+		$GLOBALS['eyeNotesWND']->setTitle(basename($file.' - '.i18n('translate',array('Text Editor'))));
+		$myHidden = new Hidden(array('name'=>'notePath','father'=>'eyeNotesWND','text'=>$file));
+		eyeWidgets('serialize',array($myHidden));
+		$size = vfs('filesize',array($file));
+		$content = fread($fp,$size);
+		fclose($fp);
+		$GLOBALS['noteContent']->setText($content);
+		$myHiddenContent = new Hidden(array(
+			'name' => 'textAreaContent',
+			'father' => 'eyeNotesWND_Content',
+			'text' => $content
+		));
+		eyeWidgets('serialize',array($myHiddenContent));
+	}
+}
+
+function eyeNotes_on_Close($params=null){
+
+	$taContent = $GLOBALS['textAreaContent']->text;
+	$content = $GLOBALS['noteContent']->text;
+
+	if($taContent != $content ) {
+		eyex('messageBox',array(
+			'content' => 'Do you want to save changes?',
+			'type' => 3,
+			'title' => 'Delete warning',
+			'win_name' => 'delete_warning',
+			'win_style' => TITLE + MIN + CLOSE,
+			'btn1_capt' => 'Save',
+			'btn1_name' => 'yDelete',
+			'btn2_capt' => "Don't save",
+			'btn2_name' => 'nDelete',
+			'btn3_capt' => 'Cancel',
+			'btn3_name' => 'cancel',
+			'img' => '?',
+			'win_removepid' => 0
+		));
+	} else {
+		proc('end');
+	}
+}
+
+function eyeNotes_on_cancel($params=""){
+	$GLOBALS['delete_warning']->close();
+}
+
+function eyeNotes_on_nDelete($params=""){
+	$GLOBALS['delete_warning']->close();
+	proc('end');
+}
+
+function eyeNotes_on_yDelete($params=null){
+	global $checknum;
+	$options = array(
+		EYEDIALOG_TYPE_SAVEFILE,
+		'SelectFileSaveClose',
+		$checknum,
+		'',
+		array(
+			'Text files' => '*.txt',
+			'All files' => '*.*'
+		)
+	);
+	$GLOBALS['delete_warning']->close();
+	if(is_object($GLOBALS['notePath']) && $GLOBALS['notePath']->text) {
+		$fp = vfs('open',array($GLOBALS['notePath']->text,'w'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+			return;
+		}
+		fwrite($fp,$GLOBALS['noteContent']->text);
+		fclose($fp);
+		eyex('messageBox',array('content'=>'File saved successfully.'));
+		proc('end');
+	} else {
+		proc('launch',array('eyeDialog',$options));
+	}
+}
+
+function eyeNotes_on_SelectFileSaveClose($params=null) {
+	$file = $params['arg'][0];
+	if($file) {
+		if ( /* utf8 */ strpos($file, '.') === false) {
+			$file .= '.txt';
+		}
+		$file = um('getCurrentUserDir').FILES_USER_DIR.'/'.$file;
+		if(!vfs('create',array($file,'eyeNotes'))) {
+			eyex('messageBox',array('content'=>'Unable to create file'));
+			return;
+		}
+		$fp = vfs('open',array($file,'w'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+			return;
+		}
+		fwrite($fp,$GLOBALS['noteContent']->text);
+		fclose($fp);
+		$myHidden = new Hidden(array('name'=>'notePath','father'=>'eyeNotesWND','text'=>$file));
+		eyeWidgets('serialize',array($myHidden));
+		eyeFiles('update',array(dirname($file)));
+		eyex('messageBox',array('content'=>'File saved successfully.'));
+	}
+	proc('end');
+}
+
+
+function eyeNotes_on_New(){
+	proc('launch',array('eyeNotes'));
+}
+?>

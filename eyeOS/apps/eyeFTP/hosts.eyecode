@@ -1,0 +1,669 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+include_once(EYE_ROOT.'/'.APP_DIR.'/eyeFTP/events'.EYE_CODE_EXTENSION);
+
+/*********************************************************************************************/
+/*   IMAGES URL                                                                              */
+/*********************************************************************************************/
+define('EYEFTP_IMG_MANAGEHOSTSDLG_HOST', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeFTP/toolbar/host.png');
+define('EYEFTP_IMG_MANAGEHOSTSDLG_ADD', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeFTP/toolbar/addhost.png');
+define('EYEFTP_IMG_MANAGEHOSTSDLG_EDIT', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeFTP/toolbar/edithost.png');
+define('EYEFTP_IMG_MANAGEHOSTSDLG_DELETE', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeFTP/toolbar/deletehost.png');
+define('EYEFTP_IMG_MANAGEHOSTSDLG_LOAD', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeFTP/toolbar/loadhost.png');
+define('EYEFTP_IMG_MANAGEHOSTSDLG_HOSTICON', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeFTP/minihost.png');
+
+/*********************************************************************************************/
+/*********************************************************************************************/
+/*					FUNCTIONS TRIGGERED BY SIGNALS RAISED BY THE INTERFACE					 */
+/*********************************************************************************************/
+/*********************************************************************************************/
+
+function eyeFTP_on_eyeFTP_manageHosts_initComplete($params=null) {
+	eyeFTP_refreshHostsTable();
+}
+
+function eyeFTP_on_eyeFTP_manageHosts_savedHosts_TAB_dblClick($params=null) {
+	eyeFTP_on_eyeFTP_manageHosts_load_BTN();
+}
+
+function eyeFTP_on_eyeFTP_manageHosts_add_BTN($params=null) {
+	$GLOBALS['eyeFTP_manageHosts_idEdition_HID']->setText('new');
+
+	eyeFTP_enableHostForm(true);
+
+	//display the "add host" icon
+	$GLOBALS['eyeFTP_manageHosts_actionIcon_IMG']->setUrl(EYEFTP_IMG_MANAGEHOSTSDLG_ADD);
+
+	//fill in with default values
+	$GLOBALS['eyeFTP_manageHosts_host_TXTBOX']->setText('');
+	$GLOBALS['eyeFTP_manageHosts_port_TXTBOX']->setText('21');
+	$GLOBALS['eyeFTP_manageHosts_username_TXTBOX']->setText('anonymous');
+	$GLOBALS['eyeFTP_manageHosts_password_TXTBOX']->setText('eyeftp@eyeos.org');
+}
+
+function eyeFTP_on_eyeFTP_manageHosts_edit_BTN($params=null) {
+	$displayedHosts = unserialize($GLOBALS['eyeFTP_manageHosts_serializedHostsData_HID']->text);
+	if (! $GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->selected) {
+		eyeX('messageBox',array('content'=>'You must select a host to edit'));
+		return;
+	}
+	eyeFTP_enableHostForm(true);
+
+	//display the "edit host" icon
+	$GLOBALS['eyeFTP_manageHosts_actionIcon_IMG']->setUrl(EYEFTP_IMG_MANAGEHOSTSDLG_EDIT);
+
+	$id = $GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->selected;
+
+	$GLOBALS['eyeFTP_manageHosts_idEdition_HID']->setText($id);
+	$GLOBALS['eyeFTP_manageHosts_host_TXTBOX']->setText($displayedHosts[$id]['name']);
+	$GLOBALS['eyeFTP_manageHosts_port_TXTBOX']->setText($displayedHosts[$id]['port']);
+	$GLOBALS['eyeFTP_manageHosts_username_TXTBOX']->setText($displayedHosts[$id]['username']);
+	$GLOBALS['eyeFTP_manageHosts_password_TXTBOX']->setText($displayedHosts[$id]['password']);
+
+	if ($displayedHosts[$id]['listA']) {
+		$GLOBALS['eyeFTP_manageHosts_listA_CHKBOX']->check();
+	}
+	else {
+		$GLOBALS['eyeFTP_manageHosts_listA_CHKBOX']->uncheck();
+	}
+}
+
+function eyeFTP_on_eyeFTP_manageHosts_delete_BTN($params=null) {
+	$displayedHosts = unserialize($GLOBALS['eyeFTP_manageHosts_serializedHostsData_HID']->text);
+	if (! $GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->selected) {
+		eyeX('messageBox',array('content'=>'You must select a host to delete'));
+		return;
+	}
+	$id = $GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->selected;
+
+	//if the host we are about to delete is being edited, we clear the form
+	if ($GLOBALS['eyeFTP_manageHosts_idEdition_HID']->text == $id) {
+		eyeFTP_enableHostForm(false);
+	}
+
+	unset($displayedHosts[$id]);
+	eyeFTP_saveHosts($displayedHosts);
+	eyeFTP_refreshHostsTable();
+}
+
+function eyeFTP_on_eyeFTP_manageHosts_load_BTN($params=null) {
+	global $checknum;
+	$conf = eyeFTP_getConf();
+	$displayedHosts = unserialize($GLOBALS['eyeFTP_manageHosts_serializedHostsData_HID']->text);
+	if (! $GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->selected
+		|| ! is_array($displayedHosts[$GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->selected])) {
+		eyeX('messageBox',array('content'=>'You must select a host to load'));
+		return;
+	}
+	$id = $GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->selected;
+
+	//if a connection is currently established we shut it down
+	if ($conf['isConnectionActive']) {
+		eyeFTP_setConnectionActive(false);
+	}
+
+	$GLOBALS['eyeFTP_host_TXTBOX']->setText($displayedHosts[$id]['name']);
+	$GLOBALS['eyeFTP_port_TXTBOX']->setText($displayedHosts[$id]['port']);
+	$GLOBALS['eyeFTP_username_TXTBOX']->setText($displayedHosts[$id]['username']);
+	$GLOBALS['eyeFTP_password_TXTBOX']->setText($displayedHosts[$id]['password']);
+	$GLOBALS['eyeFTP_listA_HID']->setText($displayedHosts[$id]['listA']);
+
+	$GLOBALS['eyeFTP_manageHosts_DLG']->close();
+
+	//auto connect to loaded host
+	eyeFTP_on_eyeFTP_connect_ITM();
+}
+
+function eyeFTP_on_eyeFTP_manageHosts_save_BTN($params=null) {
+	$displayedHosts = unserialize($GLOBALS['eyeFTP_manageHosts_serializedHostsData_HID']->text);
+
+	//adding a new host configuration
+	if (! $GLOBALS['eyeFTP_manageHosts_idEdition_HID']->text
+		|| $GLOBALS['eyeFTP_manageHosts_idEdition_HID']->text == 'new') {
+		$id = count($displayedHosts) +1;
+	}
+	//updating existing host configuration
+	else {
+		if (! is_array($displayedHosts[$GLOBALS['eyeFTP_manageHosts_idEdition_HID']->text]))
+			$id = count($displayedHosts) +1;
+		else
+			$id = intval($GLOBALS['eyeFTP_manageHosts_idEdition_HID']->text);
+	}
+
+	if (! $GLOBALS['eyeFTP_manageHosts_host_TXTBOX']->text
+		|| ! $GLOBALS['eyeFTP_manageHosts_port_TXTBOX']->text
+		|| ! $GLOBALS['eyeFTP_manageHosts_username_TXTBOX']->text) {
+		eyeX('messageBox',array('content'=>'You must specify a hostname, a port and a username'));
+		return;
+	}
+
+	$newOrUpdatedHost = array();
+	$newOrUpdatedHost['name'] = $GLOBALS['eyeFTP_manageHosts_host_TXTBOX']->text;
+	$newOrUpdatedHost['port'] = $GLOBALS['eyeFTP_manageHosts_port_TXTBOX']->text;
+	$newOrUpdatedHost['username'] = $GLOBALS['eyeFTP_manageHosts_username_TXTBOX']->text;
+	$newOrUpdatedHost['password'] = $GLOBALS['eyeFTP_manageHosts_password_TXTBOX']->text;
+	$newOrUpdatedHost['listA'] = $GLOBALS['eyeFTP_manageHosts_listA_CHKBOX']->checked? '1' : '0';
+
+	$displayedHosts[$id] = $newOrUpdatedHost;
+	eyeFTP_saveHosts($displayedHosts);
+
+	eyeFTP_enableHostForm(false);
+	eyeFTP_refreshHostsTable();
+}
+
+function eyeFTP_on_eyeFTP_manageHosts_cancel_BTN($params=null) {
+	eyeFTP_enableHostForm(false);
+}
+
+
+/*********************************************************************************************/
+/*********************************************************************************************/
+/*					TOOLS FUNCTIONS															 */
+/*********************************************************************************************/
+/*********************************************************************************************/
+
+/**
+ * Reloads the informations displayed in the hosts list from the XML
+ */
+function eyeFTP_refreshHostsTable() {
+	$hosts = eyeFTP_getSavedHosts();
+	eyeFTP_emptyHostsTable();
+
+	foreach($hosts as $id => $hostData) {
+		$hiddenPassword = /* utf8 */ str_pad('', utf8_strlen($hostData['password']), '*');
+		$GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->addRow(array(
+			'<img src="'.EYEFTP_IMG_MANAGEHOSTSDLG_HOSTICON.'" />',
+			$hostData['name'],
+			$hostData['port'],
+			$hostData['username'],
+			($hiddenPassword)? $hiddenPassword : ' ',
+			($hostData['listA'])? i18n('translate',array('yes')) : i18n('translate',array('no')),
+			$id
+		));
+	}
+	$GLOBALS['eyeFTP_manageHosts_serializedHostsData_HID']->setText(serialize($hosts));
+}
+
+/**
+ * Extracts and reformats the hosts informations stored in the XML configuration file
+ * Note: the array returned is indexed from 1 not 0, because this index is used as a key
+ *       in the SortableTable Widget and this one doesn't work well with null-like values
+ *       for cells (0, ' ', etc...)
+ *
+ * @return array array(array(name => ..., port => ..., username => ..., password => ...))
+ */
+function eyeFTP_getSavedHosts() {
+	$file = um('getCurrentUserDir').CONF_USER_DIR.'/eyeFTP/conf.xml';
+	if(!vfs('real_fileExists',array($file))) {
+		vfs('real_create',array($file));
+		$myF['eyeFTP'] = array();
+		eyeXML('setXMLfile',array($file,$myF));
+	}
+	$content = eyeXML('getXMLfile',array($file));
+
+	$i = 1;
+	$hosts = array();
+	if (is_array($content['eyeFTP'])
+		&& is_array($content['eyeFTP'][0])
+		&& is_array($content['eyeFTP'][0]['host'])) {
+		foreach($content['eyeFTP'][0]['host'] as $currentHost) {
+			$hosts[$i++] = array(
+				'name' => $currentHost['name'][0],
+				'port' => $currentHost['port'][0],
+				'username' => $currentHost['username'][0],
+				'password' => $currentHost['password'][0],
+				'listA' => ($currentHost['listA'][0])? 1 : 0,
+			);
+		}
+	}
+	//eyeFTP_logConsole($hosts, null, true);
+
+	return $hosts;
+}
+
+/**
+ * Removes all rows from the hosts table
+ */
+function eyeFTP_emptyHostsTable() {
+	$displayedHosts = unserialize($GLOBALS['eyeFTP_manageHosts_serializedHostsData_HID']->text);
+	foreach($displayedHosts as $id => $fileInfos) {
+		$GLOBALS['eyeFTP_manageHosts_savedHosts_TAB']->delRow($id);
+	}
+	$GLOBALS['eyeFTP_manageHosts_serializedHostsData_HID']->setText(serialize(array()));
+}
+
+/**
+ * Saves and replaces hosts saved in the XML config file with the ones specified in argument
+ *
+ * @param array $hosts The hosts data to save, organized the same way the data returned
+ *                     by eyeFTP_getSavedHosts():
+ *                     array(array(name => ..., port => ..., username => ..., password => ...))
+ */
+function eyeFTP_saveHosts($hosts) {
+	$file = um('getCurrentUserDir').CONF_USER_DIR.'/eyeFTP/conf.xml';
+	if(!vfs('real_fileExists',array($file))) {
+		vfs('real_create',array($file));
+		$myF['eyeFTP'] = array();
+		eyeXML('setXMLfile',array($file,$myF));
+	}
+	$content = eyeXML('getXMLfile',array($file));
+
+	//delete all saved hosts
+	if (is_array($content['eyeFTP'][0]['host']))
+		unset($content['eyeFTP'][0]['host']);
+
+	$i = 0;
+	foreach($hosts as $currentHost) {
+		$content['eyeFTP'][0]['host'][$i]['name'][0] = $currentHost['name'];
+		$content['eyeFTP'][0]['host'][$i]['port'][0] = $currentHost['port'];
+		$content['eyeFTP'][0]['host'][$i]['username'][0] = $currentHost['username'];
+		$content['eyeFTP'][0]['host'][$i]['password'][0] = $currentHost['password'];
+		$content['eyeFTP'][0]['host'][$i]['listA'][0] = $currentHost['listA'];
+		$i++;
+	}
+	$myXml = eyeXML('array2xml',array($content));
+	$fp = vfs('real_open',array($file,'w'));
+	fwrite($fp,$myXml);
+	fclose($fp);
+}
+
+/**
+ * Enable/disable the textfields of the host editor form
+ *
+ * @param boolean $enable
+ */
+function eyeFTP_enableHostForm($enable) {
+	if ($enable) {
+		$GLOBALS['eyeFTP_manageHosts_DLG']->setHeight(400);
+		$GLOBALS['eyeFTP_manageHosts_addUpdateHostData_CTNR']->unhide();
+	}
+	else {
+		$GLOBALS['eyeFTP_manageHosts_idEdition_HID']->setText('');
+		$GLOBALS['eyeFTP_manageHosts_host_TXTBOX']->setText('');
+		$GLOBALS['eyeFTP_manageHosts_port_TXTBOX']->setText('');
+		$GLOBALS['eyeFTP_manageHosts_username_TXTBOX']->setText('');
+		$GLOBALS['eyeFTP_manageHosts_password_TXTBOX']->setText('');
+		$GLOBALS['eyeFTP_manageHosts_listA_CHKBOX']->check();
+
+		$GLOBALS['eyeFTP_manageHosts_DLG']->setHeight(338);
+		$GLOBALS['eyeFTP_manageHosts_addUpdateHostData_CTNR']->hide();
+	}
+}
+
+
+
+
+/**
+ * Creates a dialog box to manage saved hosts
+ *
+ * @param array $params
+ * @see eyeFTP_on_eyeFTP_rename_rename_BTN()
+ */
+function showManageHostsDialog($params=null) {
+	global $checknum;
+
+	//prevent multiple instances of the window
+	if ($GLOBALS['eyeFTP_manageHosts_DLG']) {
+		@$GLOBALS['eyeFTP_manageHosts_DLG']->close();
+	}
+
+	$manageHostsWindow = new Window(array(
+		'name' => 'eyeFTP_manageHosts_DLG',
+		'father' => 'eyeFTP_WND',
+		'type' => NOLIST_CLOSE_WINDOW,
+		'cent' => 1,
+		'width' => 540,
+		'height' => 338,
+		'title' => 'eyeFTP',
+		'removepid' => 0
+	));
+	$manageHostsWindow->show();
+
+	/* DIALOG LOGO */
+	$logo = new Imagebox(array(
+		'name' => 'eyeFTP_manageHosts_logo_IMG',
+		'father' => 'eyeFTP_manageHosts_DLG_Content',
+		'x' => 10,
+		'y' => 10,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeFTP/managehosts.png'
+	));
+	$logo->show();
+
+	/* TITLE */
+	$title = new Label(array(
+		'name' => 'eyeFTP_manageHosts_title_LBL',
+		'father' => 'eyeFTP_manageHosts_DLG_Content',
+		'x' => 54,
+		'y' => 10,
+		'text' => 'Hosts Management'
+	));
+	$title->show(0);
+	$title->setCss(array(
+		'font-size' => '16px',
+		'font-weight' => 'bold',
+		'color' => '#004488'
+	));
+
+	/* SEPARATION LINE */
+	$line = new Line(array(
+		'name' => 'eyeFTP_manageHosts_line_LIN',
+		'father' => 'eyeFTP_manageHosts_DLG_Content',
+		'x' => 10,
+		'y' => 50,
+		'width' => $manageHostsWindow->width -20,
+		'height' => 2
+	));
+	$line->show(0);
+
+
+	/**
+	 * ACTIONS BUTTONS CONTAINER
+	 */
+	$actionsContainer = new Container(array(
+		'name' => 'eyeFTP_manageHosts_actions_CTNR',
+		'father' => 'eyeFTP_manageHosts_DLG_Content',
+		'x' => 4,
+		'y' => 64,
+		'width' => 532,
+		'height' => 32
+	));
+	$actionsContainer->show();
+
+	/* ADD BUTTON */
+	$addButton = new Button(array(
+		'name' => 'eyeFTP_manageHosts_add_BTN',
+		'father' => 'eyeFTP_manageHosts_actions_CTNR',
+		'caption' => 'Add host',
+		'x' => 0,
+		'y' => 0,
+		'enabled' => 1,
+		'img' => EYEFTP_IMG_MANAGEHOSTSDLG_ADD
+	));
+	$addButton->show(0);
+
+	/* EDIT BUTTON */
+	$editButton = new Button(array(
+		'name' => 'eyeFTP_manageHosts_edit_BTN',
+		'father' => 'eyeFTP_manageHosts_actions_CTNR',
+		'caption' => 'Edit Selection',
+		'x' => 100,
+		'y' => 0,
+		'enabled' => 1,
+		'img' => EYEFTP_IMG_MANAGEHOSTSDLG_EDIT
+	));
+
+	/* DELETE BUTTON */
+	$deleteButton = new Button(array(
+		'name' => 'eyeFTP_manageHosts_delete_BTN',
+		'father' => 'eyeFTP_manageHosts_actions_CTNR',
+		'caption' => 'Delete Selection',
+		'x' => 220,
+		'y' => 0,
+		'enabled' => 1,
+		'img' => EYEFTP_IMG_MANAGEHOSTSDLG_DELETE
+	));
+
+	/* LOAD BUTTON */
+	$loadButton = new Button(array(
+		'name' => 'eyeFTP_manageHosts_load_BTN',
+		'father' => 'eyeFTP_manageHosts_actions_CTNR',
+		'caption' => 'Load Selection',
+		'x' => 420,
+		'y' => 0,
+		'enabled' => 1,
+		'img' => EYEFTP_IMG_MANAGEHOSTSDLG_LOAD
+	));
+
+
+	/**
+	 * INPUT COMPONENTS CONTAINER
+	 */
+	$mainContainer = new Container(array(
+		'name' => 'eyeFTP_manageHosts_CTNR',
+		'father' => 'eyeFTP_manageHosts_DLG_Content',
+		'x' => 0,
+		'y' => 100,
+		'width' => 538,
+		'height' => 210
+	));
+	$mainContainer->show();
+
+	/* TABLE FOR SAVED HOSTS LIST */
+	$hostsTable = new Sortabletable(array(
+		'name' => 'eyeFTP_manageHosts_savedHosts_TAB',
+		'father' => 'eyeFTP_manageHosts_CTNR',
+		'x' => 4,
+		'y' => 4,
+		'width' => 528,
+		'height' => 200,
+		'sortypes' => array('Html','String','String','String','String','String','Hidden'),
+		'master' => 6,
+		'theader' => array(' ','Hostname','Port','Username','Password','LIST -a?','id'),
+		'signal' => 'eyeFTP_manageHosts_savedHosts_TAB_click',
+		'dblsignal' => 'eyeFTP_manageHosts_savedHosts_TAB_dblClick'
+	));
+	$hostsTable->show();
+
+	$editButton->addFriend($hostsTable);
+	$editButton->show(0);
+	$deleteButton->addFriend($hostsTable);
+	$deleteButton->show(0);
+	$loadButton->addFriend($hostsTable);
+	$loadButton->addFriend($GLOBALS['eyeFTP_passiveMode_CHKBOX']);
+	$loadButton->show(0);
+
+
+	/**
+	 * ADD/UPDATE HOST FORM COMPONENTS CONTAINER
+	 */
+	$addHostContainer = new Container(array(
+		'name' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'father' => 'eyeFTP_manageHosts_CTNR',
+		'x' => 8,
+		'y' => 212,
+		'width' => 524,
+		'height' => 56
+	));
+	$addHostContainer->show();
+	$addHostContainer->hide();
+	eyeWidgets('serialize', array($addHostContainer));
+
+	$actionIcon = new Imagebox(array(
+		'name' => 'eyeFTP_manageHosts_actionIcon_IMG',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 8,
+		'y' => 4,
+		'url' => EYEFTP_I
+	));
+	$actionIcon->show(0);
+
+	/* HOST LABEL/TEXTBOX */
+	$hostLabel = new Label(array(
+		'name' => 'eyeFTP_manageHosts_host_LBL',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 48,
+		'y' => 3,
+		'text' => 'Host: '
+	));
+	$hostLabel->show();
+	$hostTextbox = new Textbox(array(
+		'name' => 'eyeFTP_manageHosts_host_TXTBOX',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 80,
+		'y' => 1,
+		'width' => 120,
+		'enabled' => 1
+	));
+	$hostTextbox->show();
+	$hostTextbox->focus();
+
+	/* PORT LABEL/TEXTBOX */
+	$portLabel = new Label(array(
+		'name' => 'eyeFTP_manageHosts_port_LBL',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 236,
+		'y' => 3,
+		'text' => 'Port: '
+	));
+	$portLabel->show();
+	$portTextbox = new Textbox(array(
+		'name' => 'eyeFTP_manageHosts_port_TXTBOX',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 296,
+		'y' => 1,
+		'width' => 50,
+		'enabled' => 1
+	));
+	$portTextbox->show();
+
+	/* USERNAME LABEL/TEXTBOX */
+	$usernameLabel = new Label(array(
+		'name' => 'eyeFTP_manageHosts_username_LBL',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 48,
+		'y' => 25,
+		'text' => 'User: '
+	));
+	$usernameLabel->show();
+	$usernameTextbox = new Textbox(array(
+		'name' => 'eyeFTP_manageHosts_username_TXTBOX',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 80,
+		'y' => 22,
+		'width' => 120,
+		'enabled' => 1
+	));
+	$usernameTextbox->show();
+
+	/* PASSWORD LABEL/TEXTBOX */
+	$passwordLabel = new Label(array(
+		'name' => 'eyeFTP_manageHosts_password_LBL',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 236,
+		'y' => 25,
+		'text' => 'Password: '
+	));
+	$passwordLabel->show();
+	$passwordTextbox = new Textbox(array(
+		'name' => 'eyeFTP_manageHosts_password_TXTBOX',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 296,
+		'y' => 22,
+		'width' => 80,
+		'password' => 1,
+		'enabled' => 1
+	));
+	$passwordTextbox->show();
+
+	/* LIST-A LABEL/CHECKBOX */
+	$listACheckbox = new Checkbox(array(
+		'name' => 'eyeFTP_manageHosts_listA_CHKBOX',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'x' => 76,
+		'y' => 41,
+		'width' => 250,
+		'text' => 'Append -a to LIST commands',
+		'checked' => 1
+	));
+	$listACheckbox->show();
+
+	/* SAVE BUTTON */
+	$saveButton = new Button(array(
+		'name' => 'eyeFTP_manageHosts_save_BTN',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'caption' => 'Save',
+		'x' => 420,
+		'y' => 0,
+		'width' => 100,
+		'height' => 24,
+		'enabled' => 1
+	));
+	$saveButton->addFriend($hostTextbox);
+	$saveButton->addFriend($portTextbox);
+	$saveButton->addFriend($usernameTextbox);
+	$saveButton->addFriend($passwordTextbox);
+	$saveButton->addFriend($listACheckbox);
+	$saveButton->show(0);
+
+	/* CANCEL BUTTON */
+	$cancelButton = new Button(array(
+		'name' => 'eyeFTP_manageHosts_cancel_BTN',
+		'father' => 'eyeFTP_manageHosts_addUpdateHostData_CTNR',
+		'caption' => 'Cancel',
+		'x' => 420,
+		'y' => 34,
+		'width' => 100,
+		'height' => 24,
+		'enabled' => 1
+	));
+	$cancelButton->addFriend($hostTextbox);
+	$cancelButton->addFriend($portTextbox);
+	$cancelButton->addFriend($usernameTextbox);
+	$cancelButton->addFriend($passwordTextbox);
+	$cancelButton->addFriend($listACheckbox);
+	$cancelButton->show(0);
+
+
+	//HOST TEXTBOX FRIENDS (for enterEventMsg)
+	$hostTextbox->addFriend($portTextbox);
+	$hostTextbox->addFriend($usernameTextbox);
+	$hostTextbox->addFriend($passwordTextbox);
+	$hostTextbox->addFriend($listACheckbox);
+
+	//PORT TEXTBOX FRIENDS (for enterEventMsg)
+	$portTextbox->addFriend($hostTextbox);
+	$portTextbox->addFriend($usernameTextbox);
+	$portTextbox->addFriend($passwordTextbox);
+	$portTextbox->addFriend($listACheckbox);
+
+	//USERNAME TEXTBOX FRIENDS (for enterEventMsg)
+	$usernameTextbox->addFriend($hostTextbox);
+	$usernameTextbox->addFriend($portTextbox);
+	$usernameTextbox->addFriend($passwordTextbox);
+	$usernameTextbox->addFriend($listACheckbox);
+
+	//PASSWORD TEXTBOX FRIENDS (for enterEventMsg)
+	$passwordTextbox->addFriend($hostTextbox);
+	$passwordTextbox->addFriend($portTextbox);
+	$passwordTextbox->addFriend($usernameTextbox);
+	$passwordTextbox->addFriend($listACheckbox);
+
+	//"ENTER" EVENT
+	$hostTextbox->addEnterEventMsg('eyeFTP_manageHosts_save_BTN');
+	$portTextbox->addEnterEventMsg('eyeFTP_manageHosts_save_BTN');
+	$usernameTextbox->addEnterEventMsg('eyeFTP_manageHosts_save_BTN');
+	$passwordTextbox->addEnterEventMsg('eyeFTP_manageHosts_save_BTN');
+
+
+	/* HIDDEN ELEMENTS */
+	$arraySerializedHostsData = new Hidden(array(
+		'name' =>'eyeFTP_manageHosts_serializedHostsData_HID',
+		'father' => 'eyeFTP_manageHosts_DLG_Content',
+		'text' => ''
+	));
+	eyeWidgets('serialize',array($arraySerializedHostsData));
+	$idEdition = new Hidden(array(
+		'name' =>'eyeFTP_manageHosts_idEdition_HID',
+		'father' => 'eyeFTP_manageHosts_DLG_Content',
+		'text' => 'new'
+	));
+	eyeWidgets('serialize',array($idEdition));
+
+	eyeX('rawjs',array('js' => 'sendMsg('.$checknum.',"eyeFTP_manageHosts_initComplete","");'));
+}
+
+?>

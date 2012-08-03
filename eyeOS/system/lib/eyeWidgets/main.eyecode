@@ -1,0 +1,195 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	part of eyeWidgets library for oneye gui apps.
+*/
+/*
+	TODO: WE HAVE TO PUT A MEMORY LIMIT IN THE SESSION
+*/
+
+
+define('WTABLE','wtable');
+
+
+/**
+* Makes available all the widgets installed in the system.
+*
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeWidgets_loadWidgets() {
+	foreach (scandir(EYE_ROOT . '/' . SYSTEM_DIR . '/' . LIB_DIR . '/eyeWidgets/widgets') as $file) {
+		if ( /* utf8 */ substr($file, 0, 1) !== '.' && substr($file, -strlen(EYE_CODE_EXTENSION)) === EYE_CODE_EXTENSION) { // utf8
+			include_once EYE_ROOT . '/' . SYSTEM_DIR . '/' . LIB_DIR . '/eyeWidgets/widgets/' . $file;
+		}
+	}
+}
+
+/**
+* Declares the widget table variable, if not declared.
+*
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeWidgets_checkTable($params=null){
+	if(!eyeSessions('checkVar',array(WTABLE))) {
+		eyeSessions('makeArrayVar',array(WTABLE));
+	}
+}
+
+/**
+* Updates the values of the serialized widgets in the current process.
+*
+* @param $params array(params)
+* @param $params Associative array, being the keys of each value the names of
+*	the serialized widgets to be updated with the values of each
+*	element.
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeWidgets_updateContent($params=null) {
+	/*
+			<WIDGET_NAME>content</WIDGET_NAME>
+	*/
+	if($params == null || !is_array($params)){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		globalize();
+		return false;
+	}
+
+	global $myPid;
+	foreach ($params as $name => $content) {
+		if(isset($_SESSION[WTABLE][$myPid][$name])) {
+			$object = $_SESSION[WTABLE][$myPid][$name];
+			if(is_object($object)) {
+				if(method_exists($object,'setValue')) {
+					$object->setValue($content[0]);
+					$_SESSION[WTABLE][$myPid][$name] = $object;
+				}
+			}
+		}
+	}
+	globalize();
+	return true;
+}
+
+/**
+* Adds the specified object to the table of serialized widgets of the
+* current process.
+*
+* @param $params array(object)
+* @param $object Widget to serialize
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeWidgets_serialize($params) {
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	global $myPid;
+	$object = $params[0];
+	$name = $params[0]->name;
+	$_SESSION[WTABLE][$myPid][$name] = $object;
+	$GLOBALS[$name] = $object;
+}
+
+/**
+* Eliminates all the serialized widgets of an application, taking care
+* to close and remove all of its windows and widgets.
+*
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeWidgets_unserialize() {
+	global $myPid;
+	if(isset($_SESSION[WTABLE][$myPid]) && is_array($_SESSION[WTABLE][$myPid])) {
+		foreach ($_SESSION[WTABLE][$myPid] as $name=>$value) {
+			if ( /* utf8 */ strtolower(get_class($value)) === 'window') {
+				$value->close(1);
+			}
+			if(method_exists($value,'unserialize')){
+				$value->unserialize();
+			}
+			unset($GLOBALS[$name]);
+		}
+		unset($_SESSION[WTABLE][$myPid]);
+	}
+}
+
+/**
+* Unserializes a single widget from an application.
+*
+* @param $params array(name)
+* @param $name Name given to the widget to remove.
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeWidgets_singleUnserialize($params) {
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	global $myPid;
+	$name = $params[0];
+	unset($_SESSION[WTABLE][$myPid][$name]);
+	unset($GLOBALS[$name]);
+}
+
+/**
+* Eliminates all the serialized widgets of an application without
+* removing them from the screen.
+*
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeWidgets_rawunserialize() {
+	global $myPid;
+	foreach ($_SESSION[WTABLE][$myPid] as $name => $value) {
+		unset($GLOBALS[$name]);
+	}
+	unset($_SESSION[WTABLE][$myPid]);
+}
+
+function globalize() {
+	global $myPid;
+	if (isset($_SESSION[WTABLE][$myPid]) === true && is_array($_SESSION[WTABLE][$myPid]) === true) {
+		foreach ($_SESSION[WTABLE][$myPid] as $key => $value) {
+			$GLOBALS[$key] = $_SESSION[WTABLE][$myPid][$key];
+		}
+	}
+}
+
+/**
+* Returns a list of the available Widgets in the eyeWidgets lib
+* directory.
+*
+* @return If the Widgets list is retrieved successfully, returns an
+*	array containing the names of the present widgets in the
+*	system. Otherwise, returns false.
+* @date 2008/03/11
+*/
+function lib_eyeWidgets_getWidgetList() {
+	$name = array();
+	foreach (scandir(EYE_ROOT . '/' . SYSTEM_DIR . '/' . LIB_DIR . '/eyeWidgets/widgets') as $file) {
+		if ( /* utf8 */ substr($file, 0, 1) !== '.' && substr($file, -strlen(EYE_CODE_EXTENSION)) === EYE_CODE_EXTENSION) { // utf8
+			$name[] = basename($file, EYE_CODE_EXTENSION);
+		}
+	}
+	return $name;
+}
+?>

@@ -1,0 +1,371 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeSoft_on_Help($params = '') {
+	proc('launch',array('eyeHelp','eyeSoft'));
+}
+
+function eyeSoft_on_Message($params="") {
+	eyeWidgets('updateContent',$params);
+}
+ 
+function eyeSoft_on_Update($params=""){
+	// delete the old eyeSoft cache before downloading the new one
+	$dir = EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/ports/cache/';
+	if (vfs('real_fileExists', array($dir))) {
+		vfs('real_rmdir', array($dir));
+	}
+	vfs('real_mkdir', array($dir));
+	// start with downloading script
+	$config = eyeXML('getXMLfile',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports.xml'));
+	foreach($config['eyePorts'][0]['mirrors'][0]['mirror'] as $value) {
+		$httpClient = eyeURL('getHTTPClient');
+		$httpClient->setURL($value);
+		$httpClient->sendRequest();
+		$content = $httpClient->getResponseBody();
+		$myServer = eyeXML('xml2array',array($content));
+		if (is_array($myServer) === true) {
+			foreach($myServer['eyePorts'][0]['portServer'] as $pValue) {
+				$myPname = basename($pValue['name'][0]);
+				$httpClient->setURL('http://'.$pValue['address'][0].$pValue['path'][0]);
+				$httpClient->sendRequest();
+				$pContent = $httpClient->getResponseBody();
+				if(!file_exists(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/cache/'.$myPname.'.xml')) {
+					vfs('real_create',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/cache/'.$myPname.'.xml'));
+				}
+				$fp = vfs('real_open',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/cache/'.$myPname.'.xml','w'));
+				fwrite($fp,$pContent);
+				fclose($fp);
+			}
+		}
+	}
+	eyeX('messageBox',array('content'=>'eyeSoft: Package list updated'));
+	eyeSoft_loadList();
+}
+ 
+function getInstalled($app) {
+	$xml = eyeXML('getXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/ports/status.xml'));
+	if (is_array($xml) === true) {
+		foreach($xml['eyeSoft'][0]['package'] as $package) {
+			if ($package['name'][0] == $app['name'][0]) {
+				if ($package['version'][0] != $app['version'][0]) {
+					return $package['version'][0];
+				} else {
+					return i18n('translate',array('Installed'));
+				}
+			}
+		}
+	}
+}
+ 
+function eyeSoft_loadList($category=null,$search=null) {
+	global $myPid;
+	eyeX('rawjs',array('js'=>"document.getElementById('".$myPid."_eyeSoftHidden_Content').innerHTML='';"));
+	$content = vfs('real_getDirContent',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/cache/'));
+	$myHeader = array('App Name','Version','Installed');
+	$sortypes = array("String","String","String");
+ 
+	$myTable = new Sortabletable(array('name'=>'table_1','father'=>'eyeSoftHidden_Content',
+		'sortypes'=>$sortypes,'theader'=>$myHeader,'x'=>5,'y'=>0,'width'=>415,'height'=>330,'signal'=>'ClickTable'));
+	$myTable->show();
+	if($content) {
+		if(is_array($content)) {
+			foreach($content as $current) {
+				$fp = vfs('real_open',array($current,'r'));
+				$xml = fread($fp,filesize($current));
+				fclose($fp);
+				$myArray = eyeXML('xml2array',array($xml));
+				foreach($myArray['packages'][0]['package'] as $value) {
+					if(!$category) {
+						if(!$search) {
+							$myTable->addRow(array($value['name'][0],$value['version'][0],getInstalled($value)));
+						} else {
+							if (utf8_stripos($value['name'][0], $search) !== false || utf8_stripos($value['description'][0], $search) !== false) {
+								$myTable->addRow(array($value['name'][0],$value['version'][0],getInstalled($value)));
+							}
+						}
+					} else {
+						if($category == $value['category'][0]) {
+							if(!$search) {
+								$myTable->addRow(array($value['name'][0],$value['version'][0],getInstalled($value)));
+							} elseif(utf8_stripos($value['name'][0], $search) !== false || utf8_stripos($value['description'][0], $search) !== false) {
+								$myTable->addRow(array($value['name'][0],$value['version'][0],getInstalled($value)));
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+ 
+function eyeSoft_on_ClickTable($params=null) {
+	$myApp = $GLOBALS['table_1']->selected;
+	$content = vfs('real_getDirContent',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/cache/'));
+	if($content) {
+		if(is_array($content)) {
+			foreach($content as $current) {
+				$fp = vfs('real_open',array($current,'r'));
+				$xml = fread($fp,filesize($current));
+				fclose($fp);
+				$myArray = eyeXML('xml2array',array($xml));
+				foreach($myArray['packages'][0]['package'] as $value) {
+					if($value['name'][0] == $myApp) {
+						$text = "\n";
+						$text .= i18n('translate',array('Name: %s',array($myApp))) . "\n";
+						$text .= i18n('translate',array('Description: %s',array($value['description'][0]))) . "\n";
+						$text .= i18n('translate',array('License: %s',array($value['license'][0]))) . "\n";
+						$text .= i18n('translate',array('Version: %s',array($value['version'][0]))) . "\n";
+						$text .= i18n('translate',array('Category: %s',array($value['category'][0]))) . "\n";
+						$text .= i18n('translate',array('Author: %s',array($value['author'][0]))) . "\n";
+						$GLOBALS['description']->setText($text);
+						return;
+					}
+				}
+			}
+		}
+	}
+}
+ 
+function eyeSoft_on_catExecute($params=null) {
+	foreach($params as $key=>$value) {
+		if ( /* utf8 */ strpos($key, 'cat_lbl_') !== false) {
+			$category = $value[0];
+			if($category == i18n('translate',array('All'))) {
+				eyeSoft_loadList();
+			} else {
+				global $language;
+				foreach ($language as $key => $value) {
+					if ($value == $category) {
+						$category = $key;
+						break;
+					}
+				}
+				eyeSoft_loadList($category);
+			}
+			return;
+		}
+	}
+}
+ 
+function eyeSoft_on_Install($params=null){
+	$myApp = $GLOBALS['table_1']->selected;
+	if ($myApp) {
+		global $myPid;
+		global $checknum;
+		$info = getAppInformation($myApp);
+		$myWindow = new Window(array('name'=>'Installing','father'=>'eyeSoft_Content',
+			'type'=>NOLIST_CLOSE_WINDOW,'cent'=>1,'width'=>350,'height'=>240,
+			'title'=>'Installing','removepid'=>0));
+		$myWindow->show();
+		$myLabel1 = new Label(array('name'=>'Label1','father'=>'Installing_Content',
+			'text'=>"You are installing a new App in your oneye system",'y'=>15,'x'=>20));
+		$myLabel1->show();
+ 
+		$myLabel2 = new Label(array('name'=>'Label2','father'=>'Installing_Content',
+			'text'=>"Name: %s",'tokens' => array($myApp),'y'=>45,'x'=>20));
+		$myLabel2->show();
+ 
+		$myLabel3 = new Label(array('name'=>'Label3','father'=>'Installing_Content',
+			'text'=>"License: %s",'tokens' => array($info['license'][0]),'y'=>65,'x'=>20));
+		$myLabel3->show();
+ 
+		$myLabel4 = new Label(array('name'=>'Label4','father'=>'Installing_Content',
+			'text'=>"Version: %s",'tokens' => array($info['version'][0]),'y'=>85,'x'=>20));
+		$myLabel4->show();
+ 
+		if(is_array($info['dependencies'][0]['dependence'])) {
+			foreach($info['dependencies'][0]['dependence'] as $value) {
+				$dependencies .= $value.', ';
+			}
+			$dependencies = /* utf8 */ substr($dependencies, 0, -2);
+		} else {
+			$dependencies .= i18n('translate',array("none"));
+		}
+		$myLabel5 = new Label(array('name'=>'Label5','father'=>'Installing_Content',
+			'text'=>"Dependencies: %s",'tokens'=>array($dependencies),'y'=>105,'x'=>20));
+		$myLabel5->show();
+ 
+		if(is_array($info['suggestions'][0]['suggestion'])) {
+			foreach($info['suggestions'][0]['suggestion'] as $value) {
+				$suggestions .= $value.', ';
+			}
+			$suggestions = /* utf8 */ substr($suggestions, 0, -2);
+		} else {
+			$suggestions .= i18n('translate',array("none"));
+		}
+ 
+		$myLabel6 = new Label(array('name'=>'Label6','father'=>'Installing_Content',
+			'text'=>"Suggestions: %s",'tokens'=>array($suggestions),'y'=>125,'x'=>20));
+		$myLabel6->show();
+ 
+		$myButton = new Button(array('name'=>'Continue','father'=>'Installing_Content',
+			'caption'=>'Accept','x'=>100,'y'=>170,'signal'=>'Accept'));
+		$myButton->show();
+ 
+		$myButton2 = new Button(array('name'=>'Cancel','father'=>'Installing_Content',
+			'caption'=>'Cancel','x'=>200,'y'=>170,'signal'=>'Cancel'));
+		$myButton2->show();
+ 
+		$myHidden = new Hidden(array('name'=>'myApp','father'=>'eyeApps','text'=>$myApp));
+		eyeWidgets('serialize',array($myHidden));
+	} else {
+		eyex('messageBox',array('content' => 'Please choose an applictaion to be installed.'));
+	}
+}
+ 
+function eyeSoft_on_Accept($params=null) {
+	$GLOBALS['Installing']->clear();
+	$myApp = $GLOBALS['myApp']->text;
+	$myLabel1 = new Label(array('name'=>'Label1','father'=>'Installing_Content',
+		'text'=>'Downloading and Installing %s ... please wait','tokens' => array($myApp),'y'=>15,'x'=>20));
+	$myLabel1->show();
+	//TODO: GIF WITH MOVEMENT HERE
+	eyeX('sendMessage',array('msg'=>'stepInstall'));
+}
+ 
+function eyeSoft_on_stepInstall($params=null) {
+	$myApp = $GLOBALS['myApp']->text;
+	$info = getAppInformation($myApp);
+	$host = $info['address'][0];
+	$path = $info['path'][0].'/'.$info['filename'][0];
+	$url = "http://".$host.$path;
+	$fpath = EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/swap/'.basename($info['filename'][0]);
+	vfs('real_putFileContent', array($fpath, eyeURL('getRawFile', array('url' => $url))));
+	if(md5_file($fpath) != $info['key'][0]) {
+		$GLOBALS['Installing']->clear();
+		$myLabel1 = new Label(array('name'=>'Label1','father'=>'Installing_Content',
+			'text'=>'%s download is corrupted! unable to install','tokens' => array($myApp),'y'=>15,'x'=>20));
+		$myLabel1->show();
+		return;
+	}
+	include(EYE_ROOT.'/'.APP_DIR.'/eyeSoft/libCompress'.EYE_CODE_EXTENSION);
+	lib_eyeCompress_extractFile(array(EYE_ROOT,$fpath));
+	unlink($fpath);
+	$xml = eyeXML('getXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/ports/status.xml'));
+	if (is_array($xml) === true) {
+		foreach ($xml['eyeSoft'][0]['package'] as $key => $value) {
+			if ($value['name'][0] == $info['name'][0]) {
+				unset($xml['eyeSoft'][0]['package'][$key]);
+			}
+		}
+	}
+	$array['name'][0] = $info['name'][0];
+	$array['version'][0] = $info['version'][0];
+	$xml['eyeSoft'][0]['package'][] = $array;
+	eyeXML('setXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/ports/status.xml',$xml));
+	$GLOBALS['Installing']->clear();
+	$myLabel1 = new Label(array('name'=>'Label1','father'=>'Installing_Content',
+		'text'=>"%s installed succesfully!",'tokens' => array($myApp),'y'=>15,'x'=>20));
+	$myLabel1->show();
+	eyeSoft_loadList();
+}
+ 
+function eyeSoft_on_Cancel($params=null) {
+	$GLOBALS['Installing']->close();
+}
+ 
+function getAppInformation($myApp) {
+	$content = vfs('real_getDirContent',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/cache/'));
+	if($content) {
+		if(is_array($content)) {
+			foreach($content as $current) {
+				$fp = vfs('real_open',array($current,'r'));
+				$xml = fread($fp,filesize($current));
+				fclose($fp);
+				$myArray = eyeXML('xml2array',array($xml));
+				foreach($myArray['packages'][0]['package'] as $value) {
+					if($value['name'][0] == $myApp) {
+						$value['address'][0] = $myArray['address'][0];
+						$value['path'][0] = $myArray['path'][0];
+						return $value;
+					}
+				}
+			}
+		}
+	}
+}
+ 
+function eyeSoft_on_search() {
+	eyeSoft_loadList(null,$GLOBALS['search']->text);
+}
+ 
+function eyeSoft_on_Close(){
+	proc('end');
+}
+ 
+function eyeSoft_on_Uninstall($params = '') {
+	$app = $GLOBALS['table_1']->selected;
+	if ($app) {
+		eyex('messageBox',array(
+			'content' => 'Do you really want to uninstall this application?',
+			'type' => 3,
+			'title' => 'Uninstall application',
+			'win_name' => 'eyeSoft_uninstall_window',
+			'win_style' => TITLE + CLOSE,
+			'win_removepid' => 0,
+			'btn1_capt' => 'Yes',
+			'btn1_name' => 'Uninstall_yes',
+			'btn2_capt' => 'No',
+			'btn2_name' => 'Uninstall_no',
+			'hidden_text' => $app,
+			'hidden_name' => 'uninstall_hidden',
+			'father' => 'eyeSoft_Content',
+			'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/editClean.png'
+		));
+	} else {
+		eyex('messageBox',array('content' => 'Please choose an applictaion to be uninstalled.'));
+	}
+}
+ 
+function eyeSoft_on_Uninstall_yes($params = '') {
+	$app = $GLOBALS['uninstall_hidden']->text;
+	if ($app) {
+		$appDir = EYE_ROOT . '/' . APP_DIR . '/' . $app;
+		$info = getAppInformation($app);
+		if ((!$info['uninstallable'][0] || $info['uninstallable'][0] != 0) && vfs('real_fileExists',array($appDir))) {
+				vfs('real_rmdir',array($appDir));
+				$shareDir = EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/' . $app;
+				if (vfs('real_fileExists',array($shareDir))) {
+					vfs('real_rmdir',array($shareDir));
+				}
+				$externDir = EYE_ROOT . '/' . EXTERN_DIR . '/' . APP_DIR . '/' . $app;
+				if (vfs('real_fileExists',array($externDir))) {
+					vfs('real_rmdir',array($externDir));
+				}
+				$xml = eyeXML('getXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/ports/status.xml'));
+				$x = 0;
+				foreach($xml['eyeSoft'][0]['package'] as $package) {
+					if ($package['name'][0] == $app) {
+						unset($xml['eyeSoft'][0]['package'][$x]);
+					}
+					$x++;
+				}
+				eyeXML('setXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/ports/status.xml',$xml));
+		} else {
+			eyex('messageBox',array('content' => 'The application cannot be uninstalled.'));
+			return;
+		}
+		eyex('messageBox',array('content' => 'The application was successfully uninstalled.'));
+		$GLOBALS['eyeSoft_uninstall_window']->close();
+		eyeSoft_loadList();
+	}
+}
+ 
+function eyeSoft_on_Uninstall_no($params = '') {
+	$GLOBALS['eyeSoft_uninstall_window']->close();
+}
+?>

@@ -1,0 +1,38 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+echo '<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>' . "\n";
+if (!IE || IE > 7) { // We need a better workaround for this IE6 and IE7 problem!
+	echo '<base href="' . INDEX_BASE . 'iphone/" />' . "\n";
+}
+echo '<title>Welcome to ' . utf8_htmlspecialchars(EYEOS_HOSTNAME, ENT_QUOTES) . '</title>
+<link href="eyeOs_files/logo.png" rel="apple-touch-icon" />
+<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="viewport" content="width=320; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+<style type="text/css" media="screen">@import "eyeOs_files/stylesheet.css";</style>
+<script type="application/x-javascript" src="eyeOs_files/iui.js"></script>
+</head>
+<body onload="setTimeout(scrollTo, 0, 0, 1);">
+    <div id="toolbar" class="toolbar">
+        <h1 id="pageTitle"></h1>
+        <a id="backButton" class="button" href="#"></a>
+		<a id="menuButton" class="button" style="display:inline;" href="index.php?actions=eyeMenu&noPropagate=2">Menu</a>
+    </div>';
+?>

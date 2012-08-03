@@ -1,0 +1,145 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+$xml = eyeXML('getXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/smtp.xml'));
+$ContentY = 10;
+// From
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Label_From',
+	'text' => 'From',
+	'x' => 20,
+	'y' => $ContentY + 3
+));
+$myLabel->show();
+$myTextboxFrom = new Textbox(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Textbox_From',
+	'text' => $xml['CONFIG'][0]['SMTP_FROM'][0],
+	'x' => 160,
+	'y' => $ContentY
+));
+$myTextboxFrom->show();
+$ContentY += 30;
+// Username
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Label_Username',
+	'text' => 'User Name',
+	'x' => 20,
+	'y' => $ContentY + 3
+));
+$myLabel->show();
+$myTextboxUsername = new Textbox(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Textbox_Username',
+	'text' => $xml['CONFIG'][0]['SMTP_USERNAME'][0],
+	'x' => 160,
+	'y' => $ContentY
+));
+$myTextboxUsername->show();
+$ContentY += 30;
+// Password
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Label_Password',
+	'text' => 'Password',
+	'x' => 20,
+	'y' => $ContentY + 3
+));
+$myLabel->show();
+$myTextboxPassword = new Textbox(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Textbox_Password',
+	'password' => 1,
+	'text' => $xml['CONFIG'][0]['SMTP_PASSWORD'][0],
+	'x' => 160,
+	'y' => $ContentY
+));
+$myTextboxPassword->show();
+$ContentY += 30;
+// Hostname
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Label_Hostname',
+	'text' => 'Host Name',
+	'x' => 20,
+	'y' => $ContentY + 3
+));
+$myLabel->show();
+$myTextboxHostname = new Textbox(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Textbox_Hostname',
+	'text' => $xml['CONFIG'][0]['SMTP_HOST'][0],
+	'x' => 160,
+	'y' => $ContentY
+));
+$myTextboxHostname->show();
+$ContentY += 30;
+// Port
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Label_Port',
+	'text' => 'Port',
+	'x' => 20,
+	'y' => $ContentY + 3
+));
+$myLabel->show();
+$myTextboxPort = new Textbox(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Textbox_Port',
+	'text' => $xml['CONFIG'][0]['SMTP_PORT'][0],
+	'x' => 160,
+	'y' => $ContentY
+));
+$myTextboxPort->show();
+$ContentY += 30;
+// Use SSL
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Label_UseSSL',
+	'text' => 'Use SSL',
+	'x' => 20,
+	'y' => $ContentY + 3
+));
+$myLabel->show();
+$myCheckbox = new Checkbox(array(
+	'checked' => $xml['CONFIG'][0]['SMTP_SSL'][0],
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Checkbox_UseSSL',
+	'text' => ' ',
+	'x' => 160,
+	'y' => $ContentY
+));
+$myCheckbox->show();
+$ContentY += 30;
+// Save Changes
+$myButton = new Button (array(
+	'caption' => 'Save Changes',
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_smtp_Button',
+	'signal' => 'smtp_save',
+	'x' => 50,
+	'y' => $ContentY
+));
+$myButton->addFriend($myTextboxFrom);
+$myButton->addFriend($myTextboxUsername);
+$myButton->addFriend($myTextboxPassword);
+$myButton->addFriend($myTextboxHostname);
+$myButton->addFriend($myTextboxPort);
+$myButton->addFriend($myCheckbox);
+$myButton->show();
+?>

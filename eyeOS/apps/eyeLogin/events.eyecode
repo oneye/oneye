@@ -1,0 +1,269 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeLogin_on_Create($params = '') {
+	global $checknum;
+	global $currentUser;
+	global $myPid;
+	if (ALLOW_USER_REGISTER) {
+		$user = $GLOBALS['eyeLogin_Textbox_2_User']->text;
+		$password1 = base64_decode($GLOBALS['eyeLogin_Textbox_2_Password_1']->text);
+		$password2 = base64_decode($GLOBALS['eyeLogin_Textbox_2_Password_2']->text);
+		$language = basename($GLOBALS['eyeLogin_Select_2_Language']->selected);
+		if (!$user || !$password1 || !$password2) {
+			$GLOBALS['eyeLogin_Label_2_Message']->setText('Please fill out all fields!');
+		} else if (utf8_strlen($user) < 2) {
+			$GLOBALS['eyeLogin_Label_2_Message']->setText('Username is too short!');
+		} else if (um('isValidUsername', array($user)) === false) {
+			$GLOBALS['eyeLogin_Label_2_Message']->setText('Username should be alpha-numeric!');
+		} else if (utf8_strlen($password1) < 4) {
+			$GLOBALS['eyeLogin_Label_2_Message']->setText('Password is too short!');
+		} elseif ($password1 != $password2) {
+			$GLOBALS['eyeLogin_Label_2_Message']->setText('Password fields do not match!');
+			$GLOBALS['eyeLogin_Textbox_2_Password_2']->setText('');
+		} elseif ($language != 'en' && !vfs('real_fileExists',array(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/i18n/' . $language . '.xml'))) {
+			$GLOBALS['eyeLogin_Label_2_Message']->setText('The language does not exist!');
+		} else {
+			$oldUser = $currentUser;
+			$currentUser = ROOTUSER;
+			if (um('userExist',array($user))) {
+				$currentUser = $oldUser;
+				$GLOBALS['eyeLogin_Label_2_Message']->setText('That user already exists!');
+				$GLOBALS['eyeLogin_Textbox_2_User']->setText('');
+			} elseif (um('createUser',array('username' => $user,'password' => $password1))) {
+				$currentUser = $user;
+				$xml = eyeXML('getXMLconfig',array('i18n','lang.xml'));
+				$xml['lang'][0] = $language;
+				eyeXML('setXMLconfig',array('i18n','lang.xml',$xml));
+				eyex('rawjs',array('js' => 'eyeLogin_2_Clean(' . $myPid . ');'));
+				if (um('login',array($user,$password1))) {
+					i18n('setLang',array($language));
+					proc('setProcessUser',array($myPid));
+					eyex('rawjs',array('js' => 'xGetElementById("eyex-info").style.display = "block"; xGetElementById("eyex-powered").style.display = "block"; eyeLogin_successLogin("' . sec('cleanOutPutString',array('var' => $user,'noreturn' => 1,'nohtml' => 1)) . '","' . $checknum . '","' . $myPid . '");'));
+				}
+			} else {
+				$currentUser = $oldUser;
+				$GLOBALS['eyeLogin_Label_2_Message']->setText('Error creating new user!');
+			}
+		}
+	} else {
+		if (is_object($GLOBALS['eyeLogin_Label_2_Message'])) {
+			$GLOBALS['eyeLogin_Label_2_Message']->setText('This system does not allow user registrations!');
+		}
+	}
+	$GLOBALS['eyeLogin_Label_2_Message']->unhide();
+}
+
+function eyeLogin_on_Login($params = '') {
+	global $checknum;
+	global $currentUser;
+	global $myPid;
+	$GLOBALS['eyeLogin_Label_1_Disabled']->hide();
+	$user = basename($GLOBALS['eyeLogin_Textbox_1_User']->text);
+	$loginCorrect = false;
+	//If secure login is enabled, and the UM module have the needed function to login with hash, use it (SAWASC)
+	if (SECURE_LOGIN == 1 && function_exists('service_um_loginWidthHash')) {
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		$xml = um('retrieveUser',array($user));
+		$currentUser = $oldUser;
+		$password = $GLOBALS['eyeLogin_Textbox_1_Password']->text;
+		$password2 = md5($_SESSION['sawasc'] . $xml['eyeUser'][0]['password'][0]);
+		if ($password == $password2 && um('loginWidthHash',array($user,$xml['eyeUser'][0]['password'][0]))) {
+			$loginCorrect = true;
+		}
+	//If not, just use the classic plain text
+	} else {
+		$password = base64_decode($GLOBALS['eyeLogin_Textbox_1_Password']->text);
+		if (um('login',array($user,$password))) {
+			$loginCorrect = true;
+		}
+	}
+	$language = $GLOBALS['eyeLogin_Select_1_Language']->selected;
+	if ($loginCorrect == true) {
+		unset($_SESSION['sawasc']);
+		$currentUser = $user;
+		$xml = eyeXML('getXMLconfig',array('eyex','eyex.xml'));
+		if ($xml['changes'][0]['increase'][0]) {
+			$xml['changes'][0]['times'][0] += $xml['changes'][0]['increase'][0];
+			$xml['changes'][0]['increase'][0] = 0;
+			eyeXML('setXMLconfig',array('eyex','eyex.xml',$xml));
+		}
+		if ($language && $language != '[auto]' && ($language == 'en' || vfs('real_fileExists',array(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/i18n/' . $language . '.xml')))) {
+			i18n('setLang',array($language));
+		} else {
+			$xml = eyeXML('getXMLconfig',array('i18n','lang.xml'));
+			if ($xml['lang'][0]) {
+				i18n('setLang',array($xml['lang'][0]));
+			} else {
+				i18n('setLang',array('en'));
+			}
+		}
+		proc('setProcessUser',array($myPid));
+		eyex('rawjs',array('js' => 'xGetElementById("eyex-info").style.display = "block"; xGetElementById("eyex-powered").style.display = "block"; eyeLogin_successLogin("' . sec('cleanOutPutString',array('var' => $user,'noreturn' => 1,'nohtml' => 1)) . '","' . $checknum . '","' . $myPid . '");'));
+	} else {
+		if (errorCodes('getErrorCode') == UM_USER_IS_DISABLED) {
+			$GLOBALS['eyeLogin_Label_1_Disabled']->unhide();
+		} else {
+			eyex('rawjs',array('js' => 'eyeLogin_badLogin("' . sec('cleanOutPutString',array('var' => $user,'noreturn' => 1,'nohtml' => 1)) . '","' . sec('cleanOutPutString',array('var' => $password,'noreturn' => 1,'nohtml' => 1)) . '","' . $checknum . '","' . $myPid . '");'));
+		}
+	}
+}
+
+function eyeLogin_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeLogin_on_successLogin($params = '') {
+	global $currentUser;
+	if ($currentUser) {
+		$pid = proc('findPidByName',array('eyeX'));
+		proc('setProcessUser',array($pid));
+		eyex('systemSound', array('login'));
+		if ($_SESSION['SCREEN']['is_phone']) {
+			$hide_address_bar = 'window.scrollTo(0,1);';
+		} else {
+			$hide_address_bar = '';
+		}
+		eyex('rawjs',array('js' => 'xGetElementById("eyex-info").style.display = "none"; xGetElementById("eyex-powered").style.display = "none";' . $hide_address_bar));
+
+		$xml = um('retrieveUser',array($currentUser));
+		if (isset($xml['eyeUser'][0]['resetPassword']) === true && $xml['eyeUser'][0]['resetPassword'][0]) {
+			eyeLogin_dialog_ResetPassword();
+		} else {
+			loadConfig('eyeLogin');
+			proc('launch',array(LOGIN_EXECUTE,'autorun'));
+			proc('end');
+		}
+	}
+}
+
+function eyeLogin_dialog_ResetPassword() {
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => 200,
+		'name' => 'eyeLogin_Window_ResetPassword',
+		'style' => TITLE,
+		'title' => 'Change password',
+		'width' => 350
+	));
+	$myWindow->show();
+
+	$y = 20;
+	$myLabel = new Label(array(
+		'father' => 'eyeLogin_Window_ResetPassword_Content',
+		'name' => 'eyeLogin_Label_ResetPassword',
+		'text' => 'You need to specify a new password for this account now...',
+		'x' => 10,
+		'y' => $y
+	));
+	$myLabel->show();
+
+	$y += 40;
+	$myLabel = new Label(array(
+		'father' => 'eyeLogin_Window_ResetPassword_Content',
+		'name' => 'eyeLogin_Label_ResetPassword_1',
+		'text' => 'New Password:',
+		'x' => 10,
+		'y' => $y + 3
+	));
+	$myLabel->show();
+	$myTextbox_1 = new Textbox(array(
+		'father' => 'eyeLogin_Window_ResetPassword_Content',
+		'name' => 'eyeLogin_Textbox_ResetPassword_1',
+		'password' => 2,
+		'width' => 160,
+		'x' => 160,
+		'y' => $y
+	));
+	$myTextbox_1->show();
+	$myTextbox_1->focus();
+
+	$y += 40;
+	$myLabel = new Label(array(
+		'father' => 'eyeLogin_Window_ResetPassword_Content',
+		'name' => 'eyeLogin_Label_ResetPassword_2',
+		'text' => 'Retype password:',
+		'x' => 10,
+		'y' => $y + 3
+	));
+	$myLabel->show();
+	$myTextbox_2 = new Textbox(array(
+		'father' => 'eyeLogin_Window_ResetPassword_Content',
+		'name' => 'eyeLogin_Textbox_ResetPassword_2',
+		'password' => 2,
+		'width' => 160,
+		'x' => 160,
+		'y' => $y
+	));
+	$myTextbox_2->addFriend($myTextbox_1);
+	$myTextbox_2->show();
+	$myTextbox_2->addEnterEventMsg('ResetPassword');
+
+	$y += 40;
+	$myButton = new Button(array(
+		'caption' => 'Set new password',
+		'cent' => 2,
+		'father' => 'eyeLogin_Window_ResetPassword_Content',
+		'name' => 'eyeLogin_Button_ResetPassword',
+		'signal' => 'ResetPassword',
+		'y' => $y
+	));
+	$myButton->addFriend($myTextbox_1);
+	$myButton->addFriend($myTextbox_2);
+	$myButton->show();
+}
+
+function eyeLogin_on_ResetPassword($params = '') {
+	global $currentUser;
+
+	if ($currentUser) {
+		$password1 = base64_decode($GLOBALS['eyeLogin_Textbox_ResetPassword_1']->text);
+		$password2 = base64_decode($GLOBALS['eyeLogin_Textbox_ResetPassword_2']->text);
+
+		if (!$password1 || !$password2) {
+			eyex('messageBox', array('content' => 'Please fill out all fields!'));
+		} else if (utf8_strlen($password1) < 4) {
+			eyex('messageBox', array('content' => 'Password is too short!'));
+		} elseif ($password1 != $password2) {
+			eyex('messageBox', array('content' => 'Password fields do not match!'));
+		} else {
+			$oldUser = $currentUser;
+			$currentUser = ROOTUSER;
+			um('updateUser',array('username' => $oldUser, 'password' => $password1, 'resetPassword' => 0));
+			$currentUser = $oldUser;
+
+			loadConfig('eyeLogin');
+			proc('launch',array(LOGIN_EXECUTE,'autorun'));
+			proc('end');
+		}
+	}
+}
+
+function eyeLogin_on_resizedBrowser($params = NULL) {
+	$GLOBALS['eyeLogin_1']->setX(round($_SESSION['SCREEN']['width'] / 2) - 150);
+	$y = round($_SESSION['SCREEN']['height'] / 2) - 110;
+	if ($y < 280) {
+		$y -= 280 - $y;
+	}
+	if ($y < 0) {
+		$y = 0;
+	}
+	$GLOBALS['eyeLogin_1']->setY($y);
+}
+
+?>

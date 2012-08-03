@@ -1,0 +1,37 @@
+[b]To get Office support for oneye applications on Microsoft Windows 2000 and higher we need to install OpenOffice.org 2.x.x. After that we just need to do a small tweak. This article shows you how to proceed.[/b]
+
+
+[b]Apache Server[/b]
+
+[b]Run as Administrator[/b]
+[list][*] Launch "[b]services.msc[/b]".
+
+[*] Go to the dialog "[b]Properties[/b]" of your Apache service and choose the "[b]Log On[/b]" tab.
+
+[*] Activate "This account" and click "[b]Browse...[/b]".
+
+[*] Confirm an administrator account and click "[b]Check Names[/b]".
+
+[*] Click OK and save and [b]restart the Apache service.[/b] 
+[/list]
+
+[b]Documents and Presentations[/b]
+[list][*] "[b]<ooo-path>[/b]" stands for the installation path of OpenOffice.org. The [b]default[/b] path is "[b]C:\Program Files\OpenOffice.org 2.4\[/b]".
+
+[*] Download OpenOffice.org 2 from [url]http://download.services.openoffice.org/files/stable/[/url] and install it.
+
+[*] [b]Copy "extras/OpenOffice/eyeOS.xba[/b]" into "[b]<ooo-path>\share\basic\Tools\[/b]".
+
+[*] [b]Edit "<ooo-path>\share\basic\Tools\script.xlb[/b]" and [b]add "<library:element library:name="eyeOS"/>"  AT THE END OF [/b] .
+
+[*] Go back to oneye >> "[b]System preferences[/b]" >> "[b]System[/b]" >> "[b]Office Support[/b]".
+
+[*] Update the "[b]program[/b]" folder path to "[b]<ooo-path>\program\[/b]" and click "[b]Save changes[/b]". 
+[/list]
+
+[b]Spreadsheets[/b]
+[list][*] Download "7-Zip Command Line Version" from [url]http://7-zip.org/download.html[/url] .
+
+[*] Extract it and copy "[b]7za.exe[/b]" into "[b]oneye_xxxxxxxx/extras/7-Zip/[/b]". 
+[/list]
+

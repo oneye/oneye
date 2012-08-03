@@ -1,0 +1,35 @@
+Allows use to remove, edit, and create users. When we first select managing users a pop-up window will appear so we can filter or search for our users
+
+[b]New[/b]
+
+	Input the Username, Password, if you like Full Name, and E-mail
+
+
+[b]Permissions:[/b]
+[list]
+[*]Administrator: Has the same power as root over your oneye, Users, and groups without the option of uninstalling oneye
+[*]Maintainer : Can Manage groups and users that a admin and or root user assigned to them
+[*]User: can only maintain the files and folders that they make
+[/list]
+	Expiration by default is set to Never. If you would like to set a date use this format dd/mm/yyyy ex. If the day is 1st month is June and the year 2009 you would enter
+
+					01/06/2010
+
+	Now we can select what Groups the user belongs to. Now we press the Create user button
+
+
+[b]Edit[/b]
+
+	Select the user from the list and press edit and follow the instructions above for New
+
+
+[b]Delete[/b]
+
+	Select the user from the list and press Delete to remove that user
+
+
+[b]Load[/b]
+
+	Press this icon to reload the list
+
+	Note: [i]You can't remove the root user and these action can't be undone.[/i]

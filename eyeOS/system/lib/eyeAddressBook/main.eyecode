@@ -1,0 +1,925 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function lib_eyeAddressBook_imageExists($params=null) {
+	if (!$params[0]) {
+		return false;
+	}
+	$path = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/images/';
+	if(!vfs('isdir',array($path))) {
+		vfs('real_mkdir',array($path));
+		return false;
+	}
+	if (vfs('real_fileExists',array($path.$params[0].'.png'))) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function lib_eyeAddressBook_getGroups() {
+	$groups = null;
+	if (eyeAddressBook('getDatabaseType') == 'xml') {
+		$groups = eyeXML('getXMLfile', array (um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/groups.xml'));
+		if (!$groups) {
+			eyeAddressBook('newConfig',array('groups'));
+			$groups = eyeXML('getXMLfile', array (um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/groups.xml'));
+		}
+	} else {
+		// SQLite Code
+	}
+
+	return $groups;
+}
+
+function lib_eyeAddressBook_getImage($params=null) {
+	if (!$params[0]) {
+		return false;
+	}
+	if (!eyeAddressBook('imageExists',array($params[0]))) {
+		return false;
+	}
+	$imagePath = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/images/'.$params[0].'.png';
+	$imageInfo = @getimagesize($imagePath);
+	if ($imageInfo !== false) {
+		extern('getContent', array(vfs('real_getFileContent', array($imagePath)), 'png'));
+	}
+	return true;
+}
+
+function lib_eyeAddressBook_saveImage($params=null) {
+	if (!isset($params) || count($params)<2) {
+		return false;
+	}
+	$oldImagePath = $params[0];
+	$newImagePath = $params[1];
+
+	$oldImageInfo = @getimagesize($oldImagePath);
+	if ($oldImageInfo['mime']=='image/png') {
+		$img = imagecreatefrompng($oldImagePath);
+	} elseif ($oldImageInfo['mime']=='image/jpg' || $oldImageInfo['mime']=='image/jpeg') {
+		$img = imagecreatefromjpeg($oldImagePath);
+	} elseif ($oldImageInfo['mime']=='image/gif') {
+		$img = imagecreatefromgif($oldImagePath);
+	}
+	$new_width = 100;
+	$new_height = 100;
+	$width = $oldImageInfo[0];
+	$height = $oldImageInfo[1];
+	$tmp_img = imagecreatetruecolor( $new_width, $new_height );
+	imagealphablending($tmp_img, false);
+	imagecopyresampled( $tmp_img, $img, 0, 0, 0, 0, $new_width, $new_height, $width, $height );
+	imagesavealpha($tmp_img, true);
+	imagepng( $tmp_img, $newImagePath );
+	imagedestroy( $img );
+	imagedestroy( $tmp_img );
+	return true;
+}
+
+function lib_eyeAddressBook_deleteContacts($params=null) {
+	if (!isset($params[0]) || empty($params[0])) {
+		return false;
+	}
+	$toDel = $params[0];
+	$contacts = eyeAddressBook('getContacts');
+	foreach ($toDel as $value) {
+		unset($contacts['Contacts'][0]['id_'.$value]);
+	}
+	return eyeAddressBook('deleteContactsXML', array($contacts));
+}
+
+function lib_eyeAddressBook_deleteContactsXML($params=null) {
+	if (!isset($params[0]) || empty($params[0])) {
+		return false;
+	}
+	$contacts=$params[0];
+	$path = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/contacts.xml';
+	if (eyeXML('setXMLfile', array($path, $contacts))) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function lib_eyeAddressBook_newContact($params=null) {
+	if (!isset($params[0]) || empty($params[0])) {
+		return false;
+	}
+	$newContact = $params[0];
+	$md5 = md5(uniqid(rand()));
+	$contact = array('id_'.$md5 => $newContact);
+	if (isset($params[1]) && !empty($params[1])) {
+		$pathImage = $params[1];
+		vfs('real_copy',array($pathImage,um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/images/'.$md5.'.png'));
+	}
+	return eyeAddressBook('saveContact', array($contact));
+}
+
+function lib_eyeAddressBook_deleteImage($params=null) {
+	if (!$params[0]) {
+		return false;
+	}
+	$id = $params[0];
+	if (!eyeAddressBook('imageExists',array($id))) {
+		return false;
+	}
+	$path = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/images/'.$id.'.png';
+	if(!vfs('real_delete',array($path))) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+function lib_eyeAddressBook_editContact($params=null) {
+	if ((!isset($params[0]) || empty($params[0])) && (!isset($params[1]) || empty($params[1]))) {
+		return false;
+	}
+	$id = $params[0];
+	if (isset($params[2]) && !empty($params[2])) {
+		$pathImage = $params[2];
+		$newPath = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/images/'.$id.'.png';
+		if (vfs('real_fileExists',array($newPath))) {
+			vfs('real_delete',array($newPath));
+		}
+		vfs('real_copy',array($pathImage,$newPath));
+	}
+	$content = $params[1];
+	$contact = array('id_'.$id => $content);
+	return eyeAddressBook('saveContact',array($contact));
+}
+
+function lib_eyeAddressBook_saveContact($params=null) {
+	if (!isset($params[0]) || empty($params[0])) {
+		return false;
+	}
+	$contacts = $params[0];
+	if (eyeAddressBook('getDatabaseType')=='xml') {
+		return eyeAddressBook('saveContactXML',array($contacts));
+	} else {
+		return eyeAddressBook('saveContactSQLite',array($contacts));
+	}
+}
+
+function lib_eyeAddressBook_saveContactXML($params=null) {
+	if (!isset($params[0]) || empty($params[0])) {
+		return false;
+	}
+	$contacts = eyeAddressBook('getContacts');
+	$index = array_keys($params[0]);
+	$index = $index[0];
+	$contacts['Contacts'][0][$index] = $params[0][$index];
+	$path = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/contacts.xml';
+	if (eyeXML('setXMLfile', array($path, $contacts))) {
+		return /* utf8 */ substr($index, 3);
+	} else {
+		return false;
+	}
+}
+
+function lib_eyeAddressBook_getDatabaseType() {
+	$config = eyeAddressBook('loadConfig');
+	if ($config['config'][0]['database'][0]=='xml') {
+		return 'xml';
+	} else {
+		return 'sqlite';
+	}
+}
+
+function lib_eyeAddressBook_getContacts($params=null) {
+	$contact = null;
+	if (isset($params[0]) && !empty($params[0])) {
+		$contact = $params[0];
+	}
+
+	if (eyeAddressBook('getDatabaseType')=='xml') {
+		return eyeAddressBook('loadXML',array($contact));
+	} else {
+		return eyeAddressBook('loadSQLite',array($contact));
+	}
+}
+
+function lib_eyeAddressBook_importFromEyeContacts() {
+	// first load list
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/ey'.'eContacts/';
+	$content = vfs('real_getDirContent',array($path));
+	$myContacts = array();
+	if (is_array($content)) {
+		foreach($content as $dir){
+			if(vfs('isDir',array($dir))){
+				$subContent = vfs('real_getDirContent',array($path.'/'.basename($dir)));
+				foreach($subContent as $contact){
+					$contactInfo = eyeContacts('pathToInfo',array($contact));
+					$info  = eyeAddressBook('retrive_2',array($contactInfo[0],$contactInfo[1],$contactInfo[2]));
+					$myContacts[$contactInfo[2]] = $info;
+				}
+			}
+		}
+	}
+	if (empty($myContacts)) {
+		return false;
+	}
+	foreach ($myContacts as $contact) {
+		$newContact = array();
+		$newContact[0]['home'][0]['name'][0] = $contact['name'][0];
+		$newContact[0]['home'][0]['surname'][0] = $contact['surname'][0];
+		$newContact[0]['home'][0]['phone'][0]['local'][0] = $contact['home_phone'][0];
+		$newContact[0]['home'][0]['phone'][0]['mobile'][0] = $contact['mobile_phone'][0];
+		$newContact[0]['home'][0]['address'][0] = $contact['address'][0];
+		$newContact[0]['home'][0]['nick'][0] = $contact['nick'][0];
+		$newContact[0]['home'][0]['email'][0] = $contact['email'][0];
+		$newContact[0]['home'][0]['website'][0] = $contact['website'][0];
+		$newContact[0]['other'][0]['im'][0] = $contact['im'][0];
+		$newContact[0]['other'][0]['voip'][0] = $contact['voip'][0];
+		$newContact[0]['other'][0]['user'][0] = $contact['eyeos-user'][0];
+		$newContact[0]['company'][0]['name'][0] = $contact['company'][0];
+		$newContact[0]['company'][0]['phone'][0]['local'][0] = $contact['company_phone'][0];
+		$newContact[0]['company'][0]['phone'][0]['mobile'][0] = $contact['company_mobile_phone'][0];
+		$newContact[0]['company'][0]['phone'][0]['fax'][0] = $contact['company_fax'][0];
+		$newContact[0]['company'][0]['address'][0] = $contact['company_address'][0];
+		$newContact[0]['other'][0]['notes'][0] = $contact['notes'][0];
+		// Default Group (All)
+		$newContact[0]['group'][0] = 0;
+		eyeAddressBook('newContact',array($newContact));
+	}
+	return true;
+}
+
+function lib_eyeAddressBook_importFromVcard($params){
+	if (!isset($params[0]) || empty($params[0])) {
+		return false;
+	}
+	$path = $params[0];
+	eyePear('Load', array('Contact_Vcard_Parse'));
+	$parse = new Contact_Vcard_Parse();
+	$realPath = vfs('getRealName',array($path));
+	$cardInfo = $parse->fromFile($realPath);
+	if(count($cardInfo) < 1){
+		errorCodes('setErrorCode',array(NO_CONTACT_FOUND));
+		return false;
+	}
+	foreach($cardInfo as $card){
+		$eyeCard = array();
+		$fnames = true;
+		foreach($card as $name=>$comp){
+			switch($name){
+				case 'N':
+					if(!empty($comp[0]['value'][0][0])){
+						$eyeCard[0]['home'][0]['surname'][0] = $comp[0]['value'][0][0];
+					}else{
+						$eyeCard[0]['home'][0]['surname'][0] = '';
+						$fnames = false;
+					}
+					if(!empty($comp[0]['value'][1][0])){
+						$eyeCard[0]['home'][0]['name'][0] = $comp[0]['value'][1][0];
+					}else{
+						$eyeCard[0]['home'][0]['name'][0] = '';
+						$fnames = false;
+					}
+					//TODO: make support for other  name components
+				break;
+				case 'EMAIL':
+					foreach($comp as $component){
+						$preType = array();
+						foreach($component['param']['TYPE'] as $type){
+							$preType[] = /* utf8 */ strtoupper(strval($type));
+						}
+						$mail='';
+						if(isset($component['value'][0][0]) && $component['value'][0][0] != ''){
+							$mail = $component['value'][0][0];
+						}
+						if($preType[0] == 'WORK') {
+							$eyeCard[0]['company'][0]['email'][0] = $mail;
+						} else {
+							$eyeCard[0]['home'][0]['email'][0] = $mail;
+						}
+					}
+				break;
+				case 'ORG':
+					if(isset($comp[0]['value'][0][0]) && $comp[0]['value'][0][0] != ''){
+						$eyeCard[0]['company'][0]['name'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				case 'NOTE':
+					if(isset($comp[0]['value'][0][0]) && $comp[0]['value'][0][0] != ''){
+						$eyeCard[0]['other'][0]['notes'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				case 'TEL':
+					foreach($comp as $component){
+						if(isset($component['value'][0][0]) && $component['value'][0][0] != ''){
+								$tel = $component['value'][0][0];
+						}
+						$preType = array();
+						//Getting types
+						foreach($component['param']['TYPE'] as $type){
+							$preType[] = /* utf8 */ strtoupper(strval($type));
+						}
+						if($preType[0] == 'HOME' || $preType[1] == 'HOME' || $preType[0] == 'MAIN' || $preType[1] == 'MAIN') {
+							$eyeCard[0]['home'][0]['phone'][0]['local'][0] = $tel;
+						} elseif($preType[0] == 'CELL') {
+							$eyeCard[0]['home'][0]['phone'][0]['mobile'][0] = $tel;
+						} elseif($preType[0] == 'WORK' && !isset($preType[1])) {
+							$eyeCard[0]['company'][0]['phone'][0]['local'][0] = $tel;
+						} elseif($preType[0] == 'WORK' && $preType[1] == 'CELL') {
+							$eyeCard[0]['company'][0]['phone'][0]['mobile'][0] = $tel;
+						} elseif($preType[0] == 'FAX' || $preType[1] == 'FAX') {
+							$eyeCard[0]['company'][0]['phone'][0]['fax'][0] = $tel;
+						}
+					}
+				break;
+				case 'ADR': case 'ITEM1.ADR': case 'ITEM2.ADR': case 'ITEM3.ADR': case 'ITEM4.ADR': case 'ITEM5.ADR':
+					foreach($comp as $component){
+						if (!empty($component['value'][0][0])) {
+							$address = $component['value'][0][0];
+						} elseif (!empty($component['value'][1][0])) {
+							$address = $component['value'][1][0];
+						} elseif (!empty($component['value'][2][0])) {
+							$address = $component['value'][2][0];
+						} elseif (!empty($component['value'][3][0])) {
+							$address = $component['value'][3][0];
+						} elseif (!empty($component['value'][4][0])) {
+							$address = $component['value'][4][0];
+						} elseif (!empty($component['value'][5][0])) {
+							$address = $component['value'][5][0];
+						} elseif (!empty($component['value'][6][0])) {
+							$address = $component['value'][6][0];
+						}
+						$address = str_replace(";;", "", $address);
+						$address = str_replace(";", "\n", $address);
+						//Getting type
+						if(isset($component['param']['TYPE'][0])){
+							$preType = /* utf8 */ strtoupper(strval($component['param']['TYPE'][0]));
+						}else{
+							$preType = 'HOME';
+						}
+
+						if($preType == 'WORK'){
+							$eyeCard[0]['company'][0]['address'][0] = $address;
+						}else{
+							$eyeCard[0]['home'][0]['address'][0] = $address;
+						}
+					}
+				break;
+				case 'NICKNAME':
+					if(isset($comp[0]['value'][0][0]) && $comp[0]['value'][0][0] != ''){
+						$eyeCard[0]['other'][0]['nick'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				case 'URL': case 'ITEM1.URL': case 'ITEM2.URL': case 'ITEM3.URL': case 'ITEM4.URL': case 'ITEM5.URL':
+					if(isset($comp[0]['value'][0][0]) && $comp[0]['value'][0][0] != ''){
+						$eyeCard[0]['home'][0]['website'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				case 'ROLE':
+					if (!empty($comp[0]['value'][0][0])) {
+						$eyeCard[0]['company'][0]['role'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				case 'X-ONEYE-WORKURL':
+					if (!empty($comp[0]['value'][0][0])) {
+						$eyeCard[0]['company'][0]['website'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				case 'X-ONEYE-IM':
+					if (!empty($comp[0]['value'][0][0])) {
+						$eyeCard[0]['other'][0]['im'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				case 'X-ONEYE-VOIP':
+					if (!empty($comp[0]['value'][0][0])) {
+						$eyeCard[0]['other'][0]['voip'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				case 'X-ONEYE-USER':
+					if (!empty($comp[0]['value'][0][0])) {
+						$eyeCard[0]['other'][0]['user'][0] = $comp[0]['value'][0][0];
+					}
+				break;
+				default:
+					//Not supported?
+				break;
+			}
+		}
+
+		//Writing the new contact to files
+		if (!$fnames) {
+			$eyeCard = null;
+		}
+		eyeAddressBook('newContact',array($eyeCard));
+	 }
+	 return true;
+}
+
+function lib_eyeAddressBook_exportToVcard($params){
+	if (!isset($params[0]) || empty($params[0])) {
+		return false;
+	}
+	if (!isset($params[1]) || empty($params[1])) {
+		$vCards = eyeAddressBook('getContacts');
+		$vCards = $vCards['Contacts'][0];
+	} elseif (is_array($params[1])) {
+		$vCards['Contacts'][0] = array();
+		foreach ($params[1] as $id) {
+			$getContact = eyeAddressBook('getContacts',array($id));
+			$vCards['Contacts'][0]['id_'.$id] = $getContact['Contacts'][0]['id_'.$id];
+		}
+		$vCards = $vCards['Contacts'][0];
+	}
+	global $checknum;
+	$outPath = $params[0];
+	eyePear('Load', array('Contact_Vcard_Build'));
+	//Getting eyeCard content itering on $vCard array files.
+	$vCardsText = '';
+	foreach($vCards as $key=>$vCardContent){
+	//Build eyeCard to vcf
+		$vcard = new Contact_Vcard_Build();
+		$vcard->setFormattedName($vCardContent[0]['home'][0]['name'][0].' '.$vCardContent[0]['home'][0]['surname'][0]);
+		$vcard->setName($vCardContent[0]['home'][0]['surname'][0], $vCardContent[0]['home'][0]['name'][0]);
+		if (!empty($vCardContent[0]['home'][0]['phone'][0]['local'][0])) {
+			$vcard->addTelephone($vCardContent[0]['home'][0]['phone'][0]['local'][0]);
+			$vcard->addParam('TYPE','HOME');
+		}
+		if (!empty($vCardContent[0]['home'][0]['phone'][0]['mobile'][0])) {
+			$vcard->addTelephone($vCardContent[0]['home'][0]['phone'][0]['mobile'][0]);
+			$vcard->addParam('TYPE','CELL');
+		}
+		if (!empty($vCardContent[0]['home'][0]['email'][0])) {
+			$vcard->addEmail($vCardContent[0]['home'][0]['email'][0]);
+			$vcard->addParam('TYPE','HOME');
+		}
+		if (!empty($vCardContent[0]['home'][0]['website'][0])) {
+			$vcard->setURL($vCardContent[0]['home'][0]['website'][0]);
+		}
+		if (!empty($vCardContent[0]['other'][0]['notes'][0])) {
+			$vcard->setNote($vCardContent[0]['other'][0]['notes'][0]);
+		}
+		if (!empty($vCardContent[0]['home'][0]['address'][0])) {
+			$vcard->addAddress(' ',' ',$vCardContent[0]['home'][0]['address'][0],' ',' ',' ',' ');
+			$vcard->addParam('TYPE','HOME');
+		}
+		if (!empty($vCardContent[0]['company'][0]['name'][0])) {
+			 $vcard->addOrganization($vCardContent[0]['company'][0]['name'][0]);
+		}
+		if (!empty($vCardContent[0]['company'][0]['phone'][0]['local'][0])) {
+			$vcard->addTelephone($vCardContent[0]['company'][0]['phone'][0]['local'][0]);
+			$vcard->addParam('TYPE','WORK');
+		}
+		if (!empty($vCardContent[0]['company'][0]['phone'][0]['mobile'][0])) {
+			$vcard->addTelephone($vCardContent[0]['company'][0]['phone'][0]['mobile'][0]);
+			$vcard->addParam('TYPE','WORK');
+			$vcard->addParam('TYPE','CELL');
+		}
+		if (!empty($vCardContent[0]['company'][0]['phone'][0]['fax'][0])) {
+			$vcard->addTelephone($vCardContent[0]['company'][0]['phone'][0]['fax'][0]);
+			$vcard->addParam('TYPE','WORK');
+			$vcard->addParam('TYPE','FAX');
+		}
+		if (!empty($vCardContent[0]['company'][0]['email'][0])) {
+			$vcard->addEmail($vCardContent[0]['company'][0]['email'][0]);
+			$vcard->addParam('TYPE','WORK');
+		}
+		if (!empty($vCardContent[0]['company'][0]['address'][0])) {
+			$vcard->addAddress(' ',' ',$vCardContent[0]['company'][0]['address'][0],' ',' ',' ',' ');
+			$vcard->addParam('TYPE','WORK');
+		}
+		if (!empty($vCardContent[0]['company'][0]['role'][0])) {
+			$vcard->setRole($vCardContent[0]['company'][0]['role'][0]);
+		}
+		if (!empty($vCardContent[0]['other'][0]['nick'][0])) {
+			$vcard->addNickname($vCardContent[0]['other'][0]['nick'][0]);
+		}
+
+		$vCardsText .= /* utf8 */ substr($vcard->fetch(), 0, -10);
+		if (!empty($vCardContent[0]['company'][0]['website'][0])) {
+			$value = /* utf8 */ trim($vCardContent[0]['company'][0]['website'][0]);
+			$vcard->escape($value);
+			$vCardsText .= 'X-ONEYE-WORKURL:' . $value . "\n";
+		}
+		if (!empty($vCardContent[0]['other'][0]['im'][0])) {
+			$value = /* utf8 */ trim($vCardContent[0]['other'][0]['im'][0]);
+			$vcard->escape($value);
+			$vCardsText .= 'X-ONEYE-IM:' . $value . "\n";
+		}
+		if (!empty($vCardContent[0]['other'][0]['voip'][0])) {
+			$value = /* utf8 */ trim($vCardContent[0]['other'][0]['voip'][0]);
+			$vcard->escape($value);
+			$vCardsText .= 'X-ONEYE-VOIP:' . $value . "\n";
+		}
+		if (!empty($vCardContent[0]['other'][0]['user'][0])) {
+			$value = /* utf8 */ trim($vCardContent[0]['other'][0]['user'][0]);
+			$vcard->escape($value);
+			$vCardsText .= 'X-ONEYE-USER:' . $value . "\n";
+		}
+		$vCardsText .= 'END:VCARD' . "\n";
+	}
+
+	if(!vfs('fileExists',array($outPath))){
+		vfs('create',array($outPath));
+	}
+	vfs('writeFile',array($outPath,$vCardsText));
+	return true;
+}
+
+function lib_eyeAddressBook_search($params=null) {
+	if (!isset($params[0])) {
+		return false;
+	}
+	$key = $params[0];
+	if (isset($params[1])) {
+		$group = $params[1];
+	} else {
+		$group = null;
+	}
+	if (empty($params[0]) && $group=='0') {
+		return eyeAddressBook('getContacts');
+	}
+	if (eyeAddressBook('getDatabaseType')=='xml') {
+		return eyeAddressBook('searchXML',array($key,$group));
+	} else {
+		return eyeAddressBook('searchSQLite',array($key,$group));
+	}
+}
+
+function lib_eyeAddressBook_searchXML($params=null) {
+	if (!isset($params[0])) {
+		return false;
+	}
+	$key = $params[0];
+	if (isset($params[1])) {
+		$group = strval($params[1]);
+	} else {
+		$group = null;
+	}
+	$contacts = eyeAddressBook('getContacts');
+	$value['Contacts'][0] = array();
+
+	foreach($contacts['Contacts'][0] as $index=>$id) {
+		// Use conditional o some foreachs? I try with conditional (Only 18 items)
+		if ($group == '0' || $group == $id[0]['group'][0]) {
+			if (empty($key) === true) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['home'][0]['name'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['home'][0]['surname'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['home'][0]['address'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['home'][0]['phone'][0]['local'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['home'][0]['phone'][0]['mobile'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['home'][0]['email'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['home'][0]['website'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['company'][0]['name'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['company'][0]['address'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['company'][0]['phone'][0]['local'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['company'][0]['phone'][0]['mobile'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['company'][0]['phone'][0]['fax'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['company'][0]['email'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['company'][0]['website'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['company'][0]['role'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['other'][0]['im'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['other'][0]['voip'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['other'][0]['nick'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			} else if (utf8_stripos($id[0]['other'][0]['user'][0], $key) !== false) {
+				$value['Contacts'][0][$index] = $id;
+			}
+		}
+	}
+	return $value;
+}
+
+function lib_eyeAddressBook_loadConfig($params=null) {
+	$config = eyeXML('getXMLfile', array (um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/config.xml'));
+	if (!$config) {
+		eyeAddressBook('newConfig',array('config'));
+		eyeAddressBook('newConfig',array('contacts'));
+		eyeAddressBook('newConfig',array('groups'));
+		$config = eyeXML('getXMLfile', array (um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/config.xml'));
+	}
+	return $config;
+}
+
+function lib_eyeAddressBook_loadXML($params=null) {
+	$contacts = eyeXML('getXMLfile', array(um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/contacts.xml'));
+	if (!$contacts) {
+		eyeAddressBook('newConfig', array('contacts'));
+//         $contacts = eyeXML('getXMLfile', array(um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook/contacts.xml'));
+		return false;
+	}
+	if (isset($params[0]) && !empty($params[0])) {
+		$value = array();
+		$value['Contacts'][0] = array();
+		$value['Contacts'][0]['id_'.$params[0]] = $contacts['Contacts'][0]['id_'.$params[0]];
+		return $value;
+	}
+	if (is_array($contacts['Contacts'][0])) {
+		return $contacts;
+	}
+}
+
+function lib_eyeAddressBook_newConfig($params=null) {
+	$path = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook';
+	if (!vfs('isdir',array($path))) {
+		vfs('real_mkdir',array($path));
+		vfs('real_mkdir',array($path.'/images'));
+	}
+	if (!isset($params[0])) {
+		return false;
+	}
+	if ($params[0]=='contacts') {
+		$config = eyeAddressBook('loadConfig');
+		if ($config['config'][0]['database'][0]=='xml') {
+			$file = '/contacts.xml';
+		} else {
+			$file = '/contacts.db';
+		}
+		$contacts['Contacts'][0] = array();
+		if (eyeXML('setXMLfile', array($path.$file, $contacts))) {
+			return true;
+		}
+	} elseif ($params[0]=='config') {
+		$config['config'][0]['database'][0]='xml';
+		$config['config'][0]['used'][0]=0;
+		if (eyeXML('setXMLfile', array($path.'/config.xml', $config))) {
+			return true;
+		}
+	} elseif ($params[0]=='groups') {
+		$groups['groups'][0] = array();
+		if (eyeAddressBook('getDatabaseType')=='xml') {
+			eyeXML('setXMLfile', array($path.'/groups.xml', $groups));
+		} else {
+			// SQLite code
+		}
+
+		// Add default groups?
+
+		eyeAddressBook('addGroup',array('Family'));
+		eyeAddressBook('addGroup',array('Personal'));
+		eyeAddressBook('addGroup',array('Work'));
+		return true;
+	}
+}
+
+function lib_eyeAddressBook_loadSQLite($params=null) {
+}
+
+function lib_eyeAddressBook_clean($params=null) {
+	$path = um('getCurrentUserDir').'tmp/';
+	$files = vfs('real_getDirContent',array($path,'eyeAddressBook*'));
+	foreach ($files as $file) {
+		vfs('real_delete',array($file));
+	}
+	return true;
+}
+
+function lib_eyeAddressBook_delGroup($params=null) {
+	if(empty($params) || empty($params[0])){
+		return false;
+	}
+	$id = $params[0];
+	if (is_numeric($id) && $id==0) {
+		return false;
+	}
+	$groups = eyeAddressBook('getGroups');
+	$groups = $groups['groups'][0]['group'];
+
+	foreach ($groups as $key=>$value) {
+		if ($value['id'][0] == $id) {
+			unset($groups[$key]);
+			$fileGroups = eyeAddressBook('getGroups');
+			$fileGroups['groups'][0]['group'] = $groups;
+			$path = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook';
+			if (eyeAddressBook('getDatabaseType')=='xml') {
+				if (eyeXML('setXMLfile', array($path.'/groups.xml', $fileGroups))) {
+					return true;
+				} else {
+					// SQLite Code
+				}
+			}
+		}
+	}
+}
+
+function lib_eyeAddressBook_addGroup($params=null) {
+	if(empty($params) || empty($params[0])){
+		return false;
+	}
+	$groups = eyeAddressBook('getGroups');
+	if (!is_array($groups['groups'][0])) {
+		$groups['groups'][0] = array();
+		$index = 0;
+	} else {
+		$index = count($groups['groups'][0]['group']);
+	}
+	$index = intval($index);
+	$groups['groups'][0]['group'][$index]['name'][0] = $params[0];
+	$groups['groups'][0]['group'][$index]['id'][0] = md5(uniqid(rand()));
+	$path = um('getCurrentUserDir').CONF_USER_DIR.'/eyeAddressBook';
+	if (eyeAddressBook('getDatabaseType')=='xml') {
+		if (eyeXML('setXMLfile', array($path.'/groups.xml', $groups))) {
+			return true;
+		}
+	} else {
+		// SQLite code
+	}
+}
+
+// Retrocompatibility with eyeContacts
+
+ // retrive_2 auxiliar function only to importfromeyecontacts
+function lib_eyeAddressBook_retrive_2($params=null) {
+	if(empty($params) || count($params) < 1){
+		return false;
+	}
+	$name = $params[0];
+	$surname = $params[1];
+	$md5 = $params[2];
+
+	$path = eyeContacts('getContactPath',array($name));
+	$fileToCreate = $name.'_'.$surname.'_'.$md5.'.'.EYECARD_EXT;
+
+	$path = $path.'/'.$fileToCreate;
+
+	$info = eyeXML('getXMLfile',array($path));
+	return $info;
+}
+
+function lib_eyeAddressBook_pathToInfo($params=null){
+	if(empty($params) || empty($params[0])){
+		return false;
+	}
+	$contact = $params[0];
+	//Getting only the file name (with extension).
+	$contact = basename($contact);
+	//From character 0 to first _ position
+	$name = substr($contact, 0, strpos($contact, '_')); // utf8
+	//From first _ to last _
+	$sName = substr(strstr($contact, '_'), 1, strrpos($contact, '_') - 1); // utf8
+	//From the last _ to the end of the string
+	$md5 = substr($contact, strrpos($contact, '_') + 1); // utf8
+	//Remove extension
+	$md5 = basename($md5,'.eyeCard');
+	return  array($name,$sName,$md5);
+}
+
+function lib_eyeAddressBook_delete($params=null){
+	if(empty($params) || count($params) < 3){
+		return false;
+	}
+	$name = $params[0];
+	$surname = $params[1];
+	$md5 = $params[2];
+	$toDelete = array($md5);
+
+	return eyeAddressBook('deleteContacts',array($toDelete));
+}
+
+function lib_eyeAddressBook_update($params=null){
+	if(empty($params) || count($params) < 4){
+		return false;
+	}
+
+	$name = $params[0];
+	$surname = $params[1];
+	$md5 = $params[2];
+	$contact = $params[3];
+
+	$newContact = array();
+	$newContact[0]['home'][0]['name'][0] = $contact['normal']['name'];
+	$newContact[0]['home'][0]['surname'][0] = $contact['normal']['surname'];
+	$newContact[0]['home'][0]['phone'][0]['local'][0] = $contact['normal']['homephone'];
+	$newContact[0]['home'][0]['phone'][0]['mobile'][0] = $contact['normal']['mobilphone'];
+	$newContact[0]['home'][0]['address'][0] = $contact['normal']['address'];
+	$newContact[0]['home'][0]['nick'][0] = $contact['normal']['nick'];
+	$newContact[0]['home'][0]['email'][0] = $contact['normal']['email'];
+	$newContact[0]['home'][0]['website'][0] = $contact['normal']['website'];
+	$newContact[0]['other'][0]['im'][0] = $contact['normal']['im'];
+	$newContact[0]['other'][0]['voip'][0] = $contact['normal']['voip'];
+	$newContact[0]['other'][0]['user'][0] = $contact['normal']['eyeos_user'];
+	$newContact[0]['company'][0]['name'][0] = $contact['company']['name'];
+	$newContact[0]['company'][0]['phone'][0]['local'][0] = $contact['company']['homephone'];
+	$newContact[0]['company'][0]['phone'][0]['mobile'][0] = $contact['company']['mobilphone'];
+	$newContact[0]['company'][0]['phone'][0]['fax'][0] = $contact['company']['fax'];
+	$newContact[0]['company'][0]['address'][0] = $contact['company']['address'];
+	$newContact[0]['other'][0]['notes'][0] = $contact['normal']['notes'];
+	return eyeAddressBook('editContact',array($md5,$newContact));
+}
+
+function lib_eyeAddressBook_retrive($params=null){
+	if(empty($params) || count($params) < 3){
+		return false;
+	}
+	$name = $params[0];
+	$surname = $params[1];
+	$md5 = $params[2];
+
+	$newContact = eyeAddressBook('getContacts',array($md5));
+	$newContact = $newContact['Contacts'][0]['id_'.$md5];
+	$contact = array();
+	$contact['name'][0] = $newContact[0]['home'][0]['name'][0];
+	$contact['surname'][0] = $newContact[0]['home'][0]['surname'][0];
+	$contact['home_phone'][0] = $newContact[0]['home'][0]['phone'][0]['local'][0];
+	$contact['mobile_phone'][0] = $newContact[0]['home'][0]['phone'][0]['mobile'][0];
+	$contact['address'][0] = $newContact[0]['home'][0]['address'][0];
+	$contact['nick'][0] = $newContact[0]['home'][0]['nick'][0];
+	$contact['email'][0] = $newContact[0]['home'][0]['email'][0];
+	$contact['website'][0] = $newContact[0]['home'][0]['website'][0];
+	$contact['im'][0] = $newContact[0]['other'][0]['im'][0];
+	$contact['voip'][0] = $newContact[0]['other'][0]['voip'][0];
+	$contact['eyeos-user'][0] = $newContact[0]['other'][0]['user'][0];
+	$contact['company'][0] = $newContact[0]['company'][0]['name'][0];
+	$contact['company_phone'][0] = $newContact[0]['company'][0]['phone'][0]['local'][0];
+	$contact['company_mobile_phone'][0] = $newContact[0]['company'][0]['phone'][0]['mobile'][0];
+	$contact['company_fax'][0] = $newContact[0]['company'][0]['phone'][0]['fax'][0];
+	$contact['company_address'][0] = $newContact[0]['company'][0]['address'][0];
+	$contact['notes'][0] = $newContact[0]['other'][0]['notes'][0];
+	return $contact;
+}
+
+function lib_eyeAddressBook_userList($params=null){
+	$contacts = eyeAddressBook('getContacts');
+	if (!is_array($contacts)) {
+		$contacts['Contacts'][0] = array();
+	}
+	$contacts = $contacts['Contacts'][0];
+	$contact = array();
+	foreach ($contacts as $key=>$newContact) {
+		$id = /* utf8 */ substr($key, 3);
+		$contact[$id]['name'][0] = $newContact[0]['home'][0]['name'][0];
+		$contact[$id]['surname'][0] = $newContact[0]['home'][0]['surname'][0];
+		$contact[$id]['home_phone'][0] = $newContact[0]['home'][0]['phone'][0]['local'][0];
+		$contact[$id]['mobile_phone'][0] = $newContact[0]['home'][0]['phone'][0]['mobile'][0];
+		$contact[$id]['address'][0] = $newContact[0]['home'][0]['address'][0];
+		$contact[$id]['nick'][0] = $newContact[0]['home'][0]['nick'][0];
+		$contact[$id]['email'][0] = $newContact[0]['home'][0]['email'][0];
+		$contact[$id]['website'][0] = $newContact[0]['home'][0]['website'][0];
+		$contact[$id]['im'][0] = $newContact[0]['other'][0]['im'][0];
+		$contact[$id]['voip'][0] = $newContact[0]['other'][0]['voip'][0];
+		$contact[$id]['eyeos-user'][0] = $newContact[0]['other'][0]['user'][0];
+		$contact[$id]['company'][0] = $newContact[0]['company'][0]['name'][0];
+		$contact[$id]['company_phone'][0] = $newContact[0]['company'][0]['phone'][0]['local'][0];
+		$contact[$id]['company_mobile_phone'][0] = $newContact[0]['company'][0]['phone'][0]['mobile'][0];
+		$contact[$id]['company_fax'][0] = $newContact[0]['company'][0]['phone'][0]['fax'][0];
+		$contact[$id]['company_address'][0] = $newContact[0]['company'][0]['address'][0];
+		$contact[$id]['notes'][0] = $newContact[0]['other'][0]['notes'][0];
+	}
+	return $contact;
+}
+
+function lib_eyeAddressBook_create($params=null) {
+	if(!isset($params[0]) || empty($params[0])){
+		return false;
+	}
+
+	$contact = $params[0];
+	$newContact = array();
+	$newContact[0]['home'][0]['name'][0] = $contact['normal']['name'];
+	$newContact[0]['home'][0]['surname'][0] = $contact['normal']['surname'];
+	$newContact[0]['home'][0]['phone'][0]['local'][0] = $contact['normal']['homephone'];
+	$newContact[0]['home'][0]['phone'][0]['mobile'][0] = $contact['normal']['mobilphone'];
+	$newContact[0]['home'][0]['address'][0] = $contact['normal']['address'];
+	$newContact[0]['home'][0]['nick'][0] = $contact['normal']['nick'];
+	$newContact[0]['home'][0]['email'][0] = $contact['normal']['email'];
+	$newContact[0]['home'][0]['website'][0] = $contact['normal']['website'];
+	$newContact[0]['other'][0]['im'][0] = $contact['normal']['im'];
+	$newContact[0]['other'][0]['voip'][0] = $contact['normal']['voip'];
+	$newContact[0]['other'][0]['user'][0] = $contact['normal']['eyeos_user'];
+	$newContact[0]['company'][0]['name'][0] = $contact['company']['name'];
+	$newContact[0]['company'][0]['phone'][0]['local'][0] = $contact['company']['homephone'];
+	$newContact[0]['company'][0]['phone'][0]['mobile'][0] = $contact['company']['mobilphone'];
+	$newContact[0]['company'][0]['phone'][0]['fax'][0] = $contact['company']['fax'];
+	$newContact[0]['company'][0]['address'][0] = $contact['company']['address'];
+	$newContact[0]['other'][0]['notes'][0] = $contact['normal']['notes'];
+	// Default Group (All)
+	$newContact[0]['group'][0] = 0;
+	return eyeAddressBook('newContact',array($newContact));
+}
+?>

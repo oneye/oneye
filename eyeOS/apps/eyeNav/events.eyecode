@@ -1,0 +1,512 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $currentUser;
+
+include_once(EYE_ROOT . '/' . APP_DIR . '/eyeNav/libs.eyecode');
+
+$conf = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+$url = EYE_ROOT . '/' . APP_DIR . '/eyeNav/plugins/';
+$url2 = $url . $conf['eyeNav'][0]['plugin'][0] . EYE_CODE_EXTENSION;
+if (vfs('real_fileExists',array($url2))) {
+	include_once $url2;
+} else {
+	include_once $url . 'iframe.eyecode';
+}
+
+function eyeNav_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeNav_on_Resize($params = '') {
+	$GLOBALS['eyeNav_window']->width = intval($params['arg'][0]);
+	$GLOBALS['eyeNav_window']->height = intval($params['arg'][1]);
+	$GLOBALS['eyeNav_url']->setWidth($GLOBALS['eyeNav_window']->width - 207);
+//	$GLOBALS['eyeNav_image_url_right']->setX($GLOBALS['eyeNav_image_url_left']->x + $GLOBALS['eyeNav_url']->width);
+        $GLOBALS['eyeNav_image_url_right']->setX($GLOBALS['eyeNav_url']->width - -23);
+	$GLOBALS['eyeNav_window_box']->setHeight($GLOBALS['eyeNav_window']->height - $GLOBALS['eyeNav_url']->y - 65);
+	$GLOBALS['eyeNav_line']->setHeight($GLOBALS['eyeNav_window_box']->height);
+	$GLOBALS['eyeNav_frame']->setHeight($GLOBALS['eyeNav_window_box']->height);
+	if ($GLOBALS['eyeNav_box']) {
+		$GLOBALS['eyeNav_frame']->setX($GLOBALS['eyeNav_window_box']->width + 20);
+		$GLOBALS['eyeNav_frame']->setWidth($GLOBALS['eyeNav_window']->width - $GLOBALS['eyeNav_window_box']->width - 35);
+	} else {
+		$GLOBALS['eyeNav_frame']->setWidth($GLOBALS['eyeNav_window']->width - 25);
+		$GLOBALS['eyeNav_frame']->setX(10);
+	}
+}
+
+function eyeNav_on_Fullscreen($params = '') {
+	global $myPid;
+	$GLOBALS['eyeNav_window']->setFullScreen();
+	if ($GLOBALS['eyeNav_window']->fullScreen) {
+		$press = 'Press';
+	}
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeNav_toolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "Fullscreen_Container") {
+			e.childNodes[i].className = "blockbarItem' . $press . '_right";
+		}
+	}'));
+}
+
+function eyeNav_on_Back($params = '') {
+	global $myPid;
+	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].history.back();'));
+	$GLOBALS['eyeNav_frame']->focus();
+}
+
+function eyeNav_on_Forward($params = '') {
+	global $myPid;
+	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].history.forward();'));
+	$GLOBALS['eyeNav_frame']->focus();
+}
+
+function eyeNav_on_Refresh($params = '') {
+	global $myPid;
+	$js = 'var obj = document.getElementById("' . $myPid . '_eyeNav_frame");';
+	$js .= 'obj.parentNode.appendChild(obj)';
+	eyex('rawjs',array('js' => $js));
+	$GLOBALS['eyeNav_frame']->focus();
+}
+
+function eyeNav_on_Startpage($params = '') {
+	eyeNav_lib_doUrl();
+}
+
+/**
+* new bookmark sys
+*/
+function eyeNav_on_Bookmarks($params = '') {
+	global $myPid;
+	if (is_object($GLOBALS['eyeNav_box']) && (is_object($GLOBALS['eyeNav_hidden_bookmarks_url']) && $GLOBALS['eyeNav_hidden_bookmarks_url']->text == '<none>')) {
+		$GLOBALS['eyeNav_box']->remove();
+		$GLOBALS['eyeNav_frame']->setWidth($GLOBALS['eyeNav_window']->width - 25);
+		$GLOBALS['eyeNav_frame']->setX(10);
+		$GLOBALS['eyeNav_line']->hide();
+		$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+		$xml['eyeNav'][0]['sidebar'][0] = 0;
+		eyeXML('setXMLconfig',array('eyeNav','conf.xml',$xml));
+	} else {
+		eyeNav_lib_ShowBookmarks();
+		$GLOBALS['eyeNav_frame']->setWidth($GLOBALS['eyeNav_window']->width - $GLOBALS['eyeNav_window_box']->width - 35);
+		$GLOBALS['eyeNav_frame']->setX($GLOBALS['eyeNav_window_box']->width + 20);
+		$GLOBALS['eyeNav_line']->unhide();
+		eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeNav_toolbar");
+		for (var i = 0; i < e.childNodes.length; i++) {
+			if (e.childNodes[i].id == "Bookmarks_Container") {
+				e.childNodes[i].className = "blockbarItemPress";
+			} else if (e.childNodes[i].id == "Search_Container") {
+				e.childNodes[i].className = "blockbarItem";
+			}
+		}'));
+	}
+}
+
+function eyeNav_on_nav_TREE($params = null) {
+	$item = $params['itemName'][0];
+	$id = /* utf8 */ substr($item, 9);
+	$GLOBALS['selectedBookmarkId_HID']->setText($id);
+	$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	$bookmark = eyeNav_getBookmarkFromId($xml['eyeNav'][0]['bookmarks'][0]['bookmark'],$id);
+	if ($bookmark['type'][0] == 'url') {
+		eyeNav_lib_doUrl(array('page' => array($bookmark['url'][0])));
+	}
+}
+
+function eyeNav_on_delBookmark($params = '') {
+	foreach($params as $key => $value) {
+		if ( /* utf8 */ stripos($key, 'eyeNav_box_hidden_del_') !== false) {
+			eyex('messageBox',array(
+				'buttons' => array(array('delBookmark_yes','Yes'),array('delBookmark_no','No')),
+				'content' => 'Do you really want to delete this bookmark?',
+				'father' => 'eyeNav_window',
+				'hiddens' => array(array('eyeNav_hidden_delBookmark',$value[0])),
+				'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/editClean.png',
+				'title' => 'Delete bookmark',
+				'type' => 3,
+				'win_name' => 'eyeNav_window_delBookmark',
+				'win_removepid' => 0,
+				'win_style' => TITLE + CLOSE
+			));
+			return;
+		}
+	}
+}
+
+function eyeNav_getParentBookmarkFromId($xml, $id) {
+	$return = false;
+	//the root node in the XML conf has no ID so we add a fake one
+	if (!is_array($xml['id']))
+		$xml['id'] = array('root');
+	foreach($xml['bookmark'] as $key => $value) {
+		if ($value['type'][0] == 'folder')
+			$return = eyeNav_getParentBookmarkFromId($value, $id);
+		if ($value['id'][0] == $id)
+			$return = $xml;
+
+		if ($return !== false)
+			break;
+	}
+	return $return;
+}
+
+function eyeNav_on_delBookmark_yes($params = '') {
+	$name = $GLOBALS['eyeNav_hidden_delBookmark']->text;
+
+	if ($GLOBALS['eyeNav_hidden_bookmarks_url']->text == '<none>') {
+		$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	} else {
+		$path = $GLOBALS['eyeNav_hidden_bookmarks_url']->text;
+		$xml = eyeXML('getXMLfile',array(vfs('getRealName',array($path))));
+	}
+
+	$x = eyeNav_lib_array_findIdByText(array($xml['eyeNav'][0]['bookmarks'][0]['category'],'Uncategorized',array('name',0)));
+	if (isset($x[0])) {
+		$y = eyeNav_lib_array_findIdByText(array($xml['eyeNav'][0]['bookmarks'][0]['category'][$x[0]]['link'],$name,array('name',0)));
+		if (isset($y[0])) {
+			unset($xml['eyeNav'][0]['bookmarks'][0]['category'][$x[0]]['link'][$y[0]]);
+			if ($GLOBALS['eyeNav_hidden_bookmarks_url']->text == '<none>') {
+				eyeXML('setXMLconfig',array('eyeNav','conf.xml',$xml));
+			} else {
+				eyeXML('setXMLfile',array(vfs('getRealName',array($path)),$xml));
+			}
+			eyex('messageBox',array('content' => 'Link successfully deleted.'));
+			eyeNav_lib_ShowBookmarks();
+		} else {
+			eyex('messageBox',array('content' => 'Bookmark does not exist!'));
+		}
+	} else {
+		eyex('messageBox',array('content' => 'Bookmark does not exist!'));
+	}
+	$GLOBALS['eyeNav_window_delBookmark']->close();
+}
+
+function eyeNav_on_delBookmark_no($params = '') {
+	$GLOBALS['eyeNav_window_delBookmark']->close();
+}
+
+
+function eyeNav_on_open_bookmarks($params = '') {
+	global $checknum;
+	proc('launch',array('eyeDialog',
+		array(
+			EYEDIALOG_TYPE_OPENFILE,
+			'open_bookmarks_now',
+			$checknum
+		)
+	));
+}
+
+function eyeNav_on_open_bookmarks_now($params = '') {
+	eyeNav_lib_ShowBookmarks($params);
+}
+
+function eyeNav_on_Download($params = '') {
+	global $checknum;
+	proc('launch',array('eyeDialog',
+		array(
+			EYEDIALOG_TYPE_SAVEFILE,
+			'DownloadNow',
+			$checknum,
+			$params['basename'][0],
+			null,
+			null,
+			null,
+			'DownloadNow'
+		)
+	));
+}
+
+function eyeNav_on_DownloadNow($params = '') {
+	global $checknum;
+	if (isset($params['arg'][0])) {
+		proc('launch', array('eyeRename', array(um('getCurrentUserDir') . '/' . TMP_USER_DIR . '/' . $checknum . '.tmp', null, um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . $params['arg'][0])));
+	} else {
+		vfs('delete', array(um('getCurrentUserDir') . '/' . TMP_USER_DIR . '/' . $checknum . '.tmp'));
+	}
+}
+
+function eyeNav_on_SetAddress($params = '') {
+	$GLOBALS['eyeNav_url']->setText(base64_decode($params['address'][0]));
+}
+
+function eyeNav_on_Search($params = '') {
+	global $myPid;
+	if (is_object($GLOBALS['eyeNav_box']) && (is_object($GLOBALS['eyeNav_hidden_search_url']) && $GLOBALS['eyeNav_hidden_search_url']->text == '<none>')) {
+		$GLOBALS['eyeNav_box']->remove();
+		$GLOBALS['eyeNav_frame']->setWidth($GLOBALS['eyeNav_window']->width - 25);
+		$GLOBALS['eyeNav_frame']->setX(10);
+		$GLOBALS['eyeNav_line']->hide();
+		$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+		$xml['eyeNav'][0]['sidebar'][0] = 0;
+		eyeXML('setXMLconfig',array('eyeNav','conf.xml',$xml));
+	} else {
+		eyeNav_lib_ShowSearch();
+		$GLOBALS['eyeNav_frame']->setWidth($GLOBALS['eyeNav_window']->width - $GLOBALS['eyeNav_window_box']->width - 35);
+		$GLOBALS['eyeNav_frame']->setX($GLOBALS['eyeNav_window_box']->width + 20);
+		$GLOBALS['eyeNav_line']->unhide();
+		eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeNav_toolbar");
+		for (var i = 0; i < e.childNodes.length; i++) {
+			if (e.childNodes[i].id == "Search_Container") {
+				e.childNodes[i].className = "blockbarItemPress";
+			} else if (e.childNodes[i].id == "Bookmarks_Container") {
+				e.childNodes[i].className = "blockbarItem";
+			}
+		}'));
+	}
+}
+
+function eyeNav_on_search_label($params = '') {
+	foreach($params as $key => $value) {
+		if ( /* utf8 */ stripos($key,'eyeNav_box_hiddenSearch_') !== false) {
+			$page = str_replace('%s',$GLOBALS['eyeNav_search']->text,$value[0]);
+			eyeNav_lib_doUrl(array('page' => array($page)));
+		}
+	}
+}
+
+function eyeNav_on_search_default($params = '') {
+	$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	$page = str_replace('%s', $GLOBALS['eyeNav_url_search']->text, $xml['eyeNav'][0]['searches'][0]['default'][0]);
+	eyeNav_lib_doUrl(array('page' => array($page)));
+}
+
+/*function eyeNav_on_configure_search($params = '') {
+}*/
+
+function eyeNav_on_open_searches($params = '') {
+	global $checknum;
+	proc('launch',array('eyeDialog',
+		array(
+			EYEDIALOG_TYPE_OPENFILE,
+			'open_searches_now',
+			$checknum
+		)
+	));
+}
+
+function eyeNav_on_open_searches_now($params = '') {
+	eyeNav_lib_ShowSearch($params);
+}
+
+function eyeNav_on_Settings($params = '') {
+	proc('launch',array('eyeControl',array(
+		'category' => 'system',
+		'content' => 'eyenav',
+		'hidemenu' => 1
+	)));
+}
+
+function eyeNav_on_OpenURL($params = '') {
+	eyeNav_lib_doUrl(array('page' => array($GLOBALS['eyeNav_url']->text)));
+}
+
+/**
+ * book marking
+ */
+function eyeNav_on_saveUrl($params = null) {
+	$url = $params['eyeNav_url'][0];
+	eyeNav_on_nav_addBookmark('root',$url);
+}
+
+function eyeNav_on_addFolder_add_BTN($params=null) {
+	$parentId = $GLOBALS['addFolder_selectedFolder_HID']->text;
+	$text = $params['addFolder_name_TXTBOX'][0];
+	$folderId = md5($text.microtime());
+	if (empty($text)) {
+		eyex('messageBox',array('content' => 'You must enter a name'));
+		return;
+	}
+	if ($parentId == 'root') {
+		$parentId = null;
+	}
+	$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	$new = eyeNav_addFolder($xml['eyeNav'][0]['bookmarks'][0], $text, $folderId, $parentId);
+	$xml['eyeNav'][0]['bookmarks'][0] = $new;
+	if (eyeXML('setXMLconfig',array('eyeNav','conf.xml',$xml))) {
+		eyeX('messageBox',array('content'=> 'Folder successfully added'));
+		eyeNav_lib_refreshTree();
+		eyeNav_on_addFolder_cancel_BTN();
+	} else
+		eyeX('messageBox',array('content'=> 'Error adding folder'));
+}
+
+function eyeNav_on_addFolder_cancel_BTN($params=null) {
+	if ($GLOBALS['addFolder_DLG'])
+		$GLOBALS['addFolder_DLG']->close();
+}
+
+function eyeNav_on_addBookmark_cancel_BTN($params=null) {
+	if ($GLOBALS['addBookmark_DLG'])
+		$GLOBALS['addBookmark_DLG']->close();
+}
+
+function eyeNav_on_editBookmark_cancel_BTN($params=null) {
+	if ($GLOBALS['editBookmark_DLG'])
+		$GLOBALS['editBookmark_DLG']->close();
+}
+
+function eyeNav_on_editFolder_cancel_BTN($params=null) {
+	if ($GLOBALS['editFolder_DLG'])
+		$GLOBALS['editFolder_DLG']->close();
+}
+
+function eyeNav_on_addBookmark_add_BTN($params=null) {
+	$parentId = $GLOBALS['addBookmark_selectedFolder_HID']->text;
+	$name = $params['addBookmark_name_TXTBOX'][0];
+	$url = $params['addBookmark_url_TXTBOX'][0];
+	if (empty($name) || empty($url)) {
+		eyex('messageBox',array('content' => 'You must enter all fields'));
+		return;
+	}
+	if ($parentId == 'root') {
+		$parentId = null;
+	}
+	$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	$bookmark = array();
+	$bookmark['name'] = array();
+	$bookmark['id'] = array();
+	$bookmark['url'] = array();
+	$bookmark['type'] = array();
+	$bookmark['id'][0] = md5($url.microtime());
+	$bookmark['type'][0] = 'url';
+	$bookmark['name'][0] = $name;
+	$bookmark['url'][0] = $url;
+
+
+	$new = eyeNav_addBookmark($xml['eyeNav'][0]['bookmarks'][0],$bookmark,$parentId);
+	$xml['eyeNav'][0]['bookmarks'][0] = $new;
+	if (eyeXML('setXMLconfig',array('eyeNav','conf.xml',$xml))) {
+		eyeX('messageBox',array('content'=> 'Bookmark successfully added'));
+		eyeNav_lib_refreshTree();
+		eyeNav_on_addBookmark_cancel_BTN();
+	} else
+		eyeX('messageBox',array('content'=> 'Error adding bookmark'));
+}
+
+function eyeNav_on_editBookmark_apply_BTN($params=null) {
+	$BookmarkId = $GLOBALS['editBookmark_bookmarkId_HID']->text;
+	$BookmarkUrl = $GLOBALS['editBookmark_url_TXTBOX']->text;
+	$BookmarkName = $GLOBALS['editBookmark_name_TXTBOX']->text;
+	$newFolderId = $GLOBALS['editBookmark_selectedFolder_HID']->text;
+	if ($newFolderId == 'root')
+		$newFolderId = null;
+	$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	$Bookmark = eyeNav_getBookmarkFromId($xml['eyeNav'][0]['bookmarks'][0]['bookmark'], $BookmarkId);
+	if ($BookmarkName)
+		$Bookmark['name'][0] = $BookmarkName;
+	if ($BookmarkUrl)
+		$Bookmark['url'][0] = $BookmarkUrl;
+	$newBookmarksToSave = eyeNav_deleteBookmarkFolder($xml['eyeNav'][0]['bookmarks'][0], $BookmarkId);
+	$xml['eyeNav'][0]['bookmarks'][0] = $newBookmarksToSave;
+	$newBookmarksToSave = eyeNav_addBookmark($xml['eyeNav'][0]['bookmarks'][0],$Bookmark,$newFolderId);
+	$xml['eyeNav'][0]['bookmarks'][0] = $newBookmarksToSave;
+
+	if (eyeXML('setXMLconfig',array('eyeNav','conf.xml',$xml))) {
+		eyeX('messageBox',array('content'=> 'Bookmark successfully edited'));
+		eyeNav_lib_refreshTree();
+		eyeNav_on_editBookmark_cancel_BTN();
+	} else
+		eyeX('messageBox',array('content'=> 'Error editing bookmark'));
+}
+
+function eyeNav_on_editFolder_apply_BTN($params=null) {
+	$BookmarkId = $GLOBALS['editFolder_bookmarkId_HID']->text;
+	$BookmarkName = $GLOBALS['editFolder_name_TXTBOX']->text;
+	$newFolderId = $GLOBALS['editFolder_selectedFolder_HID']->text;
+
+	if ($newFolderId == 'root')
+		$newFolderId = null;
+
+	$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	$Bookmark = eyeNav_getBookmarkFromId($xml['eyeNav'][0]['bookmarks'][0]['bookmark'], $BookmarkId);
+
+	if ($BookmarkName)
+		$Bookmark['name'][0] = $BookmarkName;
+
+	$newBookmarksToSave = eyeNav_deleteBookmarkFolder($xml['eyeNav'][0]['bookmarks'][0], $BookmarkId);
+	$newBookmarksToSave = eyeNav_addBookmark($newBookmarksToSave,$Bookmark,$newFolderId);
+	$xml['eyeNav'][0]['bookmarks'][0] = $newBookmarksToSave;
+
+	if (eyeXML('setXMLconfig',array('eyeNav','conf.xml',$xml))) {
+		eyeX('messageBox',array('content'=> 'Bookmark successfully edited'));
+		eyeNav_lib_refreshTree();
+		eyeNav_on_editFolder_cancel_BTN();
+	} else
+		eyeX('messageBox',array('content'=> 'Error editing bookmark'));
+}
+
+function eyeNav_addBookmark($xml, $bookmark, $parentFolderId) {
+	if (!is_array($xml))
+		return array();
+
+	if ($xml['id'][0] == $parentFolderId || !$parentFolderId)
+		$xml['bookmark'][] = $bookmark;
+	else {
+		if (is_array($xml['bookmark'])) {
+			foreach($xml['bookmark'] as $key => $value) {
+				if ($value['type'][0] == 'folder')
+					$xml['bookmark'][$key] = eyeNav_addBookmark($value, $bookmark, $parentFolderId);
+			}
+		}
+	}
+	return $xml;
+}
+
+function eyeNav_addFolder($bookmark, $folderName, $folderId, $parentFolderId) {
+	if (!is_array($bookmark))
+		return array();
+
+	if ($bookmark['id'][0] == $parentFolderId || !$parentFolderId)
+		$bookmark['bookmark'][] = array(
+			'id' => array($folderId),
+			'type' => array('folder'),
+			'name' => array($folderName),
+			'bookmark' => array()
+		);
+	else {
+		if (is_array($bookmark['bookmark'])) {
+			foreach($bookmark['bookmark'] as $key => $value) {
+				if ($value['type'][0] == 'folder')
+					$bookmark['bookmark'][$key] = eyeNav_addFolder($value, $folderName, $folderId, $parentFolderId);
+			}
+		}
+	}
+	return $bookmark;
+}
+ /**
+ * end
+ */
+ 
+// Search Url next to url box top right
+function eyeNav_on_searchFor($params = '') {
+	$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	$page = str_replace('%s', $GLOBALS['eyeNav_url_search']->text, $xml['eyeNav'][0]['searches'][0]['default'][0]);
+	eyeNav_lib_doUrl(array('page' => array($page)));
+}
+
+//Open new Nav
+function eyeNav_on_NewWindow($params = '') {
+	proc('launch',array('eyeNav'));
+}
+
+
+
+function eyeNav_on_Close($params = '') {
+	proc('end');
+}
+?>

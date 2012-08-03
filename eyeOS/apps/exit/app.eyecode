@@ -1,0 +1,81 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	This application is a "logout" app and is a part of oneye utils.
+	When this app is executed, oneye ends current session and relaunch the base_app,
+	normally eyeLogin, by refreshing the current page.
+*/
+
+function exit_run($params=null) {
+	// Lightbox configuration (you can customize it as you like)
+	$lightbox_color = '#FFFFFF';
+	$lightbox_opacity = 0.5; // It must be a number between 0 and 1
+	
+	// Get eyeDock PID (it will be useful later)
+	$eyeDock_pid = proc('findPidByName', array('eyeDock'));
+	
+	// Play logout sound
+	if (eyex('systemSound', array('logout'))) {
+		$timeout = '2500';
+	} else {
+		$timeout = '1';
+	}
+	
+	// Hide eyeDock and eyeApps divs
+	eyex('rawjs', array('js' => '
+			var dock_top_div = xGetElementById("' . $eyeDock_pid . '_eyeDock_top");
+			var dock_bottom_div = xGetElementById("' . $eyeDock_pid . '_eyeDock_bottom");
+			var eyeApps_div = xGetElementById("eyeApps");
+			dock_top_div.style.display = "none";
+			dock_bottom_div.style.display = "none";
+			eyeApps_div.style.display = "none";
+		'));
+	
+	// Put a lightbox in front of all the screen, with the color and opacity set at the beginning
+	$myContainer = new Container(array(
+		'name' => 'exit_lightbox_main',
+		'father' => 'eyeScreen',
+		'removepid' => 1,
+		'x' => 0,
+		'y' => 0,
+		'width' => $_SESSION['SCREEN']['width'],
+		'height' => $_SESSION['SCREEN']['height']
+	));
+	$myContainer->show();
+	$myContainer->setCss(array(
+		'background-color' => $lightbox_color,
+		'border-style' => 'none',
+		'opacity' => $lightbox_opacity,
+		'filter' => 'alpha(opacity=' . round($lightbox_opacity * 100) . ')'
+	));
+	
+	// Show the loading image
+	$myImagebox = new Imagebox(array(
+		'name' => 'exit_lightbox_imagebox',
+		'father' => 'exit_lightbox_main',
+		'width' => 32,
+		'height' => 32,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/loading.gif',
+		'x' => (($myContainer->width / 2) - 16),
+		'y' => (($myContainer->height / 2) - 16)
+	));
+	$myImagebox->show();
+	
+	// Terminate the session and reload the login page
+	eyex('sendMessage', array('msg' => 'logout', 'params' => $timeout));
+}
+?>

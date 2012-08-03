@@ -1,0 +1,10 @@
+<package>
+	<name>Trash</name>
+	<category>File Management</category>
+	<version>1.9</version>
+	<description>Utility linking to trash:///</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/trash.png</icon>
+</package>

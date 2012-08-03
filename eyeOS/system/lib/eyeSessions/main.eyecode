@@ -1,0 +1,346 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Session handling lib for oneye
+*/
+define('COOKIE_ID','PHPSESSID');
+define('COOKIE_EXPIRE','2147483647');
+define('IPC_TYPE','File');
+define('FLASH_UPLOAD_FIX','flash_fix');
+/**
+* Starts a session for the current user.
+*
+* @return This function always returns true.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_startSession($params=null){
+	global $sessionId;
+
+	//Register the save session function to call it at the final of this script
+	register_shutdown_function('eyeSessions', 'saveSession');
+	//If already has a id (and posible session)
+
+	$sessionId = eyeSessions('getSessionId');
+	if($sessionId != false){
+		//If session exists
+		if(eyeIPC('isSet',array($sessionId,IPC_TYPE))){
+			$_SESSION = eyeIPC('getVar',array($sessionId,IPC_TYPE));
+			if(!is_array($_SESSION)){
+				$_SESSION = array();
+			}
+			return true;
+		}
+	}
+
+	//Creating the new session
+	$sessionId = md5(uniqid(rand()));
+	setcookie(COOKIE_ID,$sessionId,COOKIE_EXPIRE);
+	$_SESSION = array();
+	return true;
+}
+
+/**
+* Check if there are a sessionID in the request, and if it is true startSession
+*
+* @return This function doesn't return anything
+* @date 2008/03/11
+*/
+function lib_eyeSessions_checkAndSstartSession(){
+	//Getting the possible session ID
+	$sessionId = eyeSessions('getSessionId');
+	//Checking the there are an ID and if it exists as session
+	if($sessionId != false && eyeIPC('isSet',array($sessionId,IPC_TYPE))){
+		eyeSessions('startSession');
+	}
+}
+
+/**
+* Return the session ID
+*
+* @return Return the sessionId if the request have one, if not return false
+* @date 2008/12/10
+*/
+function lib_eyeSessions_getSessionId(){
+	global $sessionId;
+	//If the petition already have a sessionId, just return it.
+	if(!empty($sessionId)){
+		return $sessionId;
+	}
+	//If the request doesn't have a sessionId, we have to check if the user have sent it via $_REQUEST
+	//Flash fix,
+	//TODO: Documment the flash trick
+	if(isset($_GET[FLASH_UPLOAD_FIX]) && isset($_GET[COOKIE_ID])){
+		return $_GET[COOKIE_ID];
+	}
+	if(isset($_COOKIE[COOKIE_ID])){
+		return $_COOKIE[COOKIE_ID];
+	}
+	return false;
+}
+//single var operations
+
+/**
+* Sets a session variable named 'varName' with the value 'varValue'.
+*
+* @param $params array(varName,varValue)
+* @param $varName Name of the new variable. In case the a variable with that
+*	name exists, its value will be replaced.
+* @param $varValue Value of the variable.
+* @return This function does not return any value.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_setVar($params) {
+	if(!isset($params[0]) || !isset($params[1])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	$varValue = $params[1];
+	$_SESSION[$varName] = $varValue;
+}
+
+/**
+* Returns the value of a variable of the user's session.
+*
+* @param $params array(varName)
+* @param $varName Name of the variable.
+* @return Returns the value of the variable.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_getVar($params){
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	return $_SESSION[$varName];
+}
+
+/**
+* Deletes a variable from the user's session.
+*
+* @param $params array(varName)
+* @param $varName Name of the variable.
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_delVar($params){
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	unset($_SESSION[$varName]);
+}
+
+/**
+* Checks whether certain variable exists in the user's session.
+*
+* @param $params array(varName)
+* @param $varName Name of the variable.
+* @return Returns true if the variable exists, false otherwise.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_checkVar($params){
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	if(isset($_SESSION[$varName])){
+		return true;
+	} else {
+		return false;
+	}
+}
+
+//array operations
+
+/**
+* Initializes a new variable in the user's session with the form of an
+* empty array.
+*
+* @param $params array(varName)
+* @param $varName Name of the variable.
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_makeArrayVar($params) {
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	$_SESSION[$varName] = array();
+}
+
+/**
+* Adds a new value to an array session variable named 'varName'.
+*
+* @param $params array(varName,varValue)
+* @param $varName Name of the session variable.
+* @param $varValue Value to insert in the session variable.
+* @return This function does not return any value.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_addArrayValue($params) {
+	if(!isset($params[0]) || !isset($params[1])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	$varValue = $params[1];
+	if(!isset($_SESSION[$varName]) || !is_array($_SESSION[$varName])){
+		$_SESSION[$varName] = array();
+	}
+	array_push($_SESSION[$varName],$varValue);
+}
+
+//array with keys
+
+/**
+* Adds a new value to the array session variable varName. The value is
+* inserted as an associative array, being the key of the new element the
+* 'key' argument.
+*
+* @param $params array(varName,varValue,key)
+* @param $varName Name of the session variable.
+* @param $varValue Value to insert in the variable.
+* @param $key Key of the new element added to the array.
+* @return This function does not return any value.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_addArrayValueByKey($params) {
+	if(!isset($params[0]) || !isset($params[1]) || !isset($params[2])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	$varValue = $params[1];
+	$key = $params[2];
+	if(!isset($_SESSION[$varName]) || !is_array($_SESSION[$varName])){
+		$_SESSION[$varName] = array();
+	}
+	$_SESSION[$varName][$key] = $varValue;
+}
+
+/**
+* Unsets the element varKey of the varName session variable.
+*
+* @param $params array(varName,varKey)
+* @param $varName Name of the variable.
+* @param $varKey Name of the key to delete.
+* @return None.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_delArrayValueByKey($params) {
+	if(!isset($params[0]) || !isset($params[1])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	$varKey = $params[1];
+	unset($_SESSION[$varName][$varKey]);
+}
+
+/**
+* Retrieves the value of the array element referred by position in the
+* session variable arrayName.
+*
+* @param $params array(arrayName,position)
+* @param $arrayName Name of the variable.
+* @param $position Key of the element of the variable.
+* @return Returns the value of the specified element of the variable.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_getArrayValueByKey($params) {
+	if(!isset($params[0]) || !isset($params[1])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$arrayName = $params[0];
+	$position = $params[1];
+	return $_SESSION[$arrayName][$position];
+}
+
+/**
+* Checks whether the element varKey of the session array variable
+* varName is set.
+*
+* @param $params array(varName,varKey)
+* @param $varName Name of the variable.
+* @param $varKey Key of the variable to check.
+* @return If the variable has a an element with the given key set,
+*	returns true. If not, returns false.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_checkArrayValueByKey($params) {
+	if(!isset($params[0]) || !isset($params[1])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$varName = $params[0];
+	$varKey = $params[1];
+	if(isset($_SESSION[$varName][$varKey])) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+* Registers the user's session in the system.
+*
+* @return This function always returns true.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_saveSession(){
+	global $sessionId,$externRequest;
+	//If the petition is a extern request, the session is not saved (read only mode).
+	if(!empty($externRequest) && $externRequest == true){
+		return true;
+	}
+	//If sessionId is not pressent, don't save any session.
+	if($sessionId == ''){
+		return true;
+	}
+	//Use __FILE__ is better than use some "custom environment vars you get when oneye is used under some httpd
+	$dir = dirname(__FILE__) . '/../../../';
+	chdir($dir);
+	//save the session
+	eyeIPC('setVar',array($sessionId,$_SESSION,IPC_TYPE));
+	return true;
+}
+
+/**
+* Destroys the user session, along with all of its variables.
+*
+* @return Returns true if destroying the session is successful; false
+*	otherwise.
+* @date 2008/03/11
+*/
+function lib_eyeSessions_endSession(){
+	global $sessionId;
+	eyeIPC('rmVar',array($sessionId,IPC_TYPE));
+	//Deleting $_SESSION content
+	$_SESSION = array();
+	//Deleting session ID
+	$sessionId = '';
+	return true;
+}
+
+?>

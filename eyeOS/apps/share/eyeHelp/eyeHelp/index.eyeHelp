@@ -1,0 +1,20 @@
+﻿eyeHelp uses BBcode, with some extra tags. More tags will be added for the final version.
+
+For now, the tags are:
+[list=1]
+[*]goto --> creates a link to a specific help topic. Works like url and mail tags.
+[*]url --> creates a link which will open in a new window
+[*]mail --> creates a "mailto:" link
+[*]b --> put the text in bold
+[*]i --> put the text in italic
+[*]u --> underline the text
+[*]s --> put a line through the text
+[*]o --> put a line over the text
+[*]h --> creates a header. It put the text with an HTML h2 tag snd an hr bellow
+[*]color= --> Changes the color of the text
+[*]size= --> Chenges the size of the text
+[*]code/quote  --> creates a box with text
+[*]img --> inserts an image
+[/list]
+
+For examples on how to use this code, go to the [goto=/examples]examples page[/goto].

@@ -1,0 +1,101 @@
+<?php // utf8
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+//BBcode 2 HTML was written by WAY2WEB.net (but a lot modified by me :P)
+
+// Convert new line chars to html <br /> tags
+$Text = str_replace("\n",'<br />',$Text);
+$Text = str_replace("\t",'&nbsp;&nbsp;&nbsp;&nbsp;',$Text);
+
+// Set up the parameters for a URL search string
+$URLSearchString = " a-zA-Z0-9\:\/\-\?\&\.\=\_\~\#\'";
+// Set up the parameters for a MAIL search string
+$MAILSearchString = $URLSearchString . " a-zA-Z0-9\.@";
+
+// Perform GOTO Search
+$Text = preg_replace("/\[goto\]([$URLSearchString]*)\[\/goto\]/", '<span class="goto" onclick="sendMsg(\''.$checknum.'\',\'open\',\'$1\');">$1</span>', $Text);
+$Text = preg_replace("(\[goto\=([$URLSearchString]*)\](.+?)\[/goto\])", '<span class="goto" onclick="sendMsg(\''.$checknum.'\',\'open\',\'$1\');">$2</span>', $Text);
+
+//Perform Get a GOTO Search for eyeHelp root folder
+$Text = preg_replace("(\[get\=([../$URLSearchString]*)\](.+?)\[/get\])", '<span class="goto" onclick="sendMsg(\''.$checknum.'\',\'open\',\'$1\');">$2</span>', $Text);
+
+// Perform URL Search
+$Text = preg_replace("/\[url\]([$URLSearchString]*)\[\/url\]/", '<span class="url" onclick="sendMsg(\''.$checknum.'\',\'eyeNav\',\'$1\');">$1</span>', $Text);
+$Text = preg_replace("(\[url\=([$URLSearchString]*)\](.+?)\[/url\])", '<span class="url" onclick="sendMsg(\''.$checknum.'\',\'eyeNav\',\'$1\');">$2</span>', $Text);
+/*$Text = preg_replace("/\[url\]([$URLSearchString]*)\[\/url\]/", '<a href="$1" style="color:blue;" target="_blank">$1</a>', $Text);
+$Text = preg_replace("(\[url\=([$URLSearchString]*)\](.+?)\[/url\])", '<a href="$1" style="color:blue;" target="_blank">$2</a>', $Text);*/
+  //$Text = preg_replace("(\[url\=([$URLSearchString]*)\]([$URLSearchString]*)\[/url\])", '<a href="$1" target="_blank">$2</a>', $Text);
+
+// Perform MAIL Search
+$Text = preg_replace("(\[mail\]([$MAILSearchString]*)\[/mail\])", '<a href="mailto:$1" class="mail" >$1</a>', $Text);
+$Text = preg_replace("/\[mail\=([$MAILSearchString]*)\](.+?)\[\/mail\]/", '<a href="mailto:$1" class="mail" >$2</a>', $Text);
+
+// Check for bold text
+$Text = preg_replace("(\[b\](.+?)\[\/b])is",'<span style="font-weight: bold;">$1</span>',$Text);
+
+// Check for Italics text
+$Text = preg_replace("(\[i\](.+?)\[\/i\])is",'<span style="font-style: italic;">$1</span>',$Text);
+
+// Check for Underline text
+$Text = preg_replace("(\[u\](.+?)\[\/u\])is",'<span style="text-decoration: underline;">$1</span>',$Text);
+
+// Check for strike-through text
+$Text = preg_replace("(\[s\](.+?)\[\/s\])is",'<span style="text-decoration: line-through;">$1</span>',$Text);
+
+// Check for over-line text
+$Text = preg_replace("(\[o\](.+?)\[\/o\])is",'<span style="text-decoration: overline;">$1</span>',$Text);
+
+// Check for header text (applies a h2 and then a hr)
+$Text = preg_replace("(\[h\](.+?)\[\/h\])is",'<h2>&nbsp;&nbsp;$1</h2><hr style="width:95%" />',$Text);
+
+// Check for colored text
+$Text = preg_replace("(\[color=(.+?)\](.+?)\[\/color\])is","<span style=\"color: $1\">$2</span>",$Text);
+
+// Check for sized text
+$Text = preg_replace("(\[size=(.+?)\](.+?)\[\/size\])is","<span style=\"font-size: $1px\">$2</span>",$Text);
+
+// Check for list text
+$Text = preg_replace("/\[list\](.+?)\[\/list\]/is", '<ul style="list-style-type: disc; list-style-position: inside;">$1</ul>' ,$Text);
+$Text = preg_replace("/\[list=1\](.+?)\[\/list\]/is", '<ul style="list-style-type: decimal; list-style-position: inside;">$1</ul>' ,$Text);
+$Text = preg_replace("/\[list=i\](.+?)\[\/list\]/s", '<ul style="list-style-type: lower-roman; list-style-position: inside;">$1</ul>' ,$Text);
+$Text = preg_replace("/\[list=I\](.+?)\[\/list\]/s", '<ul style="list-style-type: upper-roman; list-style-position: inside;">$1</ul>' ,$Text);
+$Text = preg_replace("/\[list=a\](.+?)\[\/list\]/s", '<ul style="list-style-type: lower-alpha; list-style-position: inside;">$1</ul>' ,$Text);
+$Text = preg_replace("/\[list=A\](.+?)\[\/list\]/s", '<ul style="list-style-type: upper-alpha; list-style-position: inside;">$1</ul>' ,$Text);
+$Text = str_replace("[*]", "<li>", $Text);
+
+// Check for font change text
+$Text = preg_replace("(\[font=(.+?)\](.+?)\[\/font\])","<span style=\"font-family: $1;\">$2</span>",$Text);
+
+// Declare the format for [code] layout
+$CodeLayout = '<div class="code">$1</div>';
+
+// Check for [code] text
+$Text = preg_replace("/\[code\](.+?)\[\/code\]/is","$CodeLayout", $Text);
+
+// Declare the format for [quote] layout
+$QuoteLayout ='<div class="quote">$1</div>';
+
+// Check for [quote] text
+$Text = preg_replace("/\[quote\](.+?)\[\/quote\]/is","$QuoteLayout", $Text);
+
+// Images
+// [img]pathtoimage[/img]
+$Text = preg_replace("/\[img\](.+?)\[\/img\]/", '<img src="$1">', $Text);
+
+// [img=widthxheight]image source[/img]
+$Text = preg_replace("/\[img\=([0-9]*)x([0-9]*)\](.+?)\[\/img\]/", '<img src="$3" height="$2" width="$1">', $Text);
+
+?>

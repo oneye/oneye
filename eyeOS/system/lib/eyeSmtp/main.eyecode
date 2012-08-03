@@ -1,0 +1,99 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function lib_eyeSmtp_send($params) {
+
+	if (!empty($params[0])) {					// DEPRECATED
+		$to = $params[0];						// DEPRECATED
+		$subject = $params[1];					// DEPRECATED
+		$body = $params[2];						// DEPRECATED
+	} else if (!empty($params['to'])) {
+		$to = $params['to'];
+		$subject = '';
+		$body = '';
+		if (!empty($params['subject'])) {
+			$subject = $params['subject'];
+		}
+		if (!empty($params['body'])) {
+			$body = $params['body'];
+		}
+	} else {
+		return false;
+	}
+
+	$host = SMTP_HOST;
+	$port = SMTP_PORT;
+	$ssl = SMTP_SSL;
+	$username = SMTP_USERNAME;
+	$password = SMTP_PASSWORD;
+	$smtpFrom = SMTP_FROM;
+
+	if (isset($params['host'])) {
+		$host = $params['host'];
+	}
+	if (isset($params['port'])) {
+		$port = $params['port'];
+	}
+	if (isset($params['ssl'])) {
+		$ssl = $params['ssl'];
+	}
+	if (isset($params['username'])) {
+		$username = $params['username'];
+	}
+	if (isset($params['password'])) {
+		$password = $params['password'];
+	}
+	if (isset($params['from'])) {
+		$smtpFrom = $params['from'];
+	}
+	include_once(EYE_ROOT.'/system/'.LIB_DIR.'/eyeSmtp/sasl'.EYE_CODE_EXTENSION);
+	include_once(EYE_ROOT.'/system/'.LIB_DIR.'/eyeSmtp/smtp'.EYE_CODE_EXTENSION);
+
+	$smtp=new smtp_class;
+
+    $smtp->host_name = $host;       /* Change this variable to the address of the SMTP server to relay, like "smtp.myisp.com" */
+    $smtp->host_port = $port;                /* Change this variable to the port of the SMTP server to use, like 465 */
+    $smtp->ssl = $ssl;                       /* Change this variable if the SMTP server requires an secure connection using SSL */
+    $smtp->localhost="localhost";       /* Your computer address */
+    $smtp->direct_delivery=0;           /* Set to 1 to deliver directly to the recepient SMTP server */
+    $smtp->timeout=10;                  /* Set to the number of seconds wait for a successful connection to the SMTP server */
+    $smtp->data_timeout=0;              /* Set to the number seconds wait for sending or retrieving data from the SMTP server.
+                                           Set to 0 to use the same defined in the timeout variable */
+    $smtp->debug=0;                     /* Set to 1 to output the communication with the SMTP server */
+    $smtp->html_debug=0;                /* Set to 1 to format the debug output as HTML */
+    $smtp->pop3_auth_host="";           /* Set to the POP3 authentication host if your SMTP server requires prior POP3 authentication */
+    $smtp->user=$username;                     /* Set to the user name if the server requires authetication */
+    $smtp->realm="";                    /* Set to the authetication realm, usually the authentication user e-mail domain */
+    $smtp->password=$password;                 /* Set to the authetication password */
+    $smtp->workstation="";              /* Workstation name for NTLM authentication */
+    $smtp->authentication_mechanism=""; /* Specify a SASL authentication method like LOGIN, PLAIN, CRAM-MD5, NTLM, etc..
+                                           Leave it empty to make the class negotiate if necessary */
+                                           
+	$smtp->SendMessage(
+        $smtpFrom,
+        array(
+            $to
+        ),
+        array(
+            "From: ".$smtpFrom,
+            "To: $to",
+            "Subject: $subject",
+            "Date: ".strftime("%a, %d %b %Y %H:%M:%S %Z")
+        ),
+        $body);
+}
+
+?>

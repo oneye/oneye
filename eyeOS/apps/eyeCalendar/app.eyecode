@@ -1,0 +1,189 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeCalendar_run($params = '') {
+	global $checknum;
+	global $myPid;
+	global $procInfo;
+	global $myPid;
+
+	foreach (proc('getProcessTable') as $process) {
+		if ($process['appName'] == 'eyeCalendar' && $process['pid'] != $myPid) {
+			eyex('messageBox', array('content' => 'eyeCalendar is already running!'));
+			return proc('end');
+		}
+	}
+
+	if($procInfo['exec'] == 'task'){
+		$_SESSION['eyeCalendarJs'] = false;
+		if(isset($_SESSION[WTABLE][$myPid]['weekPlanner'])){
+			$_SESSION[WTABLE][$myPid]['weekPlanner']->killme();
+		}
+	}
+	if($params['fullScreen'] == 1){
+		$fullScreen = true;
+		$hiddenWidget = new Hidden(array('name'=>'fullScreen','text'=>1));
+		eyeWidgets('serialize',array($hiddenWidget));
+
+	}else{
+		$fullScreen = false;
+	}
+	//Call component js part
+	//eyeX('messageBox',array('content'=>$_SESSION['SCREEN']['refresh'],'type'=>2));
+	if(!isset($_SESSION['eyeCalendarJs']) || $_SESSION['eyeCalendarJs'] < $_SESSION['SCREEN']['refresh']){
+		eyeX('rawjs',array('js'=>'eyeCalendarChecknum = '.$checknum.';'));
+		eyex('loadScript',array('url' => 'index.php?extern=apps/eyeCalendar/js/components/eyeCalendar' . EYE_CODE_EXTENSION . '&type=dynamic'));
+		if (IE && IE < 7) {
+			eyex('loadCss',array('url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/eyeCalendar/eyeCalendar_IE6.css&type=css','id' =>'eyeCalendar.css'));
+		}else{
+			eyex('loadCss',array('url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/eyeCalendar/eyeCalendar.css&type=css','id' =>'eyeCalendar.css'));
+		}
+	}
+
+	$currentDate = time();
+
+	//Making the gui
+	//Making the main window
+	$windowWidth = 864;
+	$windowHeight = 550;
+	$myWindow1 = new Window(array('title'=>'Calendar','name'=>'eyeCalendarWin1','father' => 'eyeApps',
+	'y'=>35,'type'=>NORMAL_WINDOW,'sendResizeMsg'=>1,'sigResize'=>'mainResize','x'=>0,'cent'=>2,'width'=>$windowWidth,'height'=>$windowHeight,'savePosition' => 1));
+	$myWindow1->show();
+	eyeX('rawjs',array('js'=>'xGetElementById("'.$myPid.'_eyeCalendarWin1_Content").style.overflow = "hidden";'));
+	$windowHeight = 535;
+
+
+	$myWindow1->setCss(array('display'=>'inline'));
+
+	$myToolbar = new Toolbar(array('name'=>'myBar','father'=>'eyeCalendarWin1_Content'));
+	$myToolbar->show();
+	$myToolbar->addItem('GoBack','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/previous.png','Previous');
+	$myToolbar->addItem('GoForward','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/next.png','Next');
+	$myToolbar->addLine();
+	$myToolbar->addItem('GoToday','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/today.png','Today');
+	$myToolbar->addItem('DayView','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/day.png','Day');
+	$myToolbar->addItem('WeekView','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/week.png','Week');
+	$myToolbar->addItem('WorkView','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/work.png','Work');
+	$myToolbar->addLine();
+	$myToolbar->addItem('addCalendar','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/addcal.png','Add Calendar');
+	$myToolbar->addLine();
+	$myToolbar->addItem('globalConfigureCalendar','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/editcal.png','Configure');
+	//rightside
+	$myToolbar->addItem('Help','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/help.png','Help','',1);
+
+/**
+*	@TODO make Full Screen code below work
+*/
+
+	if($fullScreen == true){
+		$myToolbar->addItem('fullScreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Window mode','',1);
+	}else{
+		$myToolbar->addItem('fullScreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+	}
+
+	$myContainer = new Simplebox(array('name'=>'container','father'=>'eyeCalendarWin1_Content','x'=>0,'y'=>58,'width'=>$windowWidth-2,'height'=>$windowHeight-62,'border'=>0));
+	$myContainer->show(0);
+
+	$myLine = new Line(array('name'=>'verticalPanel','father'=>'eyeCalendarWin1_Content','x'=>160,'y'=>59,'width'=>5,'height'=>$windowHeight-83));
+	$myLine->show(0);
+	$myLine->setCss(array('backgroundColor'=>'#eeeeee',
+						'borderLeft'=>'1px transparent solid',
+						'borderRight'=>'1px transparent solid',
+						'cursor'=>'pointer'
+						));
+
+	$sendEvent = 'sendMsgParam = sendMsg('.$checknum.',\'hideLeftPanel\');';
+	$myLine->addEvent('onclick',$sendEvent);
+
+	$calendarContents = new Simplebox(array('name'=>'calendarsContainer','father'=>'container','x'=>0,'y'=>0,'width'=>158,'height'=>$windowHeight-62-148-20,'border'=>0));
+	$calendarContents->show(0);
+	$js = 'xGetElementById("'.$myPid.'_calendarsContainer_Container").style.overflowY = "auto";';
+	eyeX('rawjs',array('js'=>$js));
+	$js = 'xGetElementById("'.$myPid.'_calendarsContainer_Container").style.overflowX = "hidden";';
+	eyeX('rawjs',array('js'=>$js));
+
+	//Calendar widget.
+	$i10n = eyeCalendar('geti10n');
+	$myCalendarWidget = new Calendar(array(
+					'name'=>'calendarWidget',
+					'father'=>'container',
+					'width'=>158,
+					'height'=>148,
+					'x'=>0,
+					'y'=>20,
+					'vert'=>1,
+					'drawOnClick'=>1,
+					'drawServerDate'=>1,
+					'drawHighlight'=>1,
+					'startMonday'=>$i10n['startDay']
+					));
+	$myCalendarWidget->show();
+
+	$myLine = new Line(array('name'=>'horizPanel','father'=>'container','x'=>0,'y'=>170,'vert'=>1,'width'=>160,'height'=>0));
+	$myLine->show(0);
+
+	$myLine = new Line(array('name'=>'horizBottom','father'=>'container','x'=>0,'y'=>19,'vert'=>1,'width'=>$windowWidth-2,'height'=>0));
+	$myLine->show(0);
+
+
+	//Scroll box
+	//FF: 180
+	$height = $windowHeight-(83+40);
+	if(IE == 6){
+		$width = $windowWidth-185;
+	}elseif(IE == 7){
+		$width = $windowWidth-169;
+	}else{
+		$width = $windowWidth-182-4;
+	}
+	$myContainer = new Simplebox(array('name'=>'calendarContainer','father'=>'container','x'=>167,'y'=>1,'width'=>$width,'height'=>$height,'border'=>0));
+	$myContainer->show(0);
+
+	if(!IE || IE < 7){
+		$myContainer->width += 15;
+		$width += 15;
+		$GLOBALS['calendarContainer']->setWidth($width);
+		$GLOBALS['calendarContainer']->setHeight($height);
+	}
+// 	eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_calendarContainer_Container").style.overflowX="hidden";
+// 	document.getElementById("'.$myPid.'_calendarContainer_Container").style.overflowY="scroll";'));
+
+	//VERSION CHECK; this is needed since 1.0 version.
+	if(!eyeCalendar('calendarInfoExists')){
+		eyeCalendar('indexCalendarInfo',array(1));
+	}
+	//Maybe the user was added in a new group so we have to check everything
+//the group shared calendar has been desactivated until 1.9
+// 	eyeCalendar('indexGroups');
+
+	$calendarView = new Hidden(array('name'=>'calendarView','text'=>''));
+	eyeWidgets('serialize',array($calendarView));
+	addListenerServiceCall('fullResized','eyex','resizedbrowser');
+	//The weekPlanner is loaded in launch event
+	if(!isset($_SESSION['eyeCalendarJs']) || $_SESSION['eyeCalendarJs'] < $_SESSION['SCREEN']['refresh']){
+		$_SESSION['eyeCalendarJs'] = $_SESSION['SCREEN']['refresh'];
+	}else{
+		include_once EYE_ROOT.'/'.APP_DIR.'/eyeCalendar/events.eyecode';
+		eyeCalendar_on_Launch();
+	}
+}
+
+function eyeCalendar_end($params=null) {
+	removeListenerServiceCall('eyex','resizedbrowser');
+	eyeWidgets('unserialize');
+}
+
+?>

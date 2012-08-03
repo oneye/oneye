@@ -1,0 +1,502 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeFiles_on_Close($params = '') {
+	proc('end');
+}
+
+function eyeFiles_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeFiles_on_Resize($params = '') {
+	global $myPid;
+	$GLOBALS['eyeFiles_Box_Tree']->setHeight(intval($params['arg'][1]) - 155);
+	if (is_object($GLOBALS['eyeFiles_Box_Tree_Tree'])) {
+		$GLOBALS['eyeFiles_Box_Tree_Tree']->setHeight($GLOBALS['eyeFiles_Box_Tree']->height - 45);
+	}
+	$GLOBALS['eyeFiles_Window']->width = $params['arg'][0];
+	$GLOBALS['eyeFiles_Window']->height = $params['arg'][1];
+	$GLOBALS['eyeFiles_Box_View']->setHeight($GLOBALS['eyeFiles_Box_Tree']->height);
+	$GLOBALS['eyeFiles_Box_View_Container2']->setHeight($GLOBALS['eyeFiles_Box_View']->height - 35);
+	$GLOBALS['eyeFiles_Box_Actions']->setHeight($GLOBALS['eyeFiles_Box_Tree']->height);
+	$GLOBALS['eyeFiles_Box_Actions_menu_files_Container']->setHeight($GLOBALS['eyeFiles_Box_Actions']->height - 35);
+	$GLOBALS['eyeFiles_Box_Actions_menu_trash_Container']->setHeight($GLOBALS['eyeFiles_Box_Actions']->height - 35);
+	$GLOBALS['eyeFiles_Textbox_Path']->setWidth(intval($params['arg'][0]) - $GLOBALS['eyeFiles_Box_Tree']->width - 57);
+	$GLOBALS['eyeFiles_Imagebox_Path_Right']->setX($GLOBALS['eyeFiles_Textbox_Path']->x + $GLOBALS['eyeFiles_Textbox_Path']->width);
+	$GLOBALS['eyeFiles_Container']->setHeight($GLOBALS['eyeFiles_Box_Tree']->height + 35);
+	$GLOBALS['eyeFiles_Container']->setWidth($GLOBALS['eyeFiles_Textbox_Path']->width + 32);
+	if ($GLOBALS['eyeFiles_Box_View_Radio_Details']->checked) {
+		$GLOBALS['eyeFiles_View_Details_Sortabletable']->setHeight($GLOBALS['eyeFiles_Container']->height - 2);
+		$GLOBALS['eyeFiles_View_Details_Sortabletable']->setWidth($GLOBALS['eyeFiles_Container']->width - 2);
+	} elseif ($GLOBALS['eyeFiles_Box_View_Radio_List']->checked) {
+		eyex('rawjs',array('js' => 'i = 0;
+		x = 20;
+		y = 20;
+		e = xGetElementById("' . $myPid . '_eyeFiles_View_List_Icon_0_Container");
+		while (e) {
+			xSlideTo("' . $myPid . '_eyeFiles_View_List_Icon_" + i + "_Container",x,y,500);
+			y += 30;
+			if (xHeight("' . $myPid . '_eyeFiles_Container") - y - 30 < 0) {
+				x += 140;
+				y = 20;
+			}
+			i++;
+			e = xGetElementById("' . $myPid . '_eyeFiles_View_List_Icon_" + i + "_Container");
+		}'));
+	} else {
+		eyex('rawjs',array('js' => 'i = 0;
+		x = 20;
+		y = 20;
+		e = xGetElementById("' . $myPid . '_eyeFiles_View_Icons_Icon_0_Container");
+		while (e) {
+			xSlideTo("' . $myPid . '_eyeFiles_View_Icons_Icon_" + i + "_Container",x,y,500);
+			x += 88;
+			if (xWidth("' . $myPid . '_eyeFiles_Container") - x - 88 < 0) {
+				x = 20;
+				y += 88;
+			}
+			i++;
+			e = xGetElementById("' . $myPid . '_eyeFiles_View_Icons_Icon_" + i + "_Container");
+		}'));
+	}
+}
+
+function eyeFiles_on_Fullscreen($params = '') {
+	global $myPid;
+	$GLOBALS['eyeFiles_Window']->setFullScreen();
+	if ($GLOBALS['eyeFiles_Window']->fullScreen) {
+		$press = 'Press';
+	}
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeFiles_Toolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "' . $myPid . '_Fullscreen_Container") {
+			e.childNodes[i].className = "blockbarItem' . $press . '_right";
+		}
+	}'));
+}
+
+function eyeFiles_on_Back($params = '') {
+	global $myPid;
+	$_SESSION['eyeFiles'][$myPid]['history']['position']--;
+	if ($_SESSION['eyeFiles'][$myPid]['history']['position'] < 0) {
+		$_SESSION['eyeFiles'][$myPid]['history']['position'] = 0;
+		eyeFiles_on_OpenPath(array($GLOBALS['eyeFiles_Hidden_Path']->text . '/../','nohistory' => 1));
+	} else {
+		eyeFiles_on_OpenPath(array($_SESSION['eyeFiles'][$myPid]['history']['list'][$_SESSION['eyeFiles'][$myPid]['history']['position']],'nohistory' => 1));
+	}
+}
+
+function eyeFiles_on_GoUp($params = '') {
+	eyeFiles_on_OpenPath(array($GLOBALS['eyeFiles_Hidden_Path']->text . '/../'));
+}
+
+function eyeFiles_on_Next($params = '') {
+	global $myPid;
+	$_SESSION['eyeFiles'][$myPid]['history']['position']++;
+	if (isset($_SESSION['eyeFiles'][$myPid]['history']['position']) === true && $_SESSION['eyeFiles'][$myPid]['history']['list'][$_SESSION['eyeFiles'][$myPid]['history']['position']]) {
+		eyeFiles_on_OpenPath(array($_SESSION['eyeFiles'][$myPid]['history']['list'][$_SESSION['eyeFiles'][$myPid]['history']['position']],'nohistory' => 1));
+	} else {
+		$_SESSION['eyeFiles'][$myPid]['history']['position']--;
+	}
+}
+
+function eyeFiles_on_Home($params = '') {
+	eyeFiles_on_OpenPath(array('/','home'));
+}
+
+function eyeFiles_on_Groups($params = '') {
+	eyeFiles_on_OpenPath(array('/','groups'));
+}
+
+function eyeFiles_on_Trash($params = '') {
+	eyeFiles_on_OpenPath(array('/','trash'));
+}
+
+function eyeFiles_on_Users($params = '') {
+	eyeFiles_on_OpenPath(array('/','users'));
+}
+
+function eyeFiles_on_Real($params = '') {
+	eyeFiles_on_OpenPath(array('/','real'));
+}
+
+function eyeFiles_on_Upload($params = '') {
+	proc('launch',array('eyeUpload',array($GLOBALS['eyeFiles_Hidden_Path']->text)));
+}
+
+function eyeFiles_on_NewFolder($params = '') {
+	proc('launch',array('eyeMkDir',array($GLOBALS['eyeFiles_Hidden_Path']->text)));
+}
+
+function eyeFiles_on_NewFile($params = '') {
+	proc('launch',array('newFile',array($GLOBALS['eyeFiles_Hidden_Path']->text)));
+}
+
+function eyeFiles_on_Paste($params = '') {
+	proc('launch',array('eyePaste',array($GLOBALS['eyeFiles_Hidden_Path']->text)));
+}
+
+function eyeFiles_on_EmptyTrash($params = '') {
+	proc('launch',array('emptyTrash'));
+}
+
+function eyeFiles_on_Help($params = '') {
+	proc('launch',array('eyeHelp','eyeFiles'));
+}
+
+function eyeFiles_on_Action($params = '') {
+	global $myPid;
+	$path = eyeFiles('cleanPath',array($GLOBALS['eyeFiles_Hidden_Path']->text));
+	if (isset($params['File']) === true && $params['File'][0]) {
+		if ($params['Action'][0] == 'launch') {
+			$xml = eyeXML('getXMLfile',array($path[0] . '/' . $params['File'][0]));
+			eyeFiles('launchCommand',array($xml['eyeLink'][0]['content'][0]));
+		} else {
+			proc('launch',array($params['Action'][0],array($path[1] . '://' . $path[2] . '/' . $params['File'][0])));
+		}
+	} else {
+		if ($GLOBALS['eyeFiles_Hidden_Action']->text != '') {
+			$father = 'files';
+			if ($path[1] == 'trash') {
+				$father = 'trash';
+			} elseif ($path[1] == 'real') {
+				$father = 'real';
+			}
+			eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeFiles_Box_Actions_menu_' . $father . '_Container_' . $GLOBALS['eyeFiles_Hidden_Action']->text . '_Container"); e.className = ""; e.style.backgroundColor = "";'));
+		}
+		$GLOBALS['eyeFiles_Hidden_Action']->setText($params['Action'][0]);
+	}
+}
+
+function eyeFiles_on_GetThumbnail($params = '') {
+	eyeFiles('createThumbnail',array($GLOBALS['eyeFiles_Hidden_Path']->text,$params['File'][0]));
+}
+
+function eyeFiles_on_Icon_Clicked($params = '') {
+	global $myPid;
+	$path = eyeFiles('cleanPath',array($GLOBALS['eyeFiles_Hidden_Path']->text));
+	if ($params['arg0'][0]) {
+		$file = $params['arg0'][0];
+		if ($GLOBALS['eyeFiles_Hidden_Action']->text != '') {
+			proc('launch',array($GLOBALS['eyeFiles_Hidden_Action']->text,array($path[1] . '://' . $path[2] . '/' . $params['arg0'][0])));
+			$father = 'files';
+			if ($path[1] == 'trash') {
+				$father = 'trash';
+			} elseif ($path[1] == 'real') {
+				$father = 'real';
+			}
+			eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeFiles_Box_Actions_menu_' . $father . '_Container_' . $GLOBALS['eyeFiles_Hidden_Action']->text . '_Container"); e.className = ""; e.style.backgroundColor = "";'));
+			$GLOBALS['eyeFiles_Hidden_Action']->setText('');
+			return;
+		}
+	} else {
+		$file = $GLOBALS['eyeFiles_View_Details_Sortabletable']->selected;
+	}
+	if ($path[1] == 'trash') {
+		proc('launch',array('restoreTrash',array($file)));
+	} else {
+		$path[0] .= '/' . $file;
+		if (vfs('isdir',array($path[0]))) {
+			eyeFiles_on_OpenPath(array($path[2] . '/' . $file,$path[1]));
+		} elseif (strtolower(substr($path[0], -strlen('.' . EYEOS_LINK_EXT))) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($path[0])) === true) { // utf8
+			$xml = eyeXML('getXMLfile', array($path[0]));
+			eyeFiles('launchCommand', array($xml['eyeLink'][0]['content'][0]));
+		} elseif ($path[1] != 'real') {
+			$xml = getConfig('filetypes', utf8_strtolower(substr(strrchr($path[0], '.'), 1)) . '.xml'); // utf8
+			if ($xml['fileType'][0]['app'][0]) {
+				proc('launch',array($xml['fileType'][0]['app'][0],$path[0]));
+			} else {
+				proc('launch',array('eyeOpen',$path[0]));
+			}
+		}
+	}
+}
+
+function eyeFiles_on_Icon_Dropped($params = '') {
+	if (in_array( /* utf8 */ strtolower($params['arg0'][0]), array('file','folder','link')) === true) {
+		proc('launch',array('moveDrag',array($params['arg1'][0],$params['arg2'][0])));
+	}
+}
+
+function eyeFiles_on_UpdateView($params = '') {
+	$xml = eyeXML('getXMLconfig',array('eyeFiles','conf.xml'));
+	if ($GLOBALS['eyeFiles_Box_View_Radio_Details']->checked) {
+		$xml['eyeFiles'][0]['View'][0] = 3;
+	} elseif ($GLOBALS['eyeFiles_Box_View_Radio_List']->checked) {
+		$xml['eyeFiles'][0]['View'][0] = 2;
+	} else {
+		$xml['eyeFiles'][0]['View'][0] = 1;
+	}
+	eyeXML('setXMLconfig',array('eyeFiles','conf.xml',$xml));
+	eyeFiles_on_OpenPath();
+}
+
+function eyeFiles_on_OpenPath($params = '') {
+	global $myPid;
+	if (isset($params[0])) {
+		$path = $params[0];
+		$type = null;
+		if (isset($params[1]) === true) {
+			$type = $params[1];
+		}
+	} else {
+		$path = $GLOBALS['eyeFiles_Textbox_Path']->text;
+		$type = '';
+	}
+	$path = eyeFiles('cleanPath',array($path,$type));
+	$show = $path[2];
+	$type = $path[1];
+	$path = $path[0];
+
+	if (isset($params['nohistory']) === false || !$params['nohistory']) {
+		$position = $_SESSION['eyeFiles'][$myPid]['history']['position'];
+		if (isset($_SESSION['eyeFiles'][$myPid]['history']['list'][$position]) === false || $_SESSION['eyeFiles'][$myPid]['history']['list'][$position] != $type . '://' . $show) {
+			$_SESSION['eyeFiles'][$myPid]['history']['position']++;
+			$_SESSION['eyeFiles'][$myPid]['history']['list'] = array_slice($_SESSION['eyeFiles'][$myPid]['history']['list'],0,$_SESSION['eyeFiles'][$myPid]['history']['position']);
+			$_SESSION['eyeFiles'][$myPid]['history']['list'][] = $type . '://' . $show;
+		}
+	}
+
+	if ($GLOBALS['eyeFiles_Hidden_Action']->text != '') {
+		$father = 'files';
+		if ($type == 'trash') {
+			$father = 'trash';
+		} elseif ($type == 'real') {
+			$father = 'real';
+		}
+		eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeFiles_Box_Actions_menu_' . $father . '_Container_' . $GLOBALS['eyeFiles_Hidden_Action']->text . '_Container"); e.className = ""; e.style.backgroundColor = "";'));
+		$GLOBALS['eyeFiles_Hidden_Action']->setText('');
+	}
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeFiles_Window_Content").style.backgroundImage = "url(index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/windows/bg-' . $type . '.png)";'));
+	if ($show == '/') {
+		$title = i18n('translate', array( /* utf8 */ ucfirst($type)));
+	} else {
+		$title = basename($show);
+	}
+	$GLOBALS['eyeFiles_Window']->setTitle($title . ' - ' . i18n('translate',array('Files Manager')));
+	$show2 = $type . '://' . $show;
+	if ($show2 != $GLOBALS['eyeFiles_Textbox_Path']->text) {
+		$GLOBALS['eyeFiles_Textbox_Path']->setText($show2);
+	}
+	$GLOBALS['eyeFiles_Hidden_Path']->setText($show2);
+	$eyeFiles_noactions = 1;
+	if ($type == 'trash') {
+		$GLOBALS['eyeFiles_Box_Actions_menu_files_Container']->hide();
+		$GLOBALS['eyeFiles_Box_Actions_menu_trash_Container']->unhide();
+		$hide = 'e.childNodes[i].id == "' . $myPid . '_Upload_Container" || e.childNodes[i].id == "' . $myPid . '_NewFolder_Container" || e.childNodes[i].id == "' . $myPid . '_NewFile_Container"';
+		$unhide = 'e.childNodes[i].id == "ActionsLine" || e.childNodes[i].id == "' . $myPid . '_EmptyTrash_Container"';
+	} elseif ($type === 'groups' && $show === '/' || $type === 'users' && /* utf8 */ substr_count($show, '/') < 2) {
+		$eyeFiles_noactions = 0;
+		$GLOBALS['eyeFiles_Box_Actions_menu_files_Container']->hide();
+		$GLOBALS['eyeFiles_Box_Actions_menu_trash_Container']->hide();
+		$hide = 'e.childNodes[i].id == "ActionsLine" || e.childNodes[i].id == "' . $myPid . '_Upload_Container" || e.childNodes[i].id == "' . $myPid . '_NewFolder_Container" || e.childNodes[i].id == "' . $myPid . '_NewFile_Container" || e.childNodes[i].id == "' . $myPid . '_EmptyTrash_Container"';
+		$unhide = '1 == 2';
+	} else {
+		$hide = 'e.childNodes[i].id == "' . $myPid . '_EmptyTrash_Container"';
+		$unhide = 'e.childNodes[i].id == "ActionsLine" || e.childNodes[i].id == "' . $myPid . '_Upload_Container" || e.childNodes[i].id == "' . $myPid . '_NewFolder_Container" || e.childNodes[i].id == "' . $myPid . '_NewFile_Container"';
+		$GLOBALS['eyeFiles_Box_Actions_menu_files_Container']->unhide();
+		$GLOBALS['eyeFiles_Box_Actions_menu_trash_Container']->hide();
+	}
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeFiles_Toolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "' . $myPid . '_' . /* utf8 */ ucfirst($type) . '_Container") {
+			e.childNodes[i].className = "blockbarItemPress";
+		} else if (e.childNodes[i].id == "' . $myPid . '_Home_Container" || e.childNodes[i].id == "' . $myPid . '_Groups_Container" || e.childNodes[i].id == "' . $myPid . '_Trash_Container" || e.childNodes[i].id == "' . $myPid . '_Users_Container" || e.childNodes[i].id == "' . $myPid . '_Real_Container") {
+			e.childNodes[i].className = "blockbarItem";
+		}
+		if (' . $unhide . ') {
+			e.childNodes[i].style.display = "";
+		} else if (' . $hide . ') {
+			e.childNodes[i].style.display = "none";
+		}
+	}'));
+
+	if (isset($GLOBALS['eyeFiles_Container']) === true && is_object($GLOBALS['eyeFiles_Container']) === true) {
+		$GLOBALS['eyeFiles_Container']->remove();
+	}
+	$myContainer = new Container(array(
+		'father' => 'eyeFiles_Window_Content',
+		'height' => $GLOBALS['eyeFiles_Box_Tree']->height + 35,
+		'name' => 'eyeFiles_Container',
+		'width' => $GLOBALS['eyeFiles_Textbox_Path']->width + 32,
+		'x' => $GLOBALS['eyeFiles_Textbox_Path']->x - 11,
+		'y' => $GLOBALS['eyeFiles_Box_Tree']->y + 25
+	));
+	$myContainer->show();
+	$myContainer->setCss(array('display' => 'block','overflow' => 'auto','position' => 'absolute'));
+	eyeWidgets('serialize',array($myContainer));
+
+	if ($GLOBALS['eyeFiles_Box_View_Radio_Details']->checked) {
+		include(EYE_ROOT . '/' . APP_DIR . '/eyeFiles/views/details' . EYE_CODE_EXTENSION);
+	} elseif ($GLOBALS['eyeFiles_Box_View_Radio_List']->checked) {
+		include(EYE_ROOT . '/' . APP_DIR . '/eyeFiles/views/list' . EYE_CODE_EXTENSION);
+	} else {
+		include(EYE_ROOT . '/' . APP_DIR . '/eyeFiles/views/icons' . EYE_CODE_EXTENSION);
+	}
+	eyeFiles_on_ChangeBox();
+	return $type;
+}
+
+function eyeFiles_on_OpenTree($params = '') {
+	$type = eyeFiles('cleanPath',array($GLOBALS['eyeFiles_Hidden_Path']->text));
+	$path = substr($GLOBALS['eyeFiles_Box_Tree_Tree']->selected, strlen(i18n('translate', array(ucfirst($type[1]))))); // utf8
+	eyeFiles_on_OpenPath(array($path,$type[1]));
+}
+
+function eyeFiles_on_ChangeBox($params = array()) {
+	global $currentUser;
+	global $myPid;
+	if (isset($params['Box'][0]) === true && in_array($params['Box'][0],array('Tree','View','Actions'))) {
+		$path = eyeFiles('cleanPath',array($GLOBALS['eyeFiles_Hidden_Path']->text));
+		if ($GLOBALS['eyeFiles_Hidden_Action']->text != '') {
+			$father = 'files';
+			if ($path[1] == 'trash') {
+				$father = 'trash';
+			} elseif ($path[1] == 'real') {
+				$father = 'real';
+			}
+			eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeFiles_Box_Actions_menu_' . $father . '_Container_' . $GLOBALS['eyeFiles_Hidden_Action']->text . '_Container"); e.className = ""; e.style.backgroundColor = "";'));
+			$GLOBALS['eyeFiles_Hidden_Action']->setText('');
+		}
+		$GLOBALS['eyeFiles_Hidden_Box']->setText($params['Box'][0]);
+		$xml = eyeXML('getXMLconfig',array('eyeFiles','conf.xml'));
+		$xml['eyeFiles'][0]['Box'][0] = $params['Box'][0];
+		eyeXML('setXMLconfig',array('eyeFiles','conf.xml',$xml));
+	}
+	if ($GLOBALS['eyeFiles_Hidden_Box']->text == 'Tree') {
+		$path = eyeFiles('cleanPath',array($GLOBALS['eyeFiles_Hidden_Path']->text));
+		if (isset($GLOBALS['eyeFiles_Box_Tree_Tree']) === true && is_object($GLOBALS['eyeFiles_Box_Tree_Tree']) === true) {
+			$GLOBALS['eyeFiles_Box_Tree_Tree']->remove();
+		}
+		$myTree = new Tree(array(
+			'clickTree' => 1,
+			'father' => 'eyeFiles_Box_Tree',
+			'height' => $GLOBALS['eyeFiles_Box_Tree']->height - 45,
+			'name' => 'eyeFiles_Box_Tree_Tree',
+			'signal' => 'OpenTree',
+			'width' => $GLOBALS['eyeFiles_Box_Tree']->width - 8,
+			'x' => 1,
+			'y' => 25
+		));
+		$myTree->show();
+		$myTree->setCss(array('overflow' => 'auto'));
+		$myTree->addItem('eyeFiles_Box_Tree_Tree','item_' . $path[1], i18n('translate', array( /* utf8 */ ucfirst($path[1]))));
+		if (!in_array($path[1],array('groups','users'))) {
+			$myWidgetDrop = new widgetDrop(array(
+				'father' => 'item_' . $path[1],
+				'name' => 'item_' . $path[1] . '_WidgetDrop'
+			));
+			$myWidgetDrop->show();
+			$myWidgetDrop->addBehaviour(array(
+				'type' => 'widgetDrop_simpleMsg',
+				'params' => array(
+					'content' => array($path[1] . '://'),
+					'pid' => $myPid,
+					'signal' => 'Icon_Dropped'
+			)));
+		}
+		$myTree->addSubList('item_' . $path[1],'list_' . $path[1]);
+		include_once(EYE_ROOT . '/' . APP_DIR . '/eyeFiles/lib' . EYE_CODE_EXTENSION);
+		if ($path[1] == 'groups') {
+			$content = array();
+			$xml = um('retrieveUser',array($currentUser));
+			foreach ($xml['eyeUser'][0]['group'] as $group) {
+				$folder = EYE_ROOT . '/' . GROUPS_DIR . '/' . basename($group) . '/';
+				if (vfs('isdir',array($folder))) {
+					$md5 = md5(realpath($folder . '/' . FILES_GROUP_DIR . '/'));
+					$myTree->addItem('list_' . $path[1],'item_' . FILES_GROUP_DIR . '_' . $md5,basename($folder));
+					$myWidgetDrop = new widgetDrop(array(
+						'father' => 'item_' . FILES_GROUP_DIR . '_' . $md5,
+						'name' => 'item_' . FILES_GROUP_DIR . '_' . $md5 . '_WidgetDrop'
+					));
+					$myWidgetDrop->show();
+					$myWidgetDrop->addBehaviour(array(
+						'type' => 'widgetDrop_simpleMsg',
+						'params' => array(
+							'content' => array($path[1] . '://' . basename($folder)),
+							'pid' => $myPid,
+							'signal' => 'Icon_Dropped'
+					)));
+					$myTree->addSubList('item_' . FILES_GROUP_DIR . '_' . $md5,'list_' . FILES_GROUP_DIR . '_' . $md5);
+					$expand = realpath($path[0] . '/');
+					if ( /* utf8 */ strpos($expand, realpath($folder)) === 0 && $expand !== realpath($folder . '/')) {
+						eyeFiles_lib_CreateTree($path[1],$path[1] . '://' . basename($folder),$folder . '/' . FILES_GROUP_DIR . '/',$myTree,'list_' . FILES_GROUP_DIR . '_' . $md5,$expand);
+					}
+				}
+				$content[] = $folder;
+			}
+		} elseif ($path[1] == 'users') {
+			$content = vfs('getDirContent',array($path[3]));
+			foreach ($content as $folder) {
+				if (vfs('isdir',array($folder))) {
+					$md5 = md5(realpath($folder . '/'));
+					$tree = 'list_' . basename($folder) . '_' . $md5;
+					$myTree->addItem('list_' . $path[1],'item_' . basename($folder) . '_' . $md5,basename($folder));
+					$myTree->addSubList('item_' . basename($folder) . '_' . $md5,$tree);
+					if ( /* utf8 */ strpos(realpath($path[0] . '/'), realpath($path[3])) === 0 && realpath($path[0] . '/') !== realpath($path[3] . '/')) {
+						$content2 = vfs('getDirContent',array($folder));
+						foreach ($content2 as $folder) {
+							if (vfs('isdir',array($folder))) {
+								$md5 = md5(realpath($folder . '/' . FILES_USER_DIR . '/'));
+								$myTree->addItem($tree,'item_' . FILES_USER_DIR . '_' . $md5,basename($folder));
+								$myWidgetDrop = new widgetDrop(array(
+									'father' => 'item_' . FILES_USER_DIR . '_' . $md5,
+									'name' => 'item_' . FILES_USER_DIR . '_' . $md5 . '_WidgetDrop'
+								));
+								$myWidgetDrop->show();
+								$myWidgetDrop->addBehaviour(array(
+									'type' => 'widgetDrop_simpleMsg',
+									'params' => array(
+										'content' => array($path[1] . '://' . substr($folder, strlen(EYE_ROOT . '/' . USERS_DIR . '/'))), // utf8
+										'pid' => $myPid,
+										'signal' => 'Icon_Dropped'
+								)));
+								$myTree->addSubList('item_' . FILES_USER_DIR . '_' . $md5,'list_' . FILES_USER_DIR . '_' . $md5);
+								if ( /* utf8 */ strpos(realpath($path[0] . '/'), realpath($folder . '/' . FILES_USER_DIR)) === 0 && realpath($path[0] . '/') !== realpath($folder . '/')) {
+									eyeFiles_lib_CreateTree($path[1], $path[1] . '://' . substr($folder, strlen(EYE_ROOT . '/' . USERS_DIR . '/')), $folder . '/' . FILES_USER_DIR . '/', $myTree, 'list_' . FILES_USER_DIR . '_' . $md5, realpath($path[0] . '/')); // utf8
+								}
+							}
+						}
+					}
+				}
+			}
+		} elseif ($path[1] != 'trash') {
+			eyeFiles_lib_CreateTree($path[1],$path[1] . '://',$path[3],$myTree,'list_' . $path[1],realpath($path[0] . '/'));
+		}
+		$myTree->processList();
+		if ($path[1] == 'real') {
+			$content = vfs('real_getDirContent',array($path[0]));
+		} elseif ($path[1] != 'groups' || realpath($path[0] . '/') != realpath(EYE_ROOT . '/' . GROUPS_DIR . '/')) {
+			$content = vfs('getDirContent',array($path[0]));
+		}
+		$x = 0;
+		while (isset($content[$x]) === true && !vfs('isdir',array($content[$x]))) {
+			$x++;
+		}
+		if (isset($content[$x]) === true && vfs('isdir',array($content[$x]))) {
+			if ($path[1] == 'groups' && $path[2] == '/') {
+				$path[0] = $content[$x] . '/' . FILES_GROUP_DIR . '/';
+			} elseif ($path[1] === 'users' && $path[2] !== '/' && /* utf8 */ substr_count($path[2], '/') === 1) {
+				$path[0] = $content[$x] . '/' . FILES_USER_DIR . '/';
+			} else {
+				$path[0] = $content[$x];
+			}
+		}
+		$myTree->expandTree('item_' . basename($path[0]) . '_' . md5(realpath($path[0])));
+	}
+}
+?>

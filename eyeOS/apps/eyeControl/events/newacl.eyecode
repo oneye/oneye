@@ -1,0 +1,230 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_aclServChange($params=""){
+	$switch=$params[arg0][0];
+	$GLOBALS['eyeControl_acl_function_select']->delAllOptions();
+	$GLOBALS['eyeControl_acl_function_select']->addOption('---',1,1);
+	$GLOBALS['eyeControl_acl_func_desc']->setText("---");
+	
+	if ($switch > 1) {
+		$sf_file = EYE_ROOT .'/'. APP_DIR .'/eyeControl/others/acl-servfunc.xml';
+		$servfunc = eyeXML('getXMLfile', array($sf_file));
+		$sCnt = 2;
+		$fCnt = 2;
+		if ($servfunc) {
+			foreach($servfunc['servfunc'][0]['serv'] as $serv) {
+				if ($sCnt == $switch) {
+					$GLOBALS['eyeControl_acl_serv_desc']->setText($serv['sdesc'][0]);
+					foreach ($serv['func'] as $func) {
+						if ($params[arg1][0]=="false") {
+							$GLOBALS['eyeControl_acl_function_select']->addOption($func['fname'][0],$fCnt);
+						} else {
+							if (!isset($func['hazard'])) {
+								$GLOBALS['eyeControl_acl_function_select']->addOption($func['fname'][0],$fCnt);
+							}
+						}
+						$fCnt++;
+					}
+				}
+				$sCnt++;
+			}
+		}
+	} else {
+		$GLOBALS['eyeControl_acl_serv_desc']->setText("---");
+	}
+}
+
+function eyeControl_on_aclFuncChange($params=""){
+	$switch=$params[arg0][0];
+	if ($switch > 1) {
+		$sf_file = EYE_ROOT .'/'. APP_DIR .'/eyeControl/others/acl-servfunc.xml';
+		$servfunc = eyeXML('getXMLfile', array($sf_file));
+		$sCnt = 2;
+		$fCnt = 2;
+		if ($servfunc) {
+			foreach($servfunc['servfunc'][0]['serv'] as $serv) {
+				if ($sCnt == $params[arg1][0]) {
+					foreach ($serv['func'] as $func) {
+						if ($fCnt==$switch) {
+							$GLOBALS['eyeControl_acl_func_desc']->setText($func['fdesc'][0]);
+						}
+						$fCnt++;
+					}
+				}
+				$sCnt++;
+			}
+		}
+	} else {
+		$GLOBALS['eyeControl_acl_func_desc']->setText("---");
+	}
+}
+
+function eyeControl_on_acl_hideHazard($params) {
+	if ($params[arg0][0] == "false") {
+		eyeX('messageBox',array('content'=>'Denying these can cause serious problems. Please be very careful!'));
+	}
+	eyeControl_on_aclServChange(array('arg0'=>array($params[arg1][0]),'arg1'=>array($params[arg0][0])));
+}
+
+function eyeControl_on_add_settings($params=""){
+
+	$sf_file = EYE_ROOT .'/'. APP_DIR .'/eyeControl/others/acl-servfunc.xml';
+	$servfunc = eyeXML('getXMLfile', array($sf_file));
+	$sCnt = 2;
+	$fCnt = 2;
+	if ($servfunc) {
+		foreach($servfunc['servfunc'][0]['serv'] as $serv) {
+			if ($sCnt == $GLOBALS['eyeControl_acl_service_select']->selected) {
+				$service = $serv['sname'][0];
+				foreach ($serv['func'] as $func) {
+					if ($fCnt==$GLOBALS['eyeControl_acl_function_select']->selected) {
+						$call = $func['fname'][0];
+						if (is_array($func['fparam'])) {
+							$fParam = $func['fparam'][0];
+						} else {
+							$fParam = "N/A";
+						}
+						$paramType = new Hidden(array(
+							'name' => 'param_type',
+							'father' => 'eyeControl_container_big',
+							'text' => $fParam
+						));
+						eyeWidgets('serialize',array($paramType));
+					}
+					$fCnt++;
+				}
+			}
+			$sCnt++;
+		}
+	}
+	
+	if($GLOBALS['eyeControl_acl_allowDeny_select']->selected == 2){
+		$action = 'Allow';
+	} elseif ($GLOBALS['eyeControl_acl_allowDeny_select']->selected == 3){
+		$action = 'Deny';
+	}
+	
+	$id0 = $GLOBALS['uniqid']->text;
+	//$id1 = uniqid();
+	$aclName = $GLOBALS['eyeControl_acl_textbox']->text;
+
+	if(empty($id0) || empty($aclName) || empty($service) || empty($call) || empty($action)) {
+		eyeX('messageBox',array('content'=>'Please fill and select all fields'));
+	} else {
+		//$row = array ($id0, $aclName, $service, $call, $action);
+		//$GLOBALS['eyeControl_acl_target_sortabletable']->addRow($row);
+		$acl = array(
+			'id' => array($id0),
+			'description' => array($aclName),
+			'action' => array($action),
+			'service' => array($service),
+			'call' => array($call),
+			'target' => array('')
+		);
+
+		$file = EYE_ROOT .'/'. SYSTEM_DIR .'/'. SYSTEM_CONF_DIR .'/ACL/'. 'acl.xml';
+		$config = eyeXML('getXMLfile', array($file));
+
+		if(!$config){
+			$config = array('GACL' => array(array(
+			'ACL' => array()
+			)));
+			$config['GACL'][0]['ACL'] = array($acl);
+		} else {
+			if (is_array($config['GACL'][0]) === false) {
+				$config['GACL'][0] = array(
+					'ACL' => array()
+				);
+			}
+			$config['GACL'][0]['ACL'][] = $acl;
+		}
+		//eyeX('messageBox', array('content' => print_r($config, true), 'type' => 2));
+		eyeXML('setXMLfile', array($file,$config));
+		eyeControl_lib_loadContent('only_root','newtarget');
+	}
+}
+
+function eyeControl_on_update_settings($params=""){
+
+	$id0 = $GLOBALS['eyeControl_acl_sortabletable']->selected;
+	$aclName = $GLOBALS['eyeControl_acl_textbox']->text;
+
+	$file = EYE_ROOT .'/'. SYSTEM_DIR .'/'. SYSTEM_CONF_DIR .'/ACL/'. 'acl.xml';
+	$config = eyeXML('getXMLfile', array($file));
+
+	$x=0;
+	if(empty($aclName)){
+		foreach ($config['GACL'][0]['ACL'] as $aclX) {
+				$id = $config['GACL'][0]['ACL'][$x]['id'][0];
+				if ($id == $id0){
+					$aclName = $config['GACL'][0]['ACL'][$x]['description'][0];
+				}
+		$x++;
+		}
+	}
+
+	if($GLOBALS['eyeControl_acl_allowDeny_select']->selected == 2){
+		$action = 'Allow';
+	} elseif ($GLOBALS['eyeControl_acl_allowDeny_select']->selected == 3){
+		$action = 'Deny';
+	}
+
+	if(empty($aclName) || empty($action)) {
+		eyeX('messageBox',array('content'=>'Please fill and select all fields'));
+	} else {
+		$x=0;
+		if ($config) {
+			foreach ($config['GACL'][0]['ACL'] as $aclX) {
+				$id = $config['GACL'][0]['ACL'][$x]['id'][0];
+				if ($id == $id0){
+					$service = $config['GACL'][0]['ACL'][$x]['service'][0];
+					$call = $config['GACL'][0]['ACL'][$x]['call'][0];
+					$acl = array(
+						'id' => array($id0),
+						'description' => array($aclName),
+						'action' => array($action),
+						'service' => array($service),
+						'call' => array($call),
+						'target' => array('')
+					);
+					
+					//unset($config['GACL'][0]['ACL'][$x]);
+					unset($config['GACL'][0]['ACL'][$x]['description'][0]);
+					unset($config['GACL'][0]['ACL'][$x]['action'][0]);
+					eyeXML('setXMLfile', array($file,$config));
+					$config['GACL'][0]['ACL'][$x]['description'][0] = $aclName;
+					$config['GACL'][0]['ACL'][$x]['action'][0] = $action;
+					//$config['GACL'][0]['ACL'][$x] = $acl;
+					eyeXML('setXMLfile', array($file,$config));
+				}
+				$x++;
+			}
+			eyeX('messageBox',array('content'=>'Rule Updated'));
+		}
+	}
+}
+
+function eyeControl_on_target_edit($params=""){
+	$edit = new Hidden(array(
+			'name' => 'edit_target',
+			'father' => 'eyeControl_container_big',
+			'text' => 'edit'
+		));
+	eyeWidgets('serialize',array($edit));
+	eyeControl_lib_loadContent('only_root','newtarget');
+}
+?>

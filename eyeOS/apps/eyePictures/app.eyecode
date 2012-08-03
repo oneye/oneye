@@ -1,0 +1,251 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyePictures_run($params="") {
+
+	global $myPid,$currentUser;
+	
+	if (!extension_loaded('gd') || !function_exists('gd_info')) {
+		proc('launch', array('eyeImages', $params));
+		return proc('end');
+	}
+	
+	$tmp_folder = um('getUserDir', array($currentUser)).'tmp/eyePictures';
+	eyeSessions('delVar', array('eyePictures_currentPic_'.$myPid));
+	eyeSessions('setVar', array('eyePictures_currentDir_'.$myPid, um('getCurrentUserDir').'files'));
+	eyeSessions('setVar', array('eyePictures_mode_'.$myPid, 'browse')); // MODES: 'view', 'browse', 'slideshow'
+	eyeSessions('setVar', array('eyePictures_max_processable_resolution', 18000000)); // 18000000 = 18 MegaPixels
+	eyeSessions('setVar', array('eyePictures_tmp_folder', $tmp_folder));
+	eyeSessions('setVar', array('eyePictures_tmp_folder_thumbnails', $tmp_folder.'/thumbnails'));
+	
+	// Empties the tmp directory
+	if (vfs('real_fileExists', array($tmp_folder))) vfs('real_rmdir', array($tmp_folder));
+	if (!vfs('real_mkDir', array($tmp_folder)) || !vfs('real_mkDir', array($tmp_folder.'/backup')) || !vfs('real_mkDir', array($tmp_folder.'/thumbnails'))) {
+		
+		eyeX('messageBox', array('content' => 'Error during the tmp folder creation. Cannot load eyePictures.'));
+		proc('end');
+	}
+	
+	addListenerServiceCall('fullResized','eyex','resizedbrowser');
+	if ($_SESSION['SCREEN']['eyeApps']['height'] > 505) $window_height = 505;
+	else $window_height = $_SESSION['SCREEN']['eyeApps']['height'];
+	
+	$window = new Window(array(
+		'father' => 'eyeApps',
+		'name' => 'eyePictures_MainWnd',
+		'width' => 705,
+		'height' => $window_height,
+		'title' => 'eyePictures',
+		'x' => 0,
+		'y' => 0,
+		'cent' => 1,
+		'style' => TITLE + LISTED + MIN + MAX + CLOSE + RESIZE,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'winResize'
+	));
+	$window->show();
+
+	$mainBox = new Simplebox(array(
+		'name' => 'eyeMainBox',
+		'father' => 'eyePictures_MainWnd_Content',
+		'x' => 0,
+		'y' => 57,
+		'width' => $window->width - 2,
+		'height' => $window->height - 103,
+		'border' => 0,
+		'vert' => 0
+	));
+	$mainBox->show(0);
+	$mainBox->setCSS(array(
+		'background-color' => '#666666'
+	));
+	eyex('rawjs', array('js' => 'document.getElementById("'.$myPid.'_eyeMainBox").style.borderRadius="0";
+		document.getElementById("'.$myPid.'_eyeMainBox").style.MozBorderRadius="0";
+		document.getElementById("'.$myPid.'_eyeMainBox").style.WebkitBorderRadius="0";
+	'));
+
+	$bottomBox = new Simplebox(array(
+		'name' => 'extrasBox',
+		'father' => 'eyePictures_MainWnd_Content',
+		'x' => 0,
+		'y' => 0,
+		'width' => $window->width - 2,
+		'height' => 23,
+		'border' => 0,
+		'vert' => 1
+	));
+	$bottomBox->show(0);
+	$bottomBox->setCSS(array(
+		'background-color' => '#EEEEEE'
+	));
+	
+	$myStatusBarLabel = new Label(array(
+		'name' => 'statusBarLabel',
+		'father' => 'extrasBox',
+		'y' => 4,
+		'x' => 10,
+		'text' => ''
+	));
+	$myStatusBarLabel->show(0);
+
+	$myToolbar = new Toolbar(array(
+		'father' => 'eyePictures_MainWnd_Content',
+		'name' => 'toolBar',
+		'paintOnClick' => 1
+	));
+	$myToolbar->show(0);
+	
+	$itemIds = array();
+	
+	$myToolbar->addItem('backSignal','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/previous.png','Back');
+	$myToolbar->addItem('nextSignal','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/next.png','Next');
+	$myToolbar->addLine();
+	
+	$itemIds[] = $myToolbar->addItem('browseSignal','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/search.png','Browse');
+	$itemIds[] = $myToolbar->addItem('viewSignal','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/eyeImages.png','View');
+	$itemIds[] = $myToolbar->addItem('slideShow','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/eyePresentation.png','Slide Show');
+	$myToolbar->addLine();
+	
+	$myToolbar->addItem('rotateleftSignal','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/Toolbar/object-rotate-left.png','Rotate Left');
+	$myToolbar->addItem('rotaterightSignal','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/Toolbar/object-rotate-right.png','Rotate Right');
+	$myToolbar->addLine();
+	
+	$itemIds[] = $myToolbar->addItem('colorEdit','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/Toolbar/color-preferences.png','Edit Colors');
+	$myToolbar->addLine();
+	$myToolbar->addItem('Settings','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/lin_agt_wrench.png','Settings');
+	$myToolbar->addLine();
+	$myToolbar->addItem('fullScreenSignal','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+
+	eyeX('rawjs',array('js' => 'slideShow = 0;'));
+
+	if (!empty($params[0])){
+
+		$myToolbar->pressItem(array('viewSignal'));
+		eyex('sendMessage', array('msg' => 'showImage', 'params' => serialize($params[0])));
+		return;
+	} else {
+
+		$myToolbar->pressItem(array('browseSignal'));
+
+		$myDirLabel = new Label(array(
+			'name' => 'dirLabel',
+			'father' => 'eyeMainBox_Container',
+			'y' => 5,
+			'x' => 61,
+			'text' => 'Places'
+		));
+		$myDirLabel->show(0);
+		$myDirLabel->setCSS(array(
+			'font-weight' => 'bold',
+			'font-size' => '18px',
+			'color' => '#FFFFFF'
+		));
+		
+		$myPixLabel = new Label(array(
+			'name' => 'pixLabel',
+			'father' => 'eyeMainBox_Container',
+			'y' => 5,
+			'x' => 392,
+			'text' => 'Images'
+		));
+		$myPixLabel->show(0);
+		$myPixLabel->setCSS(array(
+			'font-weight' => 'bold',
+			'font-size' => '18px',
+			'color' => '#FFFFFF'
+		));
+		
+		$dirHomeLevelUp = new Simplebox(array(
+			'name' => 'dirHomeLevelUp',
+			'father' => 'eyeMainBox_Container',
+			'x' => 5,
+			'y' => 25,
+			'width' => 188,
+			'height' => 80,
+			'border' => 0,
+			'vert' => 0
+		));
+		$dirHomeLevelUp->show(0);
+		eyex('rawjs', array('js' => 'document.getElementById("'.$myPid.'_dirHomeLevelUp_Container").style.overflow="hidden";'));
+		
+		$dirHome = new icon(array(
+			'name' => 'dirHome',
+			'father' =>  'dirHomeLevelUp_Container',
+			'image' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/home.png',
+			'text' => i18n('translate', array('Home')),
+			'overBorder' => 1,
+			'draggable' => 0,
+			'onclick' => '1',
+			'content' => um('getCurrentUserDir').'files',
+			'x' => 13,
+			'y' => 10
+		));
+		$dirHome->show();
+		$dirHome->addEvent('onmouseover','document.getElementById("'.$myPid.'_statusBarLabel").innerHTML="Go to the Home directory";');
+		$dirHome->addEvent('onmouseout','document.getElementById("'.$myPid.'_statusBarLabel").innerHTML=varPictures;');
+		
+		$line = new Line(array(
+			'name' => 'line',
+			'father' =>  'eyeMainBox_Container',
+			'width' => 142,
+			'height' => 1,
+			'x' => 20,
+			'y' => 106
+		));
+		$line->show();
+		
+		$dirScrollBox = new Simplebox(array(
+			'name' => 'dirScrollBox',
+			'father' => 'eyeMainBox_Container',
+			'x' => 5,
+			'y' => 112,
+			'width' => 188,
+			'height' => $mainBox->height - 113,
+			'border' => 0,
+			'vert' => 0
+		));
+		$dirScrollBox->show(0);
+		eyex('rawjs', array('js' => 'document.getElementById("'.$myPid.'_dirScrollBox_Container").style.overflow="auto";
+			document.getElementById("'.$myPid.'_dirScrollBox_Container").style.overflowY="auto";
+			document.getElementById("'.$myPid.'_dirScrollBox_Container").style.overflowX="hidden";
+		'));
+		
+		$pixScrollBox = new Simplebox(array(
+			'name' => 'pixScrollBox',
+			'father' => 'eyeMainBox_Container',
+			'x' => 200,
+			'y' => 25,
+			'width' => $mainBox->width - 205,
+			'height' => $mainBox->height - 26,
+			'border' => 0,
+			'vert' => 0
+		));
+		$pixScrollBox->show(0);
+		eyex('rawjs', array('js' => 'document.getElementById("'.$myPid.'_pixScrollBox_Container").style.overflow="auto";
+			document.getElementById("'.$myPid.'_pixScrollBox_Container").style.overflowY="auto";
+			document.getElementById("'.$myPid.'_pixScrollBox_Container").style.overflowX="hidden";
+		'));
+		
+		$path = um('getCurrentUserDir').'files';
+		eyex('sendMessage', array('msg' => 'listContent', 'params' => $path));
+		return;
+	}
+}
+
+function eyePictures_end($params=null) {
+	eyeWidgets('unserialize');
+}
+?>

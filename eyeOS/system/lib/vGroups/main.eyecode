@@ -1,0 +1,263 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+define('VGROUPS_DIR','vGroups');
+define('VGROUP_INFO_FILE','info.xml');
+define('VMEMBERS_INFO_EXTENSION','xInfo');
+
+function lib_vGroups_isValidGroupname($params = null) {
+	if (isset($params[0]) === true
+	&& preg_match('/^[-_a-zA-Z0-9]+$/', $params[0])) {
+		return true;
+	}
+	errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+	return false;
+}
+
+//Create a group inside app config folder or in vFolder
+function lib_vGroups_createGroup($params=null) {
+		if($params == null || !isset($params['name']) || empty($params['name'])){
+			//TODO: set error code
+			return false;
+		}
+
+		$groupName = $params['name'];
+		$desc = $params['desc'];
+		if(vGroups('groupExists',array($groupName))){
+			return false;
+		}
+		$path = vGroups('groupInfoPath',array($groupName));
+		if(!vfs('isdir',array(dirname($path)))){
+			vfs('real_mkDir',array(dirname($path)));
+		}
+
+		$groupInfo = Array(
+			'info' => array(
+				array(
+					'desc' => array($desc),
+				)
+			)
+		);
+		eyeXML('setXMLfile',array($path,$groupInfo));
+		return true;
+}
+function lib_vGroups_updateGroup($params){
+	if($params == null || empty($params['name']) || empty($params['oldName'])){
+		//TODO: set error code
+		return false;
+	}
+	$groupName = $params['name'];
+	$groupOldName = $params['oldName'];
+	$newInfo = $params['info'];
+
+	if(!isset($groupOldName) && $groupOldName != $groupName){
+		$oldPath = vGroups('groupInfoPath',array($groupOldName));
+		$newPath = vGroups('groupInfoPath',array($groupName));
+		if(!vfs('real_move',array($oldPath,$newPath))){
+			return false;
+		}
+	}
+	$path = vGroups('groupInfoPath',array($groupName));
+	if(eyeXML('setXMLfile',array($path,$newInfo))){
+		return true;
+	}else{
+		return false;
+	}
+}
+function lib_vGroups_retriveGroup($params){
+	if($params == null || empty($params['name'])){
+		//TODO: set error code
+		return false;
+	}
+	$groupName = $params['name'];
+	$path = vGroups('groupInfoPath',array($groupName));
+	return eyeXML('getXMLfile',array($path));
+}
+function lib_vGroups_deleteGroup($params=null){
+	if($params == null || empty($params['name'])){
+		return false;
+	}
+
+	$groupName = $params['name'];
+	$path = vGroups('groupInfoPath',array($groupName));
+	$path = dirname($path);//We only want the directory
+	if(!vfs('real_rmdir',array($path))){
+		return false;//VFS errorcode is ok here
+	}
+	return true;
+}
+function lib_vGroups_groupExists($params=null){
+	if($params == null || empty($params[0])){
+		//TODO: set error code
+		return false;
+	}
+	$groupName = $params[0];
+	$path = vGroups('groupInfoPath',array($groupName));
+	//If already exists a group with name "groupName", return false;
+	if(!vfs('real_fileExists',array($path))){
+		return false;
+	}
+	return true;
+}
+function lib_vGroups_groupInfoPath($params){
+	if($params == null || empty($params[0])){
+		//TODO: set error code
+		return false;
+	}
+	$groupName = $params[0];
+	return um('getCurrentUserDir').'/'.CONF_USER_DIR.'/'.VGROUPS_DIR.'/'.$groupName.'/'.VGROUP_INFO_FILE;
+}
+//List all virtual groups
+function lib_vGroups_listGroups() {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/'.VGROUPS_DIR.'/';
+	$dirs = vfs('real_getDirContent',array($path));
+	$basenames = array();
+	foreach($dirs as $dir){
+		$basenames[] = basename($dir);
+	}
+	return $basenames;
+}
+//List all virtual groups
+
+function lib_vGroups_memberInfoPath($params){
+	if($params == null || empty($params[0])  || empty($params[1])){
+		//TODO: set error code
+		return false;
+	}
+	$name = $params[0];
+	$group = $params[1];
+
+	$path = dirname(vGroups('groupInfoPath',array($group)));
+	return $path.'/'.$name.'.'.VMEMBERS_INFO_EXTENSION;
+}
+//Add member in a group
+function lib_vGroups_addMember($params=null) {
+	if($params == null || empty($params['name']) || empty($params['group'])){
+		return false;
+	}
+
+	$name = $params['name'];
+	$group = $params['group'];
+	$note = $params['note'];
+
+	if(!um('userExist',array($name))){
+		//TODO: set error code
+		return false;
+	}
+	if(!vGroups('groupExists',array($group))){
+		//TODO: set errorCode
+		return false;
+	}
+	if(vGroups('memberExists',array($name,$group))){
+		//TODO: set errorCode
+		return false;
+	}
+	$path = vGroups('memberInfoPath',array($name,$group));
+	$memberInfo = Array(
+		'info' => array(
+			array(
+				'note' => array($note),
+			)
+		)
+	);
+	eyeXML('setXMLfile',array($path,$memberInfo));
+	return true;
+}
+//List all memebers of one group
+function lib_vGroups_memberExists($params=null) {
+	if($params == null || empty($params[0]) || empty($params[1])){
+		return false;
+	}
+	$name = $params[0];
+	$group = $params[1];
+
+	$path = vGroups('memberInfoPath',array($name,$group));
+	if(vfs('real_fileExists',array($path))){
+		return true;
+	}else{
+		return false;
+	}
+}
+
+//Delete a member in a group
+function lib_vGroups_deleteMember($params=null) {
+	if($params == null || empty($params[0]) || empty($params[1])){
+		return false;
+	}
+	$name = $params[0];
+	$group = $params[1];
+
+	$path = vGroups('memberInfoPath',array($name,$group));
+	if(vfs('real_delete',array($path))){
+		return true;
+	}else{
+		return false;
+	}
+}
+function lib_vGroups_retriveMember($params=null) {
+	if($params == null || empty($params[0]) || empty($params[1])){
+		return false;
+	}
+	$name = $params[0];
+	$group = $params[1];
+
+	$path = vGroups('memberInfoPath',array($name,$group));
+
+	return eyeXML('getXMLfile',array($path));
+}
+function lib_vGroups_updateMember($params=null) {
+	if($params == null || empty($params['name']) || empty($params['group'])){
+		return false;
+	}
+	$name = $params['name'];
+	$group = $params['group'];
+	$info = $params['info'];
+
+	$path = vGroups('memberInfoPath',array($name,$group));
+
+	if(eyeXML('setXMLfile',array($path,$info))){
+		return true;
+	}else{
+		return false;
+	}
+}
+//List all memebers of one group
+function lib_vGroups_listMembers($params=null) {
+	if($params == null || empty($params[0])){
+		return false;
+	}
+	$group = $params[0];
+
+	$path = vGroups('groupInfoPath',array($group));
+	$path = dirname($path);
+	$members = vfs('real_getDirContent',array($path,'*'.VMEMBERS_INFO_EXTENSION));
+	$basenames = array();
+	foreach($members as $member){
+		$basenames[] = basename($member,'.'.VMEMBERS_INFO_EXTENSION);
+	}
+	return $basenames;
+}
+//Create the initial path for old users
+function lib_vGroups_initVgroups($params=null){
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/'.VGROUPS_DIR.'/';
+	if(!vfs('real_fileExists',array($path))){
+		if(!vfs('real_mkDir',array($path))){
+			return false;
+		}
+	}
+	return true;
+}
+?>

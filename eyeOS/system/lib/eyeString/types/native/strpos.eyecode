@@ -1,0 +1,21 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strpos($haystack, $needle, $offset = 0) {
+	if ($offset < 0) {
+		return false;
+	}
+	if ($offset > 0) {
+		$haystack = utf8_substr($haystack, $offset);
+		if ($haystack === false) {
+			return false;
+		}
+	}
+	$haystack = explode($needle, $haystack, 2);
+	if (isset($haystack[1]) === true) {
+		return utf8_strlen($haystack[0]) + $offset;
+	}
+	return false;
+}
+?>

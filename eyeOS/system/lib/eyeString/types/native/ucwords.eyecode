@@ -1,0 +1,15 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_ucwords($str) {
+	return preg_replace_callback('/\\S+/u', 'private_lib_eyeString_ucwords', $str);
+}
+
+/*
+ * PRIVATE
+ */
+function private_lib_eyeString_ucwords($word) {
+	return utf8_ucfirst($word[0]);
+}
+?>

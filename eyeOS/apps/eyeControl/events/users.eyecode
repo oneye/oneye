@@ -1,0 +1,121 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_users_load($params = '') {
+	global $myPid;
+
+	eyex('messageBox',array(
+		'buttons' => array(array('users_load_selected','Show users'),array('users_load_all','Show all'),array('users_load_cancel','Cancel')),
+		'content' => 'You can use /a (ending), /b (beginning) and /c (counts) to list users.',
+		'father' => 'eyeControl_container_big',
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/groups.png',
+		'textbox_event' => 'users_load_selected',
+		'textbox_name' => 'eyeControl_users_load_textbox',
+		'textbox_text' => $_SESSION['eyeControl'][$myPid]['content']['users'],
+		'title' => 'Show users...',
+		'type' => 3,
+		'win_name' => 'eyeControl_users_load_window',
+		'win_removepid' => 0,
+		'win_style' => TITLE + CLOSE
+	));
+}
+
+function eyeControl_on_users_load_selected($params = '') {
+	eyeControl_lib_loadContent('only_root','users',array($GLOBALS['eyeControl_users_load_textbox']->text));
+}
+
+function eyeControl_on_users_load_all($params = '') {
+	eyeControl_lib_loadContent('only_root','users',array('[all]'));
+}
+
+function eyeControl_on_users_load_cancel($params = '') {
+	$GLOBALS['eyeControl_users_load_window']->close();
+}
+
+function eyeControl_on_users_new($params = '') {
+	eyeControl_lib_loadContent('only_root','newuser');
+}
+
+function eyeControl_on_users_edit($params = '') {
+	$user = $GLOBALS['eyeControl_users_sortabletable']->selected;
+	if ($user) {
+		eyeControl_lib_loadContent('only_root','edituser',array($user));
+	} else {
+		eyex('messageBox',array('content' => 'Please choose a user to be edited.'));
+	}
+}
+
+function eyeControl_on_users_delete($params = '') {
+	$user = $GLOBALS['eyeControl_users_sortabletable']->selected;
+	if ($user && $user != REAL_ROOTUSER) {
+		eyex('messageBox',array(
+			'buttons' => array(array('users_delete_yes','Yes'),array('users_delete_no','No')),
+			'content' => 'Do you really want to remove this user from the system?',
+			'father' => 'eyeControl_container_big',
+			'hiddens' => array(array('users_delete_hidden',$user)),
+			'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/editClean.png',
+			'title' => 'Delete User',
+			'type' => 3,
+			'win_name' => 'eyeControl_users_delete_window',
+			'win_style' => TITLE + CLOSE
+		));
+	} elseif ($user == REAL_ROOTUSER) {
+		eyex('messageBox',array('content' => 'You cannot delete the root user!'));
+	} else {
+		eyex('messageBox',array('content' => 'Please choose a user to be deleted.'));
+	}
+}
+
+function eyeControl_on_users_delete_yes($params = '') {
+	global $currentUser;
+	global $myPid;
+
+	if (um('checkMaintainer',array(eyeControl_lib_getConfigUser()))) {
+		$myUserXml = um('retrieveUser',array(eyeControl_lib_getConfigUser()));
+	}
+
+	$user = $GLOBALS['users_delete_hidden']->text;
+
+	if ($currentUser != ROOTUSER && !um('checkMaintainer',array(eyeControl_lib_getConfigUser())) || um('checkMaintainer',array(eyeControl_lib_getConfigUser())) && !in_array($user,$myUserXml['eyeUser'][0]['mngUser'])) {
+		eyex('messageBox',array('content' => 'You are not allowed to manage users!'));
+		eyeControl_lib_loadContent();
+		return;
+	}
+
+	if ($user && $user != REAL_ROOTUSER) {
+		$oldUser = $currentUser;
+		if (um('checkMaintainer',array(eyeControl_lib_getConfigUser()))) {
+			$currentUser = ROOTUSER;
+			$mngUsers = array();
+			foreach ($myUserXml['eyeUser'][0]['mngUser'] as $mngUser) {
+				if ($mngUser != $user) {
+					$mngUsers[] = $mngUser;
+				}
+			}
+			um('updateUser',array('username' => $oldUser,'mngUser' => $mngUsers));
+		}
+
+		um('deleteUser',array($user));
+		eyex('messageBox',array('content' => 'User successfully deleted.'));
+		$currentUser = $oldUser;
+		eyeControl_lib_loadContent('only_root','users',array($_SESSION['eyeControl'][$myPid]['content']['users']));
+	}
+}
+
+function eyeControl_on_users_delete_no($params = '') {
+	$GLOBALS['eyeControl_users_delete_window']->close();
+}
+?>

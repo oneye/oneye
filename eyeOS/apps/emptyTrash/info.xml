@@ -1,0 +1,10 @@
+<package>
+	<name>emptyTrash</name>
+	<category> Core File Management</category>
+	<version>1.9</version>
+	<description>Utility to remove files form the trash</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon />
+</package>

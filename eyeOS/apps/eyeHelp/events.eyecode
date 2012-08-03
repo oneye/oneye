@@ -1,0 +1,226 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeHelp_on_cancel($paramse=null) {
+	$GLOBALS["edit_wnd"]->close();
+}
+
+function eyeHelp_on_Message($params=null) {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeHelp_on_Resize($params = ''){
+	//main window
+	$GLOBALS['WND_1']->height = intval($params['arg'][1]);
+	$GLOBALS['WND_1']->width = intval($params['arg'][0]);
+	//body Text
+	$GLOBALS['WND_2']->setHeight($GLOBALS['WND_1']->height - $GLOBALS['WND_2']->y - 28);
+	$GLOBALS['WND_2']->setWidth($GLOBALS['WND_1']->width - 215);
+	//tree menu
+	$GLOBALS['WND_3']->setHeight($GLOBALS['WND_2']->height);
+	$GLOBALS['BOX_1']->setHeight($GLOBALS['WND_3']->height - 0);
+	$GLOBALS['WND_BOX_1']->setHeight($GLOBALS['WND_3']->height - 29);
+}
+
+function eyeHelp_getFolder($params=null){
+	global $myPid;
+
+	$return = EYE_ROOT.'/'.APP_DIR.'/'.SHARE_USER_DIR.'/eyeHelp/';
+	if($params[0]){
+		eyeSessions('setVar',array('eyeHelp_'.$myPid.'_app',$params[0]));
+	}
+	$app = eyeSessions('getVar',array('eyeHelp_'.$myPid.'_app'));
+	if($app!='' && $params['root']!=1)
+		$return .= '/'.$app;
+
+	return $return;
+}
+
+function getTitleTopic($params=null){
+	global $currentUser;
+	global $checknum,$myPid;
+
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$myDir = $folder;
+	if ( /* utf8 */ substr($myDir, -1) !== '/') {
+		$myDir .= '/';
+	}
+	$myInfoFile = $myDir.'info.xml';
+	if (file_exists($myDir . $_SESSION['lang'] . '.xml') === true) {
+		$myInfoFile = $myDir . $_SESSION['lang'] . '.xml';
+	}
+	$size = vfs('real_filesize',array($myInfoFile));
+	if ($size > 0) {
+		$fp = vfs('real_open',array($myInfoFile,'r'));
+		$InfoContent = fread($fp,$size);
+		fclose($fp);
+	}
+	$currentUser = $oldUser;
+
+	$info = eyeXML('xml2array',array($InfoContent));
+	$info = $info['eyeHelp'][0];
+
+	$title = /* utf8 */ trim($info['title'][0]);
+	$myDir2 = /* utf8 */ substr($myDir, -1);
+	if($title=="")$title = basename($myDir2);
+}
+
+function eyeHelp_on_goto($params=null){
+	global $myPid,$checknum;
+	global $currentUser;
+
+	$folder = eyeHelp_getFolder();
+	$open = /* utf8 */ substr($params['itemName'][0], 5);
+	if($params[0]){
+		$open = str_replace('..','.',$params[0]);
+	}
+	//Don't know why, but sometimes when the tree is clicked, this is the param received...
+	if($open=='OX_1_Content')$stop = TRUE;
+
+	if($open && $stop!==TRUE){
+		$myDir = $open;
+		if ( /* utf8 */ substr($myDir, -1) !== '/') {
+			$myDir .= '/';
+		}
+
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		$myInfoFile = $myDir.'info.xml';
+		if (file_exists($myDir . $_SESSION['lang'] . '.xml') === true) {
+			$myInfoFile = $myDir . $_SESSION['lang'] . '.xml';
+		}
+		$size = vfs('real_filesize',array($myInfoFile));
+		if ($size > 0) {
+			$fp = vfs('real_open',array($myInfoFile,'r'));
+			$InfoContent = fread($fp,$size);
+			fclose($fp);
+		}
+
+		$info = eyeXML('xml2array',array($InfoContent));
+		$info = $info['eyeHelp'][0];;
+		if(file_exists($myDir.$_SESSION['lang'].'.eyeHelp') && filesize($myDir.$_SESSION['lang'].'.eyeHelp') > 0)
+			$myIndexFile = $myDir.$_SESSION['lang'].'.eyeHelp';
+			else $myIndexFile = $myDir.'index.eyeHelp';
+		$size = vfs('real_filesize',array($myIndexFile));
+		if ($size > 0) {
+			$fp = vfs('real_open',array($myIndexFile,'r'));
+			$IndexContent = fread($fp,$size);
+			fclose($fp);
+		}
+		$currentUser = $oldUser;
+
+		$title = /* utf8 */ trim($info['title'][0]);
+		$myDir2 = substr($myDir, 0, strlen($myDir) - 1); // utf8
+		if($title=="")$title = basename($myDir2);
+
+		eyeX('runjs',array('js'=>'document.getElementById("'.$myPid.'_label1").innerHTML="<h1>'.str_replace('"','\\"',$title).'</h1><hr />";'));
+
+		if ( /* utf8 */ trim($info['HTML-only'][0]) !== '1') {
+			$IndexContent = eyeHelp_Code($IndexContent);
+		}
+		$IndexContent_array = /* utf8 */ explode('<br />[split]<br />',$IndexContent);
+
+		foreach($IndexContent_array as $value){
+			eyeX('concatDiv',array('name'=>$myPid.'_label1','value'=>$value));
+		}
+	}
+}
+
+function eyeHelp_on_open($param){
+	if ( /* utf8 */ strpos($param, '..') !== false) {
+		$getfolder_param['root'] = 1;
+	}
+	$goto = array(eyeHelp_getFolder($getfolder_param).$param);
+	eyeHelp_on_goto($goto);
+}
+
+function eyeHelp_on_pref() {
+	global $checknum;
+	global $currentUser;
+	if($currentUser == ROOTUSER){
+		$xml = getConfig('eyeHelp','conf.xml');
+		eyex('messageBox',array(
+			'btn1_capt' => 'Submit',
+			'btn1_name' => 'submit',
+			'content' => 'User to contact to ask for help:',
+			'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/eyeMessages.png',
+			'textbox_name' => 'eyeHelp_contact_box',
+			'textbox_text' => $xml['eyeHelp'][0]['contact'][0],
+			'textbox_event' => 'submit',
+			'title' => 'eyeHelp preferences',
+			'type' => 3,
+			'win_name' => 'eyeHelp_prefs',
+			'win_removepid'=>0,
+			'win_style' => TITLE + NOT_LISTED + CLOSE
+		));
+	}else eyex('messageBox',array('content'=>'You are not allowed to do this.'));
+}
+
+function eyeHelp_on_submit(){
+	global $currentUser;
+	if($currentUser == ROOTUSER){
+		if($GLOBALS['eyeHelp_contact_box']->text!=''){
+			$xml['eyeHelp'][0]['contact'][0] = $GLOBALS['eyeHelp_contact_box']->text;
+			eyeXML('setXMLfile',array(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/eyeHelp/conf.xml',$xml));
+			eyex('messageBox',array('content'=>'Changes successfully applied.'));
+			$GLOBALS['eyeHelp_prefs']->close();
+		}else{
+			eyex('messageBox',array('content'=>'The field must not be left empty.'));
+		}
+	}else{
+		eyex('messageBox',array('content'=>'You are not allowed to do this.'));
+		$GLOBALS['eyeHelp_prefs']->close();
+	}
+}
+
+function eyeHelp_on_SendMessage() {
+	$xml = getConfig('eyeHelp','conf.xml');
+	proc('launch',array('newMessage',array('action' => 'new','to' => $xml['eyeHelp'][0]['contact'][0])));
+}
+
+function eyeHelp_on_eyeNav($param) {
+	proc('launch',array('eyeNav',$param));
+}
+
+function eyeHelp_Code($Text){
+	global $checknum;
+	global $currentUser;
+
+	$dir = EYE_ROOT . '/' . APP_DIR . '/eyeHelp/lib/';
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$openDir = vfs('real_getDirContent',array($dir,'*' . EYE_CODE_EXTENSION));
+	$currentUser = $oldUser;
+	foreach ($openDir as $file) {
+		include_once($file);
+	}
+	return $Text;
+}
+
+function eyeHelp_on_Restart(){
+	global $myPid;
+	proc('end');
+	proc('launch',array('eyeHelp'));
+}
+
+function eyeHelp_on_Close(){
+	global $myPid;
+	eyeSessions('delVar',array('eyeHelp_'.$myPid.'_app'));
+	proc('end');
+}
+
+?>

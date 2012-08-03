@@ -1,0 +1,384 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $checknum;
+global $currentUser;
+global $myPid;
+
+$myCss_Label = array(
+	'color' => '#ffffff',
+	'font-family' => 'Verdana,Arial,sans-serif,FreeSans',
+	'font-size' => '11px'
+);
+
+$myCss_Select = array(
+	'border' => 'none',
+	'margin-left' => '2px',
+	'padding-left' => '1px'
+);
+if (!IE || IE > 7) {
+	$myCss_Select['height'] = '14px';
+}
+
+if (!IE || IE > 6) {
+	$myCss_Textbox = array(
+		'background-color' => 'transparent',
+		'background-image' => 'url(index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/box.png)',
+		'background-repeat' => 'no-repeat',
+		'border' => 'none',
+		'padding-bottom' => '5px',
+		'padding-left' => '5px',
+		'padding-top' => '5px'
+	);
+
+	$myCss_Focus = $myCss_Textbox;
+	$myCss_Focus['background-image'] = 'url(index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/box_x.png)';
+}
+
+$myCss_Title = $myCss_Label;
+$myCss_Title['cursor'] = 'pointer';
+$myCss_Title['font-weight'] = '700';
+
+$y = round($_SESSION['SCREEN']['height'] / 2) - 110;
+if ($y < 280) {
+	$y -= 280 - $y;
+}
+if ($y < 0) {
+	$y = 0;
+}
+$myImagebox = new Imagebox(array(
+	'cssClass' => 'eyeLoginWindow',
+	'father' => 'eyeApps',
+	'height' => 220,
+	'name' => 'eyeLogin_1',
+	'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/bg_login.png',
+	'width' => 301,
+	'x' => round($_SESSION['SCREEN']['width'] / 2) - 150,
+	'y' => $y,
+));
+$myImagebox->show(0);
+
+$myLabel = new Label(array(
+	'father' => 'eyeLogin_1_Container',
+	'name' => 'eyeLogin_Label_1_User',
+	'text' => 'Username',
+	'x' => 43,
+	'y' => 16
+));
+$myLabel->show();
+$myLabel->setCss($myCss_Label);
+
+$myTextbox = new Textbox(array(
+	'father' => 'eyeLogin_1_Container',
+	'height' => 24,
+	'name' => 'eyeLogin_Textbox_1_User',
+	'width' => 214,
+	'x' => 42,
+	'y' => 37
+));
+$myTextbox->show();
+$myTextbox->setCss($myCss_Focus);
+$myTextbox->focus();
+eyex('rawjs', array('js' => 'xGetElementById("'. $myPid .'_'. $myTextbox->name .'").setAttribute("autocapitalize", "off");
+	xGetElementById("'. $myPid .'_'. $myTextbox->name .'").setAttribute("autocorrect", "off");
+')); // Needed for iOS devices
+
+$myLabel = new Label(array(
+	'father' => 'eyeLogin_1_Container',
+	'name' => 'eyeLogin_Label_1_Password',
+	'text' => 'Password',
+	'x' => 43,
+	'y' => 70
+));
+$myLabel->show();
+$myLabel->setCss($myCss_Label);
+
+$myTextbox = new Textbox(array(
+	'father' => 'eyeLogin_1_Container',
+	'height' => 24,
+	'name' => 'eyeLogin_Textbox_1_Password',
+	'password' => 2,
+	'width' => 214,
+	'x' => 42,
+	'y' => 90
+));
+$myTextbox->show();
+$myTextbox->setCss($myCss_Textbox);
+
+$myLabel = new Label(array(
+	'father' => 'eyeLogin_1_Container',
+	'name' => 'eyeLogin_Label_1_Language',
+	'text' => 'Language (this session)',
+	'x' => 43,
+	'y' => 124
+));
+$myLabel->show();
+$myLabel->setCss($myCss_Label);
+
+$mySelect = new Select(array(
+	'father' => 'eyeLogin_1_Container',
+	'name' => 'eyeLogin_Select_1_Language',
+	'width' => 214,
+	'x' => 42,
+	'y' => 143
+));
+$mySelect->show();
+$mySelect->setCss($myCss_Select);
+$mySelect->addOption('( Default )','[auto]',1);
+foreach ($langs as $lang) {
+	$mySelect->addOption($lang[0],$lang[1]);
+}
+
+$myImagebox = new Imagebox(array(
+	'cssClass' => 'cPointer',
+	'father' => 'eyeLogin_1_Container',
+	'horiz' => 1,
+	'name' => 'eyeLogin_Imagebox_1_Enter',
+	'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/enter.png',
+	'vert' => 1,
+	'x' => 10,
+	'y' => 10
+));
+$myImagebox->show();
+
+$myLabel = new Label(array(
+	'father' => 'eyeLogin_1_Container',
+	'name' => 'eyeLogin_Label_1_Disabled',
+	'text' => 'Your account has been disabled!',
+	'visible' => 0,
+	'x' => 0,
+	'y' => 170
+));
+$myLabel->show(0);
+$myLabel->setCss(array(
+	'color' => '#ffaa00',
+	'font-size' => '12px',
+	'font-weight' => 'bold',
+	'text-align' => 'center',
+	'width' => '301px'
+));
+
+$myLabel = new Label(array(
+	'cssClass' => 'cPointer',
+	'father' => 'eyeLogin_1_Container',
+	'horiz' => 1,
+	'name' => 'eyeLogin_Label_1_Enter',
+	'text' => 'Enter',
+	'vert' => 1,
+	'x' => 40,
+	'y' => 13
+));
+$myLabel->show();
+$myLabel->setCss($myCss_Title);
+
+$myImagebox = new Imagebox(array(
+	'father' => 'eyeLogin_1_Container',
+	'name' => 'eyeLogin_Imagebox_1_Logo',
+	'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/eyeoslogo.png',
+	'x' => 115,
+	'y' => 260
+));
+$myImagebox->show();
+
+if (ALLOW_USER_REGISTER) {
+	$myImagebox = new Imagebox(array(
+		'cssClass' => 'cPointer',
+		'father' => 'eyeLogin_1_Container',
+		'name' => 'eyeLogin_Imagebox_1_New',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/new.png',
+		'vert' => 1,
+		'x' => 10,
+		'y' => 10
+	));
+	$myImagebox->show();
+
+	$myLabel = new Label(array(
+		'cssClass' => 'cPointer',
+		'father' => 'eyeLogin_1_Container',
+		'name' => 'eyeLogin_Label_1_New',
+		'text' => 'New User',
+		'vert' => 1,
+		'x' => 40,
+		'y' => 13
+	));
+	$myLabel->show();
+	$myLabel->setCss($myCss_Title);
+
+	$myImagebox = new Imagebox(array(
+		'father' => 'eyeLogin_1_Container',
+		'name' => 'eyeLogin_2',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/bg_newuser.png',
+		'visible' => 0,
+		'x' => 0,
+		'y' => 199
+	));
+	$myImagebox->show();
+
+	$myLabel = new Label(array(
+		'father' => 'eyeLogin_2_Container',
+		'name' => 'eyeLogin_Label_2_User',
+		'text' => 'New User',
+		'x' => 43,
+		'y' => 39
+	));
+	$myLabel->show();
+	$myLabel->setCss($myCss_Label);
+
+	$myTextbox = new Textbox(array(
+		'father' => 'eyeLogin_2_Container',
+		'height' => 24,
+		'name' => 'eyeLogin_Textbox_2_User',
+		'width' => 214,
+		'x' => 42,
+		'y' => 54
+	));
+	$myTextbox->show();
+	$myTextbox->setCss($myCss_Textbox);
+
+	$myLabel = new Label(array(
+		'father' => 'eyeLogin_2_Container',
+		'name' => 'eyeLogin_Label_2_Password_1',
+		'text' => 'Password',
+		'x' => 43,
+		'y' => 85
+	));
+	$myLabel->show();
+	$myLabel->setCss($myCss_Label);
+
+	$myTextbox = new Textbox(array(
+		'father' => 'eyeLogin_2_Container',
+		'height' => 24,
+		'name' => 'eyeLogin_Textbox_2_Password_1',
+		'password' => 2,
+		'width' => 214,
+		'x' => 42,
+		'y' => 99
+	));
+	$myTextbox->show();
+	$myTextbox->setCss($myCss_Textbox);
+
+	$myLabel = new Label(array(
+		'father' => 'eyeLogin_2_Container',
+		'name' => 'eyeLogin_Label_2_Password_2',
+		'text' => 'Retype password',
+		'x' => 43,
+		'y' => 131
+	));
+	$myLabel->show();
+	$myLabel->setCss($myCss_Label);
+
+	$myTextbox = new Textbox(array(
+		'father' => 'eyeLogin_2_Container',
+		'height' => 24,
+		'name' => 'eyeLogin_Textbox_2_Password_2',
+		'password' => 2,
+		'width' => 214,
+		'x' => 42,
+		'y' => 145
+	));
+	$myTextbox->show();
+	$myTextbox->setCss($myCss_Textbox);
+
+	$myLabel = new Label(array(
+		'father' => 'eyeLogin_2_Container',
+		'name' => 'eyeLogin_Label_2_Language',
+		'text' => 'Language',
+		'x' => 43,
+		'y' => 177
+	));
+	$myLabel->show();
+	$myLabel->setCss($myCss_Label);
+
+	$mySelect = new Select(array(
+		'father' => 'eyeLogin_2_Container',
+		'name' => 'eyeLogin_Select_2_Language',
+		'width' => 214,
+		'x' => 42,
+		'y' => 192
+	));
+	$mySelect->show();
+	$mySelect->setCss($myCss_Select);
+	foreach ($langs as $lang) {
+		if ($lang[1] == i18n('getLang')) {
+			$mySelect->addOption($lang[0],$lang[1],1);
+		} else {
+			$mySelect->addOption($lang[0],$lang[1]);
+		}
+	}
+
+	$myLabel = new Label(array(
+		'father' => 'eyeLogin_2_Container',
+		'name' => 'eyeLogin_Label_2_Message',
+		'text' => 'New User',
+		'visible' => 0,
+		'x' => 30,
+		'y' => 215
+	));
+	$myLabel->show(0);
+	$myLabel->setCss(array(
+		'color' => '#ffaa00',
+		'font-size' => '12px',
+		'font-weight' => 'bold',
+		'text-align' => 'justify',
+		'width' => '234px'
+	));
+
+	$myImagebox = new Imagebox(array(
+		'cssClass' => 'cPointer',
+		'father' => 'eyeLogin_2_Container',
+		'horiz' => 1,
+		'name' => 'eyeLogin_Imagebox_2_Create',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeLogin/enter.png',
+		'vert' => 1,
+		'x' => 48,
+		'y' => 19
+	));
+	$myImagebox->show();
+
+	$myLabel = new Label(array(
+		'cssClass' => 'cPointer',
+		'father' => 'eyeLogin_2_Container',
+		'horiz' => 1,
+		'name' => 'eyeLogin_Label_2_Create',
+		'text' => 'Create account',
+		'vert' => 1,
+		'x' => 75,
+		'y' => 22
+	));
+	$myLabel->show();
+	$myLabel->setCss($myCss_Title);
+}
+
+$myWindow = new Window(array(
+	'father' => 'eyeApps',
+	'horiz' => 1,
+	'name' => 'eyeLogin_Window_Powered',
+	'type' => INVISIBLE_WINDOW,
+	'vert' => 1,
+	'x' => 15,
+	'y' => 10
+));
+$myWindow->show();
+$myWindow->setCss(array(
+	'height' => 'auto',
+	'line-height' => '2',
+	'text-align' => 'center',
+	'width' => 'auto'
+));
+eyex('runjs', array('js' => 'document.getElementById("' . $myPid . '_eyeLogin_Window_Powered").innerHTML = %s;', 'tokens' => array('<a href="http://sourceforge.net/projects/eyeos" target="_blank"><img alt="" src="https://sflogo.sourceforge.net/sflogo.php?group_id=145027&amp;type=9" /></a><br />Powered by oneye')));
+
+eyex('loadScript',array('url' => 'index.php?extern=apps/eyeLogin/themes/default/eyeLogin' . EYE_CODE_EXTENSION . '&type=dynamic&params[]=' . $myPid . '&params[]=' . $checknum . '&params[]=' . $_SESSION['sawasc']));
+?>

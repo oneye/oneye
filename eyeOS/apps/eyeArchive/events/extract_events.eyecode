@@ -1,0 +1,93 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeArchive_on_Extract($params="") {
+	global $currentUser,$myPid;
+	//Checking if started is already opened
+
+	if($GLOBALS['projectStarted']->text != 'true'){
+		eyex('messageBox',array('content'=>'No file open'));
+		return false;
+	}
+
+	$myProject = _eyeArchive_getProject();
+	$path = $myProject->getFilesName();
+	$myRealFile = vfs('getRealName',array($myProject->getSrc()));
+	array_unshift($path,$myRealFile);
+	$fpath[] = $path;
+	$params[0] = array(
+					'archived'=>$fpath
+					);
+	if(isset($params['workingPath'][0]) && !empty($params['workingPath'][0])){
+		$dest = $params['workingPath'][0];
+	}else{
+		$dest = $GLOBALS['workingPath']->text;
+	}
+	$params[1] = um('getCurrentUserDir').'/'.FILES_USER_DIR.'/'.$dest;
+
+	$params[0] = $myRealFile;
+	//$params[1] = '/home/nasete';
+	if(!eyeFileArchive('extract',$params)){
+		eyex('messageBox',array('content'=>'File extraction failed'));
+		return false;
+	}
+	//TODO: remove it and put other system that don't need open the archived again
+	//$filesExtracted = eyeFileArchive('list',array('src'=>$path,'virtual'=>1));
+
+	eyeFiles('update',array(dirname($myRealFile)));
+	eyex('messageBox',array('content'=>'File extracted successfully.'));
+	return true;
+}
+
+function eyeArchive_on_SelectDest(){
+	global $checknum;
+	$options = array(
+		EYEDIALOG_TYPE_SELECTFOLDER,
+		'SelectDestDialog',
+		$checknum
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+
+function eyeArchive_on_SelectDestDialog($params = null){
+	global $currentUser,$checknum,$myPid;
+
+	$workPath = $params['arg'][0];
+
+	//If project are started, fill the object with the new workPath
+	if($GLOBALS['projectStarted']->text == 'true'){
+		//Filling the object
+		$myProject = _eyeArchive_getProject();
+		$myProject->setWorkPath($workPath);
+		_eyeArchive_setProject($myProject);
+
+		if($myProject->type == 'directory'){
+			$name = basename($GLOBALS['workingPath']->text);
+			$GLOBALS['workingPath']->setText($workPath.'/'.$name);
+		}else{
+			$GLOBALS['workingPath']->setText($workPath);
+		}
+
+	}else{
+		$GLOBALS['workingPath']->setText($workPath);
+	}
+
+}
+
+function eyeArchive_on_CancelSelect(){
+	$GLOBALS['outWindow']->close();
+}
+?>

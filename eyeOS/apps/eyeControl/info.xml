@@ -1,0 +1,10 @@
+<package>
+	<name>System Preferences</name>
+	<category>Utilities</category>
+	<version>1.9</version>
+	<description>Utility to manage and customise oneye</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/editClean.png</icon>
+</package>

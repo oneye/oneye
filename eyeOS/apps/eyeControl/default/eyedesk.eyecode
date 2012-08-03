@@ -1,0 +1,101 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+// $myTable
+$sortypes = array('String');
+$theader = array('Commands');
+
+$myTable = new Sortabletable(array(
+	'name' => 'eyeControl_eyedesk_sortabletable',
+	'father' => $eyeContainer,
+	'sortypes' => $sortypes,
+	'theader' => $theader,
+	'x' => 0,
+	'y' => 30,
+	'width' => 560,
+	'height' => 375,
+	'dblsignal' => 'eyedesk_edit'
+));
+$myTable->show();
+$nCommands = 0;
+$commandXML = eyeControl_lib_getXMLconfig(array('eyeDesk','conf.xml'));
+foreach($commandXML['eyeDesk'][0]['autolaunch'] as $command) {
+	$nCommands++;
+	$myTable->addRow(array($command));
+}
+// New
+$myButton = new Button(array(
+	'name' => 'eyeControl_eyedesk_button_new',
+	'father' => $eyeContainer,
+	'signal' => 'eyedesk_new',
+	'caption' => 'New',
+	'width' => 90,
+	'x' => 10,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/new.png'
+));
+$myButton->show();
+// Edit
+$myButton = new Button(array(
+	'name' => 'eyeControl_eyedesk_button_edit',
+	'father' => $eyeContainer,
+	'signal' => 'eyedesk_edit',
+	'caption' => 'Edit',
+	'width' => 90,
+	'x' => 100,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/paste.png'
+));
+$myButton->addFriend($myTable);
+$myButton->show();
+// Delete
+$myButton = new Button(array(
+	'name' => 'eyeControl_eyedesk_button_delete',
+	'father' => $eyeContainer,
+	'signal' => 'eyedesk_delete',
+	'caption' => 'Delete',
+	'width' => 90,
+	'x' => 190,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/delete.png'
+));
+$myButton->addFriend($myTable);
+$myButton->show();
+if (eyeControl_lib_getConfigUser() != '[skel]') {
+	// Use defaults
+	$myButton = new Button(array(
+		'name' => 'eyeControl_eyedesk_button_default',
+		'father' => $eyeContainer,
+		'signal' => 'eyedesk_default',
+		'caption' => 'Use Defaults',
+		'width' => 120,
+		'x' => 280,
+		'y' => 0,
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/save.png'
+	));
+	$myButton->show();
+}
+// x command(s)
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyedesk_label_commands',
+	'father' => $eyeContainer,
+	'horiz' => 1,
+	'y' => 2,
+	'text' => '%s command(s)',
+	'tokens' => array($nCommands)
+));
+$myLabel->show();
+?>

@@ -1,0 +1,104 @@
+<map>
+	<infos>
+		<author>Lars Knickrehm &amp; Spasspost</author>
+		<description>To be able to play this map was my first milestone while developing eyeCatch.</description>
+		<name>Escapa</name>
+		<version>1.0</version>
+	</infos>
+	<field>
+		<className>eyeCatch_escapa_field</className>
+		<width>450</width>
+		<height>450</height>
+	</field>
+	<player>
+		<className>eyeCatch_escapa_player</className>
+		<left>205</left>
+		<top>205</top>
+		<width>40</width>
+		<height>40</height>
+	</player>
+	<speed>
+		<0>80</0>
+		<100>60</100>
+		<200>40</200>
+		<300>30</300>
+		<400>20</400>
+		<500>10</500>
+	</speed>
+	<holes>
+		<hole>
+			<className>eyeCatch_escapa_hole</className>
+			<message />
+			<left>0</left>
+			<top>0</top>
+			<width>450</width>
+			<height>50</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_escapa_hole</className>
+			<message />
+			<left>0</left>
+			<top>50</top>
+			<width>50</width>
+			<height>350</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_escapa_hole</className>
+			<message />
+			<left>400</left>
+			<top>50</top>
+			<width>50</width>
+			<height>350</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_escapa_hole</className>
+			<message />
+			<left>0</left>
+			<top>400</top>
+			<width>450</width>
+			<height>50</height>
+		</hole>
+	</holes>
+	<enemies>
+		<enemy>
+			<className>eyeCatch_escapa_enemy</className>
+			<message />
+			<left>270</left>
+			<top>60</top>
+			<width>60</width>
+			<height>50</height>
+			<movex>-10</movex>
+			<movey>12</movey>
+		</enemy>
+		<enemy>
+			<className>eyeCatch_escapa_enemy</className>
+			<message />
+			<left>300</left>
+			<top>330</top>
+			<width>100</width>
+			<height>20</height>
+			<movex>-12</movex>
+			<movey>-20</movey>
+		</enemy>
+		<enemy>
+			<className>eyeCatch_escapa_enemy</className>
+			<message />
+			<left>70</left>
+			<top>320</top>
+			<width>30</width>
+			<height>60</height>
+			<movex>15</movex>
+			<movey>-13</movey>
+		</enemy>
+		<enemy>
+			<className>eyeCatch_escapa_enemy</className>
+			<message />
+			<left>70</left>
+			<top>70</top>
+			<width>60</width>
+			<height>60</height>
+			<movex>17</movex>
+			<movey>11</movey>
+		</enemy>
+	</enemies>
+</map>

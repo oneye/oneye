@@ -1,0 +1,10 @@
+<package>
+	<name>About oneye</name>
+	<category>Utilities</category>
+	<version>1.9</version>
+	<description>Utility to view the people behind oneye</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/i.png</icon>
+</package>

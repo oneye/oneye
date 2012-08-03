@@ -1,0 +1,47 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function newFile_on_Close($params = '') {
+	proc('end');
+}
+
+function newFile_on_Do($params = '') {
+	$path = eyeFiles('cleanPath',array($GLOBALS['newFile_Hidden_Path']->text));
+	$file = $GLOBALS['newFile_Textbox']->text;
+	if (vfs('checkSpecialChars',array($file)) === false) {
+		global $charBlackList;
+		foreach ($charBlackList as $char){
+			$file = str_replace($char,'',$file);
+		}
+		eyex('messageBox',array('content' => 'Some special chars have been removed.'));
+	}
+	$path[0] .= '/' . $file;
+	if ($path[1] == 'real' && vfs('real_create',array($path[0])) || vfs('create',array($path[0]))) {
+		if ($GLOBALS['newFile_Hidden_Callback']->text) {
+			eyex('rawjs',array('js' => $GLOBALS['newFile_Hidden_Callback']->text));
+		}
+		$path = eyeFiles('cleanPath', array(substr(trim($path[0], '/\\'), 0, -strlen(basename($path[0]))))); // utf8
+		eyeFiles('update',array($path[1] . '://' . $path[2]));
+	} else {
+		eyex('messageBox',array('content' => 'Error creating file!'));
+	}
+	proc('end');
+}
+
+function newFile_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+?>

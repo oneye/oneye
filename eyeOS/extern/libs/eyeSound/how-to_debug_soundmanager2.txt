@@ -1,0 +1,10 @@
+To activate debug to the javascript console (so you can open the Firefox Firebug Console
+or the Opera Dragonfly console, or any other JS debug console), simply rename:
+"soundmanager2.js" to "soundmanager2_REAL.js",
+"soundmanager2_debug.js" to "soundmanager2.js"
+and "soundmanager2.min.js" to "soundmanager2_REAL.min.js".
+
+To deactivate debug, rename:
+"soundmanager2.js" to "soundmanager2_debug.js",
+"soundmanager2_REAL.js" to "soundmanager2.js"
+and "soundmanager2_REAL.min.js" to "soundmanager2.min.js".

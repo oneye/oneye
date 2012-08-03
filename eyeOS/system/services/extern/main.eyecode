@@ -1,0 +1,173 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+define('MAX_FILE_EXTENSION', 8);
+define('MAX_FILE_NAME_LEN', 40);
+
+function service_extern_init($params = null) {
+	global $externRequest;
+	$externRequest = true;
+}
+
+function service_extern_getContent($params) {
+	if (isset($params[0]) === false) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	
+	// DOWNLOAD
+	if (isset($params[2]) === true && $params[2] !== false) {
+		header('Content-Description: File Transfer');
+		header('Content-Disposition: attachment; filename="' . $params[2] . '"');
+	}
+	
+	// MIMETYPES
+	$mimetypes = array(
+		'css' => 'text/css; charset=utf-8',
+		'gif' => 'image/gif',
+		'html' => 'text/html; charset=utf-8',
+		'ico' => 'image/x-icon',
+		'jpg' => 'image/jpg',
+		'js' => 'text/javascript; charset=utf-8',
+		'mp3' => 'audio/mpeg3',
+		'ogg' => 'audio/ogg',
+		'png' => 'image/png',
+		'swf' => 'application/x-shockwave-flash',
+		'txt' => 'text/plain; charset=utf-8',
+		'xml' => 'text/xml; charset=utf-8'
+	);
+	
+	// HEADER
+	if (isset($params[1]) === true && isset($mimetypes[$params[1]]) === true) {
+		header('Content-Type: ' . $mimetypes[$params[1]]);
+	}
+	header('Content-Length: ' . /* utf8 */ strlen($params[0]));
+	header('Accept-Ranges: bytes');
+	echo $params[0];
+	exit;
+}
+
+function service_extern_getFile($params) {
+	if (isset($params[0]) === false) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	$type = null;
+	if (isset($params[1]) === true) {
+		$type = $params[1];
+	}
+	
+	// PATH
+	if (isset($_REQUEST['theme']) === true) {
+		if ($_REQUEST['theme'] === '0') {
+			$path = EYE_ROOT . '/' . EXTERN_DIR . '/' . $params[0];
+		} else {
+			$path = eyex('getThemeImage', array(EYE_ROOT . '/' . EXTERN_DIR . '/' . THEMES_DIR . '/default/' . $params[0], 3));
+		}
+	} else {
+		$path = eyex('getThemeImage', array(EYE_ROOT . '/' . EXTERN_DIR . '/' . $params[0], 3));
+	}
+	if ($path === false) {
+		return false;
+	}
+	
+	// INFO
+	$info = pathinfo($path);
+	$basename = $info['basename'];
+	$dirname = $info['dirname'] .  '/' . $basename;
+	$extension = $info['extension'];
+	if (utf8_strlen($basename) > MAX_FILE_NAME_LEN === true) {
+		return false;
+	}
+	if (utf8_strlen($extension) > MAX_FILE_EXTENSION === true) {
+		return false;
+	}
+	if ( /* utf8 */ strpos(realpath($dirname), realpath(EYE_ROOT . '/' . EXTERN_DIR . '/')) !== 0) {
+		return false;
+	}
+	
+	if (is_readable($dirname) === true) {
+		$content = '';
+		
+		// DYNAMIC
+		if ($type === 'dynamic') {
+			$download = false;
+			$type = null;
+			include_once $dirname;
+			if (function_exists('get_dynamic_content') === true) {
+				$content = get_dynamic_content($_GET['params']);
+			}
+		} else {
+			// COMPRESSED
+			if (USE_COMPRESSED && substr($dirname, - strlen('.min.' . $extension)) !== '.min.' . $extension) { // utf8
+				$dirname2 = substr($dirname, 0, - strlen($extension)) . 'min.' . $extension; // utf8
+				if (is_readable($dirname2) === true && filemtime($dirname2) >= filemtime($dirname)) {
+					$dirname = $dirname2;
+				}
+			}
+			
+			// DOWNLOAD
+			$download = false;
+			if ($type === 'download') {
+				$download = $basename;
+			}
+			
+			// CACHE
+			if ($download === false) {
+				$last_modified = gmdate('r', filemtime($dirname)) . ' GMT';
+				header('Last-Modified: ' . $last_modified);
+				if (isset($_SERVER['HTTP_IF_MODIFIED_SINCE']) === true && $_SERVER['HTTP_IF_MODIFIED_SINCE'] === $last_modified) {
+					header($_SERVER['SERVER_PROTOCOL'] . ' 304 Not Modified');
+					exit;
+				}
+			}
+			
+			// TYPE
+			if ($extension === 'css') {
+				$type = 'css';
+			} else if ($extension === 'gif') {
+				$type = 'gif';
+			} else if($extension === 'htm' || $extension === 'html' || $extension === 'xhtml') {
+				$type = 'html';
+			} else if ($extension === 'cur' || $extension === 'ico') {
+				$type = 'ico';
+			} else if ($extension === 'jpg') {
+				$type = 'jpg';
+			} else if ($extension === 'js') {
+				$type = 'js';
+			} else if ($extension === 'mp3') {
+				$type = 'mp3';
+			} else if ($extension === 'ogg') {
+				$type = 'ogg';
+			} else if ($extension === 'png') {
+				$type = 'png';
+			} else if($extension === 'swf'){
+				$type = 'swf';
+			} else if ($extension === 'xml' || $extension === 'xsl') {
+				$type = 'xml';
+			} else {
+				$type = 'txt';
+			}
+			
+			// USERTHEME
+			$content = file_get_contents($dirname);
+			$content = str_replace('theme=USERTHEME', 'theme=' . $_SESSION['usertheme'], $content);
+		}
+		extern('getContent', array($content, $type, $download));
+	}
+	return true;
+}
+?>

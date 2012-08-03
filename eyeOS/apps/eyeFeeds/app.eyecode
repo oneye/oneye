@@ -1,0 +1,280 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/**
+ * @author Nanawel (nanawel@eyeos.org)
+ * @version 1.2-3
+ * @updated 11-Sept-2009
+ */
+
+define('EYEFEEDS_WIN_HEIGHT',600);
+define('EYEFEEDS_WIN_WIDTH',800);
+
+function eyeFeeds_run($params=null) {
+	global $checknum, $myPid;
+
+	$mainWindow = new Window(array(
+		'name' => 'eyeFeeds_WND',
+		'father' => 'eyeApps',
+		'cent' => 1,
+		'width' => EYEFEEDS_WIN_WIDTH,
+		'height' => EYEFEEDS_WIN_HEIGHT,
+		'title' => 'RSS Feed Reader',
+		'sigResize' => 'windowResize',
+		'sendResizeMsg' => 1,
+		'savePosition' => 1
+	));
+	$mainWindow->show();
+
+
+	/**********************************************************/
+	//		TOOLBAR
+	/**********************************************************/
+	$toolbar = new Toolbar(array(
+		'name' => 'toolbar_TLB',
+		'father' => 'eyeFeeds_WND_Content',
+		'x' => 5,
+		'y' => 5
+	));
+	$toolbar->show();
+	$toolbar->addItem(
+		'addFeed_ITM',
+		'index.php?extern=apps/eyeFeeds/gfx/addfeed.png',
+		'Add feed'
+	);
+	$toolbar->addItem(
+		'addFolder_ITM',
+		'index.php?extern=apps/eyeFeeds/gfx/newfolder.png',
+		'Add folder'
+	);
+	$toolbar->addLine();
+	$toolbar->addItem(
+		'editFeedFolder_ITM',
+		'index.php?extern=apps/eyeFeeds/gfx/editfeedfolder.png',
+		'Edit'
+	);
+	$toolbar->addItem(
+		'delFeedFolder_ITM',
+		'index.php?extern=apps/eyeFeeds/gfx/delfeedfolder.png',
+		'Delete'
+	);
+	$toolbar->addLine();
+	$toolbar->addItem(
+		'refreshFeed_ITM',
+		'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/refresh.png',
+		'Refresh'
+	);
+	$toolbar->addItem(
+		'import_ITM',
+		'index.php?extern=apps/eyeFeeds/gfx/import.png',
+		'Import'
+	);
+	$toolbar->addItem(
+		'export_ITM',
+		'index.php?extern=apps/eyeFeeds/gfx/export.png',
+		'Export'
+	);
+	$toolbar->addLine();
+	$toolbar->addItem(
+		'settings_ITM',
+		'index.php?extern=apps/eyeFeeds/gfx/settings.png',
+		'Settings'
+	);
+	$toolbar->addItem(
+		'help_ITM',
+		'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/help.png',
+		'Help',
+		'',
+		1
+	);
+	$toolbar->addItem(
+		'fullscreen',
+		'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/fullScreen.png',
+		'Full Screen',
+		'',
+		1
+	);
+
+	//LEFT/RIGHT SPLITTER
+	$leftRightSplitter = new Split(array(
+		'name' => 'leftRight_SPLT',
+		'father' => 'eyeFeeds_WND_Content',
+		'x' => 4,
+		'y' => 64,
+		'orientation' => SPLIT_VERTICAL,
+		'width' => $mainWindow->width - 8,
+		'height' => $mainWindow->height - 96,
+		'position' => 200,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'leftRightSplitResize'
+	));
+	$leftRightSplitter->show(0);
+
+
+	/**********************************************************/
+	//		LEFT PANEL
+	/**********************************************************/
+	$leftBox = new Box(array(
+		'name' => 'left_BOX',
+		'father' => 'leftRight_SPLT_first',
+		'x' => 0,
+		'y' => 0,
+		'height' => $leftRightSplitter->height,
+		'width' => $leftRightSplitter->position - 1,
+		'title' => 'Feeds'
+	));
+	$leftBox->show(0);
+
+	//tree container (for scrolling)
+	$treeContainer = new Container(array(
+		'name'=>'tree_CTN',
+		'father'=>'left_BOX',
+		'x'=>1,
+		'y'=>24,
+		'width'=>$leftRightSplitter->position - 3,
+		'height'=>$leftRightSplitter->height - 41
+	));
+	$treeContainer->show();
+	eyeWidgets('serialize',array($treeContainer));
+	eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_tree_CTN_Container").style.overflow="auto";'));
+
+	//FEEDS TREE
+	//@see func.eyecode#eyeFeeds_drawFeedsTree()
+
+	/**********************************************************/
+	//		RIGHT PANEL (ITEMS LIST + OUTLINE)
+	/**********************************************************/
+	$itemsContentSplitter = new Split(array(
+		'name' => 'itemsContent_SPLT',
+		'father' => 'leftRight_SPLT_last',
+		'x' => 2,
+		'y' => 0,
+		'orientation' => SPLIT_HORIZONTAL,
+		'width' => $leftRightSplitter->width - $leftRightSplitter->position - 8,
+		'height' => $mainWindow->height - 96,
+		'position' => round(($mainWindow->height - 96) * 3/5),
+		'sendResizeMsg' => 1,
+		'sigResize' => 'itemsContentSplitResize'
+	));
+	$itemsContentSplitter->show(0);
+
+	//ITEMS BOX
+	$titlesBox = new Box(array(
+		'name' => 'itemsList_BOX',
+		'father' => 'itemsContent_SPLT_first',
+		'x' => 0,
+		'y' => 0,
+		'width' => $itemsContentSplitter->width,
+		'height' => $itemsContentSplitter->position - 2,
+		'title' => 'Select a feed to browse...'
+	));
+	$titlesBox->show(0);
+
+	//ITEMS LIST
+	//@see [func.eyecode] eyeFeeds_clearFeedItems()
+
+	//ITEM'S CONTENT BOX
+	$titlesBox = new Box(array(
+		'name' => 'itemContent_BOX',
+		'father' => 'itemsContent_SPLT_last',
+		'x' => 0,
+		'y' => 2,
+		'width' => $itemsContentSplitter->width,
+		'height' => $itemsContentSplitter->height - $itemsContentSplitter->position - 6,
+		'title' => ''
+	));
+	$titlesBox->show(0);
+
+	$contentLabel = new Label(array(
+		'name' => 'content_LBL',
+		'father' => 'itemContent_BOX',
+		'x' => 4,
+		'y' => 26,
+		'text' => ''
+	));
+	$contentLabel->show(0);
+	eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_content_LBL_Container").style.width="99%";'));
+	eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_content_LBL_Container").style.height="170px";'));
+	eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_content_LBL_Container").style.overflow="auto";'));
+
+
+	//"LOADING" IMAGE+LABEL
+	$loadingContainer = new Container(array(
+		'name'=>'loading_CTN',
+		'father'=>'itemsList_BOX',
+		'x'=>($titlesBox->width / 2) - 60,
+		'y'=>($titlesBox->height / 2),
+		'width'=>180
+	));
+	$loadingContainer->show();
+	eyeWidgets('serialize',array($loadingContainer));
+	$loadingContainer->hide();
+
+	$loadingImage = new Imagebox(array(
+		'name' => 'loading_IMG',
+		'father' => 'loading_CTN',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/desktop/loading.gif',
+		'x' => 50,
+		'y' => 0
+	));
+	$loadingImage->show();
+
+	$loadingLabel = new Label(array(
+		'name' => 'loading_LBL',
+		'father' => 'loading_CTN',
+		'x' => 0,
+		'y' => 30,
+		'text' => 'Loading, please wait...'
+	));
+	$loadingLabel->show();
+
+
+	/**********************************************************/
+	//		HIDDEN ELEMENTS
+	/**********************************************************/
+
+	$currentFeedUrl = new Hidden(array(
+		'name' =>'currentFeedUrl_HID',
+		'father' => 'eyeFeeds_WND_Content',
+		'text' => serialize('')
+	));
+	eyeWidgets('serialize',array($currentFeedUrl));
+
+	$selectedFeedId = new Hidden(array(
+		'name' =>'selectedFeedId_HID',
+		'father' => 'eyeFeeds_WND_Content',
+		'text' => ''
+	));
+	eyeWidgets('serialize',array($selectedFeedId));
+
+
+	//check the user's configuration directory and create it if needed
+	$confDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeFeeds';
+	if(!vfs('real_fileExists',array($confDir))) {
+		vfs('real_mkdir',array($confDir));
+	}
+
+	//Listener service call to resize the app in fullScreen mode when browser is resized
+	addListenerServiceCall('fullResized','eyex','resizedbrowser');
+	eyeX('rawjs',array('js' => 'sendMsg('.$checknum.',"initComplete","");'));
+}
+
+
+function eyeFeeds_end($params=null) {
+	removeListenerServiceCall('eyex','resizedbrowser');
+	eyeWidgets('unserialize');
+}
+?>

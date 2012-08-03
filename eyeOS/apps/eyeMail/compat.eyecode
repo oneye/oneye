@@ -1,0 +1,79 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+if (function_exists('sqlite_open') === false && class_exists('SQLite3') === true) {
+	global $eyeMail_compat_sqlite;
+	
+	define('SQLITE_ASSOC', SQLITE3_ASSOC);
+	define('SQLITE_BOTH', SQLITE3_BOTH);
+	$eyeMail_compat_sqlite = null;
+	
+	function sqlite_escape_string($item) {
+		global $eyeMail_compat_sqlite;
+		
+		return $eyeMail_compat_sqlite->escapeString($item);
+	}
+	
+	function sqlite_exec($dbhandle, $query, &$error_msg = '') {
+		if (is_object($dbhandle) === false) {
+			$temp = $dbhandle;
+			$dbhandle = $query;
+			$query = $temp;
+		}
+		
+		$return = $dbhandle->exec($query);
+		if ($return === false) {
+			$error_msg = $dbhandle->lastErrorMsg();
+		}
+		return $return;
+	}
+	
+	function sqlite_fetch_all($result, $result_type = SQLITE_BOTH, $decode_binary = true) {
+		$return = array();
+		$row = $result->fetchArray($result_type);
+		while ($row !== false) {
+			$return[] = $row;
+			$row = $result->fetchArray($result_type);
+		}
+		return $return;
+	}
+	
+	function sqlite_open($filename, $mode = 0666, &$error_message = '') {
+		global $eyeMail_compat_sqlite;
+		
+		$return = new SQLite3($filename);
+		$eyeMail_compat_sqlite = $return;
+		
+		if (is_object($return) === false) {
+			$error_message = $return->lastErrorMsg();
+		}
+		return $return;
+	}
+	
+	function sqlite_query($dbhandle, $query, $result_type = SQLITE_BOTH, &$error_msg = '') {
+		if (is_object($dbhandle) === false) {
+			$temp = $dbhandle;
+			$dbhandle = $query;
+			$query = $temp;
+		}
+		$return = $dbhandle->query($query);
+		if ($return === false) {
+			$error_msg = $dbhandle->lastErrorMsg();
+		}
+		return $return;
+	}
+}
+?>

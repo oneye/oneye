@@ -1,0 +1,11 @@
+<package>
+	<name>eyeInstaller</name>
+	<category>System</category>
+	<version>1.9</version>
+	<description>Utility to install applications</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/repositories.png</icon>
+	<openWith>1</openWith>
+</package>

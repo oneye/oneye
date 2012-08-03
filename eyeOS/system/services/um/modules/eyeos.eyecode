@@ -1,0 +1,906 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	UserManager service
+*/
+
+/*
+	userInfo[0] = username
+*/
+
+/*Xml userInfo.xml in USERDIR/conf/
+ * <username>
+ * <password>
+ * <email>
+ * <creationDate>
+ * <lastLogin>
+ * <disabled>
+ */
+
+function service_um_isValidUsername($params = null) {
+	if (isset($params[0]) === true
+	&& /* utf8 */ preg_match('/^[-_a-zA-Z0-9][-_\\.a-zA-Z0-9]*$/', $params[0]) === 1
+	&& /* utf8 */ strlen($params[0]) >= 2
+	&& /* utf8 */ strlen($params[0]) <= MAX_USERNAME_LEN) {
+		return true;
+	}
+	errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+	return false;
+}
+
+/*--------------------------------------------------------------------*/
+/* USER CRUD FUNCTIONS
+/*--------------------------------------------------------------------*/
+
+/**
+* Creates a new user, including its info file in the accounts directory
+* and the user directory.
+*
+* @param $params array(username,password,[email])
+* @param $username String containing the username.
+* @param $password String containing the password.
+* @param $email String containing the email of the user
+* @param $disabled String indicating if the user is disabled or not
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false and sets the error code depending on the error
+*	occurred.
+* @exception INCORRECT_PARAMS One or both required parameters are not specified, the username is not strictly alphanumeric, the username is shorter than two characters or it is too long.
+* @exception UM_USER_ALREADY_EXISTS There already exists a username with the same name.
+* @date 2008/03/11
+*/
+function service_um_createUser($params = null){
+	global $currentUser;
+//Check arguments
+	if(!$params['username'] || !$params['password']) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if (um('isValidUsername', array($params['username'])) === false) {
+		return false;
+	}
+//Check if user exists.
+	$username = $params['username'];
+	if(um('userExist',array($username))) {
+		errorCodes('setErrorCode',array(UM_USER_ALREADY_EXISTS));
+		return false;
+	}
+// Create new user dirs
+	$myDir = um('getUserDir',array($username));
+	if(!vfs('real_exists',array(EYE_ROOT.'/'.USERS_DIR.'/'.getAcronim(array($username))))){
+		vfs('mkDir',array(EYE_ROOT.'/'.USERS_DIR.'/'.getAcronim(array($username))));
+	}
+	if(!vfs('real_exists',array($myDir))){
+		vfs('mkDir',array($myDir));
+	}
+	if(!vfs('real_exists',array(service_um_getUserFilePath(array($username,1))))){
+		vfs('mkDir',array(service_um_getUserFilePath(array($username,1))));
+	}
+// Copy skel to user
+	recursiveCopy(EYE_ROOT.'/'.SYSTEM_DIR.'/'.'/conf/skel/',$myDir,TRUE);
+		//Real create make real_fileExists now.
+//handling userInfo.
+	$array['username'][0] = $username;
+	$array['password'][0] = md5($params['password'] . md5($params['password']));
+	$array['email'][0] = $params['email'];
+	$array['quota'][0] = $params['quota'];
+	$array['fullname'][0] = $params['fullname'];
+	$array['createDate'][0] = time();
+
+	if(!isset($params['expirationDate'])) {
+		$params['expirationDate'] = 0;
+	}
+	$array['expirationDate'][0] = $params['expirationDate'];
+	if (isset($params['resetPassword']) && $params['resetPassword']) {
+		$array['resetPassword'][0] = '1';
+	}
+	if (is_array($params['groups'])) {
+		$array2['group'] = $params['groups'];
+	} elseif ($params['groups']) {
+		$array['group'][0] = $params['groups'];
+	} else {
+		$array['group'][0] = DEFAULT_GROUP;
+	}
+	if ($params['admin']) {
+		$array['admin'][0] = 1;
+	} elseif ($params['maintainer']) {
+		$array['maintainer'][0] = 1;
+		if (is_array($params['maintain'])) {
+			$array2['maintain'] = $params['maintain'];
+		} elseif ($params['maintain']) {
+			$array['maintain'][0] = $params['maintain'];
+		}
+		if (is_array($params['mngUser'])) {
+			$array2['mngUser'] = $params['mngUser'];
+		} elseif ($params['mngUser']) {
+			$array['mngUser'][0] = $params['mngUser'];
+		}
+	}
+	if ($params['disabled'] && (!$array['admin'][0] || $currentUser == REAL_ROOTUSER)) {
+		$array['disabled'][0] = 1;
+	} else {
+		$array['disabled'][0] = 0;
+	}
+
+	if ($array2['group']) {
+		$array['group'] = array_unique($array2['group']);
+	}
+	if ($array2['maintain']) {
+		$array['maintain'] = array_unique($array2['maintain']);
+	}
+	if ($array2['mngUser']) {
+		$array['mngUser'] = array_unique($array2['mngUser']);
+	}
+
+// Create users xml file
+	$data['eyeUser'][0] = $array;
+	$xml = eyeXML('array2xml',array($data));
+	if (vfs('real_putFileContent',array(service_um_getUserFilePath(array($username)),$xml))) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+* Gets the content of a user's info file.
+*
+* @param $params array(username)
+* @param $username String containing the name of the user.
+* @return If the function succeeds, returns the user's info in the
+*	form of an XML array. Otherwise, returns false and sets the
+*	error code depending on the error occurred.
+* @exception INCORRECT_PARAMS No username is specified.
+* @date 2008/03/11
+*/
+function service_um_retrieveUser($params = null){
+	if($params == null || count($params) < 1){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$username = basename($params[0]);
+	global $currentUser;
+	if($currentUser != $username && $currentUser != ROOTUSER) {
+		return false;
+	}
+	$filePath = service_um_getUserFilePath(array($username));
+	$oldUser = $currentUser;
+	$currentUser = REAL_ROOTUSER;
+	$array = eyeXML('getXMLfile',array($filePath));
+	$currentUser = $oldUser;
+	return $array;
+}
+
+function service_um_retriveUser($params = '') {
+	return service_um_retrieveUser($params);
+}
+
+function service_um_UserIsAdmin($params=null) {
+	if($params == null || count($params) < 1){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$username = basename($params[0]);
+	$userInfo = um('retrieveUser',array($username));
+
+	if (isset($userInfo['eyeUser'][0]['admin']) === true && $userInfo['eyeUser'][0]['admin'][0] == '1') {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+* Checks if a user exists.
+*
+* @param $params array(username)
+* @param $username Name of the user.
+* @return Returns a boolean value indicating whether or not a user
+*	with the given name exist. If some error occurs, returns
+*	false and sets the error accordingly.
+* @exception INCORRECT_PARAMS No username is specified.
+* @date 2008/03/11
+*/
+function service_um_userExist($params = null){
+	 
+	if($params == null || count($params) < 1){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$username = basename($params[0]);
+	$filePath = service_um_getUserFilePath(array($username));
+
+	if(file_exists($filePath)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+* Checks if a user exists. This function is an alias of userExist.
+*
+* @param $params array(username)
+* @param $username Name of the user.
+* @return Returns a boolean value indicating whether or not a user
+*	with the given name exist. If some error occurs, returns
+*	false and sets the error accordingly.
+* @exception INCORRECT_PARAMS No username is specified.
+* @date 2009/05/04
+*/
+function service_um_userExists($params = null) {
+	return um('userExist', $params);
+}
+
+/**
+* Checks if a group exists.
+*
+* @param $params array(group)
+* @param $group Name of the user.
+* @return Returns a boolean value indicating whether or not a group
+*	with the given name exist. If some error occurs, returns
+*	false and sets the error accordingly.
+* @exception INCORRECT_PARAMS No group is specified.
+* @date 2009/05/04
+*/
+function service_um_groupExists($params = null) {
+	if($params == null || count($params) < 1){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$group = basename($params[0]);
+	$path = EYE_ROOT.'/'.GROUPS_DIR.'/'.$group;
+
+	if(is_dir($path)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+/**
+* Updates a user's information contained in user's paramets file.
+*
+* @param $params array(username,[password],[fullname],[email],[creationDate],[group])
+* @param $username String containing the username of the user.
+* @param $password String containing the password of the user.
+* @param $fullname String containing the full name of ther account's owner.
+* @param $disabled String indicating if the user is disabled or not
+* @param $email Email of the user.
+* @param $lastLogin Date indicating when the user logged in last time.
+* @param $creationDate Date indicating when the user was created.
+* @param $group Specifies, in the form of an indexed or as a string, the
+*	group(s) in which the user belongs.
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false and sets the error code depending on the error
+*	occurred.
+* @exception INCORRECT_PARAMS No username is specified.
+* @date 2008/03/11
+*/
+function service_um_updateUser($params = null){
+	 //TODO: realy admin? currentuser?
+	 if($params == null || count($params) < 1){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	 }
+	  
+	 if($params['username'] == null)
+	 {
+	 	errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	 }
+	 
+	 global $currentUser;
+	 
+	 //user should be current user, or run as root
+	 if($currentUser != $params['username'] && $currentUser != ROOTUSER) {
+	 	return false;
+	 }
+	 
+	 //TODO: Make findUserByName?
+	$userInfo = um('retrieveUser',array(basename($params['username'])));
+	$array = $userInfo['eyeUser'][0];
+	if (isset($params['password'])) {
+		$array['password'][0] = md5($params['password'] . md5($params['password']));
+	}
+	if (isset($params['email'])) {
+		$array['email'][0] = $params['email'];
+	}
+	if (isset($params['fullname'])) {
+		$array['fullname'][0] = $params['fullname'];
+	}
+	if (isset($params['lastLogin'])) {
+		$array['lastLogin'][0] = $params['lastLogin'];
+	}
+	if ($currentUser == ROOTUSER) {
+		if (isset($params['createDate'])) {
+			$array['createDate'][0] = $params['createDate'];
+		}
+		if (isset($params['quota'])) {
+			$array['quota'][0] = $params['quota'];
+		}
+		if (isset($params['group'])) { // Because of the deprecated argument "group".
+			$params['groups'] = $params['group'];
+		}
+		if (isset($params['expirationDate'])) {
+			$array['expirationDate'][0] = $params['expirationDate'];
+		}
+		if (isset($params['resetPassword'])) {
+			if ($params['resetPassword']) {
+				$array['resetPassword'][0] = '1';
+			} else {
+				unset($array['resetPassword'][0]);
+			}
+		}
+		if (isset($params['groups'])) {
+			if (is_array($params['groups'])) {
+				$array2['group'] = $params['groups'];
+			} else {
+				$array['group'][0] = $params['groups'];
+			}
+		}
+		if (isset($params['admin']) && $params['admin'] == 1) {
+			$array['admin'][0] = 1;
+			unset($array['maintain']);
+			unset($array['maintainer']);
+			unset($array['mngUser']);
+		} elseif (isset($params['maintainer']) && $params['maintainer'] == 1 || isset($array['maintainer']) === true && $array['maintainer'][0] == '1') {
+			unset($array['admin']);
+			if (isset($params['maintain'])) {
+				if (is_array($params['maintain'])) {
+					$array2['maintain'] = $params['maintain'];
+				} else {
+					$array['maintain'][0] = $params['maintain'];
+				}
+			}
+			$array['maintainer'][0] = 1;
+			if (isset($params['mngUser'])) {
+				if (is_array($params['mngUser'])) {
+					$array2['mngUser'] = $params['mngUser'];
+				} else {
+					$array['mngUser'][0] = $params['mngUser'];
+				}
+			}
+		} elseif (isset($params['maintainer']) && $params['maintainer'] == 0) {
+			unset($array['admin']);
+			unset($array['maintain']);
+			unset($array['maintainer']);
+			unset($array['mngUser']);
+		}
+		if (isset($params['disabled']) && (!$array['admin'][0] || $currentUser == REAL_ROOTUSER)) {
+			$array['disabled'][0] = $params['disabled'];
+		}
+	}
+
+	if (isset($array2['group'])) {
+		$array['group'] = array_unique($array2['group']);
+	}
+	if (isset($array2['maintain'])) {
+		$array['maintain'] = array_unique($array2['maintain']);
+	}
+	if (isset($array2['mngUser'])) {
+		$array['mngUser'] = array_unique($array2['mngUser']);
+	}
+
+	$userInfo['eyeUser'][0] = $array;
+	$xml = eyeXML('array2xml',array($userInfo));
+	//TODO: WARNING: SECURITY RISK WITH USERNAME IN XML?
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	if (vfs('real_putFileContent',array(service_um_getUserFilePath(array($params['username'])),$xml))) {
+		$currentUser = $oldUser;
+		return true;
+	} else {
+		$currentUser = $oldUser;
+		return false;
+	}
+}
+
+/**
+* Deletes a user from the system, along with its directory.
+*
+* @param $params array(username)
+* @param $username Name of the user.
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false and sets the error code depending on the error
+*	occurred.
+* @exception INCORRECT_PARAMS No username is specified.
+* @date 2008/03/11
+*/
+function service_um_deleteUser($params = null){
+	global $currentUser;
+
+	// Argument handling.
+	if ($params == null || empty($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$username = basename($params[0]);
+	if ($username == ROOTUSER) {
+		return false;
+	}
+
+	//user should be current user, or run as root
+	if ($currentUser != $username && $currentUser != ROOTUSER) {
+		return false;
+	}
+
+	// Delete the accounts user dir
+	$MyDir = um('getUserDir',array($username));
+	$result = vfs('real_rmdir',array($MyDir));
+	//Error handling. (1)
+	if (!$result) {
+		return false;
+	}
+
+	$userDir = service_um_getUserFilePath(array($username));
+	$result = vfs('real_delete',array($userDir));
+	//Error handling. (2)
+	if (!$result) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
+* Checks if the current user is a maintainer.
+*
+* @return Returns a boolean value indicating whether the user is the
+*	root user or not.
+* @date 2008/03/11
+*/
+function service_um_checkMaintainer($params = '') {
+	if (!$params[0]) {
+		global $currentUser;
+		$params[0] = $currentUser;
+	}
+	$xml = um('retrieveUser',array($params[0]));
+	if ($xml['eyeUser'][0]['maintainer'][0] == '1') {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+* Checks if the current user is disabled or not
+*
+* @return Returns a boolean value indicating whether the user is
+*	disabled or not
+* @date 2008/04/12
+*/
+function service_um_checkDisabled($params = '') {
+	global $currentUser;
+	if (isset($params[0]) && !is_array($params[0])) {
+		$xml = um('retrieveUser',array($params[0]));
+	}elseif(isset($params[0]) && is_array($params[0])){
+		$xml = $params[0];
+	}
+
+	if (isset($xml['eyeUser'][0]['disabled'][0]) && $xml['eyeUser'][0]['disabled'][0] == '1' && $xml['eyeUser'][0]['username'][0] != REAL_ROOTUSER) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/*--------------------------------------------------------------------*/
+
+/*--------------------------------------------------------------------*/
+/* Logic functions, login logout etc.
+/*--------------------------------------------------------------------*/
+/**
+* Checks if the specified user's credentials are correct.
+*
+* @param $params array(username,password)
+* @param $username String containing the name of the user.
+* @param $password String containing the password of the user.
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false and sets the error code depending on the error
+*	occurred.
+* @exception INCORRECT_PARAMS No username or password are specified.
+* @exception UM_USER_IS_DISABLED The user is currently disabled.
+* @date 2008/03/11
+*/
+function service_um_login($params = null) {
+	 
+	if($params == null || count($params) < 2){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$username = basename($params[0]);
+	$password = $params[1];
+	$password = md5($password . md5($password));
+
+	global $currentUser;
+	if(um('UserIsAdmin',array($currentUser))) {
+		define('ROOTUSER',$currentUser);
+	} else {
+		define('ROOTUSER',REAL_ROOTUSER);
+	}
+
+	//special suid
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	//end of special suid
+	$info = um('retrieveUser',array($username));
+	$currentUser = $oldUser;
+	if(!$info) {
+		return false;
+	}
+
+	if(!is_array($info)) {
+	//user not exist
+		return false;
+	}
+	if(isset($info['eyeUser'][0]['expirationDate'])) {
+		if(intval($info['eyeUser'][0]['expirationDate'][0]) < time() && intval($info['eyeUser'][0]['expirationDate'][0]) != 0) {
+			eyeX('rawjs',array('js'=>'alert("Your account has expired.");'));
+			return false;
+		}
+	}
+	if($info['eyeUser'][0]['password'][0] == $password) {
+		//If the user is disabled, set error and return false
+		if(service_um_checkDisabled(array($info))){
+			errorCodes('setErrorCode',array(UM_USER_IS_DISABLED));
+			return false;
+		}
+		foreach($info['eyeUser'][0]['group'] as $value) {
+			$_SESSION['groups'][$value] = 1;
+		}
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		um('updateUser',array(
+			'username' => $username,
+			'lastLogin' => time()
+		));
+		$currentUser = $oldUser;
+		return true;
+	}
+	return false;
+}
+
+/**IF YOU ARE GOING TO USE THIS KIND OF LOGIN IN YOUR APPLICATION, REMEMBER OF KEEP
+*	RETROCOMPATIBILITY WITH THE PLAIN TEXT LOGIN, IF NOT THIRD PARTY LOGIN MODULES WOULD NOT
+*   BE ABLE TO WORK WITH YOUR APPLICATION!!
+*
+* Checks if the specified user's credentials are correct (using a hash instead plain text).
+*
+* @param $params array(username,passwordHash)
+* @param $username String containing the name of the user.
+* @param $password String containing the password of the user (hash).
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false and sets the error code depending on the error
+*	occurred.
+* @exception INCORRECT_PARAMS No username or password are specified.
+* @exception UM_USER_IS_DISABLED The user is currently disabled.
+* @date 2008/03/11
+*/
+function service_um_loginWidthHash($params = null) {
+	 
+	if($params == null || count($params) < 2){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$username = basename($params[0]);
+	$password = $params[1];
+
+	global $currentUser;
+
+	//special suid
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	//end of special suid
+	$info = um('retrieveUser',array($username));
+	$currentUser = $oldUser;
+	if(!$info) {
+		return false;
+	}
+
+	if(!is_array($info)) {
+	//user not exist
+		return false;
+	}
+	if(isset($info['eyeUser'][0]['expirationDate'])) {
+		if(intval($info['eyeUser'][0]['expirationDate'][0]) < time() && intval($info['eyeUser'][0]['expirationDate'][0]) != 0) {
+			eyeX('rawjs',array('js'=>'alert("Your account has expired.");'));
+			return false;
+		}
+	}
+	if($info['eyeUser'][0]['password'][0] == $password) {
+		//If the user is disabled, set error and return false
+		if(service_um_checkDisabled(array($info))){
+			errorCodes('setErrorCode',array(UM_USER_IS_DISABLED));
+			return false;
+		}
+		if (is_array($info['eyeUser'][0]['group'])) {
+			foreach($info['eyeUser'][0]['group'] as $value) {
+				$_SESSION['groups'][$value] = 1;
+			}
+		}
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		um('updateUser',array(
+			'username' => $username,
+			'lastLogin' => time()
+		));
+		$currentUser = $oldUser;
+		return true;
+	}
+	return false;
+}
+/**
+* Returns an associative array containing the groups with users logged
+* in.
+*
+* @return Returns the session variable that stores the group list.
+* @date 2008/03/11
+*/
+function service_um_getCurrentGroups() {
+	global $currentUser;
+	$xml = um('retrieveUser',array($currentUser));
+	$return = array();
+	if (is_array($xml['eyeUser'][0]['group']) === true) {
+		foreach ($xml['eyeUser'][0]['group'] as $value) {
+			$return[$value] = 1;
+		}
+	}
+	return $return;
+}
+
+/**
+* Alias for getAllUsersBy
+*
+* @date 2008/07/29
+*/
+function service_um_getAllUsers($params = '') {
+	return um('getAllUsersBy',$params);
+}
+
+/**
+* Returns a list with users registered in the system.
+*
+* @param $after String
+* @param $beginning String
+* @param $count Integer
+* @return Returns an array containing the names of the users.
+* @date 2008/07/29
+*/
+function service_um_getAllUsersBy($params = '') {
+	if (isset($params['after'])) {
+		$after = /* utf8 */ strtolower($params['after']);
+	} else {
+		$after = '';
+	}
+	if (isset($params['beginning'])) {
+		$beginning = /* utf8 */ strtolower($params['beginning']);
+	} else {
+		$beginning = '';
+	}
+	if (isset($params['count'])) {
+		$count = intval($params['count']);
+	}
+	$allUsers = array();
+	$counted = 0;
+	$acronyms = vfs('real_getDirContent',array(EYE_ROOT . '/' . ACCOUNT_DIR . '/'));
+	foreach ($acronyms as $acronymUrl) {
+		if (is_dir($acronymUrl)) {
+			$acronym = basename($acronymUrl);
+			if (($beginning === '' && $after === '')
+					|| ($beginning !== '' && $after === '' && strtolower(substr($acronym, 0, 1)) === substr($beginning, 0, 1)) // utf8
+					|| ($beginning === '' && $after !== '' && strtolower(substr($acronym, 1, 1)) === substr($after, -1)) // utf8
+					|| ($beginning !== '' && $after !== '' && strtolower(substr($acronym, 0, 1)) === substr($beginning, 0, 1)) && strtolower(substr($acronym, 1, 1)) === substr($after, -1)) { // utf8
+				$users = vfs('real_getDirContent',array($acronymUrl,'*.xml',2));
+				foreach ($users as $userUrl) {
+					$user = basename($userUrl,'.xml');
+					if (isset($count) && $count <= $counted) {
+						return $allUsers;
+					} else if (($beginning === '' && $after === '')
+							|| ($beginning !== '' && $after === '' && /* utf8 */ stripos($user, $beginning) === 0)
+							|| ($beginning === '' && $after !== '' && strtolower(substr($user, -strlen($after))) === $after) // utf8
+							|| ($beginning !== '' && $after !== '' && stripos($user, $beginning) === 0 && strtolower(substr($user, -strlen($after))) === $after)) { // utf8
+						$allUsers[] = $user;
+						$counted++;
+					}
+				}
+			}
+		}
+	}
+	return $allUsers;
+}
+
+/**
+* Returns a list with all the users that belong to a specific group.
+*
+* @param $group String
+* @return Returns an array containing the names of all the users of the group.
+* @date 2009/05/04
+*/
+function service_um_getAllUsersByGroup($params = null) {
+	//I am forcing the group to be specified in the 'group' key in
+	//case this function is expanded in the future
+	if(!is_array($params) || empty($params['group'])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	global $currentUser;
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER; //Switch needed due to the need of opening account files
+
+	$allUsers = array();
+	$group = $params['group'];
+	$acronyms = vfs('real_getDirContent',array(EYE_ROOT . '/' . ACCOUNT_DIR . '/'));
+	foreach($acronyms as $acronymUrl) {
+		if (is_dir($acronymUrl)) {
+			$acronym = basename($acronymUrl);
+
+			$users = vfs('real_getDirContent',array($acronymUrl,'*.xml',2));
+			foreach ($users as $userUrl) {
+				$user = basename($userUrl, '.xml');
+				$userInfo = eyeXML('getXMLFile', array(EYE_ROOT.'/'.ACCOUNT_DIR.'/'.$acronym.'/'.$user.'.xml'));
+				if (is_array($userInfo) && in_array($group, $userInfo['eyeUser'][0]['group'])) {
+					$allUsers[] = $user;
+				}
+			}
+		}
+	}
+
+	$currentUser = $oldUser;
+
+	return $allUsers;
+}
+
+/**
+* Returns the path to the current user's directory.
+*
+* @return Returns an string containing the path.
+* @date 2008/03/11
+*/
+function service_um_getCurrentUserDir() {
+	global $currentUser;
+	if(!$currentUser) { //if something fails, this is secure
+		return false;
+	}
+	return um('getUserDir',array($currentUser));
+}
+
+/**
+* Checks if the current user is the root user.
+*
+* @return Returns a boolean value indicating whether the user is the
+*	root user or not.
+* @date 2008/03/11
+*/
+function service_um_checkAdminPermissions()
+{
+	global $currentUser;
+	if($currentUser != ROOTUSER){
+		return false;
+	}else{
+		return true;
+	}
+}
+
+/**
+* Returns the path of a user's directory.
+*
+* @param $params array(username)
+* @param $username String containing the name of the user.
+* @return If the function succeeds, returns an string with the path to
+*	the user's directory. Otherwise, returns false and sets the
+*	error code depending on the error occurred.
+* @exception INCORRECT_PARAMS No username is specified.
+* @date 2008/03/11
+*/
+function service_um_getUserDir($params=null) {
+	if($params == null || count($params) < 1){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$username = basename($params[0]);
+	$userDir = EYE_ROOT.'/'.USERS_DIR.'/'.getAcronim(array($username)).'/'.$username.'/';
+	return $userDir;
+}
+
+/**
+* Returns the path to a user's account directory or the user's
+* parameters file inside of it.
+*
+* @param $params array(username,[file])
+* @param $username String containing the name of the user.
+* @param $file If set to 1, appends to the output string the filename of
+*	the user's parameters file.
+* @return If the $file parameter is set to 1, returns the path to the
+*         XML user's account info file. Else, returns the path to the
+*         parent directory of the file.
+* @exception INCORRECT_PARAMS No username is specified.
+* @date 2008/03/11
+*/
+function service_um_getUserFilePath($params=null) {
+	if($params == null || count($params) < 1){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$username = $params[0];
+	if (isset($params[1]) && $params[1] == 1) {
+		return EYE_ROOT . '/' . ACCOUNT_DIR . '/' . getAcronim(array($username)) . '/';
+	} else {
+		return EYE_ROOT . '/' . ACCOUNT_DIR . '/' . getAcronim(array($username)) . '/' . $username . '.xml';
+	}
+}
+
+
+
+/*--------------------------------------------------------------------*/
+
+
+/*--------------------------------------------------------------------*/
+/* Private functions for this service.
+/*--------------------------------------------------------------------*/
+/***
+*
+* Description: generate the username acronyms used to store users' directories
+*
+* Arguments:
+* 	+ username: string containing username
+*
+* Return: return string with user acronym
+*
+* Last update 2007-06-3
+***/
+function getAcronim($params){
+	 
+	$username = $params[0];
+	if(!$username) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	//Generate de dir, remove $userDir ? maybe.
+	return substr($username, 0, 1) . substr($username, -1) . substr(strval(strlen($username)), -1); // utf8
+}
+
+//TODO: shall we put this function in eyeLib ?
+function recursiveCopy($from,$to,$include_hidden = FALSE) {
+	global $currentUser;
+	if($currentUser != ROOTUSER) {
+		return false;
+	}
+	if ($gestor = opendir($from)) {
+		while (false !== ($archivo = readdir($gestor))) {
+			if ($archivo != "." && $archivo != ".." && $archivo != ".svn") {
+				if ($include_hidden || /* utf8 */ substr($archivo, 0, 1) !== ".") {
+					if(!is_dir($from.'/'.$archivo)) {
+						copy($from.'/'.$archivo,$to.'/'.$archivo);
+					} else {
+						mkdir($to.'/'.$archivo);
+						recursiveCopy($from.'/'.$archivo,$to.'/'.$archivo,$include_hidden);
+					}
+					chmod($to.'/'.$archivo, fileperms($from.'/'.$archivo));
+				}
+			}
+		}
+		closedir($gestor);
+	}
+}
+?>

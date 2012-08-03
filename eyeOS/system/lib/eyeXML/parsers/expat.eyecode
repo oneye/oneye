@@ -1,0 +1,244 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/**
+* Transforms the content of a XML string to a PHP array.
+*
+* @param $params array(content)
+* @param $content String containing a XML text. If the XML content has
+*	attributes in its tags, they will be ignored.
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false.
+* @date 2008/03/11
+*/
+function lib_eyeXML_xml2array($params) {
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$GLOBALS['genArray'] = array();
+	$GLOBALS['tmpArray'] = array();
+	$GLOBALS['oldArray'] = array();
+
+	$GLOBALS['counter'] = null;
+
+	$minPos = /* utf8 */ strpos($params[0], '<') + 1;
+	if($params[0]{$minPos} == '?'){
+		$params[0] = str_replace('?>','?><xmlContainer>',$params[0]);
+	}else{
+		$params[0] = '<xmlContainer>'.$params[0];
+	}
+	$params[0] = $params[0].'</xmlContainer>';
+	//Creaing the parser, nothing special here...
+	$parser = xml_parser_create('UTF-8');
+	//Setting the needed option to be compatible with the old function
+	xml_parser_set_option($parser,XML_OPTION_CASE_FOLDING,0);
+	//Setting start and end element handler
+	xml_set_element_handler($parser,'expat_eyeXML_startElementHandler','expat_eyeXML_endElementHandler');
+	//
+	xml_set_character_data_handler($parser,'expat_eyeXML_characterDataHandler');
+	xml_parse($parser,$params[0]);
+	xml_parser_free($parser);
+
+	return $GLOBALS['genArray']['xmlContainer'][0];
+}
+function expat_eyeXML_startElementHandler($parser,$name,$attrib){
+	global $counter;
+	if(!isset($counter)){
+		$counter = 0;//We are in the first node
+		$GLOBALS['genArray'][$name] = array(array());
+		$GLOBALS['tmpArray'] = &$GLOBALS['genArray'][$name][0];
+		$GLOBALS['oldArray'][$counter] = &$GLOBALS['genArray'][$name][0];
+	}else{
+		$counter++;//OK let's go guys, we are going to the next node
+		if(empty($GLOBALS['tmpArray'])){
+			$GLOBALS['tmpArray'][$name] = array('');
+			$GLOBALS['tmpArray'] = &$GLOBALS['tmpArray'][$name][0];
+			$GLOBALS['oldArray'][$counter] = &$GLOBALS['tmpArray'];
+		}else{;
+			if(count($GLOBALS['tmpArray'][$name]) == 1){
+				$GLOBALS['tmpArray'][$name][1] = '';
+				$GLOBALS['tmpArray'] = &$GLOBALS['tmpArray'][$name][1];
+				$GLOBALS['oldArray'][$counter] = &$GLOBALS['tmpArray'];
+			}else{
+				if(!empty($GLOBALS['tmpArray'][$name])){
+					$zIndex = count($GLOBALS['tmpArray'][$name]);
+					$GLOBALS['tmpArray'][$name][$zIndex];
+					$GLOBALS['tmpArray'] = &$GLOBALS['tmpArray'][$name][$zIndex];
+					$GLOBALS['oldArray'][$counter] = &$GLOBALS['tmpArray'];
+				}else{
+					$GLOBALS['tmpArray'][$name] = array('');
+					$GLOBALS['tmpArray'] = &$GLOBALS['tmpArray'][$name][0];
+					$GLOBALS['oldArray'][$counter] = &$GLOBALS['tmpArray'];
+				}
+			}
+		}
+	}
+}
+
+function expat_eyeXML_endElementHandler($parser,$name){
+	global $counter;
+	unset($GLOBALS['oldArray'][$counter]);
+	$counter--;
+	$GLOBALS['tmpArray'] = &$GLOBALS['oldArray'][$counter];
+	unset($GLOBALS['concatData']);
+}
+function expat_eyeXML_characterDataHandler($parser,$data){
+ 	$data = /* utf8 */ rtrim($data, "\t\n\r");
+	if($data != ''){
+		if($GLOBALS['concatData']){
+			$GLOBALS['concatData'] .=  '&'.$data;
+		}else{
+			if(empty($GLOBALS['tmpArray'])){
+				$GLOBALS['tmpArray'] = $data;
+				$GLOBALS['concatData'] = &$GLOBALS['tmpArray'];
+			}else{
+				echo "This conditional shouldn't be accesed";exit;
+				$index = count($GLOBALS['tmpArray']);
+				$GLOBALS['tmpArray'][$index] = $data;
+				$GLOBALS['concatData'] = &$GLOBALS['tmpArray'][$index];
+			}
+		}
+	}
+}
+
+/**
+* Converts an array to a string in the XML format. Each key of every
+* array element will be transformed to a XML tag, being the value of the
+* key the value of the tag.
+*
+* @param $params array(myArray,[myHeader])
+* @param $myArray Array to be converted. It must have a structure with the
+*	same notation the function xml2array uses.
+* @param $myHeader If set, precedes the returned text with a XML header.
+* @return If the function succeeds, returns the resulting XML content.
+*	Otherwise, returns false.
+* @date 2008/03/11
+*/
+function lib_eyeXML_array2xml($params){
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$myArray = $params[0];
+	if(!isset($myArray)) {
+		return false;
+	}
+	if(isset($params[1]) && $params[1] == 1) {
+		return lib_eyeXML_getXmlHeader().getArrayText($myArray);
+	}
+	return getArrayText($myArray);
+}
+
+/**
+* Returns a string containing a XML tag with a value inside.
+*
+* @param $params array(master,content)
+* @param $master Name of the XML tag.
+* @param $content Value inside the tag.
+* @return Returns the result of embedding the value 'content' inside
+*	the tag 'master'.
+* @date 2008/03/11
+*/
+function lib_eyeXML_append($params) {
+	if(!isset($params[0]) || !isset($params[1])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$master = $params[0];
+	$content = $params[1];
+	return "<$master>$content</$master>\n";
+}
+
+function getArrayText($content, $tabs = 0) {
+	$return = '';
+	if (is_array($content) === true) {
+		foreach ($content as $key => $value) {
+			if (is_array($value) === true) {
+				$key = utf8_htmlspecialchars($key, ENT_NOQUOTES);
+				$key = preg_replace_callback('/\\s{1}/u', 'private_lib_eyeXML_Entity', $key); // utf8
+				$key = strtr($key, array('!' => '&#33;', '/' => '&#47;', '?' => '&#63;'));
+				foreach ($value as $current) {
+					$return .= /* utf8 */ str_pad('', $tabs, "\t");
+					if ($current === '') {
+						$return .= '<' . $key . ' />' . "\n";
+					} else {
+						$return .= '<' . $key . '>';
+						if (is_array($current) === true) {
+							$return .= "\n" . getArrayText($current, $tabs + 1) . "\n" . /* utf8 */ str_pad('', $tabs, "\t");
+						} else {
+							$return .= utf8_htmlspecialchars($current, ENT_NOQUOTES);
+						}
+						$return .= '</' . $key . '>' . "\n";
+					}
+				}
+			}
+		}
+	}
+	return /* utf8 */ substr($return, 0, -1);
+}
+
+function private_lib_eyeXML_Entity($matches) {
+	return '&#' . strval(utf8_ord($matches[0])) . ';';
+}
+
+function getNodeContent($content) {
+	$content_old = $content;
+	$content = /* utf8 */ strstr($content, '<');
+	$end = /* utf8 */ strstr($content, '>');
+	if ($content === false || $end === false) {
+		// The following line is required for backwards compatibility with eyeos 1.9.0.3 and lower due to bugs in the older xml parsers.
+		$content_old = str_replace('&nbsp;', ' ', $content_old);
+		return utf8_html_entity_decode($content_old, ENT_QUOTES);
+	}
+	$return = array();
+	while ($content !== false && $end !== false) {
+		$full_tag = substr($content, 1, - strlen($end)); // utf8
+		if ( /* utf8 */ preg_match('/^\\S*/u', $full_tag, $matches) === 1) {
+			$tag = $matches[0];
+		} else {
+			$tag = $full_tag;
+		}
+		if ( /* utf8 */ strlen($tag) > 0 && $tag[0] === '/') {
+			$content = /* utf8 */ substr($end, 1);
+		} else if ( /* utf8 */ strlen($tag) > 0 && $tag[0] === '?') {
+			$content = /* utf8 */ substr(strstr($content, '?>'), 2);
+		} else if ( /* utf8 */ substr($tag, 0, 3) === '!--') {
+			$content = /* utf8 */ substr(strstr($content, '-->'), 3);
+		} else if (strlen($full_tag) > 0 && $full_tag[strlen($full_tag) - 1] === '/') { // utf8
+			$content = /* utf8 */ substr($end, 1);
+			if ($tag === $full_tag) {
+				$tag = /* utf8 */ substr($tag, 0, -1);
+			}
+			$return[$tag][] = '';
+		} else {
+			do {
+				$content = /* utf8 */ strstr($content, '</' . $tag . '>');
+				$tag_content = substr($end, 1, strlen($end) - 1 - strlen($content)); // utf8
+				$content = substr($content, strlen('</' . $tag . '>')); // utf8
+			} while (preg_match_all('/<' . preg_quote($tag, '/') . '[\\s>]/u', $tag_content, $matches) - substr_count($tag_content, '</' . $tag . '>') > 0 && strpos($content, '</' . $tag . '>') !== false); // utf8
+			// The following line is required for backwards compatibility with eyeos 1.9.0.3 and lower due to bugs in the older xml parsers.
+			$tag = str_replace('&nbsp;', ' ', $tag);
+			$tag = utf8_html_entity_decode($tag, ENT_QUOTES);
+			$return[$tag][] = getNodeContent($tag_content);
+		}
+		$content = /* utf8 */ strstr($content, '<');
+		$end = /* utf8 */ strstr($content, '>');
+	}
+	return $return;
+}
+?>

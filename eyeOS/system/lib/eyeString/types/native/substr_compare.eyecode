@@ -1,0 +1,13 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_substr_compare($main_str, $str, $offset, $length = null, $case_insensitivity = false) {
+	$main_str = utf8_substr($main_str, $offset, $length);
+	$str = utf8_substr($str, 0, $length);
+	if ($case_insensitivity === true) {
+		return utf8_strcasecmp($main_str, $str);
+	}
+	return utf8_strcmp($main_str, $str);
+}
+?>

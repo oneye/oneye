@@ -1,0 +1,14 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_htmlspecialchars($string, $flags = null, $double_encode = true) {
+	if ($flags === null) {
+		$flags = ENT_COMPAT | ENT_HTML401;
+	}
+	if ($double_encode === false) {
+		$string = utf8_htmlspecialchars_decode($string, $flags);
+	}
+	return htmlspecialchars($string, $flags, 'UTF-8');
+}
+?>

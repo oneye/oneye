@@ -1,0 +1,145 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $currentUser, $myPid;
+
+$ContentY = 10;
+
+$userDir = um('getCurrentUserDir');
+if (!vfs('real_fileExists',array($userDir . 'conf/eyePdf/conf.xml'))) {
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	vfs('real_mkDir', array($userDir . 'conf/eyePdf'));
+	vfs('real_copy',array(EYE_ROOT . '/' . SYSTEM_DIR . '/conf/skel/' . CONF_USER_DIR . '/eyePdf/conf.xml',$userDir . 'conf/eyePdf/conf.xml'));
+	$currentUser = $oldUser;
+}
+$PdfUserConf = eyeControl_lib_getXMLconfig(array('eyePdf','conf.xml'));
+
+// Browse Plugin
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_renderer',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Render Method'
+));
+$myLabel->show();
+$mySelect = new Select(array(
+	'name' => 'eyeControl_eyePdf_select_renderer',
+	'father' => $eyeContainer,
+	'width' => 165,
+	'x' => 160,
+	'y' => $ContentY
+));
+$mySelect->show();
+$mySelect->addOption('Browser plugin', 'plugin', ($PdfUserConf['eyePdf'][0]['renderer'][0] == 'plugin' ? 1 : 0));
+$mySelect->addOption('HTML5 integrated renderer', 'pdf.js', ($PdfUserConf['eyePdf'][0]['renderer'][0] == 'pdf.js' ? 1 : 0));
+$mySelect->addOption('Direct download', 'download', ($PdfUserConf['eyePdf'][0]['renderer'][0] == 'download' ? 1 : 0));
+$ContentY += 30;
+// Start maximized
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_start_maximized',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Open fullscreen'
+));
+$myLabel->show();
+$myCheckbox = new Checkbox(array(
+	'name' => 'eyeControl_eyePdf_checkbox_start_maximized',
+	'father' => $eyeContainer,
+	'text' => '',
+	'checked' => $PdfUserConf['eyePdf'][0]['start_maximized'][0],
+	'x' => 160,
+	'y' => $ContentY
+));
+$myCheckbox->show();
+$ContentY += 30;
+// Save Changes
+$myButton = new Button(array(
+	'name' => 'eyeControl_eyePdf_button_save',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'caption' => 'Save Changes',
+	'signal' => 'eyePdf_save'
+));
+$myButton->addFriend($mySelect);
+$myButton->addFriend($myCheckbox);
+$myButton->show();
+$ContentY += 120;
+// Notes on renderers
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_notes_title',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Informations about the available rendering methods'
+));
+$myLabel->show();
+$myLabel->setCss(array('font-weight' => 'bold'));
+$ContentY += 30;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_notes_title_plugin',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'BROWSER PLUGIN:'
+));
+$myLabel->show();
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_notes_body_plugin',
+	'father' => $eyeContainer,
+	'x' => 150,
+	'y' => $ContentY,
+	'text' => 'Use the browser plugin (recommended if your browser has a PDF reader plugin installed)'
+));
+$myLabel->show();
+$ContentY += 45;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_notes_title_pdf.js',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'HTML5 RENDERER:'
+));
+$myLabel->show();
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_notes_body_pdf.js',
+	'father' => $eyeContainer,
+	'x' => 150,
+	'y' => $ContentY,
+	'text' => 'Use an HTML5 renderer. It does not require any external plugin. It is still under development, so some PDF files could be wrongly displayed'
+));
+$myLabel->show();
+$ContentY += 45;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_notes_title_download',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'DIRECT DOWNLOAD:'
+));
+$myLabel->show();
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyePdf_label_notes_body_download',
+	'father' => $eyeContainer,
+	'x' => 150,
+	'y' => $ContentY,
+	'text' => 'Instead of displaying the PDF files in a window, download them. The browser will then ask you whether you\'d like to open them or save them'
+));
+$myLabel->show();
+?>

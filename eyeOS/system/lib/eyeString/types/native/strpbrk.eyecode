@@ -1,0 +1,12 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strpbrk($haystack, $char_list) {
+	$result = utf8_strcspn($haystack, $char_list);
+	if ($result === utf8_strlen($haystack)) {
+		return false;
+	}
+	return $result;
+}
+?>

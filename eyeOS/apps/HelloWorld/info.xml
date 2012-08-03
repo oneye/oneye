@@ -1,0 +1,10 @@
+<package>
+	<name>HelloWorld</name>
+	<category>Utilities</category>
+	<version>1.9</version>
+	<description>Utility to show how to use the oneye Toolkit</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/rename.png</icon>
+</package>

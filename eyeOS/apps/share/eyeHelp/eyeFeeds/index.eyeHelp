@@ -1,0 +1,14 @@
+The default RSS feeds reader. You can run eyeFeeds by opening the "Network" menu of eyeDock (on the top of the desktop) and selecting "RSS Feed Reader", or by clicking the "eyeFeeds" icon in the "Software" window accessible from the desktop.
+
+Author: Nanawel [mail]nanawel@eyeos.org[/mail]
+[url]http://wiki.eyeos.org/EyeFeeds[/url]
+
+
+[b]eyeFeeds is made up of 3 panels:[/b]
+[list]
+[*]The feeds tree on the left, displays your feeds in a tree
+[*]The items list on the top right, displays the fetched items from the selected feed
+[*]The content area on the bottom right, displays the content of the selected item
+[/list]
+
+

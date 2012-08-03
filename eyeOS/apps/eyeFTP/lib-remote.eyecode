@@ -1,0 +1,84 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*********************************************************************************************/
+/*********************************************************************************************/
+/*					LIB FUNCTIONS - REMOTE FILES VIEW										 */
+/*********************************************************************************************/
+/*********************************************************************************************/
+
+/**
+ * Removes all rows from the remote files table
+ */
+function eyeFTP_emptyRemoteFilesTable() {
+	global $checknum, $myPid;
+	if ($GLOBALS['eyeFTP_remoteFiles_TAB']) {
+		$GLOBALS['eyeFTP_remoteFiles_TAB']->remove();
+	}
+
+	/* TABLE FOR REMOTE FILES LIST */
+	$remoteFilesTable = new Sortabletable(array(
+		'name' => 'eyeFTP_remoteFiles_TAB',
+		'father' => 'eyeFTP_leftRight_SPLT_last',
+		'x' => 10,
+		'y' => 24,
+		'width' => $GLOBALS['eyeFTP_leftRight_SPLT']->width - $GLOBALS['eyeFTP_leftRight_SPLT']->position - 25,
+		'height' => $GLOBALS['eyeFTP_leftRight_SPLT']->height - 30,
+		'sortypes' => array('Html','String','Number','Date','String','String','Hidden'),
+		'master' => 6,
+		'theader' => array(' ','Filename','Filesize (B)','Date','Permissions','Owner','id'),
+		'signal' => 'eyeFTP_remoteFilesClick',
+		'dblsignal' => 'eyeFTP_remoteFilesDblClick'
+	));
+	$remoteFilesTable->show();
+	eyex('addEvent',array(
+		'name' => $myPid.'_eyeFTP_remoteFiles_TAB_Container',
+		'action' => 'sendMsg('.$checknum.',"eyeFTP_remoteFilesClick","")',
+		'event' => 'onclick',
+		'args'=>''
+	));
+	$remoteFilesTable->setCss(array('white-space' => 'nowrap'));
+	eyeFTP_setActiveView($GLOBALS['eyeFTP_selectedView_HID']->text);
+
+	$GLOBALS['eyeFTP_serializedRemoteFilesData_HID']->setText(serialize(array()));
+	$GLOBALS['eyeFTP_remotePath_TXTBOX']->setText("");
+}
+
+function eyeFTP_refreshRemote() {
+	$conf = eyeFTP_getConf();
+	eyeFTP_browseRemote($conf['currentRemoteDir']);
+}
+
+/**
+ * @param string $path The path to browse
+ */
+function eyeFTP_browseRemote($path = '/') {
+	$conf = eyeFTP_getConf();
+	if (! $conf['isConnectionActive']) {
+		eyeX('messageBox',array('content'=>'You must connect first!'));
+		return;
+	}
+
+	eyeFTP_logConsole('Listing directory "%s"...',
+		array(eyeFTP_getFormatedDirPath($path))
+	);
+	eyeFTP_bounceRequest(array(
+		'__signal' => 'eyeFTP_browseRemote_bounced',
+		'dir_b64' => base64_encode($path)
+	));
+}
+
+?>

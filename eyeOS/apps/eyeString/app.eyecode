@@ -1,0 +1,179 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeString_run($params=null){
+	
+	$myWindow1 = new Window(array(
+		'name' => 'eyeString_wnd',
+		'father' => 'eyeApps',
+		'cent' => 1,
+		'width' => 655,
+		'height' => 560,
+		'title' => 'eyeString',
+		'type' => 3,
+		'savePosition' => 1));
+	$myWindow1->show();
+
+	$myBox = new Box(array(
+		'name' => 'eyeString_box',
+		'father' => 'eyeString_wnd_Content',
+		'x' => 459,
+		'y' => 70,
+		'width' => 183,
+		'height' => 200,
+		'title' => 'Options'));
+	$myBox->show();
+
+	$mySelect = new Select(array(
+		'name' => 'eyeString_slc',
+		'father' => 'eyeString_box',
+		'x' => 10,
+		'y' => 35));
+
+	$mySelect->show();
+
+	$mySelect->addOption('md5 Hash', 'md5encode', 0);
+	$mySelect->addOption('oneye hash', 'eyehash', 0);
+
+	$mySelect->addOption('Base64 Encode','base64encode',0);
+	$mySelect->addOption('Base64 Decode','base64decode',0);
+
+	$mySelect->addOPtion('URL Encode', 'urlencode', 0);
+	$mySelect->addOption('URL Decode', 'urldecode', 0);
+
+	$mySelect->addOption('Ascii to Hexa', 'ascktohex', 0);
+	$mySelect->addOption('Hexa to Ascii', 'hextoasck', 0);
+	//roman numbers
+	$mySelect->addOption('Decimal to Roman', 'NumtoRoman', 0);
+	$mySelect->addOption('Roman to Decimal', 'RomantoNum', 0);
+
+	$mySelect->addOption('Html Entities', 'htmlen', 0);
+	$mySelect->addOption('Remove Html Entities', 'htmlde', 0);
+ 
+
+	$myText1 = new Textarea(array(
+									'name' => 'eyeString_TxtA1',
+									'father' => 'eyeString_wnd_Content',
+									'x' => 10,
+									'y' => 95,
+									'width' => 433,
+									'height' => 172));
+
+	$myText1->show();
+	$myText1->focus();
+
+	$myLabel1 = new Label(array(
+									'name'=> 'eyeString_Lbl1',
+									'father' => 'eyeString_wnd_Content',
+									'x' => 10,
+									'y' => 78,
+									'text' => 'Input Text'));
+	$myLabel1->show();
+
+	$myLabel2 = new Label(array(
+									'name' => 'eyeString_Lbl2',
+									'father' => 'eyeString_wnd_Content',
+									'x' => 10,
+									'y' => 288,
+									'text' => 'Output Text'));
+
+	$myLabel2 -> show();
+
+
+
+	$myText2 =new Textarea(array(
+									'name'=>'eyeString_TxtA2',
+									'father' => 'eyeString_wnd_Content',
+									'x'=> 10,
+									'y' => 305,
+									'width' => 630,
+									'height' => 216
+));
+
+	$myText2->show();
+
+	$myButton1 = new Button(array(
+									'name' => 'eyeString_Btn1',
+									'father' => 'eyeString_box',
+									'x' => 6,
+									'y' => 170,
+									'horiz' => '1',
+									'caption' => 'Start'));
+
+	$myButton1->addFriend($myText1);
+	$myButton1->addFriend($mySelect);
+
+	$myCheck1 = new Checkbox(array(
+									'name' => 'chk1',
+									'father' => 'eyeString_box',
+									'x' => 6,
+									'y' => 64,
+									'text' => 'Auto clear input'));
+
+	$myCheck1->show();
+
+	$myCheck2 = new Checkbox(array(
+									'name' => 'chk2',
+									'father' => 'eyeString_box',
+									'x' => 6,
+									'y' => 86,
+									'text' => 'Concatenate Output'));
+
+	$myCheck2->show();
+
+	$myCheck3 = new Checkbox(array(
+									'name' => 'chk3',
+									'father' => 'eyeString_box',
+									'x' => 6,
+									'y' => 108,
+									'text' => 'Add new line to end'));
+
+	$myCheck3->show();
+
+	$myCheck4 = new Checkbox(array(
+									'name' => 'chk4',
+									'father' => 'eyeString_box',
+									'x' => 6,
+									'y' => 130,
+									'text' => 'Add input to output'));
+
+	$myCheck4->show();
+
+	$myButton1->addFriend($myCheck1);
+	$myButton1->addFriend($myCheck2);
+	$myButton1->addFriend($myCheck3);
+	$myButton1->addFriend($myCheck4);
+ 	$myButton1->show();
+
+	$myToolbar = new Toolbar(array(
+		'name'=>'myBar',
+		'father'=>'eyeString_wnd_Content'
+	));
+	$myToolbar->show();
+
+	$myToolbar->addItem('clear','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/delete.png','Clear');
+
+	$myLabel3 = new Label(array(
+									'name' => 'timerlbl',
+									'father' => 'eyeString_wnd_Content',
+									'x' => 459,
+									'y' => 280,
+									'text' => ''));
+
+	$myLabel3->show(0);
+}
+
+?>

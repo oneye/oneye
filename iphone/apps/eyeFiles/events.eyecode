@@ -1,0 +1,52 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+require_once(IPHONE_PATH.'apps/eyeFiles/lib.eyecode');
+
+function eyeFiles_getIcon() {
+	$icon = basename($_GET['icon']);
+	$rpath = eyex('getThemeImage',array('icons/16x16/'.$icon,2));
+	$mime = getimagesize($rpath);
+	if(!$mime) {
+		exit;
+	}
+	$len = filesize($rpath);
+	header('Content-Type: '.$mime['mime']);
+	header("Content-Length: $len");
+	header("Accept-Ranges: bytes");
+	readfile($rpath);
+	exit;
+}
+
+function eyeFiles_viewTempImg() {
+	if (!isset($_GET['params'])) {
+		return false;
+	}
+	$params = $_GET['params'];
+	$path = um('getCurrentUserDir') . '/tmp/' . basename($params);
+	$info = @getimagesize($path);
+	if ($info !== false) {
+		header('Content-Type: ' . $info['mime']);
+		header('Accept-Ranges: bytes');
+		vfs('printFile',array($path));
+	}
+	exit;
+}
+function eyeFiles_open() {
+	$file = $_GET['file'];
+	eyeFiles_openLocation($file);
+}
+?>

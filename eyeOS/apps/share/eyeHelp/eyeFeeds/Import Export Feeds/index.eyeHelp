@@ -1,0 +1,20 @@
+[b]The import/export features use the OPML format which could then be used with Google Reader, Yahoo!, and a lot more of feeds readers.[/b]
+
+
+[b]Import[/b]
+[list]
+[*]Click on the "Import" button in the toolbar
+[*]Select a file by pressing the "Select file" button and choosing a file in your oneye account
+[*]Select the destination folder in your bookmarks (left tree)
+[*]Enter a name for the folder to create, or leave blank to import all the feeds directly into the previously selected folder
+[*]Click "Import", all the feeds found in the file will be imported to your bookmarks
+[/list]
+[b]Export[/b]
+[list]
+[*]Click on the "Export" button in the toolbar
+[*]Choose a folder and a name for your output file
+[*]Click "Save", the specified file will be created and will contain all your feeds
+[/list]
+
+
+

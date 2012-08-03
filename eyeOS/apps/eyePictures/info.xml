@@ -1,0 +1,11 @@
+<package>
+	<name>Image Viewer</name>
+	<category>Multimedia</category>
+	<version>1.9</version>
+	<description>Image viewer with slideshow and extra functionality such as image rotation and image effects</description>
+	<author>Pau Peris and Luca Ferrario</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeImages.png</icon>
+	<openWith>1</openWith>
+</package>

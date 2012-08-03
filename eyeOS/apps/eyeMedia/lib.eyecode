@@ -1,0 +1,98 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeMedia_PlayPause($params=null) {
+	global $myPid;
+	global $checknum;
+	eyeWidgets('updateContent',$params);
+	$Current_Value = $GLOBALS['eyeMedia_txtStatus']->text;
+	if ($Current_Value == 'Playing.')
+	{
+		$GLOBALS['eyeMedia_txtStatus']->setText('Paused.');
+		eyeX('rawjs',array('js'=>"if(document.getElementById('".$myPid."_tlbToolbar_Play_Container').className == 'blockbarItemPress') {document.getElementById('".$myPid."_tlbToolbar_Play_Container').className = 'blockbarItem';}"));
+		eyeSound('pause', array('sndSound'));
+	} else {
+		$Cur_Selected_Row = $GLOBALS['eyeMedia_tblPlaylist']->selected;
+		if ($Cur_Selected_Row)
+		{
+			if ($Current_Value == 'Nothing Playing.')
+			{
+				//Using a random number as a short URL helps with browsers caching files.
+				//It will make sure the browser fetches the current file each time.
+				$Cur_File = rand();
+				addShortUrl($Cur_File,'getFile');
+				eyeSound('createSound', array('sndSound', 'index.php/'.$Cur_File));
+				$GLOBALS['eyeMedia_hdnCurFile']->setText($Cur_File);
+				eyex('messageBox',array('content'=>'Playing: %s','tokens' => array($GLOBALS['eyeMedia_tblPlaylist']->selected), 'sound' => ''));
+			}
+			$GLOBALS['eyeMedia_txtStatus']->setText('Playing.');
+			eyeX('rawjs', array('js' => "document.getElementById('".$myPid."_tlbToolbar_Play_Container').className = 'blockbarItemPress';"));
+			eyeSound('play', array('sndSound'));
+			eyeSound('onFinish', array('sndSound', 'Sound_Finished'));
+		}
+	}
+}
+
+function eyeMedia_Stop($params=null) {
+	global $myPid;
+	eyeWidgets('updateContent',$params);
+	$Current_Value = $GLOBALS['eyeMedia_txtStatus']->text;
+	if (!($Current_Value == 'Nothing Playing.'))
+	{
+		$GLOBALS['eyeMedia_txtStatus']->setText('Nothing Playing.');
+		eyeX('rawjs',array('js'=>"if(document.getElementById('".$myPid."_tlbToolbar_Play_Container').className == 'blockbarItemPress') {document.getElementById('".$myPid."_tlbToolbar_Play_Container').className = 'blockbarItem';}"));
+		eyeSound('stop', array('sndSound'));
+		eyeSound('destroySound', array('sndSound'));
+		delShortUrl('index.php/'.$GLOBALS['eyeMedia_hdnCurFile']->text);
+	}
+}
+
+function eyeMedia_Previous($params=null) {
+	global $myPid;
+	global $checknum;
+	$Current_Value = $GLOBALS['eyeMedia_txtStatus']->text;
+	$Keep_Playing = 0;
+	if (!($Current_Value == 'Nothing Playing.'))
+	{
+		eyeMedia_Stop($params);
+		$Keep_Playing = 1;
+	}
+	eyeX('rawjs',array('js'=>'eyeMedia_Previous(' . $myPid . ', ' . $Keep_Playing . ', ' . $checknum . ');'));
+}
+
+function eyeMedia_Next($params=null) {
+	global $myPid;
+	global $checknum;
+	$Current_Value = $GLOBALS['eyeMedia_txtStatus']->text;
+	$Keep_Playing = 0;
+	if (!($Current_Value == 'Nothing Playing.'))
+	{
+		eyeMedia_Stop($params);
+		$Keep_Playing = 1;
+	}
+	eyeX('rawjs',array('js'=>'eyeMedia_Next(' . $myPid . ', ' . $Keep_Playing . ', ' . $checknum . ');'));
+}
+
+function eyeMedia_RemoveDoubleSlash($text) {
+	if ($text == '' || $text == '//') {
+		return '/';
+	}
+	else {
+		return str_replace('//','/',$text);
+	}
+}
+
+?>

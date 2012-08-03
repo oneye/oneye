@@ -1,0 +1,269 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Select widget abstraction
+*/
+
+class Select {
+	//pid controller
+
+	var $creatorPid;
+
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//global widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+
+	//friends abstraction
+	var $friends = "''";
+
+	var $showed = 0;
+
+	//custom widget options
+	var $enabled;
+	var $visible;
+	var $option;
+	var $width;
+	var $events;
+	var $selected;
+
+	function Select($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 10;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 10;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+
+		//especific button options
+		isset($params['enabled']) ? $this->enabled = $params['enabled'] : $this->enabled = 1;
+		isset($params['visible']) ? $this->visible = $params['visible'] : $this->visible = 1;
+		isset($params['option'])? $this->option = $params['option'] : $this->option = "";
+		isset($params['width']) ? $this->width = $params['width'] : $this->width = -1;
+	}
+
+	function show($noserialize=0) {
+		$eventString = "";
+		if(is_array($this->events)) {
+			foreach($this->events as $key => $value) {
+				$eventString .= $key.'="'.$value.'" ';
+			}
+		}
+		$widgetsparams = array(
+			'enabled' => $this->enabled,
+			'visible' => $this->visible,
+			'width' => $this->width
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$mySelect = array(
+			'name' => $this->name,
+			'father' => $this->father,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'x' => $this->x,
+			'y' => $this->y,
+			'center' => $this->cent,
+			'widgetname' => 'Select',
+			'params' => $widgetsparams
+		);
+		eyex('createWidget',$mySelect);
+		$this->showed=1;
+		if($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	//friends handler
+	function addFriend($friend) {
+		if (method_exists($friend,'getSyncString')) {
+			if ($this->friends == "''") {
+				$this->friends = $friend->getSyncString();
+			} else {
+				$this->friends .= '+' . $friend->getSyncString();
+			}
+		}
+	}
+
+	//comunication functions
+	function getSyncString() {
+		global $myPid;
+		return "eyeParam('$this->name',document.getElementById('$myPid".'_'."$this->name').value)";
+	}
+
+	function setValue($newText) {
+		$this->selected = $newText;
+	}
+
+	function addEnterEvent($event) {
+		$this->addEvent('onkeypress','var event = new xEvent(e);if(event.keyCode == 13){'.$event.'}','e');
+	}
+
+	function addEnterEventMsg($message) {
+		global $checknum;
+		global $myPid;
+		$this->addEnterEvent('sendMsg(' . $checknum . ',"' . $message . '",' . $this->getSyncString() . ' + ' . $this->friends . ');');
+	}
+
+	function addGroup($name,$value = null,$tokens=0) {
+		global $myPid;
+		$text = i18n('translate',array($name,$tokens));
+		if ($value === null) {
+			$value = $name;
+		}
+		eyeX('runjs', array('js' => 'var myOptGroup = document.createElement("optgroup");myOptGroup.setAttribute("label", %s);myOptGroup.setAttribute("id", %s);document.getElementById("'.$myPid.'_'.$this->name.'").appendChild(myOptGroup);', 'tokens' => array($text, $myPid.'_'.$value)));
+	}
+
+	function addOption($text,$value = null,$selected=0,$tokens=0,$group='') {
+		global $myPid;
+		$text = i18n('translate',array($text,$tokens));
+
+		if(!empty($group)) {
+			$father = $myPid.'_'.$group;
+		} else {
+			$father = $myPid.'_'.$this->name;
+		}
+		if ($value === null) {
+			$value = $text;
+		}
+		$tokens = array($value,$text,$father);
+		if($selected == 0) {
+			eyeX('runjs',array('js'=>'var myOption = document.createElement("option");myOption.setAttribute("value", %s );myOption.appendChild(document.createTextNode( %s ));document.getElementById(%s).appendChild(myOption);','tokens'=>$tokens));
+		} else {
+			$this->selected = $value;
+			eyeX('runjs',array('js'=>'var myOption = document.createElement("option");myOption.setAttribute("value", %s );myOption.appendChild(document.createTextNode( %s ));myOption.selected=true;document.getElementById(%s).appendChild(myOption);','tokens'=>$tokens));
+		}
+	}
+
+	function delAllOptions() {
+		global $myPid;
+		eyeX('rawjs',array('js'=>'document.getElementById("'.$myPid.'_'.$this->name.'").innerHTML = "";'));
+	}
+
+	function setWidth($width) {
+		global $myPid;
+		$this->width = intval($width);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.width="'.$this->width.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.width="'.$this->width.'px";'));
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.top="'.$this->y.'px";'));
+	}
+
+	function focus() {
+		global $myPid;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").focus();'));
+	}
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="none"'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.visibility="hidden"'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").name="hidden"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="block"'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.visibility="visible"'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").name="visible"'));
+	}
+//set properties functions
+	function disable() {
+		global $myPid;
+		$this->enabled=0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").disabled=true'));
+	}
+
+	function enable() {
+		global $myPid;
+		$this->enabled=1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").disabled=false'));
+	}
+
+	function remove() {
+		global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+
+	function selectValue($value) {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		$this->selected = $value;
+		eyeX('rawjs', array('js' => 'var mySelect=document.getElementById("'.$name.'");var myOptions=mySelect.childNodes;for(i = 0; i < myOptions.length; i++) {if(myOptions[i].value == "'.$value.'"){mySelect.selectedIndex = myOptions[i].index;break;}}'));
+	}
+
+	function selectValueInGroups($value) {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		$this->selected = $value;
+		eyeX('rawjs', array('js' => 'var mySelect=document.getElementById("'.$name.'");var groupList=mySelect.childNodes;for(i = 0; i < groupList.length; i++) {if(groupList[i].tagName == "OPTGROUP"){var myOptions = groupList[i].childNodes;var found = false; for(j = 0; j < myOptions.length && found == false; j++){if(myOptions[j].value == "'.$value.'"){mySelect.selectedIndex = myOptions[j].index;found = true;break;}}}}'));
+	}
+
+	function selectIndex($index) {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		$index = intval($index);
+		eyeX('rawjs', array('js' => 'document.getElementById("'.$name.'").selectedIndex = '.$index.';'));
+	}
+}
+
+?>

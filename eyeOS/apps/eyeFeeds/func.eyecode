@@ -1,0 +1,869 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+define('EYEFEEDS_FEEDITEMS_FETCHNUMBER', 16);
+define('EYEFEEDS_FEEDITEMS_CACHELOCATION', EYE_ROOT.'/'.APP_DIR.'/share/eyeFeeds/cache/');
+define('EYEFEEDS_FEEDITEMS_CACHEDURATION', 3600);
+define('EYEFEEDS_FEEDITEMS_CONTENT_DISPLAYEDSIZE', 1800);
+define('EYEFEEDS_FEEDITEMS_READINGHISTORYDURATION', 60);
+
+define('EYEFEEDS_FEEDITEM_ICONURL_READ', 'index.php?extern=apps/eyeFeeds/gfx/item_read.png');
+define('EYEFEEDS_FEEDITEM_ICONURL_UNREAD', 'index.php?extern=apps/eyeFeeds/gfx/item_unread.png');
+
+/*********************************************************************************************/
+//		EYEFEEDS GRAPHICAL FUNCTIONS
+/*********************************************************************************************/
+
+/**
+ *
+ * @param array $folderNode
+ * @return Tree
+ */
+function eyeFeeds_drawFeedsTree($folderNode) {
+	if ($GLOBALS['feeds_TREE']) {
+		$GLOBALS['feeds_TREE']->remove();
+		$GLOBALS['selectedFeedId_HID']->setText('');
+	}
+
+	$myTree = new Tree(array(
+		'name'=>'feeds_TREE',
+		'father'=>'tree_CTN',
+		'x'=>0,
+		'y'=>0,
+		'width' =>160,
+		'height' => 300,
+		'clickTree'=>1
+	));
+	$myTree->show();
+
+	//root node
+	$myTree->addItem('feeds_TREE', 'feeds_TREE_root', i18n('translate',array('Bookmarks')));
+	$myTree->addSubList('feeds_TREE_root', 'feeds#folder_root');
+	eyeFeeds_drawFeedsTree_addContextMenu('feeds#menu_feeds_TREE_root','feeds_TREE_root', true);
+
+	if(is_array($folderNode['feed'])) {
+		foreach($folderNode['feed'] as $node) {
+			$displayedNodeName = utf8_strlen($node['name'][0]) > 20 ? utf8_substr($node['name'][0], 0, 19) . '…' : $node['name'][0];
+			if($node['type'][0] == 'folder') {
+				$myTree->addItem('feeds#folder_root', 'feeds#item_'.$node['id'][0], $displayedNodeName);
+				$myTree->addSubList('feeds#item_'.$node['id'][0], 'feeds#folder_'.$node['id'][0]);
+				eyeFeeds_drawFeedsTreeNode($myTree, 'feeds#folder_'.$node['id'][0], $node, false, 'feeds#');
+				eyeFeeds_drawFeedsTree_addContextMenu('feeds#menu_'.$node['id'][0],'feeds#item_'.$node['id'][0]);
+			} else {
+				$myTree->addItem('feeds#folder_root', 'feeds#item_'.$node['id'][0], $displayedNodeName);
+				eyeFeeds_drawFeedsTree_addContextMenu('feeds#menu_'.$node['id'][0],'feeds#item_'.$node['id'][0]);
+			}
+		}
+	}
+	$myTree->processList();
+	return $myTree;
+}
+function eyeFeeds_drawFeedsTreeNode($treeObject, $parentNode, $folderNode, $foldersOnly=false, $itemsNamesPrefix='') {
+	if(is_array($folderNode['feed'])) {
+		foreach($folderNode['feed'] as $node) {
+			$displayedNodeName = utf8_strlen($node['name'][0]) > 20 ? utf8_substr($node['name'][0], 0, 19) . '…' : $node['name'][0];
+			if($node['type'][0] == 'folder') {
+				$treeObject->addItem($parentNode,
+									$itemsNamesPrefix.'item_'.$node['id'][0],
+									$displayedNodeName);
+				$treeObject->addSubList($itemsNamesPrefix.'item_'.$node['id'][0],
+										$itemsNamesPrefix.'folder_'.$node['id'][0]);
+				eyeFeeds_drawFeedsTreeNode($treeObject,
+											$itemsNamesPrefix.'folder_'.$node['id'][0],
+											$node);
+				eyeFeeds_drawFeedsTree_addContextMenu($itemsNamesPrefix.'menu_'.$node['id'][0], $itemsNamesPrefix.'item_'.$node['id'][0]);
+			} elseif (!$foldersOnly) {
+				$treeObject->addItem($parentNode,
+									$itemsNamesPrefix.'item_'.$node['id'][0],
+									$displayedNodeName);
+				eyeFeeds_drawFeedsTree_addContextMenu($itemsNamesPrefix.'menu_'.$node['id'][0], $itemsNamesPrefix.'item_'.$node['id'][0]);
+			}
+		}
+	}
+}
+function eyeFeeds_drawFeedsTree_addContextMenu($menuName, $nodeName, $addOnly=false) {
+	$feedId = substr($nodeName, stripos($nodeName, '_') + 1); // utf8
+
+	//add context menu
+	$myMenu = new ContextMenu(array(
+		'name' => $menuName,
+		'father' => $nodeName,
+		'searchFather' => 1
+	));
+	$myMenu->show();
+
+	//ADD FEED
+	$myMenu->addEntry(
+		'<img id="' . $menuName . 'addfeed_menu" style="height: 16px; width: 16px;" src="index.php?extern=apps/eyeFeeds/gfx/addfeed_menu.png" /> &nbsp; '.utf8_htmlspecialchars(i18n('translate',array('Add feed')), ENT_QUOTES),
+		'feeds_CMN_addFeed_ENT',
+		'feeds_CMN_addFeed_ENT',
+		$feedId,
+		$menuName . 'addfeed_menu'
+	);
+	//ADD FOLDER
+	$myMenu->addEntry(
+		'<img id="' . $menuName . 'addfolder_menu" style="height: 16px; width: 16px;" src="index.php?extern=apps/eyeFeeds/gfx/addfolder_menu.png" /> &nbsp; '.utf8_htmlspecialchars(i18n('translate',array('Add folder')), ENT_QUOTES),
+		'feeds_CMN_addFolder_ENT',
+		'feeds_CMN_addFolder_ENT',
+		$feedId,
+		$menuName . 'addfolder_menu'
+	);
+	if (!$addOnly) {
+		//EDIT
+		$myMenu->addEntry(
+			'<img id="' . $menuName . 'editfeedfolder_menu" style="height: 16px; width: 16px;" src="index.php?extern=apps/eyeFeeds/gfx/editfeedfolder_menu.png" /> &nbsp; '.utf8_htmlspecialchars(i18n('translate',array('Edit')), ENT_QUOTES),
+			'feeds_CMN_edit_ENT',
+			'feeds_CMN_edit_ENT',
+			$feedId,
+			$menuName . 'editfeedfolder_menu'
+		);
+		//DELETE
+		$myMenu->addEntry(
+			'<img id="' . $menuName . 'delfeedfolder_menu" style="height: 16px; width: 16px;" src="index.php?extern=apps/eyeFeeds/gfx/delfeedfolder_menu.png" /> &nbsp; '.utf8_htmlspecialchars(i18n('translate',array('Delete')), ENT_QUOTES),
+			'feeds_CMN_del_ENT',
+			'feeds_CMN_del_ENT',
+			$feedId,
+			$menuName . 'delfeedfolder_menu'
+		);
+	}
+}
+
+function eyeFeeds_clearFeedItems() {
+	global $myPid;
+
+	$GLOBALS['itemsList_BOX']->setTitle('Select a feed to browse...');
+	$GLOBALS['eyeFeeds_WND']->setTitle(i18n('translate',array('RSS Feed Reader')));
+
+	//remove previous table
+	if ($GLOBALS['feedItems_TAB'])
+		$GLOBALS['feedItems_TAB']->remove();
+
+	//create and add new table
+	$feedItemsTable = new Sortabletable(array(
+		'name' => 'feedItems_TAB',
+		'father' => 'itemsList_BOX',
+		'x' => 4,
+		'y' => 26,
+		'width' => $GLOBALS['itemsList_BOX']->width - 8,
+		'height' => $GLOBALS['itemsList_BOX']->height - 30,
+		'sortypes' => array('Html', 'String', 'Date', 'String', 'Hidden'),
+		'master' => 4,
+		'theader' => array(' ', 'Title', 'Date', 'Author'),
+		'signal' => 'feedItemClick',
+		'dblsignal' => 'feedItemDblClick'
+	));
+	$feedItemsTable->show();
+	//remove border of the table
+	eyex('rawjs', array('js' => 'document.getElementById("'.$myPid.'_feedItems_TAB_Container").firstChild.style.border="none";'));
+}
+
+function eyeFeeds_clearItemContent() {
+	$GLOBALS['itemContent_BOX']->setTitle('Select an item to read...');
+	$GLOBALS['content_LBL']->setText('');
+}
+
+function eyeFeeds_displayFeedItems($feed, $forceRefresh=false) {
+	if (! is_array($feed))
+		return;
+
+	global $myPid;
+
+	$items = eyeFeeds_fetchFeedItemsFromUrl($feed['url'][0], $forceRefresh);
+	foreach($items as $itemId => $itemData) {
+		if (eyeFeeds_isTitleRead($itemData['permalink'])) {
+			$iconUrl = '<img src="'.EYEFEEDS_FEEDITEM_ICONURL_READ.'" ';
+		}
+		else {
+			$iconUrl = '<img src="'.EYEFEEDS_FEEDITEM_ICONURL_UNREAD.'" ';
+		}
+		//add ID to the image to be able to change its url dynamically (when user clicks to read the item)
+		$iconUrl .= ' id="'.$myPid.'_titleIcon_'.$itemId.'" />';
+
+		$itemRowData = array(
+			$iconUrl,
+			cleanString($itemData['title']),
+			$itemData['date']? $itemData['date'] : ' ',
+			$itemData['author_name']? $itemData['author_name'] : ' ',
+			$itemId
+		);
+		$GLOBALS['feedItems_TAB']->addRow($itemRowData);
+	}
+	$GLOBALS['loading_CTN']->hide();
+}
+
+/**
+ * Displays the content of an item in the bottom right box of the interface
+ *
+ * @param array $item
+ */
+function eyeFeeds_displayItemContent($item) {
+	if (! is_array($item))
+		return;
+
+	global $checknum, $myPid;
+	$settings = eyeFeeds_loadSettings();
+
+	eyeFeeds_setTitleAsRead($item['permalink']);
+
+	//prepare enclosures links
+	$enclosuresLinks = '<br /><br />';
+	if(count($item['enclosures']) > 0)	{
+		foreach($item['enclosures'] as $key => $enc) {
+			$enclosuresLinks .= '<a href="#" onclick=\'sendMsg("'.$checknum.'","openEnclosure",eyeParam("itemId","'.md5($item['id']).'")+eyeParam("enc","'.$key.'"));return false;\'>'
+									.'Enclosure '.$enc['filename'].' ('.$enc['type'].')'
+								.'</a><br />';
+		}
+
+	}
+
+	$GLOBALS['itemContent_BOX']->setTitle($item['title']);
+	//NOTE: b64 encoding is used to allow displaying HTML text in the "content" box
+	if (!$item['content']) {
+		$encodedTextToDisplay = base64_encode('(No content to display)'.$enclosuresLinks);
+	} else {
+		$content = $item['content'];
+		if (utf8_strlen($content) > $settings['contentSize'][0]) {
+			$content = utf8_substr($content, 0, $settings['contentSize'][0]) . ' (…)';
+		}
+		$content = cleanString(eyeFeeds_replaceUrlMarksByEyeNavCalls($content));
+		$content .= $enclosuresLinks;
+		$encodedTextToDisplay = base64_encode($content);
+	}
+	eyeX('rawjs', array('js' => 'document.getElementById("'.$myPid.'_content_LBL").innerHTML=Base64.decode("'.$encodedTextToDisplay.'");'));
+}
+
+
+/*********************************************************************************************/
+//		EYEFEEDS MISC FUNCTIONS
+/*********************************************************************************************/
+
+/**
+ *
+ * @return mixed array or FALSE
+ */
+function eyeFeeds_getSelectedFeedItem() {
+	$itemId = $GLOBALS['feedItems_TAB']->selected;
+	if (!$itemId)
+		return false;
+
+	$item = eyeFeeds_getFeedItem($itemId);
+	if (!$item)
+		return false;
+
+	return $item;
+}
+
+function eyeFeeds_getFeedFromId($feeds, $id) {
+	$return = false;
+	if ($id == null) {
+		return $feeds;
+	}
+	foreach($feeds as $key => $value) {
+		if ($value['type'][0] == 'folder')
+			$return = eyeFeeds_getFeedFromId($value['feed'], $id);
+		if ($value['id'][0] == $id)
+			$return = $feeds[$key];
+
+		if ($return !== false)
+			break;
+	}
+	return $return;
+}
+
+/**
+ *
+ * @param array $feeds
+ * @param string $id
+ * @return mixed array if the parent feed has been found, FALSE otherwise
+ */
+function eyeFeeds_getParentFeedFromId($feeds, $id) {
+	$return = false;
+	//the root node in the XML conf has no ID so we add a fake one
+	if (!is_array($feeds['id']))
+		$feeds['id'] = array('root');
+	foreach($feeds['feed'] as $key => $value) {
+		if ($value['type'][0] == 'folder')
+			$return = eyeFeeds_getParentFeedFromId($value, $id);
+		if ($value['id'][0] == $id)
+			$return = $feeds;
+
+		if ($return !== false)
+			break;
+	}
+	return $return;
+}
+
+/**
+ *
+ * @param string $id
+ * @return array
+ */
+function eyeFeeds_getFeedItem($id) {
+	$return = false;
+	$items = eyeFeeds_fetchFeedItemsFromUrl(unserialize($GLOBALS['currentFeedUrl_HID']->text));
+	foreach($items as $key => $itemData) {
+		if ($key == $id)
+			$return = $itemData;
+	}
+	return $return;
+}
+
+function eyeFeeds_addFeed($feeds, $feed, $parentFolderId) {
+	if (!is_array($feeds))
+		return array();
+
+	if ($feeds['id'][0] == $parentFolderId || !$parentFolderId)
+		$feeds['feed'][] = $feed;
+	else {
+		foreach($feeds['feed'] as $key => $value) {
+			if ($value['type'][0] == 'folder')
+				$feeds['feed'][$key] = eyeFeeds_addFeed($value, $feed, $parentFolderId);
+		}
+	}
+	return $feeds;
+}
+
+function eyeFeeds_addFolder($feeds, $folderName, $folderId, $parentFolderId) {
+	if (!is_array($feeds))
+		return array();
+
+	if ($feeds['id'][0] == $parentFolderId || !$parentFolderId)
+		$feeds['feed'][] = array(
+			'id' => array($folderId),
+			'type' => array('folder'),
+			'name' => array($folderName),
+			'feed' => array()
+		);
+	else {
+		foreach($feeds['feed'] as $key => $value) {
+			if ($value['type'][0] == 'folder')
+				$feeds['feed'][$key] = eyeFeeds_addFolder($value, $folderName, $folderId, $parentFolderId);
+		}
+	}
+	return $feeds;
+}
+
+function eyeFeeds_deleteFeedFolder($feeds, $feedId) {
+	if (!is_array($feeds))
+		return false;
+
+	foreach($feeds['feed'] as $key => $value) {
+		if ($value['id'][0] == $feedId) {
+			unset($feeds['feed'][$key]);
+			break;
+		}
+		elseif ($value['type'][0] == 'folder') {
+			$feeds['feed'][$key] = eyeFeeds_deleteFeedFolder($value, $feedId);
+		}
+	}
+	return $feeds;
+}
+
+function eyeFeeds_saveFeedsToFile($feeds, $redrawFeedsTree=true, $sortFeeds=true) {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
+	$conf = eyeXML('getXMLfile', array($path));
+
+	if ($sortFeeds)
+		$feeds['feed'] = eyeFeeds_sortFeeds($feeds['feed']);
+
+	$conf['eyeFeeds'][0]['base'][0] = $feeds;
+	if (!eyeXML('setXMLfile',array($path, $conf))) {
+		return false;
+	}
+
+	//redraw tree with saved configuration
+	$conf2 = eyeXML('getXMLfile', array($path));
+	if ($redrawFeedsTree) {
+		$tree = eyeFeeds_drawFeedsTree($conf2['eyeFeeds'][0]['base'][0]);
+		$tree->expandTree();
+	}
+	return true;
+}
+
+function eyeFeeds_sortFeeds($feeds) {
+	foreach ($feeds as $key => $value) {
+		if ($value['type'][0] == 'folder') {
+			$value['feed'] = eyeFeeds_sortFeeds($value['feed']);
+			$feeds[$key] = $value;
+		}
+	}
+	usort($feeds, eyeFeeds_sortFeeds_compare);
+	return $feeds;
+}
+
+function eyeFeeds_sortFeeds_compare($a,$b) {
+	$return = 0;
+	if ($a['type'][0] == $b['type'][0]) {
+		$return = utf8_strcasecmp($a['name'][0], $b['name'][0]);
+	}
+	if ($a['type'][0] == 'folder' && $b['type'][0] != 'folder')
+		$return -1;
+	if ($a['type'][0] != 'folder' && $b['type'][0] == 'folder')
+		$return = 1;
+
+	return $return;
+}
+
+/**
+ *
+ * @return array The saved feeds
+ */
+function eyeFeeds_getSavedFeeds() {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
+	$conf = eyeXML('getXMLfile', array($path));
+
+	if (!is_array($conf))
+		$conf = array('eyeFeeds' => array());
+
+	if (!is_array($conf['eyeFeeds'][0]))
+		$conf['eyeFeeds'][0] = array('base' => array());
+
+	if (!is_array($conf['eyeFeeds'][0]['base'][0]))
+		$conf['eyeFeeds'][0]['base'][0] = array('feed' => array());
+
+	return $conf['eyeFeeds'][0]['base'][0];
+}
+
+function eyeFeeds_replaceUrlMarksByEyeNavCalls($htmlText) {
+	$return = /* utf8 */ preg_replace_callback('/<a (.*?)href="(.*?)"(.*?)>/i',
+									eyeFeeds_replaceUrlMarksByEyeNavCalls_callback,
+									$htmlText);
+	return $return;
+}
+function eyeFeeds_replaceUrlMarksByEyeNavCalls_callback($matches) {
+	global $checknum;
+	return eyeFeeds_getEyeNavLinkFromUrl($matches[2]);
+}
+function eyeFeeds_getEyeNavLinkFromUrl($url, $linkText=null) {
+	global $checknum;
+	$return = '<a href="#" onclick=\'sendMsg('.$checknum.',"contentLinkClick",eyeParam("url","'.urlencode($url).'"));return false;\'>';
+
+	if ($linkText != null)
+		$return .= $linkText.'</a>';
+
+	return $return;
+}
+
+/*********************************************************************************************/
+//		READING HISTORY FUNCTIONS
+/*********************************************************************************************/
+function eyeFeeds_loadReadingHistory() {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
+	$conf = eyeXML('getXMLfile', array($path));
+
+	if (!is_array($conf))
+		$conf = array('eyeFeeds' => array());
+
+	if (!is_array($conf['eyeFeeds'][0]))
+		$conf['eyeFeeds'][0] = array('readingHistory' => array());
+
+	if (!is_array($conf['eyeFeeds'][0]['readingHistory'][0]))
+		$conf['eyeFeeds'][0]['readingHistory'][0] = array('title' => array());
+
+	$readingHistory = $conf['eyeFeeds'][0]['readingHistory'][0]['title'];
+
+	$settings = eyeFeeds_loadSettings();
+	$limitDate = time() - ($settings['readingHistoryDuration'][0] * 86400);
+	$change = false;
+	if (is_array($readingHistory)) {
+		foreach($readingHistory as $key => $title) {
+			if(intval($title['readingDate'][0]) < $limitDate) {
+				array_splice($readingHistory, $key, 1);
+				$change = true;
+			}
+		}
+	}
+	if ($change) {
+		eyeFeeds_saveReadingHistory($readingHistory);
+	}
+	return $readingHistory;
+}
+
+function eyeFeeds_saveReadingHistory($newReadingHistory) {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
+	$conf = eyeXML('getXMLfile', array($path));
+
+	$conf['eyeFeeds'][0]['readingHistory'][0]['title'] = $newReadingHistory;
+	return eyeXML('setXMLfile',array($path, $conf));
+}
+
+function eyeFeeds_isTitleRead($url) {
+	$readingHistory = eyeFeeds_loadReadingHistory();
+
+	if (is_array($readingHistory)) {
+		foreach($readingHistory as $key => $title) {
+			if ($title['url'][0] == $url) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function eyeFeeds_setTitleAsRead($url) {
+	$readingHistory = eyeFeeds_loadReadingHistory();
+	foreach($readingHistory as $title) {
+		if ($title['url'][0] == $url) {
+			return;
+		}
+	}
+	$readingHistory[] = array(
+		'readingDate' => array(time()),
+		'url' => array($url)
+	);
+
+	eyeFeeds_saveReadingHistory($readingHistory);
+}
+
+/*********************************************************************************************/
+//		SETTINGS FUNCTIONS
+/*********************************************************************************************/
+function eyeFeeds_loadSettings() {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
+	$conf = eyeXML('getXMLfile', array($path));
+
+	if (!is_array($conf))
+		$conf = array('eyeFeeds' => array());
+
+	if (!is_array($conf['eyeFeeds'][0]))
+		$conf['eyeFeeds'][0] = array('settings' => array());
+
+	$settings = $conf['eyeFeeds'][0]['settings'][0];
+	$settings['titlesNumber'][0] = $settings['titlesNumber'][0]? $settings['titlesNumber'][0] : EYEFEEDS_FEEDITEMS_FETCHNUMBER;
+	$settings['contentSize'][0] = $settings['contentSize'][0]? $settings['contentSize'][0] : EYEFEEDS_FEEDITEMS_CONTENT_DISPLAYEDSIZE;
+	$settings['cacheDuration'][0] = $settings['cacheDuration'][0]? $settings['cacheDuration'][0] : EYEFEEDS_FEEDITEMS_CACHEDURATION;
+	$settings['readingHistoryDuration'][0] = $settings['readingHistoryDuration'][0]? $settings['readingHistoryDuration'][0] : EYEFEEDS_FEEDITEMS_READINGHISTORYDURATION;
+
+	return $settings;
+}
+
+function eyeFeeds_saveSettings($newSettings) {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
+	$conf = eyeXML('getXMLfile', array($path));
+
+	$conf['eyeFeeds'][0]['settings'][0] = $newSettings;
+	return eyeXML('setXMLfile',array($path, $conf));
+}
+
+/*********************************************************************************************/
+//		RSS READER LIBRARY RELATED FUNCTIONS
+/*********************************************************************************************/
+/**
+ * NOTA: uses the SimplePie library
+ *
+ * @param string $url
+ * @return array The feed
+ */
+function eyeFeeds_fetchFeedFromUrl($url, $forceRefresh=false) {
+	include_once(EYE_ROOT.'/'.APP_DIR.'/eyeFeeds/simplepie'.EYE_CODE_EXTENSION);
+	$settings = eyeFeeds_loadSettings();
+
+	//fetch RSS feed's items
+	$simplePie = new SimplePie();
+	$simplePie->set_feed_url($url);
+	$simplePie->set_cache_location(EYEFEEDS_FEEDITEMS_CACHELOCATION);
+	$simplePie->enable_cache(true);
+	$simplePie->set_cache_duration(($forceRefresh)? 0 : $settings['cacheDuration'][0]);
+	$simplePie->init();
+	$simplePie->handle_content_type();
+
+	if ($simplePie->error()) {
+		eyeX('messageBox',array('content'=> 'Error getting specified feed'));
+		return false;
+	}
+
+	$feed = array(
+		'id' => array(md5($url.microtime())),
+		'type' => array('feed'),
+		'name' => array($simplePie->get_title()),
+		'url' => array($url)
+	);
+	return $feed;
+}
+
+/**
+ * NOTA: uses the SimplePie library
+ *
+ * @param string $url
+ * @return array The feed's items
+ */
+function eyeFeeds_fetchFeedItemsFromUrl($url, $forceRefresh=false) {
+	include_once(EYE_ROOT.'/'.APP_DIR.'/eyeFeeds/simplepie'.EYE_CODE_EXTENSION);
+	$settings = eyeFeeds_loadSettings();
+
+	//fetch RSS feed's items
+	$simplePie = new SimplePie();
+	$simplePie->set_feed_url($url);
+	$simplePie->set_cache_location(EYEFEEDS_FEEDITEMS_CACHELOCATION);
+	$simplePie->enable_cache(true);
+	$simplePie->set_cache_duration(($forceRefresh)? 0 : $settings['cacheDuration'][0]);
+	$simplePie->init();
+	$simplePie->handle_content_type();
+
+	$return = array();
+	foreach($simplePie->get_items(0, $settings['titlesNumber'][0]) as $key => $simplePieItem) {
+		$categories = array();
+		$categories_tmp = $simplePieItem->get_categories();
+		if (is_array($categories_tmp)) {
+			foreach($categories_tmp as $cat) {
+				$categories[] = $cat->get_label();
+			}
+		}
+		$enclosures = array();
+		$enclosures_tmp = $simplePieItem->get_enclosures();
+		if (is_array($enclosures_tmp)) {
+			foreach($enclosures_tmp as $enc) {
+				$enclosures[] = array(
+					'title' => $enc->get_title(),
+					'filename' => substr($enc->get_link(), strrpos($enc->get_link(), '/') + 1), // utf8
+					'link' => $enc->get_link(),
+					'type' => $enc->get_type(),
+					'embed' => $enc->embed('',true)
+				);
+			}
+		}
+
+		$item = array(
+			'id' => $simplePieItem->get_id(),
+			'permalink' => $simplePieItem->get_permalink(),
+			'title' => $simplePieItem->get_title(),
+			'date' => $simplePieItem->get_date('Y-m-d G:i'),
+			'author_name' => ($simplePieItem->get_author())? $simplePieItem->get_author()->get_name() : ' ',
+			'author_email' => ($simplePieItem->get_author())? $simplePieItem->get_author()->get_email() : ' ',
+			'author_link' => ($simplePieItem->get_author())? $simplePieItem->get_author()->get_link() : ' ',
+			'links' => $simplePieItem->get_links(),
+			'categories' => $categories,
+			'content' => $simplePieItem->get_content(),
+			'enclosures' => $enclosures
+		);
+		$return[md5($item['id'])] = $item;
+	}
+	return $return;
+}
+
+/*********************************************************************************************/
+//		IMPORT/EXPORT FUNCTIONS
+/*********************************************************************************************/
+
+function eyeFeeds_importFeeds($rootFeed, $parentFolderId, $inputFilePath) {
+	//the given rootnode is the specified container of the imported feeds
+	if ($rootFeed['id'][0] == $parentFolderId) {
+		$fp = vfs('open',array($inputFilePath, 'r'));
+		if (!$fp) {
+			return false;
+		}
+		$size = vfs('filesize',array($inputFilePath));
+		$fileContent = fread($fp, $size);
+
+		try {
+			$opml = new SimpleXMLElement($fileContent);
+		}
+		catch(Exception $e) {
+			return false;
+		}
+		if (!isset($opml->body) || !isset($opml->body->outline)) {
+			return false;
+		}
+
+		foreach($opml->body->outline as $outline) {
+			$newNode = eyeFeeds_createFeedNodeFromOpml($outline);
+			if ($newNode) {
+				$rootFeed['feed'][] = $newNode;
+			}
+		}
+		return $rootFeed;
+	}
+	//the given rootnode is NOT the container for the imported feeds, continue search
+	else {
+		foreach($rootFeed['feed'] as $key => $value) {
+			if ($value['type'][0] == 'folder') {
+				$value = eyeFeeds_importFeeds($value, $parentFolderId, $inputFilePath);
+				if ($value !== false) {
+					$rootFeed['feed'][$key] = $value;
+					return $rootFeed;
+				}
+			}
+		}
+	}
+
+	return false;
+}
+
+function eyeFeeds_createFeedNodeFromOpml($xmlObject) {
+	if (! is_object($xmlObject)) {
+		return false;
+	}
+	/**
+	 * BIG UGLY HACK FOR PHP 5.2.0
+	 * @see http://fr3.php.net/manual/en/book.simplexml.php#85674
+	 */
+	$title = $xmlObject['title']->asXML();
+	$title = trim(preg_replace('/.*="(.*?)".*/', '$1', $title)); // utf8
+	$text = $xmlObject['text']->asXML();
+	$text = trim(preg_replace('/.*="(.*?)".*/', '$1', $text)); // utf8
+
+	$name = '';
+	if ($title) {
+		$name = $title;
+	}
+	elseif ($text) {
+		$name = $text;
+	}
+
+	//folder
+	if (isset($xmlObject->outline)) {
+		$subfeeds = array();
+		foreach($xmlObject->outline as $outline) {
+			$subfeeds[] = eyeFeeds_createFeedNodeFromOpml($outline);
+		}
+
+		$feed = array(
+			'id' => array(md5($name.microtime())),
+			'type' => array('folder'),
+			'name' => array($name),
+			'feed' => $subfeeds
+		);
+	}
+	//feed
+	else {
+		/** BIG HACK AGAIN */
+		$url = $xmlObject['xmlUrl']->asXML();
+		$url = trim(preg_replace('/.*="(.*?)".*/', '$1', $url)); // utf8
+
+		//if no name/title is provided in the OPML file, use the hostname instead
+		if ($name == '') {
+			$urlParts = parse_url($url);
+			if (is_array($urlParts)) {
+				if ( /* utf8 */ preg_match('/^www\\.(.*)/i', $urlParts['host'], $matches)) {
+					$name = $matches[1];
+				} else {
+					$name = $urlParts['host'];
+				}
+			} else {
+				$name = i18n('translate',array('(Unknown name)'));
+			}
+		}
+		$feed = array(
+			'id' => array(md5($url.microtime())),
+			'type' => array('feed'),
+			'name' => array($name),
+			'url' => array($url)
+		);
+	}
+	return $feed;
+}
+
+function eyeFeeds_exportFeeds($outputFilePath) {
+	global $currentUser;
+	$savedFeeds = eyeFeeds_getSavedFeeds();
+	$outputFilePath = um('getCurrentUserDir').FILES_USER_DIR.$outputFilePath;
+
+	$outputXml = new SimpleXMLElement('<opml version="2.0"></opml>');
+
+	//head
+	$outputXml->addChild('head');
+	$outputXml->head->addChild('title');
+	$outputXml->head->title = $currentUser.' RSS Feeds (exported from eyeFeeds)';
+
+	//body
+	$outputXml->addChild('body');
+	foreach($savedFeeds['feed'] as $feed) {
+		eyeFeeds_attachFeedNodeToOpml($outputXml->body, $feed);
+	}
+
+	if (!vfs('create',array($outputFilePath))) {
+		eyeX('messageBox',array('content'=> 'Unable to export list to the specified location'));
+		return;
+	}
+	if (! vfs('writeFile',array($outputFilePath, $outputXml->asXML()))) {
+		eyeX('messageBox',array('content'=> 'Unable to export list to the specified location'));
+		return;
+	}
+	eyeFiles('update',array(dirname($outputFilePath)));
+	eyeX('messageBox',array('content'=> 'Feeds list successfully exported'));
+}
+
+function eyeFeeds_attachFeedNodeToOpml($xmlObject, $feed) {
+	if (!isset($xmlObject->outline)) {
+		$xmlObject->addChild('outline');
+		$outputXml = $xmlObject->outline;
+	} else {
+		$xmlObject->addChild('outline');
+		$outputXml = $xmlObject->outline[count($xmlObject->outline)-1];
+	}
+
+	$outputXml->addAttribute('title', $feed['name'][0]);
+	$outputXml->addAttribute('text', $feed['name'][0]);
+
+	if ($feed['type'][0] == 'folder') {
+		foreach($feed['feed'] as $subfeed) {
+			eyeFeeds_attachFeedNodeToOpml($outputXml, $subfeed);
+		}
+	}
+	else {
+		$outputXml->addAttribute('xmlUrl', $feed['url'][0]);
+		$outputXml->addAttribute('type', 'rss');
+	}
+	return $outputXml;
+
+}
+
+
+/*********************************************************************************************/
+//		OTHER FUNCTIONS
+/*********************************************************************************************/
+
+/**
+ * This function makes possible to update the interface BEFORE performing an operation which
+ * can take some time to achieve, so we can inform the user that a process has started and
+ * he has to wait.
+ *
+ * @param array $params An array with at least the following content:
+ *                      array('__signal' => the_name_of_the_signal_to_send)
+ */
+function bounceRequest($params=null) {
+	global $checknum;
+
+	$sendMsgParams = '';
+	foreach($params as $key => $value) {
+		if ($key != '__signal')
+			$sendMsgParams .= 'eyeParam("'.$key.'", "'.$value.'")+';
+	}
+	$sendMsgParams .= 'eyeParam("__bounce", "1")';
+
+	eyeX('rawjs', array('js' => 'sendMsg('.$checknum.', "'.$params['__signal'].'", '.$sendMsgParams.');'));
+}
+
+/**
+ * Checks if the calling function was called from a "bounced" request
+ *
+ * @param mixed $params Arguments given to the calling function when called
+ * @return boolean TRUE if the arguments indicate that the function is called from a "bounced" request,
+ *                 FALSE otherwise
+ */
+function isFromBouncedRequest($params="") {
+	return (is_array($params) && $params['__bounce'][0] == 1);
+}
+
+function cleanString($string) {
+	$encodding = 'UTF-8';
+	if (function_exists('mb_detect_encoding') === true) {
+		$encoding = mb_detect_encoding($string);
+	}
+	return @html_entity_decode($string, ENT_QUOTES, $encoding); // utf8
+}
+
+?>

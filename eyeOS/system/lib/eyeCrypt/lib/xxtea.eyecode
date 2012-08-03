@@ -1,0 +1,21 @@
+<?php
+eyePear('Load', array('Crypt_XXTEA'));
+
+function crypt_xxtea_crypt($params) {
+	$str = $params[0];
+	$key = $params[1];
+	$myClass = new Crypt_XXTEA();
+	$myClass->setKey($key);
+	$ret = $myClass->encrypt($str);
+	return $ret;
+}
+
+function crypt_xxtea_decrypt($params) {
+	$str = $params[0];
+	$key = $params[1];
+	$myClass = new Crypt_XXTEA();
+	$myClass->setKey($key);
+	$ret = $myClass->decrypt($str);
+	return $ret;
+}
+?>

@@ -1,0 +1,120 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeString_on_Message($params=null){
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeString_on_Close($params=null){
+	proc('end');
+}
+
+function eyeString_on_eyeString_Btn1($params=null){
+	$starttimer = time()+microtime();
+	$SAlgot = $GLOBALS['eyeString_slc']->selected;
+	$original = $GLOBALS['eyeString_TxtA1']->text;
+	$TextUncripted = $GLOBALS['eyeString_TxtA1']->text;
+	if($SAlgot == 'base64encode')
+	{
+		$TextUncripted = base64_encode($TextUncripted);
+	}
+
+	elseif($SAlgot == 'base64decode')
+	{
+		$TextUncripted = base64_decode($TextUncripted);
+	}
+	elseif($SAlgot == 'md5encode')
+	{
+		$TextUncripted = md5($TextUncripted);
+	}
+	elseif($SAlgot == 'urlencode')
+	{
+		$TextUncripted = urlencode($TextUncripted);
+	}
+	elseif($SAlgot == 'urldecode')
+	{
+		$TextUncripted = urldecode($TextUncripted);
+	}
+
+	elseif($SAlgot == 'ascktohex')
+	{
+		$TextUncripted = bin2hex($TextUncripted);
+	}
+
+	elseif($SAlgot == 'hextoasck') {
+		for ($i = 0; $i < /* utf8 */ strlen($TextUncripted); $i += 2) {
+			$abc .= chr(hexdec(substr($TextUncripted, $i, 2))); // utf8
+
+		}
+		$TextUncripted = $abc;
+	}
+
+	elseif($SAlgot == 'NumtoRoman') {
+		eyePear('Load', array('Numbers_Roman'));
+		$number = new Numbers_Roman();
+		$TextUncripted = $number->toNumeral(intval($TextUncripted),true,false);
+	}
+
+	elseif($SAlgot == 'RomantoNum') {
+		eyePear('Load', array('Numbers_Roman'));
+		$number = new Numbers_Roman();
+		$TextUncripted = $number->toNumber($TextUncripted);
+	}
+
+	elseif($SAlgot == 'htmlen')
+	{
+		$TextUncripted = utf8_htmlentities($TextUncripted, ENT_QUOTES);
+	}
+
+	elseif($SAlgot == 'htmlde')
+	{
+		$TextUncripted = utf8_html_entity_decode($TextUncripted, ENT_QUOTES);
+	}
+
+	elseif($SAlgot == 'eyehash')
+	{
+		$TextUncripted = md5($TextUncripted.md5($TextUncripted));
+	}
+
+	else {
+		$TextUncripted = "";
+	}
+	if($GLOBALS['chk4']->checked) {
+		$TextUncripted = $original.' -> '.$TextUncripted;
+	}
+	if($GLOBALS['chk3']->checked) {
+		$TextUncripted = $TextUncripted."\n";
+	}
+	if($GLOBALS['chk2']->checked) {
+		$GLOBALS['eyeString_TxtA2']->setText($GLOBALS['eyeString_TxtA2']->text.$TextUncripted);
+	} else {
+		$GLOBALS['eyeString_TxtA2']->setText($TextUncripted);
+	}
+
+	if($GLOBALS['chk1']->checked) {
+		$GLOBALS['eyeString_TxtA1']->setText('');
+	}
+	$stoptimer = time()+microtime();
+	$timer = round($stoptimer-$starttimer,4);
+	$GLOBALS['timerlbl']->setText('Last execution time: %s',array($timer));
+}
+
+function eyeString_on_Clear($params=null){
+	$GLOBALS['eyeString_TxtA2']->setText('');
+	$GLOBALS['eyeString_TxtA1']->setText('');
+}
+
+?>

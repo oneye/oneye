@@ -1,0 +1,98 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $checknum;
+global $myPid;
+$menus = array('menu_files.xml','menu_trash.xml');
+foreach ($menus as $menu) {
+	$father = 'eyeFiles_Box_Actions_' . basename($menu,'.xml') . '_Container';
+	$myContainer = new Container(array(
+		'father' => 'eyeFiles_Box_Actions',
+		'height' => $GLOBALS['eyeFiles_Box_Tree']->height - 35,
+		'name' => $father,
+		'width' => $GLOBALS['eyeFiles_Box_Tree']->width - 2,
+		'x' => 1,
+		'y' => 30
+	));
+	$myContainer->show();
+	$myContainer->setCss(array('display' => 'block','overflow' => 'auto','overflow-x' => 'hidden','position' => 'absolute'));
+	eyeWidgets('serialize',array($myContainer));
+	$xml = getConfig('eyeFiles',$menu);
+	$counter = 0;
+	foreach($xml['menu'][0]['entry'] as $entry) {
+		$myContainer = new Container(array(
+			'father' => $father,
+			'height' => 30,
+			'name' => $father . '_' . $entry['action'][0] . '_Container',
+			'width' => $myContainer->width,
+			'x' => 0,
+			'y' => $counter * 30
+		));
+		$myContainer->show();
+		eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_' . $father . '_' . $entry['action'][0] . '_Container");
+		e.style.cursor = "pointer";
+		e.onclick = function() {
+			if (xGetElementById("' . $myPid . '_eyeFiles_Box_View_Radio_Details").checked) {
+				sendMsg(' . $checknum . ',"Action",eyeParam("Action","' . $entry['action'][0] . '") + eyeParam("File",table_' . $myPid . '_eyeFiles_View_Details_Sortabletable.getSelectValue(0)));
+			} else {
+				e = xGetElementById("' . $myPid . '_' . $father . '_' . $entry['action'][0] . '_Container");
+				if (e.className != "eyeFilesActionsSelected") {
+					e.className = "eyeFilesActionsSelected";
+					e.style.backgroundColor = "#579aff";
+					sendMsg(' . $checknum . ',"Action",eyeParam("Action","' . $entry['action'][0] . '"));
+				} else {
+					e.className = "";
+					e.style.backgroundColor = "";
+					sendMsg(' . $checknum . ',"Action",eyeParam("Action",""));
+				}
+			}
+		};
+		e.onmouseout = function() {
+			e = xGetElementById("' . $myPid . '_' . $father . '_' . $entry['action'][0] . '_Container");
+			if (e.className != "eyeFilesActionsSelected") {
+				e.style.backgroundColor = "";
+			}
+		};
+		e.onmouseover = function() {
+			e = xGetElementById("' . $myPid . '_' . $father . '_' . $entry['action'][0] . '_Container");
+			if (e.className != "eyeFilesActionsSelected") {
+				e.style.backgroundColor = "#e9e9e9";
+			}
+		};'));
+
+		$myImagebox = new Imagebox(array(
+			'father' => $father . '_' . $entry['action'][0] . '_Container',
+			'name' => $father . '_' . $entry['action'][0] . '_Imagebox',
+			'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/' . $entry['icon'][0] . '.png',
+			'x' => 10,
+			'y' => 7
+		));
+		$myImagebox->show();
+
+		$myLabel = new Label(array(
+			'father' => $father . '_' . $entry['action'][0] . '_Container',
+			'name' => $father . '_' . $entry['action'][0] . '_Label',
+			'text' => $entry['text'][0],
+			'x' => 40,
+			'y' => 7
+		));
+		$myLabel->show();
+		$myLabel->setCss(array('cursor' => 'pointer'));
+
+		$counter++;
+	}
+}
+?>

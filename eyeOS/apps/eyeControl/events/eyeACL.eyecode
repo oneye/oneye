@@ -1,0 +1,92 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_acl_add($params=''){
+		$myHidden = new Hidden(array(
+			'name' => 'addEdit',
+			'father' => 'eyeControl_container_big',
+			'text' => 'add'
+		));
+		eyeWidgets('serialize',array($myHidden));
+		eyeControl_lib_loadContent('only_root','newacl');
+}
+
+function eyeControl_on_acl_edit($params=''){
+	$id = $GLOBALS['eyeControl_acl_sortabletable']->selected;
+
+	if(empty($id)){
+		eyeX('messageBox',array('content'=>"Please choose an ACL to edit from the list"));
+		return true;
+	} else {
+		$myHidden = new Hidden(array(
+			'name' => 'addEdit',
+			'father' => 'eyeControl_container_big',
+			'text' => 'edit'
+		));
+		eyeWidgets('serialize',array($myHidden));
+		eyeControl_lib_loadContent('only_root','newacl');
+	}
+}
+
+function eyeControl_on_acl_delete($params=''){
+
+	$id = $GLOBALS['eyeControl_acl_sortabletable']->selected;
+
+	if(empty($id)){
+		eyeX('messageBox',array('content'=>'Please choose an ACL to delete'));
+	} else {
+		eyex('messageBox',array(
+			'content' => 'Are you sure you want to delete this ACL?',
+			'type' => 3,
+			'title' => 'Delete warning',
+			'win_name' => 'delete_warning0',
+			'win_style' => TITLE + MIN + CLOSE,
+			'btn1_capt' => 'Yes',
+			'btn1_name' => 'yDelete0',
+			'btn2_capt' => 'No',
+			'btn2_name' => 'nDelete0',
+			'img' => '?',
+			'win_removepid' => 0
+		));
+	}
+}
+
+
+function eyeControl_on_yDelete0($params=''){
+	$id0 = $GLOBALS['eyeControl_acl_sortabletable']->selected;
+
+	$file = EYE_ROOT .'/'. SYSTEM_DIR .'/'. SYSTEM_CONF_DIR .'/ACL/'. 'acl.xml';
+	$config = eyeXML('getXMLfile', array($file));
+	$i=0;
+	if($config){
+		foreach($config['GACL'][0]['ACL'] as $value) {
+			$id = $value['id'][0];
+			if($id == $id0){
+				unset($config['GACL'][0]['ACL'][$i]);
+			}
+			$i++;
+		}
+	}
+	eyeXML('setXMLfile', array($file,$config));
+	$GLOBALS['eyeControl_acl_sortabletable']->delRow($id0);
+	$GLOBALS['delete_warning0']->close();
+}
+
+function eyeControl_on_nDelete0($params=''){
+	$GLOBALS['delete_warning0']->close();
+}
+
+?>

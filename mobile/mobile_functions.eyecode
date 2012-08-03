@@ -1,0 +1,132 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+if(isset($_REQUEST['dirname'])) {
+	$dirname = $_REQUEST['dirname'];
+	if (vfs('checkSpecialChars',array($dirname)) === false) {
+		$dirname = str_replace('/','',$dirname);
+		$dirname = str_replace('\\','',$dirname);
+	}
+	$myUserDir = $dir.'/'.$dirname;
+	vfs('mkDir',array($myUserDir));
+} elseif (isset($_REQUEST['download'])) {
+	if(empty($_REQUEST['download'])) {
+		die();
+	}
+	$file = $_REQUEST['download'];
+	$myName = vfs('getRealName',array($dir.$file));
+	if(vfs('fileExists', array($dir.$file))) {
+		$extension = pathinfo($dir.$file);
+		$extension = /* utf8 */ strtolower($extension['extension']);
+		switch ($extension) {
+			case "jpg": case"jpeg":
+				header('Content-Type: image/jpeg');
+			break;
+			case "png":
+				header('Content-Type: image/png');
+			break;
+			case "gif":
+				header('Content-Type: image/gif');
+			break;
+			case "txt":
+				header('Content-Type: text/plain');
+			break;
+			case "htm": case"html":
+				header('Content-Type: text/html');
+			break;
+			case "mpg": case"mpeg": case"mp4":
+				header('Content-Type: video/mpeg');
+			break;
+			case "avi":
+				header('Content-Type: video/avi');
+			break;
+			case "doc": case "odt": case "ods": case "xls":
+				header('Content-Type: text/html');
+			break;
+			default:
+				header('Content-Type: application/octet-stream');
+				header('Content-Disposition: attachment; filename="'.urlencode($file).'"');
+			break;
+		}
+		if($extension == 'doc' || $extension == 'odt' || $extension == 'ods' || $extension == 'xls') {
+			$file = $myName;
+			$real = $file;
+			if(!vfs('checkPermissions',array($file))) {
+				return false;
+			}
+			$nfile = um('getCurrentUserDir').'tmp/mobile_file.'.$extension;
+			$myHTML = um('getCurrentUserDir').'tmp/mobile_new.tmp';
+
+			copy($real,$nfile);
+			$to = 'HTML (StarWriter)';
+			$tfp = vfs('real_open',array($nfile,'r'));
+			$bytes = fread($tfp,5);
+			$real = 1;
+			if($bytes == '<html') {
+				$real = 0;
+				$content = file_get_contents($nfile);
+			}
+			$bytes = fread($tfp,25);
+			if ( /* utf8 */ strpos($bytes, '<!--') !== false) {
+				$real = 0;
+				$content = file_get_contents($nfile);
+			}
+			if($extension == 'eyedoc') {
+				$real = 0;
+				$content = file_get_contents($nfile);
+			}
+			fclose($tfp);
+
+			if ($extension == 'xls' || $extension == 'ods') {
+				$to = 'HTML (StarCalc)';
+			} else {
+				$to = 'HTML (StarWriter)';
+			}
+			if($real == 1) {
+				eyeConverter('convert',array($nfile,$myHTML,$to,1));
+				$fp = vfs('real_open',array($myHTML,'r'));
+				$content = fread($fp,vfs('real_filesize',array($myHTML)));
+				fclose($fp);
+				$content = str_replace('<IMG SRC="','<IMG SRC="index.php?checknum='.$tCheckNum.'&msg=viewTempImg&params=',$content);
+			} else {
+				$pattern = '/<img[^\\/]*\\/>/i';
+				$replacement = '';
+				$content = /* utf8 */ preg_replace($pattern, $replacement, $content);
+			}
+		} else {
+			vfs('printFile', array($myName));
+		}
+		echo $content;
+		vfs('real_delete', array($myHTML));
+		vfs('real_delete', array($nfile));
+		exit;
+	}
+} elseif ($_GET['action'] == 'upload') {
+	if(is_uploaded_file($_FILES['file']['tmp_name'])) {
+		$filename = basename($_FILES['file']['name']);
+		$finalPath = $dir.'/'.$filename;
+		if(!vfs('checkQuota',array($_FILES['file']['tmp_name']))) {
+			exit;
+		}
+		if(!vfs('checkPermissions',array($finalPath))) {
+			exit;
+		}
+		move_uploaded_file($_FILES['file']['tmp_name'],$finalPath);
+		vfs('realToVirtual',array($finalPath));
+	}
+}
+
+?>

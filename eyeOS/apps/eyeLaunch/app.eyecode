@@ -1,0 +1,109 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	eyeLaunch
+
+	This app launch apps introducing his name into the textbox and clicking the button
+*/
+
+function eyeLaunch_run($params=null) {
+	global $myPid;
+
+	$myWindow = new Window(array('name'=>'wnd1','title'=>'Run...','father'=>'eyeApps','type'=>NORESIZE_WINDOW,'width'=>280,
+		'height'=>150,'cent'=>1,'savePosition' => 1));
+	$myWindow->show();
+
+	$myLabel1 = new Label(array('name'=>'label1','text'=>'Type the name of the app or command to run',
+		'father'=>'wnd1_Content','x'=>10,'y'=>10));
+	$myLabel1->show();
+
+	$myTextbox = new Textbox(array('name'=>'eyeLaunch_run','width'=>212,'father'=>'wnd1_Content','x'=>30,'y'=>50));
+	$myTextbox->show();
+
+	$myButton = new Button(array('name'=>'doLaunch','caption'=>'Run','father'=>'wnd1_Content','x'=>32,'y'=>85, 'horiz' => 1));
+
+	$myCheckBox = new Checkbox(array('name'=>'su_chk','father'=>'wnd1_Content','x'=>30,
+	'y'=>85,'text'=>'Run as different user'));
+	$myCheckBox->show();
+
+	$onCheck = 'document.getElementById("'.$myPid.'_wnd1").style.height="250px";';
+	$onCheck .= 'document.getElementById("'.$myPid.'_label2").style.display = "block";';
+ 	$onCheck .= 'document.getElementById("'.$myPid.'_eyeLaunch_user").style.display = "block";';
+ 	$onCheck .= 'document.getElementById("'.$myPid.'_label3").style.display = "block";';
+ 	$onCheck .= 'document.getElementById("'.$myPid.'_eyeLaunch_pass").style.display = "block";';
+ 	$onCheck .= 'document.getElementById("'.$myPid.'_eyeLaunch_user").focus();';
+ 
+	$unCheck = 'document.getElementById("'.$myPid.'_wnd1").style.height="150px";';
+	$unCheck .= 'document.getElementById("'.$myPid.'_label2").style.display = "none";';
+ 	$unCheck .= 'document.getElementById("'.$myPid.'_eyeLaunch_user").style.display = "none";';
+ 	$unCheck .= 'document.getElementById("'.$myPid.'_label3").style.display = "none";';
+ 	$unCheck .= 'document.getElementById("'.$myPid.'_eyeLaunch_pass").style.display = "none";';
+ 	$unCheck .= 'document.getElementById("'.$myPid.'_eyeLaunch_run").focus();';
+ 
+	$js = "if(document.getElementById('".$myPid."_su_chk').checked == true) { ".$onCheck." } else { ".$unCheck." }";
+
+	$myCheckBox->addEvent('onclick',$js);
+
+	$myLabel2 = new Label(array('name'=>'label2','text'=>'User',
+		'father'=>'wnd1_Content','x'=>30,'y'=>125));
+	$myLabel2->show();
+	$myLabel2->setCss(array('display'=>'none'));
+
+	$myTextboxU = new Textbox(array('name'=>'eyeLaunch_user','width'=>212,'father'=>'wnd1_Content','x'=>30,
+		'y'=>145));
+	$myTextboxU->show();
+	$myTextboxU->setCss(array('display'=>'none'));
+
+	$myLabel2 = new Label(array('name'=>'label3','text'=>'Password',
+		'father'=>'wnd1_Content','x'=>30,'y'=>165));
+	$myLabel2->show();
+	$myLabel2->setCss(array('display'=>'none'));
+
+	$myTextboxP = new Textbox(array('name'=>'eyeLaunch_pass','width'=>212,'father'=>'wnd1_Content','x'=>30,
+		'y'=>185,'password' => 2));
+	$myTextboxP->show();
+	$myTextboxP->setCss(array('display'=>'none'));
+
+	$myButton->addFriend($myTextbox);
+	$myButton->addFriend($myTextboxU);
+	$myButton->addFriend($myTextboxP);
+	$myButton->addFriend($myCheckBox);
+	$myButton->show();
+
+	$myTextbox->addFriend($myTextboxU);
+	$myTextbox->addFriend($myTextboxP);
+	$myTextbox->addFriend($myCheckBox);
+
+	$myTextboxU->addFriend($myTextbox);
+	$myTextboxU->addFriend($myTextboxP);
+	$myTextboxU->addFriend($myCheckBox);
+
+	$myTextboxP->addFriend($myTextboxU);
+	$myTextboxP->addFriend($myTextbox);
+	$myTextboxP->addFriend($myCheckBox);
+
+	$myTextboxU->addEnterEventMsg('doLaunch');
+	$myTextboxP->addEnterEventMsg('doLaunch');
+	$myTextbox->addEnterEventMsg('doLaunch');
+	$myTextbox->focus();
+}
+
+function eyeLaunch_end($params=null) {
+	eyeWidgets('unserialize');
+}
+
+?>

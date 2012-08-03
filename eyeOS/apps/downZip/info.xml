@@ -1,0 +1,10 @@
+<package>
+	<name>downZip</name>
+	<category>Core File Management</category>
+	<version>1.9</version>
+	<description>Utility to download files as zip file</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon />
+</package>

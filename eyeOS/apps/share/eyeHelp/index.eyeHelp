@@ -1,0 +1,59 @@
+    Welcome to oneye the Cloud Computing Operating System. Work online personally and or collaboratively with your files, office, calendar, contacts and much more. The idea of oneye is to create a free, open source (AGPLv3) product easy to install on a web server so you will have your own cloud system under your control. 
+
+    oneye is all about centering work and entertainment in a single place. oneye is about removing compatibility issues between applications and operating systems and taking your life everywhere. 
+
+    oneye is available in 30 translations. And is used privatively and professionally through out the world. rather it is used for public environments, schools, small and large companies alike or a way to share data with your family. oneye has a use in our the digital life era
+
+
+
+[h]The Goals for oneye[/h]
+	[list][*]Being able to work from everywhere, regardless of whether or not you are using a full-featured, modern computer, a mobile gadget, or a completely obsolete PC.
+	[*]Sharing resources easily between different work centers at company, or working from different places and countries on the same projects.
+	[*]Always enjoying the same applications with the same open formats, and forgetting the usual compatibility problems between office suites and traditional operating systems.
+	[*]Being able to continue working if you have to leave your local computer or if it just crashes, without loosing data or time: Just log in to your oneye from another place and continue working. 
+	[/list]
+
+
+[h]What Can You Do with oneye?[/h]
+
+	[b]File management[/b]
+	[list][*]Upload multiple files
+	[*]Easy visual file management
+	[*]Download entire folders as Zip
+	[*]Compress and uncompress Zip/Tar files
+	[*]Photo viewer and slideshow 
+	[/list]
+
+	[b]Personal Information Management[/b]
+	[list][*]Calendar with multiple views
+	[*]Contacts manager
+	[*]Export and Import vCards 
+	[/list]
+
+	[b]System[/b]
+	[list][*]Packages Installer
+	[*]Repository based Ports
+	[*]Control system for groups and users
+	[*]Multiple instances of the applications 
+	[/list]
+		
+	[b]Office[/b]
+	[list][*]Word Processor
+	[*]Spreadsheets
+	[*]Presentations
+	[*]Support for MS Office and OpenDocument files 
+	[/list]
+
+	[b]Network[/b]
+	[list][*]Internal Messaging System
+	[*]Bulletin Board
+	[*]Proxied FTP Client
+	[*]RSS Feeds Reader 
+	[/list]
+
+	[b]Desktop[/b]	
+	[list][*]Third-party applications
+	[*]Auto-run desired apps
+	[*]Translations
+	[*]Theming 
+	[/list]

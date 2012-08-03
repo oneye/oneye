@@ -1,0 +1,11 @@
+<package>
+	<name>PDF File Reader</name>
+	<category>Office</category>
+	<version>1.9</version>
+	<description>Utility to open pdf files</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/filetypes/pdf.png</icon>
+	<openWith>1</openWith>
+</package>

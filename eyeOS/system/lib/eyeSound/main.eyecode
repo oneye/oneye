@@ -1,0 +1,290 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function lib_eyeSound_createSound($params = '') {
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('runjs',array('js' => 'soundManager.createSound("' . $myPid . '_' . base64_encode($params[0]) . '",%s);','tokens' => array($params[1])));
+}
+
+function lib_eyeSound_destroySound($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.destroySound("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+}
+
+function lib_eyeSound_mute($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.mute("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+}
+
+function lib_eyeSound_onfinish($params = '') {
+	global $checknum;
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$tokens = array();
+	if (isset($params[1]) === true && $params[1] == 2) {
+		$js = $params[2];
+	} elseif (isset($params[1]) === true && $params[1]) {
+		$js = 'sendMsg(' . $checknum . ',%s,eyeParam("id",%s) + eyeParam("event","onfinish"));';
+		$tokens = array($params[1],$params[0]);
+	} else {
+		$js = 'soundManager.destroySound("' . $myPid . '_' . base64_encode($params[0]) . '");';
+	}
+	eyex('runjs',array('js' => 'soundManager.sounds["' . $myPid . '_' . base64_encode($params[0]) . '"]._iO.onfinish = function() { ' . $js . ' };','tokens' => $tokens));
+}
+
+function lib_eyeSound_onid3($params = '') {
+	global $checknum;
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if ($params[1] == 2) {
+		$js = $params[2];
+	} else {
+		$js = 'var param = ""; for (data in this.id3) { param += eyeParam(data,this.id3[data]); } sendMsg(' . $checknum . ',%s,eyeParam("id",%s) + eyeParam("event","onid3") + eyeParam("id3",param));';
+		$tokens = array($params[1],$params[0]);
+	}
+	eyex('runjs',array('js' => 'soundManager.sounds["' . $myPid . '_' . base64_encode($params[0]) . '"]._iO.onid3 = function() { ' . $js . ' };','tokens' => $tokens));
+}
+
+function lib_eyeSound_onload($params = '') {
+	global $checknum;
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if ($params[1] == 2) {
+		$js = $params[2];
+	} else {
+		$js = 'sendMsg(' . $checknum . ',%s,eyeParam("id",%s) + eyeParam("event","onload") + eyeParam("duration",this.duration) + eyeParam("readyState",this.readyState));';
+		$tokens = array($params[1],$params[0]);
+	}
+	eyex('runjs',array('js' => 'soundManager.sounds["' . $myPid . '_' . base64_encode($params[0]) . '"]._iO.onload = function() { ' . $js . ' };','tokens' => $tokens));
+}
+
+function lib_eyeSound_onpause($params = '') {
+	global $checknum;
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if ($params[1] == 2) {
+		$js = $params[2];
+	} else {
+		$js = 'sendMsg(' . $checknum . ',%s,eyeParam("id",%s) + eyeParam("event","onpause"));';
+		$tokens = array($params[1],$params[0]);
+	}
+	eyex('runjs',array('js' => 'soundManager.sounds["' . $myPid . '_' . base64_encode($params[0]) . '"]._iO.onpause = function() { ' . $js . ' };','tokens' => $tokens));
+}
+
+function lib_eyeSound_onplay($params = '') {
+	global $checknum;
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if ($params[1] == 2) {
+		$js = $params[2];
+	} else {
+		$js = 'sendMsg(' . $checknum . ',%s,eyeParam("id",%s) + eyeParam("event","onplay"));';
+		$tokens = array($params[1],$params[0]);
+	}
+	eyex('runjs',array('js' => 'soundManager.sounds["' . $myPid . '_' . base64_encode($params[0]) . '"]._iO.onplay = function() { ' . $js . ' };','tokens' => $tokens));
+}
+
+function lib_eyeSound_onresume($params = '') {
+	global $checknum;
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if ($params[1] == 2) {
+		$js = $params[2];
+	} else {
+		$js = 'sendMsg(' . $checknum . ',%s,eyeParam("id",%s) + eyeParam("event","onresume"));';
+		$tokens = array($params[1],$params[0]);
+	}
+	eyex('runjs',array('js' => 'soundManager.sounds["' . $myPid . '_' . base64_encode($params[0]) . '"]._iO.onresume = function() { ' . $js . ' };','tokens' => $tokens));
+}
+
+function lib_eyeSound_onstop($params = '') {
+	global $checknum;
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if ($params[1] == 2) {
+		$js = $params[2];
+	} else {
+		$js = 'sendMsg(' . $checknum . ',%s,eyeParam("id",%s) + eyeParam("event","onstop"));';
+		$tokens = array($params[1],$params[0]);
+	}
+	eyex('runjs',array('js' => 'soundManager.sounds["' . $myPid . '_' . base64_encode($params[0]) . '"]._iO.onstop = function() { ' . $js . ' };','tokens' => $tokens));
+}
+
+function lib_eyeSound_pause($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.pause("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+}
+
+function lib_eyeSound_pauseAll($params = '') {
+	eyex('rawjs',array('js' => 'soundManager.pauseAll();'));
+}
+
+function lib_eyeSound_play($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.play("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+	if (isset($params[1]) === true && $params[1]) {
+		eyeSound('onfinish',array($params[0]));
+	}
+}
+
+function lib_eyeSound_simplePlay($params = '') {
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyeSound('createSound',array($params[0],$params[1]));
+	eyeSound('play',array($params[0]));
+	eyeSound('onfinish',array($params[0]));
+	return true;
+}
+
+function lib_eyeSound_resume($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.resume("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+}
+
+function lib_eyeSound_resumeAll($params = '') {
+	eyex('rawjs',array('js' => 'soundManager.resumeAll();'));
+}
+
+function lib_eyeSound_setPan($params = '') {
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$params[1] = intval($params[1]);
+	if ($params[1] < -100) {
+		$params[1] = -100;
+	} elseif ($params[1] > 100) {
+		$params[1] = 100;
+	}
+	eyex('rawjs',array('js' => 'soundManager.setPan("' . $myPid . '_' . base64_encode($params[0]) . '","' . $params[1] . '");'));
+}
+
+function lib_eyeSound_setPosition($params = '') {
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$params[1] = intval($params[1]);
+	if ($params[1] < 0) {
+		$params[1] = 0;
+	}
+	eyex('rawjs',array('js' => 'soundManager.setPosition("' . $myPid . '_' . base64_encode($params[0]) . '","' . $params[1] . '");'));
+}
+
+function lib_eyeSound_setVolume($params = '') {
+	global $myPid;
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$params[1] = intval($params[1]);
+	if ($params[1] < 0) {
+		$params[1] = 0;
+	} elseif ($params[1] > 100) {
+		$params[1] = 100;
+	}
+	eyex('rawjs',array('js' => 'soundManager.setVolume("' . $myPid . '_' . base64_encode($params[0]) . '","' . $params[1] . '");'));
+}
+
+function lib_eyeSound_stop($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.stop("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+}
+
+function lib_eyeSound_stopAll($params = '') {
+	eyex('rawjs',array('js' => 'soundManager.stopAll();'));
+}
+
+function lib_eyeSound_togglePause($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.togglePause("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+}
+
+function lib_eyeSound_unload($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.unload("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+}
+
+function lib_eyeSound_unmute($params = '') {
+	global $myPid;
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	eyex('rawjs',array('js' => 'soundManager.unmute("' . $myPid . '_' . base64_encode($params[0]) . '");'));
+}
+?>

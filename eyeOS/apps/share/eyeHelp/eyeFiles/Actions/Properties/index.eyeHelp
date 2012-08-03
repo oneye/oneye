@@ -1,0 +1,5 @@
+﻿If you use the "properties" action, a window will pop up. This window contains informations about the file or the folder. These informations are:
+[list][*]Path: The path of the folder where that file is
+[*]Filetime: The time where the file was created
+[*]Size: The size of the file
+[*]Author: Who created or uploaded the file[/list]

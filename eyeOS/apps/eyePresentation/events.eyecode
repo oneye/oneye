@@ -1,0 +1,161 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyePresentation_on_Message($params="") {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyePresentation_on_Open($params=null) {
+	global $checknum;
+	$options = array(
+		0,
+		'SelectFileOpen',
+		$checknum,
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+
+function eyePresentation_on_SelectFileOpen($params=null) {
+	$file = $params['arg'][0];
+	if($file) {
+		$file = um('getCurrentUserDir').FILES_USER_DIR.'/'.$file;
+		//TODO: SECURITY: MAYBE VFS HERE
+		if(is_dir($file)) {
+			eyex('messageBox',array('content'=>'You need to select a file to open!'));
+			return;
+		}
+		$fp = vfs('open',array($file,'r'));
+		if(!$fp) {
+			eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
+			return;
+		}
+		fclose($fp);
+		$myHidden = new Hidden(array('name'=>'filepath','father'=>'presentationWND','text'=>$file));
+		eyeWidgets('serialize',array($myHidden));
+		$GLOBALS['filepath'] = $myHidden;
+		gotoSlide(0);
+		global $checknum;
+		$GLOBALS['imgFrame']->setUrl("index.php?checknum=".$checknum."&msg=getSlide&anticache=".md5(uniqid(time())));
+	}
+}
+
+function eyePresentation_on_fullscreen($params=null) {
+	global $checknum;
+	$GLOBALS['presentationWND']->setFullScreen();
+}
+
+function eyePresentation_on_back($params=null) {
+	global $checknum;
+	$myNumber = intval($GLOBALS['currentSlide']->text);
+	if($myNumber == 0) {
+		eyeX('messagebox',array('content'=>'You are already on the first slide, you cannot go back anymore!'));
+	} else {
+		$myNumber--;
+		gotoSlide($myNumber);
+		$GLOBALS['imgFrame']->setUrl("index.php?checknum=".$checknum."&msg=getSlide&anticache=".md5(uniqid(time())));
+	}
+}
+
+function eyePresentation_on_next($params=null) {
+	global $checknum;
+	$myNumber = intval($GLOBALS['currentSlide']->text);
+	$myNumber++;
+	gotoSlide($myNumber);
+	$GLOBALS['imgFrame']->setUrl("index.php?checknum=".$checknum."&msg=getSlide&anticache=".md5(uniqid(time())));
+}
+
+function eyePresentation_on_getSlide($params=null) {
+	global $myPid;
+	$myNumber = $GLOBALS['currentSlide']->text;
+	$myName = basename($GLOBALS['filepath']->text);
+	$file = realpath(um('getCurrentUserDir').'/tmp/').'/'.$myPid.'_'.$myName.'_'.$myNumber.'.png';
+	if(!$file) {
+		return;
+	}
+	$len = filesize($file);
+	$info = @getimagesize($file);
+	if ($info !== false) {
+		$fp = vfs('real_open',array($file,'r'),1);
+		if(!$fp) {
+			return;
+		}
+		header('Content-Type: '.$info['mime']);
+		header("Content-Length: $len");
+		header("Accept-Ranges: bytes");
+		$content = fread($fp,$len);
+		echo $content;
+		fclose($fp);
+	}
+	exit;
+}
+
+function eyePresentation_on_Resize($params=null) {
+	$width = $params['arg'][0];
+	$height = $params['arg'][1];
+	$width = intval($width);
+	$height = intval($height);
+	$GLOBALS['imgFrame']->setWidth($width-15);
+	$GLOBALS['imgFrame']->setHeight($height-90);
+}
+
+function gotoSlide($num) {
+	global $myPid;
+	$myFile = $GLOBALS['filepath']->text;
+	$myName = basename($myFile);
+	$dir = realpath(um('getCurrentUserDir').'/tmp/').'/'.$myPid.'_'.$myName;
+
+	if(!vfs('checkPermissions',array($myFile,'r'))) {
+		return false;
+	}
+
+	$myFile = vfs('getRealName',array($myFile));
+	copy($myFile,$dir); //TODO: WARNING: SECURITY: THIS SHOULD BE PASSED TO VFS_REAL_COPY
+	$myFile = realpath(dirname($dir)).'/'.basename($dir);
+
+	$myFile = escapeshellarg($myFile);
+	$myFile = /* utf8 */ substr($myFile, 1);
+	$myFile = /* utf8 */ substr($myFile, 0, -1);
+
+	$dir = escapeshellarg($dir);
+	$dir = /* utf8 */ substr($dir, 1);
+	$dir = /* utf8 */ substr($dir, 0, -1);
+
+	//TODO: maybe vfs here?
+	if(is_dir($myFile) || !is_file($myFile) || !is_readable($myFile)) {
+		return false;
+	}
+	if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) { // Check for windows systems
+		$myFile = str_replace('/','\\',$myFile);
+		$dir = str_replace('/','\\',$dir);
+		$content = 'cd "' . OFFICE_COMMAND . '"' . "\n" . 'soffice.exe -headless -norestore macro:///Tools.eyeOS.getSingleSlide(' . OFFICE_SEPARATOR_ARG . $myFile . OFFICE_SEPARATOR_ARG . ',' . OFFICE_SEPARATOR_ARG . intval($num) . OFFICE_SEPARATOR_ARG . ',' . OFFICE_SEPARATOR_ARG . $dir . OFFICE_SEPARATOR_ARG . ')';
+		file_put_contents($myFile . '.bat',$content);
+		$cmd = '"' . $myFile . '.bat"';
+	} elseif (OFFICE_USE_DISPLAY == 1) {
+		$cmd = OFFICE_COMMAND.' -headless -norestore -display :'.intval(OFFICE_SCREEN).'.0 '.OFFICE_SEPARATOR_ARG.'macro:///Tools.eyeOS.getSingleSlide('.$myFile.','.intval($num).','.$dir.')'.OFFICE_SEPARATOR_ARG;
+	} else {
+		$cmd = OFFICE_COMMAND.' -headless -norestore '.OFFICE_SEPARATOR_ARG.'macro:///Tools.eyeOS.getSingleSlide('.$myFile.','.intval($num).','.$dir.')'.OFFICE_SEPARATOR_ARG;
+	}
+	$myHidden = new Hidden(array('name'=>'currentSlide','father'=>'presentationWND','text'=>$num));
+	eyeWidgets('serialize',array($myHidden));
+	$GLOBALS['currentSlide'] = $myHidden;
+	shell_exec($cmd);
+}
+
+function eyePresentation_on_Close(){
+	proc('end');
+}
+
+?>

@@ -1,0 +1,228 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function miniActions_run($params=null) {
+	global $myPid;
+
+	foreach (proc('getProcessTable') as $process) {
+		if ($process['appName'] == 'miniActions' && $process['pid'] != $myPid) {
+			eyex('messageBox', array('content' => 'miniActions is already running!'));
+			return proc('end');
+		}
+	}
+
+	$width = $_SESSION['SCREEN']['eyeApps']['width']-236;
+	// Window
+	$myWindow = new Window(array(
+		'name'=>'miniActionsWND',
+		'father' => 'eyeWidgets',
+		'removeFatherPid' => 1,
+		'type'=>WIN_IMAGE_DRAGGABLE_NOTLISTED,
+		'title'=>'Actions widget',
+		'background'=>'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/miniApps/miniActions/bg.png',
+		'width'=>197,
+		'height'=>174,
+		'forceSavePosition'=>1,
+		'x'=>$width,
+		'y'=>165,
+	));
+	$myWindow->show();
+
+	/**
+	*@Todo if Windows Widget gets class fix this
+	*/
+	eyeX('rawjs',array('js'=>
+		'document.getElementById("'.$myPid.'_' . $myWindow->name . '").className = "miniWND";
+		document.getElementById("'.$myPid.'_' . $myWindow->name . '_Content").className = "miniWND";
+		'
+	));
+
+	// Button 1
+	$y = 5;
+	$myImage1 = new Imagebox(array(
+		'name' => 'miniActions_1',
+		'father' => 'miniActionsWND',
+		'x' => 5,
+		'y' => $y,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/miniApps/miniActions/button.png',
+		'signal' => 'Launch1',
+		'disableMsg'=>0
+	));
+	$myImage1->show();
+
+	$myImage2 = new Imagebox(array(
+		'name' => 'miniActions_1_img',
+		'father' => 'miniActionsWND',
+		'x' => 15,
+		'y' => $y + 7,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/upload.png',
+		'signal' => 'Launch1',
+		'disableMsg'=>0
+	));
+	$myImage2->show();
+	$myImage2->setCss(array('cursor' => 'Pointer'));
+
+	$myLabel1 = new Label(array(
+		'name' => 'miniActions_1_lbl',
+		'father' => 'miniActionsWND',
+		'x' => 38,
+		'y' => $y + 9,
+		'signal' => 'Launch1',
+		'text' => 'Upload your files',
+		'disablemsg'=>0
+	));
+	$myLabel1->show();
+
+	// Button 2
+	$y = $y + 36;
+	$myImage3 = new Imagebox(array(
+		'name' => 'miniActions_2',
+		'father' => 'miniActionsWND',
+		'x' => 5,
+		'y' => $y,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/miniApps/miniActions/button.png',
+		'disableMsg'=>0
+	));
+	$myImage3->show();
+
+	$myImage4 = new Imagebox(array(
+		'name' => 'miniActions_2_img',
+		'father' => 'miniActionsWND',
+		'x' => 15,
+		'y' => $y + 7,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/message.png',
+		'signal' => 'Launch2',
+		'disableMsg'=>0
+	));
+	$myImage4->show();
+	$myImage4->setCss(array('cursor' => 'Pointer'));
+
+	$myLabel2 = new Label(array(
+		'name' => 'miniActions_2_lbl',
+		'father' => 'miniActionsWND',
+		'x' => 38,
+		'y' => $y + 9,
+		'signal' => 'Launch2',
+		'text' => 'Send an internal message',
+		'disablemsg'=>0
+	));
+	$myLabel2->show();
+
+	// Button 3
+	$y = $y + 36;
+	$myImage5 = new Imagebox(array(
+		'name' => 'miniActions_3',
+		'father' => 'miniActionsWND',
+		'x' => 5,
+		'y' => $y,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/miniApps/miniActions/button.png',
+		'disableMsg'=>0
+	));
+	$myImage5->show();
+
+	$myImage6 = new Imagebox(array(
+		'name' => 'miniActions_3_img',
+		'father' => 'miniActionsWND',
+		'x' => 15,
+		'y' => $y + 7,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/document.png',
+		'signal' => 'Launch3',
+		'disableMsg'=>0
+	));
+	$myImage6->show();
+	$myImage6->setCss(array('cursor' => 'Pointer'));
+
+	$myLabel3 = new Label(array(
+		'name' => 'miniActions_3_lbl',
+		'father' => 'miniActionsWND',
+		'x' => 38,
+		'y' => $y + 9,
+		'signal' => 'Launch3',
+		'text' => 'Create a new document',
+		'disablemsg'=>0
+	));
+	$myLabel3->show();
+
+	// Button 4
+	$y = $y + 36;
+	$myImage7 = new Imagebox(array(
+		'name' => 'miniActions_4',
+		'father' => 'miniActionsWND',
+		'x' => 5,
+		'y' => $y,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/miniApps/miniActions/button.png',
+		'disableMsg'=>0
+	));
+	$myImage7->show();
+
+	$myImage8 = new Imagebox(array(
+		'name' => 'miniActions_4_img',
+		'father' => 'miniActionsWND',
+		'x' => 15,
+		'y' => $y + 7,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/spreadsheet.png',
+		'signal' => 'Launch4',
+		'disableMsg'=>0
+	));
+	$myImage8->show();
+	$myImage8->setCss(array('cursor' => 'Pointer'));
+
+	$myLabel4 = new Label(array(
+		'name' => 'miniActions_4_lbl',
+		'father' => 'miniActionsWND',
+		'x' => 38,
+		'y' => $y + 9,
+		'signal' => 'Launch4',
+		'text' => 'Create a new spreadsheet',
+		'disablemsg'=>0
+	));
+	$myLabel4->show();
+
+	// Close button
+	$myImage9 = new Imagebox(array(
+		'name' => 'miniActions_close',
+		'father' => 'miniActionsWND',
+		'x' => 90,
+		'y' => 10,
+		'vert'=>1,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/12x12/close.png',
+		'signal' => 'closeApp',
+		'disableMsg'=>0
+	));
+	$myImage9->show();
+	$myImage9->setCss(array("cursor"=>"pointer"));
+
+	//set css classes for text
+	eyex('rawjs',array('js' =>
+		'document.getElementById("' . $myPid . '_' . $myLabel1->name . '").className = "miniActionsText";
+		document.getElementById("' . $myPid . '_' . $myLabel2->name . '").className = "miniActionsText";
+		document.getElementById("' . $myPid . '_' . $myLabel3->name . '").className = "miniActionsText";
+		document.getElementById("' . $myPid . '_' . $myLabel4->name . '").className = "miniActionsText";
+		'
+	));
+
+	//CSS
+	eyex('loadCss',array(
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/miniApps/miniApps.css&type=css',
+		'id' => 'miniApps'
+	));
+}
+
+function miniActions_end() {
+	eyeWidgets('unserialize');
+}
+
+?>

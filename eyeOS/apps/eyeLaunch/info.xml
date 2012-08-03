@@ -1,0 +1,10 @@
+<package>
+	<name>Launch App</name>
+	<category>Utilities</category>
+	<version>1.9</version>
+	<description>Utility to launch applications</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/exec.png</icon>
+</package>

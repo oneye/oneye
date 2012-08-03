@@ -1,0 +1,28 @@
+<menu>
+	<entry>
+		<icon>launcher</icon>
+		<text>Launch</text>
+		<action>launch</action>
+		<type>event</type>
+	</entry>
+	<entry>
+		<icon>rename</icon>
+		<text>Edit</text>
+		<action>editLink</action>
+	</entry>
+	<entry>
+		<icon>delete</icon>
+		<text>Delete</text>
+		<action>eyeDelete</action>
+	</entry>
+	<entry>
+		<icon>rename</icon>
+		<text>Rename</text>
+		<action>eyeRename</action>
+	</entry>
+	<entry>
+		<icon>properties</icon>
+		<text>Properties</text>
+		<action>eyeProperties</action>
+	</entry>
+</menu>

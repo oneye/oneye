@@ -1,0 +1,12 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_nl2br($string, $is_xhtml = true) {
+	if ($is_xhtml === true) {
+		return nl2br($string);
+	}
+	$string = str_replace(array('&lt;', '&amp;'), array('<', '&'), $string);
+	return str_replace(array('<br />', '&lt;', '&amp;'), array('<br>', '<', '&'), nl2br($string));
+}
+?>

@@ -1,0 +1,30 @@
+<?php
+global $lib_eyeString;
+if (isset($lib_eyeString['ord']) === false || is_array($lib_eyeString['ord']) === false) {
+	$lib_eyeString['ord'] = array();
+}
+
+/*
+ * FUNCTIONS
+ */
+function utf8_ord($string) {
+	global $lib_eyeString;
+	
+	$string = utf8_substr($string, 0, 1);
+	if (isset($lib_eyeString['ord'][$string]) === false) {
+		$ord = ord($string);
+		$bin = '11111110';
+		while ($ord < bindec($bin)) {
+			$bin = substr($bin, 1) . '0';
+		}
+		$ord -= bindec($bin);
+		
+		$length = strlen($string);
+		for ($i = 1; $i < $length; $i++) {
+			$ord = $ord * 64 + ord($string[$i]) - 128;
+		}
+		$lib_eyeString['ord'][$string] = $ord;
+	}
+	return $lib_eyeString['ord'][$string];
+}
+?>

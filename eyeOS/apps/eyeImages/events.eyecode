@@ -1,0 +1,204 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeImages_lib_Load($path) {
+	global $checknum;
+	if (!$GLOBALS['eyeImages_Hidden_Resized']->text) {
+		$info = @getimagesize(vfs('getRealName',array($path)));
+		if ($info[0] > 600) {
+			$info[1] = intval(600 / $info[0] * $info[1]);
+			$info[0] = 600;
+		}
+		if ($info[1] > 480) {
+			$info[0] = intval(480 / $info[1] * $info[0]);
+			$info[1] = 480;
+		}
+		if ($GLOBALS['eyeImages_Window']->fullScreen) {
+			$GLOBALS['eyeImages_Window']->originWidth = $info[0] + 18;
+			$GLOBALS['eyeImages_Window']->originHeight = $info[1] + 99;
+		} else {
+			$GLOBALS['eyeImages_Window']->setWidth($info[0] + 18);
+			$GLOBALS['eyeImages_Window']->setHeight($info[1] + 99);
+			$GLOBALS['eyeImages_Iframe']->setWidth($GLOBALS['eyeImages_Window']->width - 2);
+			$GLOBALS['eyeImages_Iframe']->setHeight($GLOBALS['eyeImages_Window']->height - 83);
+		}
+	}
+	$GLOBALS['eyeImages_Hidden_Path']->setText($path);
+	$GLOBALS['eyeImages_Iframe']->setUrl('index.php?checknum=' . $checknum . '&msg=getImage&time=' . time());
+	$GLOBALS['eyeImages_Window']->setTitle(basename($path) . ' - ' . i18n('translate',array('View Images')));
+}
+
+function eyeImages_on_Close($params = '') {
+	proc('end');
+}
+
+function eyeImages_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeImages_on_Fullscreen($params = '') {
+	global $myPid;
+	$resized = $GLOBALS['eyeImages_Hidden_Resized']->text;
+	$GLOBALS['eyeImages_Window']->setFullScreen();
+	$GLOBALS['eyeImages_Hidden_Resized']->setText($resized);
+	if ($GLOBALS['eyeImages_Window']->fullScreen) {
+		$press = 'Press';
+	}
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeImages_Toolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "Fullscreen_Container") {
+			e.childNodes[i].className = "blockbarItem' . $press . '_right";
+		}
+	}'));
+}
+
+function eyeImages_on_getImage($params = '') {
+	$path = $GLOBALS['eyeImages_Hidden_Path']->text;
+	$info = @getimagesize(vfs('getRealName',array($path)));
+	if ($info !== false) {
+		header('Content-Type: ' . $info['mime']);
+		header('Content-Length: ' . vfs('filesize',array($path)));
+		header('Accept-Ranges: bytes');
+		vfs('readFile',array($path));
+	}
+	exit;
+}
+
+function eyeImages_on_Init($params = '') {
+	global $checknum;
+	if (isset($params['arg'][0])) {
+		$params[0] = um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . $params['arg'][0];
+	}
+	$info = @getimagesize(vfs('getRealName',array($params[0])));
+	if ($info[0] > 600) {
+		$info[1] = intval(600 / $info[0] * $info[1]);
+		$info[0] = 600;
+	}
+	if ($info[1] > 480) {
+		$info[0] = intval(480 / $info[1] * $info[0]);
+		$info[1] = 480;
+	}
+	addListenerServiceCall('fullResized','eyex','resizedbrowser');
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => $info[1] + 99,
+		'minHeight' => 200,
+		'minWidth' => 200,
+		'name' => 'eyeImages_Window',
+		'title' => basename($params[0]) . ' - ' . i18n('translate',array('View Images')),
+		'savePosition' => 1,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'Resize',
+		'width' => $info[0] + 18
+	));
+	$myWindow->show();
+	$GLOBALS['eyeImages_Window'] = $myWindow;
+
+	$myToolbar = new Toolbar(array(
+		'father' => 'eyeImages_Window_Content',
+		'name' => 'eyeImages_Toolbar'
+	));
+	$myToolbar->show();
+	$myToolbar->addItem('Previous','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/previous.png','Previous');
+	$myToolbar->addItem('Next','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/next.png','Next');
+	$myToolbar->addItem('Fullscreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+
+	$myIframe = new Iframe(array(
+		'father' => 'eyeImages_Window_Content',
+		'height' => $myWindow->height - 83,
+		'name' => 'eyeImages_Iframe',
+		'url' => 'index.php?checknum=' . $checknum . '&msg=getImage&time=' . time(),
+		'width' => $myWindow->width - 2,
+		'x' => 0,
+		'y' => 59
+	));
+	$myIframe->show();
+	$myIframe->focus();
+	$GLOBALS['eyeImages_Iframe'] = $myIframe;
+
+	$myHidden = new Hidden(array(
+		'father' => 'eyeImages_Window_Content',
+		'name' => 'eyeImages_Hidden_Path',
+		'text' => $params[0]
+	));
+	$myHidden->show();
+	$GLOBALS['eyeImages_Hidden_Path'] = $myHidden;
+
+	$myHidden = new Hidden(array(
+		'father' => 'eyeImages_Window_Content',
+		'name' => 'eyeImages_Hidden_Resized',
+		'text' => 0
+	));
+	$myHidden->show();
+	$GLOBALS['eyeImages_Hidden_Resized'] = $myHidden;
+}
+
+function eyeImages_on_Next($params = '') {
+	$files = vfs('getDirContent',array(dirname($GLOBALS['eyeImages_Hidden_Path']->text)));
+	$image = '';
+	$next = 0;
+	foreach ($files as $file) {
+		$info = pathinfo($file);
+		if (in_array( /* utf8 */ strtolower($info['extension']) ,array('bmp', 'gif', 'jpeg', 'jpg', 'png', 'tiff')) === true) {
+			if (!$image) {
+				$image = $file;
+			}
+			if (utf8_strtolower($file) == utf8_strtolower($GLOBALS['eyeImages_Hidden_Path']->text)) {
+				$next = 1;
+			} elseif ($next) {
+				$image = $file;
+				break;
+			}
+		}
+	}
+	if ($image) {
+		eyeImages_lib_Load($image);
+	} else {
+		eyex('messageBox',array('content' => 'No image could be found.'));
+	}
+}
+
+function eyeImages_on_Previous($params = '') {
+	$files = vfs('getDirContent',array(dirname($GLOBALS['eyeImages_Hidden_Path']->text)));
+	$image = '';
+	foreach ($files as $file) {
+		$info = pathinfo($file);
+		if (in_array( /* utf8 */ strtolower($info['extension']) ,array('bmp', 'gif', 'jpeg', 'jpg', 'png', 'tiff')) === true) {
+			if (utf8_strtolower($file) == utf8_strtolower($GLOBALS['eyeImages_Hidden_Path']->text) && $image) {
+				break;
+			} else {
+				$image = $file;
+			}
+		}
+	}
+	if ($image) {
+		eyeImages_lib_Load($image);
+	} else {
+		eyex('messageBox',array('content' => 'No image could be found.'));
+	}
+}
+
+function eyeImages_on_Resize($params = '') {
+	if (!$GLOBALS['eyeImages_Hidden_Resized']->text && !$GLOBALS['eyeImages_Window']->fullScreen) {
+		$GLOBALS['eyeImages_Hidden_Resized']->setText(1);
+	}
+	$GLOBALS['eyeImages_Window']->width = $params['arg'][0];
+	$GLOBALS['eyeImages_Window']->height = $params['arg'][1];
+	$GLOBALS['eyeImages_Iframe']->setWidth($GLOBALS['eyeImages_Window']->width - 2);
+	$GLOBALS['eyeImages_Iframe']->setHeight($GLOBALS['eyeImages_Window']->height - 83);
+}
+?>

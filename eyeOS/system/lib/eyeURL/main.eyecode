@@ -1,0 +1,227 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	uniform resource locator abstraction library for oneye
+*/
+
+function lib_eyeURL_getHTTPClient($params=null) {
+	return new HTTP_Request();
+}
+
+eyePear('Load', array('HTTP_Request2'));
+
+class HTTP_Request extends HTTP_Request2 {
+	protected $response = false;
+	
+	public function getResponseBody() {
+		if ($this->response === false) {
+			return false;
+		}
+		try {
+			return $this->response->getBody();
+		} catch (Exception $e) {
+			return false;
+		}
+	}
+	
+	public function getResponseCode() {
+		if ($this->response === false) {
+			return false;
+		}
+		try {
+			return $this->response->getStatus();
+		} catch (Exception $e) {
+			return false;
+		}
+	}
+	
+	public function sendRequest() {
+		try {
+			$this->response = $this->send();
+		} catch (Exception $e) {
+			return false;
+		}
+		$status = $this->response->getStatus();
+		return ($status < 400);
+	}
+}
+
+//DEPRECATED BUT STILL HERE FOR BACKWARDS COMPATIBILITY
+
+/**
+* Given an absolute URL to a file, getRawFile makes a HTTP request via
+* the specified port to retrieve the contents of the file.
+*
+* @param $params array(url)
+* @param $url Url to the file to retrieve.
+* @return If the function succeeds, returns true. Otherwise, it
+*	returns false and sets the error code according to the error
+*	occurred.
+* @date 2008/03/11
+*/
+function lib_eyeURL_getRawFile($params) {
+	$url = $params['url'];
+	if(!$url) {
+		return false;
+	}
+
+	preg_match('/^\\s*(?:\\w+:\\/{2})?(.*?)(:\\d+)?(\\/.*)$/',$url, $matches); // utf8
+	$host = $matches[1];
+	$port = $matches[2];
+	$path = $matches[3];
+
+	if(!$port) {
+		$port = 80;
+	}
+
+	if(!$path) {
+		$path = '/';
+	}
+	$socket = fsockopen($host, $port);
+    if (!$socket) {
+		return false;
+    }
+	fwrite ($socket, "GET $path HTTP/1.1\n");
+	fwrite ($socket, "Host: $host\n");
+	fwrite ($socket, "Connection: close\n\n");
+	$bufer = "";
+	while (! feof ($socket)) {
+		$bufer .= fread ($socket, 4096);
+	}
+	fclose ($socket);
+	$bufer = preg_replace('/^.*?(\\r?\\n){2}/s', '', $bufer); // utf8
+	return $bufer;
+}
+
+/**
+* Makes an HTTP request to get the content of a remote file, allowing
+* the possibility to specify the HTTP method, the presence of extra
+* parameters in the header or the maximum size (in bytes) to read.
+*
+* @param $params array(host,path,[data],[port],[maxsize],[method])
+* @param $host String containing the name of the host.
+* @param $path String containing the path to the file inside the host.
+* @param $data Extra HTTP parameters included in the request.
+* @param $port Natural number specifying in which port the request must be
+*	made. The default port value is 80.
+* @param $maxsize Natural number specifying, in bytes, the maximum file size
+*	to read. Default value is specified by the MAX_READ_SIZE
+*	constant.
+* @param $method Valid HTTP method used to retrieve the file. The default
+*	method is 'GET'.
+* @return If the function succeeds, returns the content of the file
+*	read from the host. Else, if the system cannot establish a
+*	connection with the host to get the file, the response
+*	header size is larger than the 'maxsize' parameter or the
+*	server error code is not 200 (OK), returns false.
+* @date 2008/03/11
+*/
+function lib_eyeURL_doRequest($params) {
+	if(!isset($params['host']) || !isset($params['path'])) {
+		return false; //TODO: ERROR HANDLER
+	}
+
+	$host = $params['host'];
+	$path = $params['path'];
+
+	$data = "";
+	if(isset($params['data']) && is_array($params['data'])) {
+		foreach($params['data'] as $key=>$value) {
+			$data .= urlencode($key).'='.urlencode($value).'&';
+		}
+		$data = /* utf8 */ substr($data, 0, -1);
+	}
+
+	if(!isset($params['port'])) {
+		$port = 80;
+	} else {
+		$port = $params['port'];
+	}
+
+	if(!isset($params['maxsize'])) {
+		$max_size = MAX_READ_SIZE;
+	} else {
+		$max_size = intval($params['maxsize']);
+	}
+
+	if($max_size < 0) {
+		$max_size = MAX_READ_SIZE;
+	}
+
+	if(!isset($params['method'])) {
+		$method = 'GET';
+	} else {
+		$method = /* utf8 */ strtoupper($params['method']);
+	}
+
+	if ($method == "GET") {
+		if(!empty($data)) {
+		$path.= '?'.$data;
+		}
+	}
+
+	$filePointer = fsockopen($host, 80, $errorNumber, $errorString);
+
+	if (!$filePointer){
+		return false; //TODO: ERROR HANDLER
+	}
+
+	$requestHeader = $method." ".$path."  HTTP/1.1\r\n";
+	$requestHeader.= "Host: ".$host."\r\n";
+	$requestHeader.= "User-Agent: ".EYEOS_USER_AGENT."\r\n";
+	$requestHeader.= "Accept-Encoding: \r\n";
+
+	if ($method == "POST") {
+		$requestHeader.= "Content-Type: application/x-www-form-urlencoded\r\n";
+		$requestHeader .= 'Content-Length: ' . /* utf8 */ strlen($data) . "\r\n";
+	}
+
+	$requestHeader.= "Connection: close\r\n\r\n";
+
+	if ($method == "POST") {
+		$requestHeader.= $data;
+	}
+
+	fwrite($filePointer, $requestHeader);
+
+	$responseHeader = '';
+	$responseContent = '';
+	$counter = 0;
+	do {
+		$responseHeader.= fread($filePointer, 1);
+		if($counter > $max_size) {
+			return false;
+		}
+		$counter++;
+	} while ( /* utf8 */ preg_match('/\\r\\n\\r\\n$/', $responseHeader) !== 1);
+
+	$errorCodes = /* utf8 */ explode(' ', $responseHeader);
+	if($errorCodes[1] != "200") {
+		return false;
+	}
+
+	while (!feof($filePointer)) {
+		if($counter > $max_size) {
+			return $responseContent;
+		}
+		$responseContent.= fgets($filePointer, 128);
+		$counter += 128;
+	}
+
+	return chop($responseContent);
+}
+?>

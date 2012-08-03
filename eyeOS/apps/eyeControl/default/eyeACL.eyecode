@@ -1,0 +1,89 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+$sortypes = array('Hidden','String','String','String','String');
+$theader = array('Id','ACL Name','Action','Service','Function');
+
+$myTable = new Sortabletable(array(
+	'name' => 'eyeControl_acl_sortabletable',
+	'father' => $eyeContainer,
+	'sortypes' => $sortypes,
+	'theader' => $theader,
+	'x' => 0,
+	'y' => 30,
+	'width' => 560,
+	'height' => 375,
+	'master' => 0,
+	'dblsignal' => 'acl_edit'
+));
+$myTable->show();
+
+$myButton = new Button(array(
+	'name' => 'eyeControl_acl_button_add',
+	'father' => $eyeContainer,
+	'signal' => 'acl_add',
+	'caption' => 'Add ACL',
+	'width' => 80,
+	'x' => 10,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/new.png'
+));
+$myButton->show();
+
+$myButton1 = new Button(array(
+	'name' => 'eyeControl_acl_button_edit',
+	'father' => $eyeContainer,
+	'signal' => 'acl_edit',
+	'caption' => 'Edit ACL',
+	'width' => 80,
+	'x' => 90,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/paste.png'
+));
+$myButton1->addFriend($myTable);
+$myButton1->show();
+
+$myButton3 = new Button(array(
+	'name' => 'eyeControl_acl_button_delete',
+	'father' => $eyeContainer,
+	'signal' => 'acl_delete',
+	'caption' => 'Delete ACL',
+	'width' => 80,
+	'x' => 474,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/delete.png'
+));
+$myButton3->addFriend($myTable);
+$myButton3->show();
+
+$path = EYE_ROOT .'/'. SYSTEM_DIR .'/'. SYSTEM_CONF_DIR .'/ACL';
+
+if(!file_exists($path)){
+	vfs('real_mkDir', array($path));
+}
+
+$file = EYE_ROOT .'/'. SYSTEM_DIR .'/'. SYSTEM_CONF_DIR .'/ACL/'. 'acl.xml';
+$config = eyeXML('getXMLfile', array($file));
+
+if ($config) {
+	foreach($config['GACL'][0] as $acl => $value) {
+		foreach($value as $value2){
+			$myTable->addRow(array($value2['id'][0], $value2['description'][0], i18n('Translate', array($value2['action'][0])), $value2['service'][0], $value2['call'][0]));
+		}
+	}
+}
+
+?>

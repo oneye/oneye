@@ -1,0 +1,147 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $myPid;
+
+$myWidgetDrop = new widgetDrop(array(
+	'father' => 'eyeFiles_Container',
+	'name' => 'eyeFiles_View_List_WidgetDrop'
+));
+$myWidgetDrop->show();
+$myWidgetDrop->addBehaviour(array(
+	'type' => 'moveAndClick',
+	'params' => array(
+		'content' => array($GLOBALS['eyeFiles_Hidden_Path']->text),
+		'moveType' => 2,
+		'pid' => $myPid,
+		'signal' => 'Icon_Dropped'
+)));
+
+$myContextMenu = new ContextMenu(array(
+	'father' => 'eyeFiles_Container',
+	'name' => 'eyeFiles_View_List_ContextMenu'
+));
+$myContextMenu->show();
+if ($eyeFiles_noactions) {
+	if ($type == 'trash') {
+		$myContextMenu->addEntry('<img style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/delete.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Empty trash')), ENT_QUOTES),'eyeFiles_View_List_ContextMenu_delete','EmptyTrash','',$myPid . '_eyeFiles_View_List_ContextMenu_delete_img');
+	} else {
+		$myContextMenu->addEntry('<img style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/upload.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Upload files')), ENT_QUOTES),'eyeFiles_View_List_ContextMenu_upload','Upload','',$myPid . '_eyeFiles_View_List_ContextMenu_upload_img');
+		$myContextMenu->addEntry('<img style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/newfolder.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('New folder')), ENT_QUOTES),'eyeFiles_View_List_ContextMenu_newfolder','NewFolder','',$myPid . '_eyeFiles_View_List_ContextMenu_newfolder_img');
+		$myContextMenu->addEntry('<img style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/new.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('New file')), ENT_QUOTES),'eyeFiles_View_List_ContextMenu_new','NewFile','',$myPid . '_eyeFiles_View_List_ContextMenu_new_img');
+		$myContextMenu->addEntry('<img style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/paste.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Paste')), ENT_QUOTES),'eyeFiles_View_List_ContextMenu_paste','Paste','',$myPid . '_eyeFiles_View_List_ContextMenu_paste_img');
+	}
+}
+$myContextMenu->addEntry('<img style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/refresh.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Refresh')), ENT_QUOTES),'eyeFiles_View_List_ContextMenu_refresh','OpenPath','',$myPid . '_eyeFiles_View_List_ContextMenu_refresh_img');
+
+$conf = eyeXML('getXMLconfig',array('eyeFiles','conf.xml'));
+if (!$conf['eyeFiles'][0]['clickMethod'][0]) {
+	$conf['eyeFiles'][0]['clickMethod'][0] = 1;
+}
+$shareConf = getConfig('eyeFiles','conf.xml');
+$mime = getConfig('mime','mime.xml');
+if ($type == 'trash') {
+	$menu = getConfig('eyeFiles','menu_trash.xml');
+} else {
+	$menu_files = getConfig('eyeFiles','menu_files.xml');
+	$menu_folders = getConfig('eyeFiles','menu_folders.xml');
+	$menu_link = getConfig('eyeFiles','menu_links.xml');
+}
+if ($GLOBALS['eyeFiles_Box_View_Radio_ShowNot']->checked) {
+	$filter = 3;
+} else if ($GLOBALS['eyeFiles_Box_View_Radio_ShowOnly']->checked) {
+	$filter = 2;
+} else {
+	$filter = 1;
+}
+$files = eyeFiles('getDirContent',array($path,$type,$GLOBALS['eyeFiles_Box_View_Textbox_Filter']->text,$filter,$GLOBALS['eyeFiles_Box_View_Checkbox_Files']->checked,$GLOBALS['eyeFiles_Box_View_Checkbox_Links']->checked,$GLOBALS['eyeFiles_Box_View_Checkbox_Folders']->checked,$GLOBALS['eyeFiles_Box_View_Checkbox_Folders_First']->checked));
+$i = 0;
+$x = 20;
+$y = 20;
+foreach ($files as $file) {
+	if ($type != 'trash') {
+		if ($file[1] == 'folder') {
+			$menu = $menu_folders;
+		} elseif ($file[1] == 'link') {
+			$menu = $menu_link;
+		} else {
+			$menu = $menu_files;
+		}
+	}
+	$myIcon = new Icon(array(
+		'content' => $file[0],
+		'draggable' => 0,
+		'father' => 'eyeFiles_Container',
+		'image' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/' . $file[1] . '.png',
+		'name' => 'eyeFiles_View_List_Icon_' . $i,
+		'onclick' => $conf['eyeFiles'][0]['clickMethod'][0],
+		'overBorder' => 1,
+		'overClass' => 'eyeFiles_icons',
+		'text' => $file[2],
+		'useClass' => 1,
+		'x' => $x,
+		'y' => $y
+	));
+	$myIcon->show();
+	$myIcon->setCss(array());
+	eyex('rawjs',array('js' => 'xGetElementById("' . $myPid . '_' . $myIcon->name . '_globalContainer").style.width = "120px"; xGetElementById("' . $myPid . '_' . $myIcon->name . '_text").style.display = "inline"; xGetElementById("' . $myPid . '_' . $myIcon->name . '_text").style.paddingLeft = "3px";'));
+
+	if ($eyeFiles_noactions) {
+		$myWidgetDrag = new widgetDrag(array(
+			'content' => array($file[1],$show2 . '/' . $file[0]),
+			'dragAlpha' => 75,
+			'dragCss' => array(array('border'),array('1px #000000 dotted')),
+			'father' => $myIcon->name . '_Container',
+			'name' => $myIcon->name . '_WidgetDrag'
+		));
+		$myWidgetDrag->show();
+	}
+
+	if ($file[1] == 'folder') {
+		$myWidgetDrop = new widgetDrop(array(
+			'father' => $myIcon->name . '_Container',
+			'name' => $myIcon->name . '_WidgetDrop'
+		));
+		$myWidgetDrop->show();
+		$myWidgetDrop->addBehaviour(array(
+			'type' => 'widgetDrop_simpleMsg',
+			'params' => array(
+				'content' => array($GLOBALS['eyeFiles_Hidden_Path']->text . '/' . $file[0] . '/'),
+				'pid' => $myPid,
+				'signal' => 'Icon_Dropped'
+		)));
+	}
+
+	if ($eyeFiles_noactions) {
+		$myContextMenu = new ContextMenu(array(
+			'father' => $myIcon->name . '_globalContainer',
+			'name' => $myIcon->name . '_ContextMenu',
+			'mfather' => 'eyeFiles_Container',
+			'searchFather' => 1
+		));
+		$myContextMenu->show();
+		foreach ($menu['menu'][0]['entry'] as $value) {
+			$myContextMenu->addEntry('<img style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/' . $value['icon'][0] . '.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array($value['text'][0])), ENT_QUOTES),$myIcon->name . '_ContextMenu_' . $value['action'][0],'Action','<Action>' . $value['action'][0] . '</Action><File>' . $file[0] . '</File>',$myPid . '_' . $myIcon->name . '_ContextMenu_' . $value['action'][0] . '_img');
+		}
+	}
+	$y += 30;
+	if ($GLOBALS['eyeFiles_Container']->height - $y - 30 < 0) {
+		$x += 140;
+		$y = 20;
+	}
+	$i++;
+}
+?>

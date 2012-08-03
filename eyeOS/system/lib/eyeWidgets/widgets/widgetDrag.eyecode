@@ -1,0 +1,117 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	widgetDrag widget abstraction
+*/
+
+class widgetDrag {
+	//pid controller
+
+	var $creatorPid;
+
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	var $showed = 0;
+
+	//custom widget options
+	var $widgetDrag;
+	var $content;
+	var $clickSignal;
+	var $widgetDragCursor;
+	var $widgetDragPos;
+	var $clickCallback;
+	var $dragAlpha;
+	var $dragCss;
+	var $x;
+	var $y;
+
+	function widgetDrag($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+
+		//generic widget options without default
+		$this->name = $params['name'];
+		if(is_object($params['father'])){
+			$this->father = $params['father']->name;
+		}else{
+			$this->father = $params['father'];
+		}
+		//Optional arguments with default value
+		isset($params['content']) ? $this->content = $params['content'] : $this->content = '';
+		isset($params['clickSignal']) ? $this->clickSignal = $params['clickSignal'] : $this->clickSignal = 0;
+		isset($params['cursor']) ? $this->cursor = $params['cursor'] : $this->cursor = 'defaut';//Default cursor
+		isset($params['cursorPos']) ? $this->cursorPos = $params['cursorPos'] : $this->cursorPos = 0; //Where I click, es where I drag.
+		isset($params['clickCallback']) ? $this->clickCallback = $params['clickCallback'] : $this->clickCallback = '';//No callback seted
+		isset($params['widgetDrag']) ? $this->widgetDrag = $params['widgetDrag'] : $this->widgetDrag = $myPid.'_'.$this->father.'_Container';
+		isset($params['dragCss']) ? $this->dragCss = $params['dragCss'] : $this->dragCss = '';
+		isset($params['dragAlpha']) ? $this->dragAlpha = $params['dragAlpha'] : $this->dragAlpha = '';
+	}
+
+	function show($noserialize=1) {
+		if(!is_array($this->content)){
+			$this->content = array($this->content);
+		}
+		$myContent = mmap('array2jsArg',array($this->content,1));
+		if(is_array($this->dragCss)){
+			$dragCssNames = mmap('array2jsArg',array($this->dragCss[0],1));
+			$dragCssContent = mmap('array2jsArg',array($this->dragCss[1],1));
+		}else{
+			$dragCssNames = '';
+			$dragCssContent = '';
+		}
+		$widgetsparams = array(
+			'widgetDrag'=>$this->widgetDrag,
+			'content'=>$myContent,
+			'clickSignal'=>$this->clickSignal,
+			'cursor'=>$this->cursor,
+			'cursorPos'=>$this->cursorPos,
+			'clickCallback'=>$this->clickCallback,
+			'dragCssNames'=>$dragCssNames,
+			'dragCssContent'=>$dragCssContent,
+			'dragAlpha'=>$this->dragAlpha,
+			'myPid'=>$this->creatorPid
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+		$myWidgetDrag = array(
+			'name' => $this->name,
+			'widgetname' => 'WidgetDrag',
+			'father'=>$this->father,
+			'params' => $widgetsparams,
+			'x' => 0,
+			'y' => 0,
+			'horiz' => 0,
+			'vert' => 0
+		);
+
+		eyex('createWidget',$myWidgetDrag);
+		$this->showed=1;
+		if($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+	}
+
+	function remove() {
+	/*	global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));*/
+	}
+}
+
+?>

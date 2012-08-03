@@ -1,0 +1,37 @@
+<?php
+global $lib_eyeString;
+if (isset($lib_eyeString['chr']) === false || is_array($lib_eyeString['chr']) === false) {
+	$lib_eyeString['chr'] = array();
+}
+
+/*
+ * FUNCTIONS
+ */
+function utf8_chr($unicode) {
+	global $lib_eyeString;
+	
+	if (is_string($unicode) === true) {
+		$unicode = hexdec($unicode);
+	}
+	if (isset($lib_eyeString['chr'][$unicode]) === false) {
+		$chr = false;
+		if ($unicode < 128) {
+			$chr = chr($unicode);
+		} else {
+			$bin = decbin($unicode);
+			if ($unicode < 2048) {
+				$bin = str_pad($bin, 11, '0', STR_PAD_LEFT);
+				$chr = chr(bindec('110' . substr($bin, 0, 5))) . chr(bindec('10' . substr($bin, 5)));
+			} else if ($unicode < 65536) {
+				$bin = str_pad($bin, 16, '0', STR_PAD_LEFT);
+				$chr = chr(bindec('1110' . substr($bin, 0, 4))) . chr(bindec('10' . substr($bin, 4, 6))) . chr(bindec('10' . substr($bin, 10)));
+			} else if ($unicode < 1114112) { // Unicode maximum: 17 * 65536 = 1114112; UTF-8 maximum: 2 ^ 21 = 2097152
+				$bin = str_pad($bin, 21, '0', STR_PAD_LEFT);
+				$chr = chr(bindec('11110' . substr($bin, 0, 3))) . chr(bindec('10' . substr($bin, 3, 6))) . chr(bindec('10' . substr($bin, 9, 6))) . chr(bindec('10' . substr($bin, 15, 6)));
+			}
+		}
+		$lib_eyeString['chr'][$unicode] = $chr;
+	}
+	return $lib_eyeString['chr'][$unicode];
+}
+?>

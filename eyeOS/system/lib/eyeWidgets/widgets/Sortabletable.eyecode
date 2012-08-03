@@ -1,0 +1,397 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Sortabletable widget abstraction
+*/
+
+class Sortabletable {
+
+	//pid controller
+	var $creatorPid;
+
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//generic widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+
+	var $showed = 0;
+
+	//friends abstraction
+	var $friends="''";
+
+	//custom widget options
+	var $height;
+	var $width;
+	var $visible;
+	var $theader;
+	var $tbody;
+	var $sortypes;
+	var $sizeUnit;
+	var $master;
+	var $signal;
+	function Sortabletable($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 10;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 10;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+
+		//especific button options
+		isset($params['master']) ? $this->master = $params['master'] : $this->master = 0;
+		isset($params['height']) ? $this->height = $params['height'] : $this->height = 100;
+		isset($params['width']) ? $this->width = $params['width'] : $this->width = 100;
+		isset($params['visible']) ? $this->visible = $params['visible'] : $this->visible = 1;
+		isset($params['theader']) ? $this->theader = $params['theader'] : $this->theader = "";
+		isset($params['sortypes']) ? $this->sortypes = $params['sortypes'] : $this->sortypes = "";
+		isset($params['sizeUnit']) ? $this->sizeUnit = $params['sizeUnit'] : $this->sizeUnit = 'px';
+		isset($params['signal']) ? $this->signal = $params['signal'] : $this->signal = '';
+		isset($params['dblsignal']) ? $this->dblsignal = $params['dblsignal'] : $this->dblsignal = '';
+		isset($params['border']) ? $this->border = $params['border'] : $this->border = 1;
+	}
+
+	function show($noserialize=0) {
+		if(is_array($this->theader)) {
+			$newHeader = array();
+			foreach($this->theader as $value) {
+				if (strval($value) === '') {
+					$newHeader[] = ' ';
+				} else {
+					$newHeader[] = i18n('translate',array($value));
+				}
+			}
+			$this->theader = $newHeader;
+		}
+		$myHeader = mmap("array2jsArg",array($this->theader,1));
+		$widgetsparams = array(
+			'visible' => $this->visible,
+			'theader' => $myHeader,
+			'height' => $this->height,
+			'width' => $this->width,
+			'sortypes' => mmap("array2jsArg",array($this->sortypes)),
+			'sizeUnit' => $this->sizeUnit,
+			'master' => $this->master,
+			'signal' => $this->signal,
+			'doubleClickSignal' => $this->dblsignal,
+			'realName' => $this->name,
+			'sync' => $this->friends,
+			'border' => $this->border
+		);
+		$widgetsparams = mmap("array2js",array($widgetsparams));
+
+		$mySortable = array(
+			'name' => $this->name,
+			'x' => $this->x,
+			'y' => $this->y,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'father' => $this->father,
+			'widgetname' => 'Sortabletable',
+			'params' => $widgetsparams,
+			'center' => $this->cent
+		);
+		eyex('createWidget',$mySortable);
+		$this->showed=1;
+		if($noserialize == 0) {
+			$mySelector = new SortabletableSelected(array('name'=>$this->name,
+															'width'=>$this->width,
+															'height'=>$this->height,
+															'theader' => $this->theader,
+															'sortypes'=> $this->sortypes,
+															'sync'=> $this->friends,
+															'x'=>$this->x,
+															'y'=>$this->y));
+			eyeWidgets('serialize',array($mySelector));
+		}
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+			}
+		}
+		eyex('rawjs', array('js' => 'Sortabletable_updateHeight(document.getElementById("' . $myPid . '_' . $this->name . '"), document.getElementById("' . $myPid . '_' . $this->name . '_Body"));'));
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	//comunication functions
+	function getSyncString() {
+		global $myPid;
+		return "eyeParam('$this->name',table_".$myPid."_".$this->name.".getSelectValue($this->master))";
+	}
+
+	//custom functions
+
+	function addRow($params){
+		global $myPid;
+		$name = 'table_' . $myPid . '_'.$this->name;
+		for($i=0;$i<count($params);$i++) {
+			if (strval($params[$i]) === '') {
+				$params[$i] = ' ';
+			}
+			$params[$i] = utf8_htmlentities($params[$i], ENT_QUOTES);
+		}
+		$row = mmap('array2jsArg',array($params,1));
+		$tokens[] = $row;
+		eyex('runjs',array('js' => "if($name){".$name.".addEntry( %s );}",'tokens'=>$tokens));
+	}
+
+	function delRow($params) {
+		global $myPid;
+		$name = 'table_' . $myPid . '_'.$this->name;
+		$params = addslashes($params);
+		$tokens[] = $params;
+		eyex('rawjs',array('js' => "if($name){".$name.".delEntry( %s );}",'tokens'=>$tokens));
+	}
+
+	// friends handler
+
+	function addFriend($friend) {
+		if(method_exists($friend,'getSyncString')) {
+			if($this->friends == "''") {
+				$this->friends = $friend->getSyncString();
+			} else {
+				$this->friends .= '+'.$friend->getSyncString();
+			}
+		}
+	}
+
+	function setHeader($params) {
+		$this->theader=$params;
+	}
+
+	function setSortypes($params) {
+		$this->sortypes = $params;
+	}
+
+	function setValue($newText) {
+		$this->text = $newText;
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.top="'.$this->y.'px";'));
+	}
+
+	function setWidth($width) {
+		global $myPid;
+		$this->width = intval($width);
+		eyex('rawjs', array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '").style.width="' . $this->width . 'px";
+		document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.width="' . $this->width . 'px";
+		document.getElementById("' . $myPid . '_' . $this->name . '_generalContainer").style.width="' . $this->width . 'px";
+		Sortabletable_updateHeight(document.getElementById("' . $myPid . '_' . $this->name . '"), document.getElementById("' . $myPid . '_' . $this->name . '_Body"));'));
+	}
+
+	function setHeight($height) {
+		global $myPid;
+		$this->height = intval($height);
+		eyex('rawjs', array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.height="' . $this->height . 'px";
+		document.getElementById("' . $myPid . '_' . $this->name . '_generalContainer").style.height="' . $this->height . 'px";
+		Sortabletable_updateHeight(document.getElementById("' . $myPid . '_' . $this->name . '"), document.getElementById("' . $myPid . '_' . $this->name . '_Body"));'));
+	}
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.display="none"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.display="block"'));
+	}
+
+	function remove() {
+		global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+
+	function sort($column, $descending = true) {
+		global $myPid;
+		$name = 'table_' . $myPid . '_'.$this->name;
+		$tokens = array($column, $descending);
+		eyeX('runjs', array('js' => 'if('.$name.'){'.$name.'.sort( %s , %s );}', 'tokens' => $tokens));
+	}
+
+	function delAllRows() {
+		global $myPid;
+		$name = $myPid.'_' . $this->name . '_Body';
+		if(!IE) {
+			eyeX('rawjs', array('js' => 'document.getElementById("'.$name.'").innerHTML = "";'));
+		} else {
+			eyeX('rawjs', array('js' => 't = document.getElementById("'.$name.'");while(t.firstChild){t.removeChild(t.firstChild);}'));
+		}
+		eyex('rawjs', array('js' => 'Sortabletable_updateHeight(document.getElementById("' . $myPid . '_' . $this->name . '"), document.getElementById("' . $myPid . '_' . $this->name . '_Body"));'));
+	}
+}
+
+class SortabletableSelected {
+	var $selected;
+	var $name;
+	var $width;
+	var $height;
+	var $theader;
+	var $sortypes;
+	var $x;
+	var $y;
+	function SortabletableSelected($params) {
+		$this->name = $params['name'];
+		$this->width = $params['width'];
+		$this->height = $params['height'];
+		$this->x = $params['x'];
+		$this->y = $params['y'];
+		$this->theader = $params['theader'];
+		$this->sortypes = $params['sortypes'];
+
+		$this->selected="";
+	}
+
+	function setValue($newText) {
+		$this->selected = $newText;
+	}
+
+	function delRow($params) {
+		global $myPid;
+		$name = 'table_' . $myPid . '_'.$this->name;
+		if($this->selected == $params){
+			$this->setValue(null);
+		}
+		$tokens[] = $params;
+		eyex('runjs',array('js' => "if($name){".$name.".delEntry( %s );}",'tokens'=>$tokens));
+	}
+
+	function addRow($params){
+		global $myPid;
+		$name = 'table_' . $myPid . '_'.$this->name;
+		for($i=0;$i<count($params);$i++) {
+			$params[$i] = utf8_htmlentities($params[$i], ENT_QUOTES);
+		}
+		$row = mmap('array2jsArg',array($params,1));
+		$tokens[] = $row;
+		eyex('runjs',array('js' => "if($name){".$name.".addEntry( %s );}",'tokens'=>$tokens));
+	}
+
+	function setContainerCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_' . $this->name . '_Container','property' => $key,'value' => $value));
+			}
+		}
+		eyex('rawjs', array('js' => 'Sortabletable_updateHeight(document.getElementById("' . $myPid . '_' . $this->name . '"), document.getElementById("' . $myPid . '_' . $this->name . '_Body"));'));
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.top="'.$this->y.'px";'));
+	}
+
+	function setWidth($width) {
+		global $myPid;
+		$this->width = intval($width);
+		eyex('rawjs', array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '").style.width="' . $this->width . 'px";
+		document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.width="' . $this->width . 'px";
+		document.getElementById("' . $myPid . '_' . $this->name . '_generalContainer").style.width="' . $this->width . 'px";
+		Sortabletable_updateHeight(document.getElementById("' . $myPid . '_' . $this->name . '"), document.getElementById("' . $myPid . '_' . $this->name . '_Body"));'));
+	}
+
+	function setHeight($height) {
+		global $myPid;
+		$this->height = intval($height);
+		eyex('rawjs', array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.height="' . $this->height . 'px";
+		document.getElementById("' . $myPid . '_' . $this->name . '_generalContainer").style.height="' . $this->height . 'px";
+		Sortabletable_updateHeight(document.getElementById("' . $myPid . '_' . $this->name . '"), document.getElementById("' . $myPid . '_' . $this->name . '_Body"));'));
+	}
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.display="none"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_Container").style.display="block"'));
+	}
+
+	function remove() {
+		global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+
+	function sort($column, $descending = true) {
+		global $myPid;
+		$name = 'table_' . $myPid . '_'.$this->name;
+		$tokens = array($column, $descending);
+		eyeX('runjs', array('js' => 'if('.$name.'){'.$name.'.sort( %s , %s );}', 'tokens' => $tokens));
+	}
+
+	function delAllRows() {
+		global $myPid;
+		$name = $myPid.'_' . $this->name . '_Body';
+		if(!IE) {
+			eyeX('rawjs', array('js' => 'document.getElementById("'.$name.'").innerHTML = "";'));
+		} else {
+			eyeX('rawjs', array('js' => 't = document.getElementById("'.$name.'");while(t.firstChild){t.removeChild(t.firstChild);}'));
+		}
+		eyex('rawjs', array('js' => 'Sortabletable_updateHeight(document.getElementById("' . $myPid . '_' . $this->name . '"), document.getElementById("' . $myPid . '_' . $this->name . '_Body"));'));
+	}
+}
+?>

@@ -1,0 +1,11 @@
+<package>
+	<name>Presentation</name>
+	<category>Office</category>
+	<version>1.0</version>
+	<description>Presentations Editor</description>
+	<author>Edouard DAUBIN</author>
+	<license>GPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyePresentation.png</icon>
+	<openWith>1</openWith>
+</package>

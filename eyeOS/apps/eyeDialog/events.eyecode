@@ -1,0 +1,240 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+include_once(EYE_ROOT.'/'.APP_DIR.'/eyeDialog/app'.EYE_CODE_EXTENSION);
+include_once(EYE_ROOT.'/'.APP_DIR.'/eyeDialog/func'.EYE_CODE_EXTENSION);
+
+function eyeDialog_on_initComplete($params=null) {
+	eyeDialog_drawFoldersTree();
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	eyeDialog_browseHome($dialogParams[5]);
+	eyeDialog_selectTreeFolder($dialogParams[5]);
+}
+
+
+//HOME BUTTON
+function eyeDialog_on_places_home_BTN($params=null) {
+	$GLOBALS['currentPlace_HID']->setText(__EYEDIALOG_PLACE_HOME);
+	eyeDialog_browseHome('/');
+	eyeDialog_drawFoldersTree();
+}
+//GROUPS BUTTON
+function eyeDialog_on_places_groups_BTN($params=null) {
+	eyeX('messageBox',array('content'=> 'Not available yet'));
+	/*$GLOBALS['currentPlace_HID']->setText(__EYEDIALOG_PLACE_GROUPS);
+	$GLOBALS['currentGroup_HID']->setText('');
+	eyeDialog_browseGroups('/');
+	eyeDialog_drawFoldersTree();*/
+}
+
+function eyeDialog_on_foldersRefresh_IMG($params=null) {
+	eyeDialog_drawFoldersTree();
+}
+
+//FOLDERS TREE CLICK
+function eyeDialog_on_folders_TREE($params=null) {
+	switch($GLOBALS['currentPlace_HID']->text) {
+		case __EYEDIALOG_PLACE_GROUPS:
+			//TODO
+			/*$selectedPath = substr($params['folders_TREE'][0], strlen(i18n('translate', array(__EYEDIALOG_FOLDERSTREE_ROOTNODE_GROUPS)))); // utf8
+			$selectedPath = eyeDialog_getFormatedDirPath($selectedPath);
+			$groupname = '';
+
+			//if a group has been selected (not the root node)
+			if ($selectedPath != '/') {
+				$groupname = substr($selectedPath, 1, strpos($selectedPath, '/', 2) - 1); // utf8
+				$GLOBALS['currentGroup_HID']->setText($groupname);
+				$selectedPath = substr($selectedPath, strlen($groupname) + 1); // utf8
+				$selectedPath = eyeDialog_resolvePathInGroupsDir($selectedPath, false, $groupname);
+			}
+			eyeDialog_browseGroups($selectedPath, $groupname);*/
+			break;
+
+		default:
+			$selectedPath = substr($params['folders_TREE'][0], strlen(i18n('translate', array(__EYEDIALOG_FOLDERSTREE_ROOTNODE_HOME)))); // utf8
+			eyeDialog_browseHome($selectedPath);
+			break;
+	}
+}
+
+//FILES TABLE CLICK
+function eyeDialog_on_files_TAB_click($params=null) {
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	$currentPath = $GLOBALS['currentPath_HID']->text;
+	$selectedFileId = unserialize(urldecode($GLOBALS['files_TAB']->selected));
+
+	if ($dialogParams[0] != EYEDIALOG_TYPE_SELECTFOLDER) {
+		if ($selectedFileId[0] != 'd') {
+			$GLOBALS['filename_TXTBOX']->setText(eyeDialog_autoSetExtensionToFilename(basename($selectedFileId[1])));
+		}
+	}
+	else {
+		if (basename($selectedFileId[1]) != '..') {
+			$GLOBALS['filename_TXTBOX']->setText('');
+		}
+	}
+}
+
+//FILES TABLE CLICK
+function eyeDialog_on_files_TAB_dblClick($params=null) {
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	$currentPath = $GLOBALS['currentPath_HID']->text;
+	$selectedFileId = unserialize(urldecode($GLOBALS['files_TAB']->selected));
+
+	switch($GLOBALS['currentPlace_HID']->text) {
+		case __EYEDIALOG_PLACE_GROUPS:
+			//TODO
+			/*$groupname = $selectedFileId[2];
+			$path = eyeDialog_resolvePathInGroupsDir($currentPath.'/'.basename($selectedFileId[1]), true, $groupname);
+			if ($path === false) {
+				$path = '/';
+			}
+			eyeDialog_browseGroups($path, $groupname);*/
+			break;
+		default:
+			if ($selectedFileId[0] == 'd') {
+				eyeDialog_browseHome(eyeDialog_getFormatedDirPath($currentPath.'/'.basename($selectedFileId[1])));
+				eyeDialog_selectTreeFolder($selectedFileId[1]);
+
+				if ($dialogParams[0] == EYEDIALOG_TYPE_SELECTFOLDER) {
+					$GLOBALS['filename_TXTBOX']->setText('');
+				}
+			}
+			elseif ($selectedFileId[0] != 'l') {
+				//TODO
+			}
+			break;
+	}
+}
+
+//FILENAME TEXTBOX
+function eyeDialog_on_filename_TXTBOX_change($params=null) {
+	//nothing to do
+}
+
+//FILETYPE SELECTOR
+function eyeDialog_on_filetype_SEL_change($params=null) {
+	$myHiddenFileType = new Hidden(array(
+		'name' => 'selectedFileType',
+		'father' => 'eyeDialog_WND_Content',
+		'text' => $params['filetype'][0]
+	));
+	eyeWidgets('serialize',array($myHiddenFileType));
+	$GLOBALS['currentFiletypeFilter_HID']->setText($params['filetype'][0]);
+	if ($GLOBALS['filename_TXTBOX']->text) {
+		$GLOBALS['filename_TXTBOX']->setText(eyeDialog_autoSetExtensionToFilename($GLOBALS['filename_TXTBOX']->text, true));
+	}
+	eyeDialog_refreshFilesList();
+}
+
+//Notify eyeDialog is going to be closed to the application which launched it
+function eyeDialog_on_closingNotification(){
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	$trimd = /* utf8 */ trim($dialogParams[7]);
+	if(!empty($trimd)){
+		$cancelCallback = $dialogParams[7];
+		$callback_checknum = $dialogParams[2];
+		if($cancelCallback && $callback_checknum) {
+			eyex('rawjs',array('js'=>'sendMsg('.$callback_checknum.',"'.$cancelCallback.'",eyeParam("CanceledByUser","'.'1'.'"));'));
+		}
+	}
+}
+
+//OK BUTTON (could be "open" or "select" or "save" according to the type of the dialog)
+function eyeDialog_on_ok_BTN($params=null) {
+	//eyeX('messageBox',array('content'=> $GLOBALS['files_TAB']->selected));
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	$filename = $GLOBALS['filename_TXTBOX']->text;
+
+	$dirContent = eyeDialog_listDir($GLOBALS['currentPath_HID']->text);
+	$selectedFileInfo = null;
+	foreach($dirContent as $fileInfo) {
+		if (utf8_strtolower($fileInfo['name']) === utf8_strtolower($filename)) {
+			$selectedFileInfo = $fileInfo;
+		}
+	}
+
+	switch($dialogParams[0]) {
+		case EYEDIALOG_TYPE_OPENFILE:
+			if (is_null($selectedFileInfo)) {
+				eyeX('messageBox',array('content'=> i18n("translate",array('You must select a file'))));
+				return;
+			}
+			if ($selectedFileInfo['type'] == 'd') {
+				eyeDialog_browseHome($selectedFileInfo['path']);
+				$GLOBALS['filename_TXTBOX']->setText('');
+			}
+			else {
+				eyeDialog_openFile($GLOBALS['currentPath_HID']->text, $selectedFileInfo['name']);
+			}
+			break;
+
+		case EYEDIALOG_TYPE_SELECTFOLDER:
+			eyeDialog_selectFolder(eyeDialog_resolvePath($GLOBALS['currentPath_HID']->text));
+			break;
+
+		case EYEDIALOG_TYPE_SAVEFILE:
+			//existing file selected
+			if (!is_null($selectedFileInfo)) {
+				//folder
+				if ($selectedFileInfo['type'] == 'd') {
+					eyeDialog_browseHome($selectedFileInfo['path']);
+				}
+				else {
+					eyeDialog_saveAs($GLOBALS['currentPath_HID']->text,$filename);
+				}
+			}
+			else {
+				if ( /* utf8 */ strlen($filename) === 0) {
+					eyeX('messageBox',array('content'=> i18n("translate",array('You must enter a name'))));
+				}
+				else {
+					eyeDialog_saveAs($GLOBALS['currentPath_HID']->text,$filename);
+				}
+			}
+			break;
+	}
+}
+
+//CANCEL BUTTON
+function eyeDialog_on_cancel_BTN($params=null) {
+	eyeDialog_on_closingNotification();
+	eyeDialog_on_Close();
+}
+
+//REPLACE FILE DIALOG CONFIRMATION
+function eyeDialog_on_confirmFileReplace_DLG_yes_BTN($params=null) {
+	$params = unserialize($GLOBALS['confirmFileReplace_DLG_params_HID']->text);
+	$GLOBALS['confirmFileReplace_DLG']->close();
+	eyeDialog_saveAs($params[0], $params[1], true);
+}
+function eyeDialog_on_confirmFileReplace_DLG_no_BTN($params=null) {
+	$GLOBALS['confirmFileReplace_DLG']->close();
+}
+
+
+
+//SYSTEM EVENTS
+function eyeDialog_on_Message($params="") {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeDialog_on_Close(){
+	eyeDialog_on_closingNotification();
+	proc('end');
+}
+
+?>

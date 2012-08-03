@@ -1,0 +1,223 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $currentUser;
+
+$ContentY = 10;
+// Configure the startpage
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyenav_label_startpages',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Configure the startpage'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+$ContentY += 30;
+$NavUserConf = eyeControl_lib_getXMLconfig(array('eyeNav','conf.xml'));
+// Startpage
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyenav_label_startpage',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Startpage'
+));
+$myLabel->show();
+$myTextbox = new Textbox(array(
+	'name' => 'eyeControl_eyenav_textbox_startpage',
+	'father' => $eyeContainer,
+	'x' => 160,
+	'y' => $ContentY,
+	'width' => 140,
+	'text' => $NavUserConf['eyeNav'][0]['home'][0]
+));
+$myTextbox->show();
+$myTextbox->addEnterEventMsg('eyenav_test');
+$myTextbox->focus();
+// Test address
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyenav_label_test',
+	'father' => $eyeContainer,
+	'x' => 320,
+	'y' => $ContentY + 3,
+	'text' => 'Test Address',
+	'disablemsg' => 0,
+	'signal' => 'eyenav_test'
+));
+$myLabel->addFriend($myTextbox);
+$myLabel->show();
+$myLabel->setCss(array(
+	'color' => '#004488',
+	'cursor' => 'Pointer'
+));
+$ContentY += 30;
+// Browse Plugin
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyenav_label_plugin',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Browse Plugin'
+));
+$myLabel->show();
+$mySelect = new Select(array(
+	'name' => 'eyeControl_eyenav_select_plugin',
+	'father' => $eyeContainer,
+	'width' => 145,
+	'x' => 160,
+	'y' => $ContentY + 3
+));
+$mySelect->show();
+$mySelect->addOption('Iframe (' . i18n('translate',array('Default')) . ')','iframe');
+$oldUser = $currentUser;
+$currentUser = ROOTUSER;
+$openDir = vfs('real_getDirContent',array(EYE_ROOT . '/' . APP_DIR . '/eyeNav/plugins/','*' . EYE_CODE_EXTENSION));
+$currentUser = $oldUser;
+foreach ($openDir as $plugin) {
+	$plugin = basename($plugin,EYE_CODE_EXTENSION);
+	if ($plugin != 'iframe') {
+		if ($plugin == $NavUserConf['eyeNav'][0]['plugin'][0]) {
+			$select = 1;
+		} else {
+			$select = 0;
+		}
+		$mySelect->addOption( /* utf8 */ ucfirst($plugin), $plugin, $select);
+	}
+}
+$ContentY += 30;
+// Save Changes
+$myButton = new Button(array(
+	'name' => 'eyeControl_eyenav_button_save',
+	'father' => $eyeContainer,
+	'x' => 50,
+	'y' => $ContentY,
+	'caption' => 'Save Changes',
+	'signal' => 'eyenav_save'
+));
+$myButton->addFriend($myTextbox);
+$myButton->addFriend($mySelect);
+$myButton->show();
+$ContentY += 60;
+// Export default bookmarks and search engines
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyenav_label_export',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Export default bookmarks and search engines'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+$ContentY += 30;
+// Export
+$myButton = new Button(array(
+	'name' => 'eyeControl_eyenav_button_export',
+	'father' => $eyeContainer,
+	'signal' => 'eyenav_export',
+	'caption' => 'Export',
+	'width' => 90,
+	'x' => 50,
+	'y' => $ContentY,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/download.png'
+));
+$myButton->show();
+$ContentY += 60;
+// Manage default bookmarks
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyenav_label_bookmarks_import',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Manage default bookmarks'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+$ContentY += 30;
+// Import
+$myButton = new Button(array(
+	'name' => 'eyeControl_eyenav_button_bookmarks_import',
+	'father' => $eyeContainer,
+	'signal' => 'eyenav_bookmarks_import',
+	'caption' => 'Import',
+	'width' => 90,
+	'x' => 50,
+	'y' => $ContentY,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/folder.png'
+));
+$myButton->show();
+if (eyeControl_lib_getConfigUser() != '[skel]') {
+	// Use defaults
+	$myButton = new Button(array(
+		'name' => 'eyeControl_eyenav_button_bookmarks_default',
+		'father' => $eyeContainer,
+		'signal' => 'eyenav_bookmarks_default',
+		'caption' => 'Use Defaults',
+		'width' => 100,
+		'x' => 200,
+		'y' => $ContentY,
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/save.png'
+	));
+	$myButton->show();
+}
+$ContentY += 60;
+// Manage default search engines
+$myLabel = new Label(array(
+	'name' => 'eyeControl_eyenav_label_search_import',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'text' => 'Manage default search engines'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+$ContentY += 30;
+// Import
+$myButton = new Button(array(
+	'name' => 'eyeControl_eyenav_button_search_import',
+	'father' => $eyeContainer,
+	'signal' => 'eyenav_search_import',
+	'caption' => 'Import',
+	'width' => 90,
+	'x' => 50,
+	'y' => $ContentY,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/folder.png'
+));
+$myButton->show();
+if (eyeControl_lib_getConfigUser() != '[skel]') {
+	// Use defaults
+	$myButton = new Button(array(
+		'name' => 'eyeControl_eyenav_button_search_default',
+		'father' => $eyeContainer,
+		'signal' => 'eyenav_search_default',
+		'caption' => 'Use Defaults',
+		'width' => 100,
+		'x' => 200,
+		'y' => $ContentY,
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/save.png'
+	));
+	$myButton->show();
+}
+?>

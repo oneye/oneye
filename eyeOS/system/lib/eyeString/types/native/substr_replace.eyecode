@@ -1,0 +1,16 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_substr_replace($string, $replacement, $start, $length = false) {
+	$end = '';
+	if ($length !== false) {
+		if ($length < 0) {
+			$end = utf8_substr($string, $length);
+		} else {
+			$end = utf8_substr($string, $start + $length);
+		}
+	}
+	return utf8_substr($string, 0, $start) . $replacement . $end;
+}
+?>

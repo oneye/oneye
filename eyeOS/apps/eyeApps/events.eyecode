@@ -1,0 +1,206 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeApps_on_Action($params = '') {
+	global $myPid;
+	foreach (eyeApps_lib_GetCategories() as $category => $action) {
+		eyex('rawjs', array('js' => '
+			var e = document.getElementById("' . $myPid . '_' . $category . '_Container");
+			e.className = "";
+			e.style.backgroundColor = "transparent";
+			e.style.border = "0";'
+		));
+	}
+	$GLOBALS['eyeApps_Container']->remove();
+	
+	eyeApps_lib_ShowApps($params['category'][0]);
+	
+	$xml = eyeXML('getXMLconfig', array('eyeApps', 'conf.xml'));
+	$xml['eyeApps'][0]['category'][0] = $params['category'][0];
+	eyeXML('setXMLconfig', array('eyeApps', 'conf.xml', $xml));
+}
+
+function eyeApps_on_Close($params = '') {
+	proc('end');
+}
+
+function eyeApps_on_Icon_Clicked($params = '') {
+	proc('launch',array($params['arg0'][0]));
+}
+
+function eyeApps_on_InstallApps($params = '') {
+	proc('launch',array('eyeSoft'));
+}
+
+function eyeApps_on_ManageDock($params = '') {
+	proc('launch',array('eyeManageApps'));
+}
+
+function eyeApps_on_fullScreen() {
+	$GLOBALS['eyeApps_Window']->setFullScreen();
+}
+
+function eyeApps_on_Resize($params = '') {
+	global $myPid;
+	$GLOBALS['eyeApps_Window']->height = intval($params['arg'][1]);
+	$GLOBALS['eyeApps_Window']->width = intval($params['arg'][0]);
+	$GLOBALS['eyeApps_MenuContainer']->setHeight($GLOBALS['eyeApps_Window']->height - 82);
+	$GLOBALS['eyeApps_Line']->setHeight($GLOBALS['eyeApps_MenuContainer']->height);
+	$GLOBALS['eyeApps_Container']->setHeight($GLOBALS['eyeApps_MenuContainer']->height);
+	$GLOBALS['eyeApps_Container']->setWidth($GLOBALS['eyeApps_Window']->width - 4 - $GLOBALS['eyeApps_Line']->x);
+	
+	eyex('rawjs',array('js' => 'var i = 0;
+	var x = 20;
+	var y = 20;
+	var e = document.getElementById("' . $myPid . '_eyeApps_Icon_0_Container");
+	while (e) {
+		xSlideTo("' . $myPid . '_eyeApps_Icon_" + i + "_Container",x,y,500);
+		x += 88;
+		if (xWidth("' . $myPid . '_eyeApps_Container") - x - 88 < 0) {
+			x = 20;
+			y += 88;
+		}
+		i++;
+		e = document.getElementById("' . $myPid . '_eyeApps_Icon_" + i + "_Container");
+	}'));
+}
+
+function eyeApps_lib_GetAllApps() {
+	$array = array();
+	foreach (scandir(EYE_ROOT . '/' . APP_DIR . '/') as $app) {
+		$xml = getAppInfo($app);
+		if ($xml['package'][0]['type'][0] == 'Application' || $xml['package'][0]['type'][0] == 'Widget') {
+			$array[] = array($app, str_replace('theme=USERTHEME', 'theme=' . $_SESSION['usertheme'], $xml['package'][0]['icon'][0]), $xml['package'][0]['name'][0]);
+		}
+	}
+	return $array;
+}
+
+function eyeApps_lib_GetApps() {
+	$array = array();
+	foreach (scandir(EYE_ROOT . '/' . APP_DIR . '/') as $app) {
+		$xml = getAppInfo($app);
+		if ($xml['package'][0]['type'][0] == 'Application' || $xml['package'][0]['type'][0] == 'Widget') {
+			$array[$xml['package'][0]['category'][0]][] = array($app, str_replace('theme=USERTHEME', 'theme=' . $_SESSION['usertheme'], $xml['package'][0]['icon'][0]), $xml['package'][0]['name'][0]);
+		}
+	}
+	return $array;
+}
+
+function eyeApps_lib_GetCategories() {
+	$array = array();
+	foreach (scandir(EYE_ROOT . '/' . APP_DIR . '/') as $app) {
+		$xml = getAppInfo($app);
+		if ($xml['package'][0]['type'][0] == 'Application' || $xml['package'][0]['type'][0] == 'Widget' && !isset($array[$xml['package'][0]['category'][0]])) {
+			$array[$xml['package'][0]['category'][0]] = $xml['package'][0]['category'][0];
+		}
+	}
+	ksort($array);
+	return array_merge(array('All Applications' => ''), $array);
+}
+
+function eyeApps_lib_GetCategoryIcon($category) {
+	$icons = array(
+		'All Applications' => 'rating_g',
+		'File Management' => 'homeFolder',
+		'Games' => 'eyeChess',
+		'Multimedia' => 'eyeMedia',
+		'Networking' => 'eyeNav',
+		'Office' => 'eyeDocs',
+		'Utilities' => 'mail-attach',
+		'Widgets' => 'desktop_widgets'
+	);
+	if (isset($icons[$category])) {
+		return $icons[$category];
+	} else {
+		return 'exec';
+	}
+}
+
+function eyeApps_lib_ShowApps($category) {
+	global $myPid;
+	if ($category == '') {
+		$apps = eyeApps_lib_GetAllApps();
+		$category = 'All Applications';
+	} else {
+		$apps = eyeApps_lib_GetApps();
+		$apps = $apps[$category];
+	}
+	eyex('rawjs', array('js' => '
+		var e = document.getElementById("' . $myPid . '_' . $category . '_Container");
+		e.className = "eyeHighlighted";
+		e.style.backgroundColor = "#ffffff";
+		e.style.borderBottom = "1px solid #eeeeee";
+		e.style.borderTop = "1px solid #dadada";'
+	));
+	
+	$myContainer = new Container(array(
+		'father' => 'eyeApps_Window_Content',
+		'height' => $GLOBALS['eyeApps_Window']->height - 82,
+		'name' => 'eyeApps_Container',
+		'width' => $GLOBALS['eyeApps_Window']->width - 4 - $GLOBALS['eyeApps_Line']->x,
+		'x' => $GLOBALS['eyeApps_Line']->x + 1,
+		'y' => 57
+	));
+	$myContainer->show();
+	$myContainer->setCss(array(
+		'overflow' => 'auto',
+		'position' => 'absolute'
+	));
+	
+	$conf = eyeXML('getXMLconfig',array('eyeFiles','conf.xml'));
+	if (!isset($conf['eyeFiles'][0]['clickMethod'][0])) {
+		$conf['eyeFiles'][0]['clickMethod'][0] = 1;
+	}
+	
+	$i = 0;
+	$x = 20;
+	$y = 20;
+	foreach ($apps as $app) {
+		if ($app[0] != 'eyeApps') {
+			$myIcon = new Icon(array(
+				'content' => array($app[0]),
+				'draggable' => 0,
+				'father' => 'eyeApps_Container',
+				'image' => $app[1],
+				'name' => 'eyeApps_Icon_' . $i,
+				'onclick' => $conf['eyeFiles'][0]['clickMethod'][0],
+				'overClass' => 'eyeFiles_icons',
+				'text' => i18n('translate', array($app[2])),
+				'useClass' => 1,
+				'x' => $x,
+				'y' => $y
+			));
+			$myIcon->show();
+			eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $myIcon->name . '_Container").style.textAlign = "center"; document.getElementById("img_' . $myPid . '_' . $myIcon->name . '").style.marginLeft = "-1px";'));
+			$x += 88;
+			if ($myContainer->width - $x - 88 < 0) {
+				$x = 20;
+				$y += 88;
+			}
+			$i++;
+			$myWidgetDrag = new widgetDrag(array(
+				'content' => array('app',$app[0]),
+				'dragAlpha' => 75,
+				'dragCss' => array(array('border'),array('1px #000000 dotted')),
+				'father' => $myIcon->name . '_Container',
+				'name' => $myIcon->name . '_WidgetDrag'
+			));
+			$myWidgetDrag->show();
+		}
+	}
+}
+?>

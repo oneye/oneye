@@ -1,0 +1,8 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strlen($string) {
+	return iconv_strlen($string, 'UTF-8');
+}
+?>

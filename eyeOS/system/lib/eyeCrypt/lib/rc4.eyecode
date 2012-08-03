@@ -1,0 +1,19 @@
+<?php
+eyePear('Load', array('Crypt_RC42'));
+
+function crypt_rc4_crypt($params) {
+	$str = $params[0];
+	$key = $params[1];
+	$myClass = new Crypt_RC42($key);
+	$ret = $myClass->encrypt($str);
+	return $ret;
+}
+
+function crypt_rc4_decrypt($params) {
+	$str = $params[0];
+	$key = $params[1];
+	$myClass = new Crypt_RC42($key);
+	$ret = $myClass->decrypt($str);
+	return $ret;
+}
+?>

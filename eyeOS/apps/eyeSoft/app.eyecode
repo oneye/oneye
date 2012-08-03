@@ -1,0 +1,121 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeSoft_run($params=null) {
+	global $currentUser;
+	global $myPid;
+	if($currentUser != ROOTUSER) {
+		eyex('messageBox',array('content'=>'Only root can install eyeApps'));
+		proc('end');
+		return;
+	}
+	$config = eyeXML('getXMLfile',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports.xml'));
+
+	$myWindow = new Window(array('name'=>'eyeSoft','father'=>'eyeApps',
+	'cent'=>1,'width'=>650,'height'=>570,'title'=>'Packages Manager','style' => TITLE + LISTED + MIN + CLOSE,'savePosition' => 1));
+	$myWindow->show();
+
+	$myWindow = new Window(array('name'=>'eyeSoftHidden','father'=>'eyeSoft_Content',
+	'width'=>430,'height'=>360,'type'=>100,'x'=>207,'y'=>33));
+	$myWindow->show();
+
+	$myTextBox = new Textbox(array('name'=>'search','father'=>'eyeSoft_Content',
+		'x'=>90,'y'=>15,'width'=>180,'horiz'=>1));
+	$myTextBox->show();
+	$myTextBox->addEnterEventMsg('search');
+
+	$myButton = new Button(array('name'=>'doSearch','father'=>'eyeSoft_Content',
+		'caption'=>'Search','x'=>12,'y'=>$myTextBox->y-1,'signal'=>'search','horiz'=>1));
+	$myButton->addFriend($myTextBox);
+	$myButton->show();
+
+	$myBox = new Box(array('name'=>'BOX_1','father'=>'eyeSoft_Content','x'=>15,'y'=>56,'width'=>182,
+		'height'=>331,'title'=>'Categories'));
+	$myBox->show();
+
+	$myHeader = array('App Name','Version','Installed');
+	$sortypes = array("String","String","String");
+
+	$myTable = new Sortabletable(array('name'=>'table_1','father'=>'eyeSoftHidden_Content',
+		'sortypes'=>$sortypes,'theader'=>$myHeader,'x'=>5,'y'=>0,'width'=>415,'height'=>330));
+	$myTable->show();
+
+	$myButton = new Button(array(
+		'name'=>'Install',
+		'father'=>'eyeSoft_Content',
+		'signal'=>'Install',
+		'caption'=>'Install',
+		'x'=>20,'y'=>15,
+		'img'=>'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/plus.png'
+	));
+	$myButton->addFriend($myTable);
+	$myButton->show();
+
+	$myButton = new Button(array(
+		'name'=>'Update',
+		'father'=>'eyeSoft_Content',
+		'signal'=>'Update',
+		'caption'=>'Update',
+		'x'=>110,'y'=>15,
+		'img'=>'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/refresh.png'
+	));
+	$myButton->show();
+
+	$myButton = new Button(array(
+		'name'=>'Uninstall',
+		'father'=>'eyeSoft_Content',
+		'signal'=>'Uninstall',
+		'caption'=>'Uninstall',
+		'x'=>200,'y'=>15,
+		'img'=>'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/minus.png'
+	));
+	$myButton->addFriend($myTable);
+	$myButton->show();
+
+	$myButton = new Button(array(
+		'name'=>'Help',
+		'father'=>'eyeSoft_Content',
+		'signal'=>'Help',
+		'caption'=>'Help',
+		'x'=>300,'y'=>15,
+		'img'=>'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/eyeHelp.png'
+	));
+	$myButton->show();
+
+	$myTextArea = new Textarea(array('name'=>'description','father'=>'eyeSoft_Content',
+		'width'=>614,'height'=>145,'x'=>15,'y'=>392,'enabled'=>0));
+	$myTextArea->show();
+	//read categories
+	$counter=1;
+
+	foreach($config['eyePorts'][0]['categories'][0]['category'] as $value) {;
+		$Yofset = $counter * 25+10;
+		$myLabel1 = new Label(array('name'=>'cat_lbl_'.$counter,
+			'father'=>'BOX_1','text'=>$value,'y'=>$Yofset,'x'=>15,'disablemsg'=>0,'signal'=>'catExecute'));
+		$myLabel1->show();
+		$myLabel1->setCss(array('cursor'=>'Pointer'));
+		$counter++;
+	}
+	include_once(EYE_ROOT.'/'.APP_DIR.'/eyeSoft/events'.EYE_CODE_EXTENSION);
+	eyeSoft_loadList();
+}
+
+function eyeSoft_end($params=null) {
+	eyeWidgets('unserialize');
+}
+
+
+?>

@@ -1,0 +1,240 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+class File {
+	//pid controller
+
+	var $creatorPid;
+
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//generic widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+
+	var $showed = 0;
+
+	//custom widget options
+	var $filename;
+	var $visible;
+	var $callback;
+	var $multiple;
+	//constructor
+	function File($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		isset($params['father']) ? $this->father = $params['father'] : $this->father = 'eyeApps';
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
+		//especific options
+		isset($params['callback']) ? $this->callback = $params['callback'] : $this->callback = "";
+		isset($params['visible']) ? $this->visible = $params['visible'] : $this->visible = 1;
+		isset($params['filename']) ? $this->filename = $params['filename'] : $this->filename = "";
+		isset($params['multiple']) ? $this->multiple = $params['multiple'] : $this->multiple = 0;
+	}
+
+	//widget show method, send a createWidget message
+
+	function show($noserialize=0) {
+		global $myPid;
+		$widgetsparams = array(
+			'callback' => $this->callback,
+			'visible' => $this->visible,
+			'filename' => $this->filename,
+			'multiple' => $this->multiple,
+			'pid' => $myPid
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$myFile = array(
+			'name' => $this->name,
+			'x' => $this->x,
+			'y' => $this->y,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'father' => $this->father,
+			'widgetname' => 'File',
+			'params' => $widgetsparams,
+			'center' => $this->cent
+		);
+		eyex('createWidget',$myFile);
+		$this->showed=1;
+		if($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args='') {
+		global $myPid;
+		$myname = $myPid.'_'.$this->name.'_Container';
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $myname, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	//set properties functions.
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="none"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="block"'));
+	}
+
+	function setWidth($width) {
+		global $myPid;
+		$this->width = intval($width);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.width="'.$this->width.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.width="'.$this->width.'px";'));
+	}
+
+	function setHeight($height) {
+		global $myPid;
+		$this->height = intval($height);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.height="'.$this->height.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.height="'.$this->height.'px";'));
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.top="'.$this->y.'px";'));
+	}
+
+	function remove() {
+		global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+
+	function notify($callback) {
+		global $checknum;
+		$js = '<script>window.parent.sendMsg('.$checknum.',"'.$callback.'","");</script>';
+		echo $js;
+	}
+
+	function checkfile() {
+		if ($this->multiple != 0 && is_array($_FILES[$this->filename]['tmp_name']) && count($_FILES[$this->filename]['tmp_name'])) {
+			foreach ($_FILES[$this->filename]['tmp_name'] as $index => $file) {
+				if ($_FILES[$this->filename]['error'][$index] != 0) {
+					continue;
+				}
+				if (!is_uploaded_file($file)) {
+					return false;
+				}
+			}
+			return true;
+		} else if (is_uploaded_file($_FILES[$this->filename]['tmp_name'])) {
+			return true;
+		}
+		return false;
+	}
+
+	function saveFile($where,$suffix = '') {
+		if(!vfs($suffix . 'checkPermissions',array($where))) {
+			return false;
+		}
+		if($this->multiple != 0){
+			foreach($_FILES[$this->filename]['tmp_name'] as $index=>$file){
+				if($_FILES[$this->filename]['error'][$index] != 0){
+					continue;
+				}
+				$filename = basename($_FILES[$this->filename]['name'][$index]);
+				$finalPath = $where.'/'.$filename;
+				if(!vfs('checkQuota',array($file))) {
+					exit;
+				}
+				$countFiles = 0;
+				$extension = substr($finalPath, strrpos($finalPath, '.') + 1); // utf8
+				while (vfs($suffix . 'fileExists',array($finalPath))) {
+					$finalPathTemp = substr($finalPath, 0, -strlen($extension) - 1); // utf8
+					if ($countFiles) {
+						$finalPathTemp = substr($finalPath, 0, -strrpos($finalPathTemp, '_')); // utf8
+					}
+					$countFiles++;
+					$finalPath = $finalPathTemp . '_' . $countFiles . '.' . $extension;
+				}
+
+				move_uploaded_file($file,$finalPath);
+				if (!$suffix) {
+					vfs('realToVirtual',array($finalPath));
+				}
+			}
+		}else{
+			$filename = basename($_FILES[$this->filename]['name']);
+			$finalPath = $where.'/'.$filename;
+			if(!vfs('checkQuota',array($_FILES[$this->filename]['tmp_name']))) {
+				exit;
+			}
+			$countFiles = 0;
+			$extension = substr($finalPath, strrpos($finalPath, '.') + 1); // utf8
+			while (vfs($suffix . 'fileExists',array($finalPath))) {
+				$finalPathTemp = substr($finalPath, 0, -strlen($extension) - 1); // utf8
+				if ($countFiles) {
+					$finalPathTemp = substr($finalPath, 0, -strrpos($finalPathTemp, '_')); // utf8
+				}
+				$countFiles++;
+				$finalPath = $finalPathTemp . '_' . $countFiles . '.' . $extension;
+			}
+
+			move_uploaded_file($_FILES[$this->filename]['tmp_name'],$finalPath);
+			if (!$suffix) {
+				vfs('realToVirtual',array($finalPath));
+			}
+		}
+		return true;
+	}
+
+	function getRemoteName() {
+		return $_FILES[$this->filename]['name'];
+	}
+}
+
+
+?>

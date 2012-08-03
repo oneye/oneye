@@ -1,0 +1,48 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeOpen_on_Close($params = '') {
+	proc('end');
+}
+
+function eyeOpen_on_Icon_Clicked($params = '') {
+	$path = $GLOBALS['eyeOpen_Hidden_Path']->text;
+	$file = basename($path);
+	$path = eyeFiles('cleanPath', array(substr(trim($path, '/\\'), 0, -strlen($file)))); // utf8
+	proc('launch',array($params['arg0'][0],array($path[0] . '/' . $file,$GLOBALS['eyeOpen_Hidden_Callback']->text)));
+	proc('end');
+}
+
+function eyeOpen_on_Resize($params = '') {
+	global $myPid;
+	$GLOBALS['eyeOpen_Container']->setHeight(intval($params['arg'][1]) - 25);
+	$GLOBALS['eyeOpen_Container']->setWidth(intval($params['arg'][0]) - 4);
+	eyex('rawjs',array('js' => 'i = 0;
+	x = 20;
+	y = 20;
+	e = xGetElementById("' . $myPid . '_eyeOpen_Icon_0_Container");
+	while (e) {
+		xSlideTo("' . $myPid . '_eyeOpen_Icon_" + i + "_Container",x,y,500);
+		x += 88;
+		if (xWidth("' . $myPid . '_eyeOpen_Container") - x - 88 < 0) {
+			x = 20;
+			y += 88;
+		}
+		i++;
+		e = xGetElementById("' . $myPid . '_eyeOpen_Icon_" + i + "_Container");
+	}'));
+}
+?>

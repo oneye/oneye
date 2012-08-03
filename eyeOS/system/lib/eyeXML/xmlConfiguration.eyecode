@@ -1,0 +1,104 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/**
+* Opens an XML file and returns it as an array.
+*
+* @param $params array(file)
+* @param $file Path to the file.
+* @return If the function succeeds, returns an array with the contents
+*	of the file. Otherwise, returns false.
+* @date 2009/12/05
+*/
+function lib_eyeXML_getXMLfile($params) {
+	if (!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	return lib_eyeXML_xml2array(array(vfs('real_getFileContent', array($params[0]))));
+}
+
+/**
+* Saves a PHP array as an XML file.
+*
+* @param $params array(file,myArray,[myHeader])
+* @param $file Path to the file.
+* @param $myArray PHP array to save as the content of the file.
+* @param $myHeader XML header of the file.
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false.
+* @date 2009/12/05
+*/
+function lib_eyeXML_setXMLfile($params) {
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if (isset($params[2]) === false) {
+		$params[2] = false;
+	}
+	if (vfs('real_putFileContent', array($params[0], lib_eyeXML_array2xml(array($params[1], $params[2])))) === false) {
+		return false;
+	}
+	return true;
+}
+
+/**
+* Opens an XML config file of a specified application inside the user's
+* configurations directory, and returns it in the form of an array.
+*
+* @param $params array(appname,filename)
+* @param $appname Name of the application.
+* @param $filename Name of the file to open.
+* @return If the function succeeds, returns an array with the contents
+*	of the read file. Otherwise, returns false.
+* @date 2009/12/05
+*/
+function lib_eyeXML_getXMLconfig($params) {
+	if (!isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	return lib_eyeXML_getXMLfile(array(um('getCurrentUserDir') . '/' . CONF_USER_DIR . '/' . $params[0] . '/' . $params[1]));
+}
+
+/**
+* Updates the configuration file of an application with a specified
+* content.
+*
+* @param $params array(appname,filename,newConfig)
+* @param $appname Name of the application.
+* @param $filename Name of the configuration file.
+* @param $newConfig PHP array to save as the content of the file.
+* @return If the configuration file is written successfully, returns
+*	true. Otherwise returns false.
+* @date 2009/12/05
+*/
+function lib_eyeXML_setXMLconfig($params) {
+	if (!isset($params[0]) || !isset($params[1]) || !isset($params[2])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$path = um('getCurrentUserDir') . '/' . CONF_USER_DIR . '/' . $params[0] . '/';
+	if (!vfs('real_fileExists', array($path))) {
+		vfs('real_mkdir', array($path));
+	}
+	return lib_eyeXML_setXMLfile(array($path . $params[1], $params[2]));
+}
+?>

@@ -1,0 +1,10 @@
+<package>
+	<name>Messages Widget</name>
+	<category>Widgets</category>
+	<version>1.9</version>
+	<description>Keep up-to-date with your internal messages</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Widget</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/miniMessages.png</icon>
+</package>

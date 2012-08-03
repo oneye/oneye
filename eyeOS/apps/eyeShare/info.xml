@@ -1,0 +1,10 @@
+<package>
+	<name>eyeShare</name>
+	<category>Core Utilities</category>
+	<version>1.9</version>
+	<description>Utility to share files and folders</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon />
+</package>

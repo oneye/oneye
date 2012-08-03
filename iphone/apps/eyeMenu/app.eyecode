@@ -1,0 +1,37 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeMenu_execute() {
+	global $currentUser;
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$dirapp=vfs('real_getDirContent', array(IPHONE_PATH.'apps/'));
+	echo '<ul id="home" title="oneye" selected="true">';
+	foreach($dirapp as $value) {
+		$info = eyeXML('getXmlFile',array($value.'/info.xml'));
+		if($info) {
+			if($info['application'][0]['name'][0] == 'eyeCalendar') {
+				echo '<li><a href="index.php?action='.$info['application'][0]['name'][0].'&noPropagate=2"><img style="position:relative;padding-right:7px;top:7px;" src="apps/'.$info['application'][0]['name'][0].'/icon.png">'.$info['application'][0]['text'][0].'</a></li>';
+			} else {
+				echo '<li><a href="index.php?action='.$info['application'][0]['name'][0].'"><img style="position:relative;padding-right:7px;top:7px;" src="apps/'.$info['application'][0]['name'][0].'/icon.png">'.$info['application'][0]['text'][0].'</a></li>';
+			}
+		}
+	}
+	echo '<li><a href="index.php?action=logout"><img style="position:relative;padding-right:7px;top:7px;" src="apps/logout/icon.png">Logout</a></li>';
+	echo '</ul>';
+	$currentUser = $oldUser;
+}
+?>

@@ -1,0 +1,50 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeDesk_com_onEvent($params = '') {
+	global $myPid;
+	eyeWidgets('updateContent');
+	$desktop = false;
+	$trash = false;
+	foreach ($params as $value) {
+		$value = eyeFiles('cleanPath',array($value));
+		if ($value[1] == 'home' && $value[2] == 'Desktop/') {
+			$desktop = true;
+		} elseif ($value[1] == 'trash') {
+			$trash = true;
+		}
+	}
+	if ($desktop === true) {
+		include_once(EYE_ROOT . '/' . APP_DIR . '/eyeDesk/events' . EYE_CODE_EXTENSION);
+		eyeDesk_on_OpenPath();
+	}
+	if ($trash === true) {
+		foreach ($_SESSION['eyeDesk'][$myPid]['trashes'] as $trash) {
+			if (!count(vfs('getDirContent',array(um('getCurrentUserDir') . '/' . TRASH_USER_DIR . '/')))) {
+				eyex('rawjs',array('js' => 'xGetElementById("img_' . $myPid . '_eyeDesk_View_Icons_Icon_' . $trash . '").src = "index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/trash.png";'));
+			} else {
+				eyex('rawjs',array('js' => 'xGetElementById("img_' . $myPid . '_eyeDesk_View_Icons_Icon_' . $trash . '").src = "index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/trash_full.png";'));
+			}
+		}
+	}
+}
+
+function eyeDesk_com_onResized($params = '') {
+	eyeWidgets('updateContent');
+	include_once(EYE_ROOT . '/' . APP_DIR . '/eyeDesk/events' . EYE_CODE_EXTENSION);
+	eyeDesk_on_OpenPath();
+}
+?>

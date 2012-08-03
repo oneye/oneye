@@ -1,0 +1,108 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeOpen_run($params = '') {
+	global $myPid;
+	if ($params[0]) {
+		$myWindow = new Window(array(
+			'cent' => 1,
+			'father' => 'eyeApps',
+			'height' => 340,
+			'name' => 'eyeOpen_Window',
+			'title' => i18n('translate',array('Open "%s" with...',array(basename($params[0])))),
+			'savePosition' => 1,
+			'sendResizeMsg' => 1,
+			'sigResize' => 'Resize',
+			'width' => 500,
+			'x' => 0,
+			'y' => 0
+		));
+		$myWindow->show();
+
+		$myHidden = new Hidden(array(
+			'father' => 'eyeOpen_Window_Content',
+			'name' => 'eyeOpen_Hidden_Path',
+			'text' => $params[0]
+		));
+		$myHidden->show();
+
+		$myHidden = new Hidden(array(
+			'father' => 'eyeOpen_Window_Content',
+			'name' => 'eyeOpen_Hidden_Callback',
+			'text' => $params[1]
+		));
+		$myHidden->show();
+
+		$myContainer = new Container(array(
+			'father' => 'eyeOpen_Window_Content',
+			'height' => $myWindow->height - 25,
+			'name' => 'eyeOpen_Container',
+			'width' => $myWindow->width - 4,
+			'x' => intval(!IE || IE > 6),
+			'y' => 0
+		));
+		$myContainer->show();
+		$myContainer->setCss(array(
+			'display' => 'block',
+			'overflow' => 'auto',
+			'position' => 'absolute'
+		));
+		eyeWidgets('serialize',array($myContainer));
+
+		$conf = eyeXML('getXMLconfig',array('eyeFiles','conf.xml'));
+		if (!isset($conf['eyeFiles'][0]['clickMethod'][0])) {
+			$conf['eyeFiles'][0]['clickMethod'][0] = 1;
+		}
+		$path = EYE_ROOT . '/' . APP_DIR . '/';
+		$folders = scandir($path);
+		$i = 0;
+		$x = 20;
+		$y = 20;
+		foreach ($folders as $folder) {
+			$xml = getAppInfo($folder);
+			if ($xml['package'][0]['openWith'][0]) {
+				$myIcon = new Icon(array(
+					'content' => array($folder),
+					'draggable' => 0,
+					'father' => 'eyeOpen_Container',
+					'image' => str_replace('theme=USERTHEME', 'theme=' . $_SESSION['usertheme'], $xml['package'][0]['icon'][0]),
+					'name' => 'eyeOpen_Icon_' . $i,
+					'onclick' => $conf['eyeFiles'][0]['clickMethod'][0],
+					'overClass' => 'eyeFiles_icons',
+					'text' => $xml['package'][0]['name'][0],
+					'useClass' => 1,
+					'x' => $x,
+					'y' => $y
+				));
+				$myIcon->show();
+				eyex('rawjs',array('js' => 'xGetElementById("' . $myPid . '_' . $myIcon->name . '_Container").style.textAlign = "center"; xGetElementById("img_' . $myPid . '_' . $myIcon->name . '").style.marginLeft = "-1px";'));
+				$x += 88;
+				if ($myContainer->width - $x - 88 < 0) {
+					$x = 20;
+					$y += 88;
+				}
+				$i++;
+			}
+		}
+	} else {
+		proc('end');
+	}
+}
+
+function eyeOpen_end($params = '') {
+	eyeWidgets('unserialize',$params);
+}
+?>

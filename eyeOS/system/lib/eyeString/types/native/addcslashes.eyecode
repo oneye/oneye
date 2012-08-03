@@ -1,0 +1,8 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_addcslashes($str, $charlist) {
+	return preg_replace('/[' . private_lib_eyeString_PrepareCharlist($charlist) . ']/u', '\\\\$0', $str);
+}
+?>

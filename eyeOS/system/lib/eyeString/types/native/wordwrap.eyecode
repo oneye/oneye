@@ -1,0 +1,32 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_wordwrap($str, $width = 75, $break = "\n", $cut = false) {
+	$line = '';
+	$return = '';
+	$words = explode(' ', $str);
+	foreach ($words as $word) {
+		if ($line !== '' && utf8_strlen($line . $word) > $width) {
+			$return .= $break . utf8_substr($line, 1);
+			$line = '';
+		}
+		if ($cut === true) {
+			$array = utf8_str_split($word, $width);
+		} else {
+			$array = array($word);
+		}
+		foreach ($array as $value) {
+			if (utf8_strlen($value) === $width) {
+				$return .= $break . $value;
+			} else {
+				$line .= ' ' . $value;
+			}
+		}
+	}
+	if ($line !== '') {
+		$return .= $break . utf8_substr($line, 1);
+	}
+	return substr($return, strlen($break));
+}
+?>

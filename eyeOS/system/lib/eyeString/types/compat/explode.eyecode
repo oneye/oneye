@@ -1,0 +1,26 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_explode($delimiter, $string, $limit = null) {
+	if ($limit === null) {
+		return explode($delimiter, $string);
+	}
+	
+	$return = array();
+	$length = strlen($delimiter);
+	while ($limit > 1) {
+		$position = strpos($string, $delimiter);
+		if ($position === false) {
+			$return[] = $string;
+			return $return;
+		} else {
+			$return[] = substr($string, 0, $position);
+			$string = substr($string, $position + $length);
+		}
+		$limit -= 1;
+	};
+	$return[] = $string;
+	return $return;
+}
+?>

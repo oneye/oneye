@@ -1,0 +1,71 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeArchive_on_Message($params="") {
+	eyeWidgets('updateContent',$params);
+}
+
+global $archivedExtensions;
+$archivedExtensions = array('tar','tgz','tbz','tbz2','zip','gzip','tar.gz','tar.bz2','eyepackage','deb');
+
+$oldUser = $currentUser;
+$currentUser = ROOTUSER;
+
+$eventsFiles = vfs('real_getDirContent',array(EYE_ROOT.'/'.APP_DIR.'/eyeArchive/events/','*.eyecode'));
+$currentUser = $oldUser;
+foreach($eventsFiles as $file){
+	include_once($file);
+}
+
+function _eyeArchive_getProject(){
+	global $myPid;
+	//Filling the object
+	require_once(EYE_ROOT.'/'.APP_DIR.'/eyeArchive/libraries/project_class.eyecode');
+
+	//Getting the project object.
+	$myProject = new project;
+	$projectInfo = eyeXML('getXMLConfig',array('eyeArchive','myProject.xml'));
+	$myProject = unserialize($projectInfo[$myPid][0]);
+
+	return $myProject;
+}
+
+function _eyeArchive_setProject(&$project){
+	global $myPid;
+	//Filling the object
+	require_once(EYE_ROOT.'/'.APP_DIR.'/eyeArchive/libraries/project_class.eyecode');
+
+	$dir = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeArchive';
+
+	if(!vfs('isdir',array($dir))){
+		if(!vfs('real_mkDir',array($dir))){
+			return false;
+		}
+	}
+
+	$projectInfo = eyeXML('getXMLConfig',array('eyeArchive','myProject.xml'));
+
+	//Serialize it for save
+	$s = serialize($project);
+	//Saving on app conf file
+	$projectInfo[$myPid] = array($s);
+	eyeXML('setXMLconfig',array('eyeArchive','myProject.xml',$projectInfo));
+}
+
+function eyeArchive_on_Close() {
+	proc('end');
+}
+?>

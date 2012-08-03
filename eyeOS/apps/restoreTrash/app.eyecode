@@ -1,0 +1,42 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function restoreTrash_run($params = '') {
+	$file = basename($params[0]);
+	$xml = eyeXML('getXMLfile',array(um('getCurrentUserDir') . '/' . TRASH_USER_DIR . '/' . $file));
+	if ($params[0]) {
+		eyex('messageBox',array(
+			'buttons' => array(array('Do','Accept'),array('Close','Cancel')),
+			'content' => 'Do you really want to restore "%s"?',
+			'hiddens' => array(array('restoreTrash_Hidden_Path',$file),array('restoreTrash_Hidden_Callback',$params[1]),array('restoreTrash_Hidden_To',$params[2])),
+			'img' => '?',
+			'savePosition' => 1,
+			'sound' => 'question',
+			'title' => i18n('translate',array('Restore %s',array($xml['eyeTrash'][0]['lastname'][0]))),
+			'tokens' => array($xml['eyeTrash'][0]['lastname'][0]),
+			'type' => 3,
+			'win_name' => 'restoreTrash_Window',
+			'win_style' => TITLE + LISTED + MIN + CLOSE
+		));
+	} else {
+		proc('end');
+	}
+}
+
+function restoreTrash_end($params = '') {
+	eyeWidgets('unserialize');
+}
+?>

@@ -1,0 +1,1 @@
+﻿With the "download" action you can download any file or folder. If you try to download a folder, it will be downloaded in a zip file. If you want to download any file as zip you can use the "download as zip" action.

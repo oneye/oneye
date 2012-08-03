@@ -1,0 +1,64 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+.eyeCalendar_day, .eyeCalendar_hour, .eyeCalendar_part {
+	float: left;
+	position: relative;
+}
+
+.eyeCalendar_day {
+	height: 100%;
+}
+
+.eyeCalendar_halfHour {
+	border-top: 1px dotted #dddddd;
+	height: 1px;
+	position: absolute;
+}
+
+.eyeCalendar_halfHour, .eyeCalendar_hour, .eyeCalendar_part {
+	width: 100%;
+}
+
+.eyeCalendar_hover:hover {
+	text-decoration: underline;
+}
+
+.eyeCalendar_part {
+	height: 25%;
+	z-index: 2;
+}
+
+.eyeCalendar {
+	padding-right: 2px;
+}
+
+#noteBody, #noteTitle {
+	-moz-border-radius-bottomleft: 0px;
+	-moz-border-radius-bottomright: 0px;
+	-webkit-border-bottom-left-radius: 0px;
+	-webkit-border-bottom-right-radius: 0px;
+	border-bottom-left-radius: 0px;
+	border-bottom-right-radius: 0px;
+}
+
+#noteBody {
+	-moz-border-radius-topleft: 0px;
+	-moz-border-radius-topright: 0px;
+	-webkit-border-top-left-radius: 0px;
+	-webkit-border-top-right-radius: 0px;
+	border-top-left-radius: 0px;
+	border-top-right-radius: 0px;
+}

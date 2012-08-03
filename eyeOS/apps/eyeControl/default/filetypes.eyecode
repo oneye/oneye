@@ -1,0 +1,89 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+// $myTable
+$sortypes = array('String','String','String','String');
+$theader = array('Filetype', 'Title', 'Application', 'Description');
+
+$myTable = new Sortabletable(array(
+	'name' => 'eyeControl_filetypes_sortabletable',
+	'father' => $eyeContainer,
+	'sortypes' => $sortypes,
+	'theader' => $theader,
+	'x' => 0,
+	'y' => 30,
+	'width' => 560,
+	'height' => 375,
+	'dblsignal' => 'filetypes_edit'
+));
+$myTable->show();
+$nFiletypes = 0;
+foreach (vfs('real_getDirContent', array(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/filetypes/')) as $filetype) {
+	if (is_file($filetype)) {
+		$nFiletypes++;
+		$xml = eyeXML('getXMLfile', array($filetype));
+		$myTable->addRow(array(basename($filetype,'.xml'), $xml['fileType'][0]['name'][0], $xml['fileType'][0]['app'][0], $xml['fileType'][0]['description'][0]));
+	}
+}
+// New
+$myButton = new Button(array(
+	'name' => 'eyeControl_filetypes_button_new',
+	'father' => $eyeContainer,
+	'signal' => 'filetypes_new',
+	'caption' => 'New',
+	'width' => 80,
+	'x' => 10,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/new.png'
+));
+$myButton->show();
+// Edit
+$myButton = new Button(array(
+	'name' => 'eyeControl_filetypes_button_edit',
+	'father' => $eyeContainer,
+	'signal' => 'filetypes_edit',
+	'caption' => 'Edit',
+	'width' => 80,
+	'x' => 90,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/paste.png'
+));
+$myButton->addFriend($myTable);
+$myButton->show();
+// Delete
+$myButton = new Button(array(
+	'name' => 'eyeControl_filetypes_button_delete',
+	'father' => $eyeContainer,
+	'signal' => 'filetypes_delete',
+	'caption' => 'Delete',
+	'width' => 80,
+	'x' => 170,
+	'y' => 0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/delete.png'
+));
+$myButton->addFriend($myTable);
+$myButton->show();
+// x filetype(s)
+$myLabel = new Label(array(
+	'name' => 'eyeControl_filetypes_label_mirrors',
+	'father' => $eyeContainer,
+	'horiz' => 1,
+	'y' => 2,
+	'text' => '%s filetype(s)',
+	'tokens' => array($nFiletypes),
+));
+$myLabel->show();
+?>

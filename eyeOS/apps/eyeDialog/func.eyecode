@@ -1,0 +1,583 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+include_once(EYE_ROOT.'/'.APP_DIR.'/eyeDialog/app'.EYE_CODE_EXTENSION);
+
+
+/********** VALIDATION OPERATIONS **********/
+function eyeDialog_openFile($folderPath, $filename) {
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	$callback = $dialogParams[1];
+	$callback_checknum = $dialogParams[2];
+
+	$folderPath = eyeDialog_resolvePath($folderPath,true);		//true only for eyeDialog1 compatibility
+	$filePath = eyeDialog_getFormatedDirPath($folderPath.'/'.$filename);
+	if($callback && $callback_checknum) {
+		eyex('rawjs',array('js'=>'sendMsg('.$callback_checknum.',"'.$callback.'",eyeParam("arg","'.$filePath.'"));'));
+	}
+	eyeDialog_closeDialog();
+}
+function eyeDialog_selectFolder($folderPath) {
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	$callback = $dialogParams[1];
+	$callback_checknum = $dialogParams[2];
+
+	$folderPath = eyeDialog_resolvePath($folderPath,true);		//true only for eyeDialog1 compatibility
+	if($callback && $callback_checknum) {
+		eyex('rawjs',array('js'=>'sendMsg('.$callback_checknum.',"'.$callback.'",eyeParam("arg","'.$folderPath.'"));'));
+	}
+	//eyeX('messageBox',array('content'=> 'Select folder OK: '.$folderPath));
+	eyeDialog_closeDialog();
+}
+function eyeDialog_saveAs($folderPath, $filename, $overwrite=false) {
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	$callback = $dialogParams[1];
+	$callback_checknum = $dialogParams[2];
+
+	$folderPath = eyeDialog_resolvePath($folderPath,true);		//true only for eyeDialog1 compatibility
+	if (vfs('checkSpecialChars',array($filename)) === false) {
+		$filename = str_replace('/','',$filename);
+		$filename = str_replace('\\','',$filename);
+	}
+	$filename = eyeDialog_autoSetExtensionToFilename($filename, $dialogParams[6], true);		//force extension if needed
+	$filePath = eyeDialog_getFormatedDirPath($folderPath.'/'.$filename);
+
+	//eyeX('rawjs', array('js' => 'console.log("'.eyeDialog_resolvePath($folderPath).'/'.$filename.'")'));
+	$filenameExtension = eyeDialog_getFilenameAndExtension($filename);
+	$filenameExtension = $filenameExtension[1];
+	if (!$overwrite && vfs('fileExists', array(eyeDialog_resolvePath($folderPath).'/'.$filename))) {
+		eyeDialog_confirmFileReplace($folderPath, $filename);
+		return;
+	}
+
+	if($callback && $callback_checknum) {
+		eyex('rawjs',array('js'=>'sendMsg('.$callback_checknum.',"'.$callback.'",eyeParam("arg","'.$filePath.'")+eyeParam("ext","'.$filenameExtension.'")+eyeParam("fileType","'.$GLOBALS['selectedFileType']->text.'"));'));
+	}
+	//eyeX('messageBox',array('content'=> 'Save as OK: '.$filePath));
+	eyeDialog_closeDialog();
+}
+
+function eyeDialog_confirmFileReplace($folderPath, $filename) {
+	eyeX('messageBox',array(
+		'content' => 'Are you sure you want to replace this file?',
+		'type' => 3,
+		'title' => 'Confirm file replacement',
+		'win_name' => 'confirmFileReplace_DLG',
+		'win_style' => TITLE + CLOSE,
+		'win_removepid' => 0,
+		'btn1_capt' => 'Yes',
+		'btn1_name' => 'confirmFileReplace_DLG_yes_BTN',
+		'btn2_capt' => 'No',
+		'btn2_name' => 'confirmFileReplace_DLG_no_BTN',
+		'hidden_name' => 'confirmFileReplace_DLG_params_HID',
+		'hidden_text' => serialize(array($folderPath,$filename)),
+		'father' => 'eyeDialog_WND',
+		'img' => '?'
+	));
+}
+
+
+/********** OTHER INTERNAL OPERATIONS **********/
+function eyeDialog_closeDialog() {
+	$GLOBALS['eyeDialog_WND']->close();
+	proc('end');
+}
+
+function eyeDialog_refreshFilesList() {
+	switch ($GLOBALS['currentPlace_HID']->text) {
+		case __EYEDIALOG_PLACE_GROUPS:
+			//TODO
+			/*eyeDialog_browseGroups($GLOBALS['currentPath_HID']->text);*/
+			break;
+		default:
+			eyeDialog_browseHome($GLOBALS['currentPath_HID']->text);
+			break;
+	}
+}
+
+function eyeDialog_autoSetExtensionToFilename($filename, $forceExtension=false, $appendExtension=false) {
+	//eyeX('rawjs', array('js' => 'console.log("original name = '.$filename.'")'));
+	$return = '';
+	$dialogParams = unserialize($GLOBALS['serialized_dialogParams_HID']->text);
+	$displayedFiletypes = /* utf8 */ explode('|', $GLOBALS['currentFiletypeFilter_HID']->text);
+
+	$defaultFilenameExt = eyeDialog_getFilenameAndExtension($displayedFiletypes[0]);	//first one is default
+	$filenameExt = eyeDialog_getFilenameAndExtension($filename);
+	$extensionOk = false;
+
+	if ($filenameExt[1] != '') {
+		//the filename has an extension
+		foreach($displayedFiletypes as $filetype) {
+			$filetypeExt = eyeDialog_getFilenameAndExtension($filetype);
+			if (utf8_strcasecmp($filetypeExt[1], $filenameExt[1]) === 0) {
+				$extensionOk = true;
+			}
+		}
+	}
+	else {
+		$filenameExt[0] = $filename;
+	}
+
+	if ($extensionOk) {
+		//the filename is already correct, no need to change anything
+		$return = $filename;
+	}
+	else {
+		//if default extension is applicable (not *)
+		if ($defaultFilenameExt[1] != '*') {
+			if ($forceExtension) {
+				if ($appendExtension) {
+					//append the default extension at the end of the filename
+					$return = $filename.'.'.$defaultFilenameExt[1];
+				}
+				else {
+					//replace the current extension of the filename
+					$return = $filenameExt[0].'.'.$defaultFilenameExt[1];
+				}
+			}
+			else {
+				$return = $filename;
+			}
+		}
+		else {
+			$return = $filename;
+		}
+	}
+	//eyeX('rawjs', array('js' => 'console.log("final name = '.$return.'")'));
+	return $return;
+}
+
+/**
+ *
+ * @return SortableTable
+ */
+function eyeDialog_clearFiles() {
+	global $myPid;
+
+	//remove previous table
+	if ($GLOBALS['files_TAB'])
+		$GLOBALS['files_TAB']->remove();
+
+	//create and add new table
+	$filesTable = new Sortabletable(array(
+		'name' => 'files_TAB',
+		'father' => 'eyeDialog_WND_Content',
+		'x' => 178,
+		'y' => 4,
+		'width' => 414,
+		'height' => 260,
+		'sortypes' => array('Hidden', 'Html', 'String', 'Number', 'Date', 'String'),
+		'master' => 0,
+		'theader' => array('id', ' ', 'Name', 'Size (B)', 'Date', 'Author'),
+		'signal' => 'files_TAB_click',
+		'dblsignal' => 'files_TAB_dblClick'
+	));
+	$filesTable->show();
+	$filesTable->setCss(array('white-space' => 'nowrap'));
+
+	return $filesTable;
+}
+
+function eyeDialog_drawFoldersTree($selectedFolder='') {
+	global $currentUser;
+
+	if ($GLOBALS['folders_TREE'])
+		$GLOBALS['folders_TREE']->remove();
+
+	$myTree = new Tree(array(
+		'name'=>'folders_TREE',
+		'father'=>'folders_CTN',
+		'x'=>0,
+		'y'=>0,
+		'width' =>120,
+		'height' => 100,
+		'clickTree'=>1
+	));
+	$myTree->show();
+
+	switch ($GLOBALS['currentPlace_HID']->text) {
+		case __EYEDIALOG_PLACE_GROUPS:
+			//TODO
+			/*$rootNodeName = __EYEDIALOG_FOLDERSTREE_ROOTNODE_GROUPS;*/
+			break;
+
+		default:
+			$rootNodeName = __EYEDIALOG_FOLDERSTREE_ROOTNODE_HOME;
+			break;
+	}
+
+	//root node
+	$myTree->addItem('folders_TREE', 'item_root', i18n('translate',array($rootNodeName)));
+	$myTree->addSubList('item_root', 'list_root');
+
+	switch ($GLOBALS['currentPlace_HID']->text) {
+		case __EYEDIALOG_PLACE_GROUPS:
+			//TODO
+			/*$userInfo = um('retrieveUser',array($currentUser));
+			foreach($userInfo['eyeUser'][0]['group'] as $groupname) {
+				$relativePath = eyeDialog_resolvePathInGroupsDir('/', false, $groupname);
+				$itemId = md5($relativePath);
+				$myTree->addItem('list_root', 'item_'.$itemId, $groupname);
+				$myTree->addSubList('item_'.$itemId, 'list_'.$itemId);
+				eyeDialog_drawFolderNode($myTree, 'list_'.$itemId, $relativePath);
+			}*/
+			break;
+
+		default:
+			$relativePath = eyeDialog_resolvePathInUserDir('/');
+			$firstSubItemId = eyeDialog_drawFolderNode($myTree, 'list_root', $relativePath);
+			break;
+	}
+
+	$myTree->processList();
+	$myTree->selectItem('item_root');
+	if ($firstSubItemId) {
+		$myTree->expandTree($firstSubItemId);
+	}
+}
+
+/**
+ *
+ * @param string $relativePath oneye root relative path
+ */
+function eyeDialog_drawFolderNode($treeObject, $parentListNode, $relativePath) {
+	$firstItemId = false;
+	$relativePath = eyeDialog_resolvePath($relativePath, false);
+	//eyeX('rawjs', array('js' => 'console.log("'.print_r('relative path = '.$relativePath,true).'")'));
+	if ($relativePath !== false) {
+		$dirContent = vfs('getDirContent', array($relativePath));
+		//eyeX('rawjs', array('js' => 'console.log("'.print_r($dirContent,true).'")'));
+		if ($dirContent !== false) {
+			foreach($dirContent as $filepath) {
+				if (vfs('isdir', array($filepath))) {
+					$itemId = md5($filepath);
+					if (!$firstItemId) {
+						$firstItemId = 'item_'.$itemId;
+					}
+					$treeObject->addItem($parentListNode, 'item_'.$itemId, basename($filepath));
+					$treeObject->addSubList('item_'.$itemId, 'list_'.$itemId);
+					eyeDialog_drawFolderNode($treeObject, 'list_'.$itemId, $filepath);
+				}
+			}
+		}
+	}
+	return $firstItemId;
+}
+
+function eyeDialog_selectTreeFolder($path) {
+	$resolvedPath = eyeDialog_resolvePathInUserDir($path);
+	if ($resolvedPath == eyeDialog_resolvePathInUserDir('/'))
+		$GLOBALS['folders_TREE']->selectItem('item_root');
+	else
+		$GLOBALS['folders_TREE']->selectItem('item_'.md5($resolvedPath));
+}
+
+/**
+ * @param string $path The path within the user dir ('/', '/Documents', '/Desktop', etc.) to browse
+ */
+function eyeDialog_browseHome($path = '/') {
+	$filesTable = eyeDialog_clearFiles();
+
+	$displayedFiletypes = /* utf8 */ explode('|', $GLOBALS['currentFiletypeFilter_HID']->text);
+
+	$path = eyeDialog_resolvePathInUserDir($path);
+	if ($path === false) {
+		eyeX('messageBox',array('content'=> i18n("translate",array('Error while trying to browse folder'))));
+		return;
+	}
+
+	$fullPath = eyeDialog_resolvePathInUserDir($path,false);
+	$filesData = eyeDialog_listDir($fullPath);
+	foreach($filesData as $id => $fileInfo) {
+		switch($fileInfo['type']) {
+			case 'd':
+				$urlIcon = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/folder.png';
+				$size = ' ';
+				break;
+
+			case 'l':
+				$urlIcon = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/link.png';
+				$size  = ' ';
+				break;
+
+			default:
+				$urlIcon = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/file.png';
+				$size  = $fileInfo['size'];
+		}
+		$displayOk = false;
+		if ($fileInfo['type'] != 'd') {
+			foreach ($displayedFiletypes as $ft) {
+				$pattern = /* utf8 */ preg_replace('/\./', '\\.', $ft);
+				$pattern = /* utf8 */ preg_replace('/\*/', '.*', $pattern);
+				$pattern = '/^'.$pattern.'$/isu';
+				if ( /* utf8 */ preg_match($pattern, $fileInfo['name']) === 1) {
+					$displayOk = true;
+				}
+			}
+		}
+		else {
+			$displayOk = true;
+		}
+
+		if ($displayOk) {
+			$filesTable->addRow(array(
+				$fileInfo['id']? $fileInfo['id'] : urlencode(serialize(array($fileInfo['type'], $fileInfo['path']))),
+				'<img src="'.$urlIcon.'" />',
+				$fileInfo['displayedName'],
+				$size,
+				$fileInfo['date'],
+				$fileInfo['author']
+			));
+		}
+	}
+	$GLOBALS['currentPath_HID']->setText($path);
+}
+
+/**
+ *
+ * @param string $path (e.g. /MyFolder)
+ * @param string $groupname The name of the group (empty to display the groups folders)
+ */
+//function eyeDialog_browseGroups($path, $groupname = ''){
+//	global $currentUser;
+//	$filesTable = eyeDialog_clearFiles();
+//
+//	$filesData = array();
+//
+//	//groups root
+//	if ($groupname == '') {
+//		$userInfo = um('retrieveUser', array($currentUser));
+//		foreach($userInfo['eyeUser'][0]['group'] as $groupname) {
+//			$fileInfo = array(
+//				'id' => urlencode(serialize(array('d', '/', $groupname))),
+//				'type'=>'d',
+//				'author'=>' ',
+//				'size'=>' ',
+//				'date'=>' ',
+//				'name'=>$groupname,
+//				'displayedName'=>$groupname,
+//				'path'=>'/'
+//			);
+//			$filesData[] = $fileInfo;
+//		}
+//		$path = '';
+//	}
+//	//not groups root (other internal folder)
+//	else {
+//		$displayedFiletypes = /* utf8 */ explode('|', $GLOBALS['currentFiletypeFilter_HID']->text);
+//
+//		$fullPath = eyeDialog_resolvePathInGroupsDir($path, false, $groupname);
+//		if ($path === false) {
+//			eyeX('messageBox',array('content'=> i18n("translate",array('Error while trying to browse folder'))));
+//			return;
+//		}
+//		$filesData = eyeDialog_listDir($fullPath, $groupname);
+//	}
+//
+//
+//	foreach($filesData as $id => $fileInfo) {
+//		switch($fileInfo['type']) {
+//			case 'd':
+//				$urlIcon = 'index.php?extern=apps/eyeDialog/gfx/typefolder.png';
+//				$size = ' ';
+//				break;
+//
+//			case 'l':
+//				$urlIcon = 'index.php?extern=apps/eyeDialog/gfx/typelink.png';
+//				$size  = ' ';
+//				break;
+//
+//			default:
+//				$urlIcon = 'index.php?extern=apps/eyeDialog/gfx/typedefault.png';
+//				$size  = $fileInfo['size'];
+//		}
+//		$displayOk = false;
+//		if ($fileInfo['type'] != 'd') {
+//			foreach ($displayedFiletypes as $ft) {
+//				$pattern = /* utf8 */ preg_replace('/\./', '\\.', $ft);
+//				$pattern = /* utf8 */ preg_replace('/\*/', '.*', $pattern);
+//				$pattern = '/^'.$pattern.'$/isu';
+//				if ( /* utf8 */ preg_match($pattern, $fileInfo['name']) === 1) {
+//					$displayOk = true;
+//				}
+//			}
+//		}
+//		else {
+//			$displayOk = true;
+//		}
+//
+//		if ($displayOk) {
+//			$filesTable->addRow(array(
+//				$fileInfo['id']? $fileInfo['id'] : urlencode(serialize(array($fileInfo['type'], $fileInfo['path'], $groupname))),
+//				'<img src="'.$urlIcon.'" />',
+//				$fileInfo['displayedName'],
+//				$size,
+//				$fileInfo['date'],
+//				$fileInfo['author']
+//			));
+//		}
+//	}
+//	$GLOBALS['currentPath_HID']->setText($path);
+//}
+
+/**
+ * @param string $dir The directory to browse (e.g. './users/jn4/john/files/Documents')
+ * @return array
+ */
+function eyeDialog_listDir($dir) {
+	$dir = eyeDialog_getFormatedDirPath($dir);
+	$content = vfs('getDirContent', array($dir));
+
+	$i = 1;
+	$filesData = array();
+	//add parent entry (..) only if we are not in the root directory
+	$checkedDir = eyeDialog_resolvePathInUserDir($dir);
+	if ($checkedDir != eyeDialog_resolvePathInUserDir('/')) {
+		$fileInfo = array(
+			'id' => urlencode(serialize(array('d',$dir.'/..'))),
+			'type'=>'d',
+			'author'=>' ',
+			'size'=>' ',
+			'date'=>' ',
+			'name'=>'..',
+			'displayedName'=>'..',
+			'path'=>''
+		);
+		$filesData[$i++] = $fileInfo;
+	}
+
+	if (is_array($content)) {
+		foreach($content as $file) {
+			$fileInfo = vfs('readInfo', array($file));
+			if (is_dir($file)) {
+				$type = 'd';
+				$author = ' ';
+				$size = ' ';
+				$date = ' ';
+				$name = basename($file);
+			}
+			elseif (ltrim(strrchr($file, '.'), '.') === EYEOS_LINK_EXT) { // utf8
+				$type = 'l';
+				$author = ' ';
+				$size = ' ';
+				$date = ' ';
+				$name = basename($file);
+			}
+			else {
+				$type = '-';
+				$author = $fileInfo['eyeFile'][0]['author'][0];
+				$size = vfs('filesize', array($file));
+				$date = date('Y-m-d',$fileInfo['eyeFile'][0]['created'][0]);
+				$name = $fileInfo['eyeFile'][0]['filename'][0];
+			}
+			$path = $dir.'/'.$name;
+
+			$fileInfo = array(
+				'id' => '',				//filled in browseXxx()
+				'type'=>$type,
+				'author'=>$author,
+				'size'=>$size,
+				'date'=>$date,
+				'name'=>$name,
+				'displayedName'=>$name,
+				'path'=>$path
+			);
+			$filesData[$i++] = $fileInfo;
+		}
+	}
+
+	usort($filesData, 'eyeDialog_compareFilesData');
+	return $filesData;
+}
+
+/**
+ * Sort files list processed by eyeDialog_listDir() in order to put the folders on top
+ * of the list.
+ * AUTOMATICALLY CALLED BY eyeDialog_listDir()
+ *
+ * @param array $a
+ * @param array $b
+ * @return int A negative value if $a must be placed before $b, a positive value otherwise
+ */
+function eyeDialog_compareFilesData($a, $b) {
+	if ($a['type'] == $b['type']) {
+		if ($a['name'] == '..')
+			return -1;
+
+		if ($b['name'] == '..')
+			return 1;
+
+		return strcmp($a['name'],$b['name']);
+	}
+	if ($a['type'] == 'd' && $b['type'] != 'd')
+		return -1;
+	if ($a['type'] != 'd' && $b['type'] == 'd')
+		return 1;
+}
+
+/**
+ * Removes double slashes when present and returns result string.
+ *
+ * @param string $dir The path to format
+ * @return string The path formated
+ */
+function eyeDialog_getFormatedDirPath($dir) {
+	if ($dir == '' || $dir == '//') {
+		return '/';
+	}
+	else {
+		return str_replace('//','/',$dir);
+	}
+}
+
+/**
+ *
+ * @param string $filename
+ * @return array (0 => filename_without_extension, 1 => extension)
+ */
+function eyeDialog_getFilenameAndExtension($filename) {
+	$nbMatches = /* utf8 */ preg_match('/^(.*)\.([_\*A-Za-z]+)$/', $filename, $matches);
+	if ($nbMatches == 0) {
+		$return = array(
+			$filename,
+			''
+		);
+	}
+	else {
+		$return = array(
+			$matches[1],
+			$matches[2]
+		);
+	}
+	return $return;
+}
+
+function eyeDialog_resolvePath($path, $returnReferenceFolderRelative = false, $groupname = '') {
+	if ($GLOBALS['currentPlace_HID']->text == __EYEDIALOG_PLACE_GROUPS)
+		return eyeDialog_resolvePathInGroupsDir($path, $returnReferenceFolderRelative, $groupname);
+	else
+		return eyeDialog_resolvePathInUserDir($path, $returnReferenceFolderRelative);
+}
+
+function eyeDialog_resolvePathInUserDir($path, $returnUserFilesRelative = false) {
+	return vfs('resolvePath', array($path, 'user_files', $returnUserFilesRelative));
+}
+
+function eyeDialog_resolvePathInGroupsDir($path, $returnGroupsDirRelative = false, $groupname) {
+	return vfs('resolvePath', array($path, 'group_files', $returnGroupsDirRelative, $groupname));
+}
+
+?>

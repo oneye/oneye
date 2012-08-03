@@ -1,0 +1,10 @@
+﻿If a file is recognized by oneye and is associated to an installed application, you can just click on the file without any action selected Action, and the appropiate application will be launched opening the file. Otherwise, an "Open with" dialog will pop up. Also, you can use the "Open with" action to open the dialog.
+
+Some file types that will be recognized by oneye by default are:
+[list][*]Images (.bmp, .png, .jpg, .jpeg, .gif, .tiff) will be opened with the oneye Image Viewer.
+[*]MP3 Music files (.mp3) will be opened with the oneye Music Player.
+[*]Videos and movies (.flv, .avi, .divx...) will be opened with eyeVideo or eyeMovies, depending if the DivX plugin is needed or not.
+[*]Microsoft Word Documents (.doc) and oneye Documents (.eyedoc) will be opened with eyeDocs, the oneye Word Processor.
+[*]Compressed files (.zip, .tar, .tbz, .tbz2, .tgz, .tar.gz, .tar.bz2) will be opened with eyeArchive, the oneye compressing and uncompressing tool.
+[*]Text files (.eyecode, .txt, .py, .pl, .c, .cc) will be opened with eyeNotes.
+[*]eyePackages, the oneye installable packages (.eyepackage) will be opened with eyeInstaller, but only if you are logged in as root.[/list]

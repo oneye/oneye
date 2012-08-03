@@ -1,0 +1,30 @@
+[b]Add a feed[/b]
+[list]
+[*]Click on the "Add feed" button in the toolbar, or right-click on an element of the tree then choose "Add feed"
+[*]Enter the URL of the feed
+[*]Select the folder where you want to place your feed.
+[*]You can optionally enter a name for the feed (in this case the default one fetched from the target site will be replaced by yours)
+[*]Click on the "Add feed" button to validate
+[/list]
+[b]Add a folder[/b]
+[list]
+[*]Click on the "Add folder" button in the toolbar
+[*]Select the folder where you want to place your folder
+[*]Type the name of the new folder
+[*]Click on the "Add folder" button to validate
+[/list]
+[b]Edit a feed or a folder[/b]
+[list]
+[*]Click on an element of the tree
+[*]Click on the "Edit" button in the toolbar
+[*]You can also directly right-click on the element of the tree and choose "Edit" in the context menu
+[*]Modify the informations of the element
+[*]Click on the "Apply" button
+[/list]
+[b]Remove a feed or a folder[/b]
+[list]
+[*]Left-click on an element of the tree
+[*]Click on the "Delete" button in the toolbar
+[*]You can also directly right-click on the element of the tree and choose "Remove" in the context menu
+[*]Confirm by clicking "Ok"
+[/list]

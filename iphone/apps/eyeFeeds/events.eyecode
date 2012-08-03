@@ -1,0 +1,176 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+include_once(IPHONE_PATH.'lib/message.eyecode');
+
+function eyeFeeds_showFeed() {
+	if(!isset($_GET['furl'])) {
+		return false;
+	}
+	if (isset($_GET['fid'])) {
+		eyeFeeds_viewContent($_GET['fid']);
+	} else {
+		$feed = $_GET['feed'];
+		$url = $_GET['furl'];
+		$items = eyeFeeds_fetchFeedItemsFromUrl($url);
+		echo '<ul id="feed" title="'.$feed.'" selected="true">';
+		foreach ($items as $key=>$theitem) {
+			echo '<li><a href="index.php?action=eyeFeeds&do=showFeed&furl='.$url.'&fid='.$key.'"><img style="position:relative;padding-right:7px;top:7px;" src="apps/eyeFeeds/icon.png">'.$theitem['title'].'</a></li>';
+		}
+		echo '</ul>';
+	}
+}
+
+function eyeFeeds_viewContent($fid) {
+	$feed = $_GET['feed'];
+	$url = $_GET['furl'];
+	$fid = $_GET['fid'];
+	$item = eyeFeeds_fetchFeedItemsFromUrl($url);
+	echo '<ul id="feedcontent" title="'.$feed.'" class="panel">';
+	echo '<div class="info" style="text-align:justify;padding:7px;"><h3 style="margin-left:0px;">'.$item[$fid]['content'].'</h3>';
+	echo '<a href="'.$item[$fid]['permalink'].'">Read more...</a>';
+	echo '</div>';
+	echo '</ul>';
+}
+
+function eyeFeeds_new() {
+	echo '<form method="post" action="index.php?action=eyeFeeds&do=thesave" id="eyeFeeds" title="Feeds - Add Feed" class="panel" selected="true">
+        <fieldset>
+            <div class="row">
+                <label>URL</label>
+                <input type="text" name="theurl" value="http://"/>
+            </div>
+            <div class="row">
+                <label>Name</label>
+                <input type="text" name="thename" value=""/>
+            </div>
+        </fieldset>
+	<input id="lgbt" name="savefeed" value="Add" type="submit">
+    </form>';
+}
+
+function eyeFeeds_thesave() {
+	if (!isset($_POST['theurl']) || empty($_POST['theurl']) || $_POST['theurl']=="http://") {
+		msgIphone(array('content' => 'Please, fill in the url.', 'title' => 'Error'));
+		return false;
+	}
+
+	$feedUrl = $_POST['theurl'];
+	$feedName = $_POST['thename'];
+
+	$feed = eyeFeeds_fetchFeedFromUrl($feedUrl);
+	if (!$feed) {
+		return false;
+	}
+	if (!empty($feedName)) {
+		$feed['name'][0] = $feedName;
+	}
+
+	$newFeedsToSave = eyeFeeds_addFeed(eyeFeeds_getSavedFeeds(), $feed);
+
+	if (eyeFeeds_saveFeedsToFile($newFeedsToSave)) {
+		msgIphone(array('content' => 'Feed successfully added', 'title' => 'Complete', 'caption' => 'Continue', 'link' => 'index.php?action=eyeFeeds&noPropagate=2'));
+	} else {
+		msgIphone(array('content' => 'Error adding feed', 'title' => 'Error'));
+	}
+}
+
+function eyeFeeds_addFeed($feeds, $feed) {
+	if (!is_array($feeds)) {
+		return array();
+	}
+	$feeds['feed'][] = $feed;
+	return $feeds;
+}
+
+function eyeFeeds_getSavedFeeds() {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
+	$conf = eyeXML('getXMLfile', array($path));
+
+	if (!is_array($conf))
+		$conf = array('eyeFeeds' => array());
+
+	if (!is_array($conf['eyeFeeds'][0]))
+		$conf['eyeFeeds'][0] = array('base' => array());
+
+	if (!is_array($conf['eyeFeeds'][0]['base'][0]))
+		$conf['eyeFeeds'][0]['base'][0] = array('feed' => array());
+
+	return $conf['eyeFeeds'][0]['base'][0];
+}
+
+function eyeFeeds_saveFeedsToFile($feeds) {
+	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
+	$conf = eyeXML('getXMLfile', array($path));
+
+	$conf['eyeFeeds'][0]['base'][0] = $feeds;
+	if (!eyeXML('setXMLfile',array($path, $conf))) {
+		return false;
+	}
+	return true;
+}
+
+function eyeFeeds_fetchFeedFromUrl($url) {
+	include_once(EYE_ROOT.'/'.APP_DIR.'/eyeFeeds/simplepie'.EYE_CODE_EXTENSION);
+
+	$simplePie = new SimplePie();
+	$simplePie->set_feed_url($url);
+	$simplePie->enable_cache(false);
+	$simplePie->init();
+	$simplePie->handle_content_type();
+	if ($simplePie->error()) {
+		msgIphone(array('content' => 'Error getting specified feed', 'title' => 'Error'));
+		return false;
+	}
+
+	$feed = array(
+		'id' => array(md5($url.microtime())),
+		'type' => array('feed'),
+		'name' => array($simplePie->get_title()),
+		'url' => array($url)
+	);
+	return $feed;
+}
+
+function eyeFeeds_fetchFeedItemsFromUrl($url) {
+	include_once(EYE_ROOT.'/'.APP_DIR.'/eyeFeeds/simplepie'.EYE_CODE_EXTENSION);
+
+	//fetch RSS feed's items
+	$simplePie = new SimplePie();
+	$simplePie->set_feed_url($url);
+	$simplePie->enable_cache(false);
+	$simplePie->init();
+	$simplePie->handle_content_type();
+
+	if ($simplePie->error()) {
+		msgIphone(array('content' => 'Error getting specified feed', 'title' => 'Error'));
+		return false;
+	}
+
+	$return = array();
+	foreach($simplePie->get_items(0, 0) as $key => $simplePieItem) {
+		$item = array(
+			'id' => $simplePieItem->get_id(),
+			'permalink' => $simplePieItem->get_permalink(),
+			'title' => $simplePieItem->get_title(),
+			'date' => $simplePieItem->get_date('Y-m-d G:i'),
+			'content' => $simplePieItem->get_content(),
+		);
+		$return[md5($item['id'])] = $item;
+	}
+	return $return;
+}
+?>

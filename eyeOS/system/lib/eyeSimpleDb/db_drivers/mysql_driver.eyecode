@@ -1,0 +1,162 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+*Return an Intanced of dbDriver.
+*/
+function get_db_object(){
+	$object = new dbDriver();
+	return $object;
+}
+
+/*
+*This class i a filled interface for mysql database.
+*/
+class dbDriver{
+
+	var $error;//storage the error text when it appears (the i18n is php dependence)
+	var $conn;//A conection link (in dbDriver for txt is the file descriptor).
+	var $result;
+	var $connEncoding = 'utf8';//Our default encoding is utf8
+
+	//Constructor, check if mysql function are available
+	function dbDriver(){
+		if(!function_exists('mysql_connect')){
+			errorCodes('setErrorCode',array(DB_NO_SUPPORT));
+			return FALSE;
+		}
+	}
+
+	//Do the necesary for communicate with database (in dbDriver for txt open the file etc
+	function connect($params){
+		$host = $params['host'];
+		$login = $params['login'];
+		$password = '';
+		//If password is set in params, set it.
+		if($params['password']){
+			$password = $params['password'];
+		}
+		if($params['connEncoding']){
+			$this->connEncoding = $params['connEncoding'];
+		}
+		$conn = mysql_connect($host,$login,$password);
+		if(!$conn){
+			errorCodes('setErrorCode',array(DB_NO_CONNECT));
+			$this->error = mysql_error();
+			return FALSE;
+		}
+		//Setting the connection charset, only applicable to mysql
+// 		$result = mysql_query("SET NAMES '".$this->connEncoding."'",$conn);
+		//if(!$result){
+			//Waiting for better debuggin system... maybe return false here?
+		//}
+		//Setting connection for a driver instance
+		$this->conn = $conn;
+		//Setting encoding
+		return TRUE;
+	}
+
+	//Select db.
+	function select_db($params){
+		$dbName = $params['dbname'];
+		$db_selected = mysql_select_db($dbName,$this->conn);
+		if(!$db_selected){
+			errorCodes('setErrorCode',array(DB_NO_SELECTDB));
+			$this->error = mysql_error();
+			return FALSE;
+		}
+		return TRUE;
+	}
+
+	//Do a query and storage the query results in class vars, the results can change beteewn dbDrivers.
+	function query($params){
+		$queryString = $params['query'];
+		$result = mysql_query($queryString,$this->conn);
+
+		if(!$result){
+			$this->error = mysql_error();
+			echo mysql_error();
+			return FALSE;
+		}
+
+		$this->result = $result;
+		$callFunction = $params['type'].'Result';
+		if(method_exists($this,$callFunction)){
+			return call_user_func(array($this,$callFunction));
+		}
+		return FALSE;
+	}
+
+	//Return all results in an array.
+	function getResult(){
+		$params = array('sqlResult'=>$this->result);
+		//$result = new dbResult();
+	}
+
+	//Close conection with db server (in dbDriver txt for example close the file descriptor).
+	function close(){
+		return 	mysql_close($this->conn);
+	}
+
+	//Fetch a results for select query.
+	function selectResult(){
+		//affect rows if any rows be affected, set the correct state and return.
+		$this->resultRows = array();
+		$this->affectedRows = mysql_num_rows($this->result);
+
+		//At the moment only assoc fetch is implemented because is not significantly slower than row and provice add values
+		while($row = mysql_fetch_assoc($this->result)){
+			$this->resultRows[] = $row;
+		}
+
+		//Return array
+		$arrayReturn = array('assoc'=>$this->resultRows,'affected'=>$this->affectedRows);
+		return $arrayReturn;
+	}
+
+	//Fetch a results for update query
+	function updateResult(){
+		$this->affectedRows = mysql_affected_rows($this->conn);
+		$returnArray = array('affected'=>$this->affectedRows);
+		return $returnArray;
+	}
+
+	//Fetch a results for insert query
+	function insertResult(){
+		$this->affectedRows = mysql_affected_rows($this->conn);
+		$inssertedId = mysql_insert_id($this->conn);
+		if($inssertedId == 0 || $inssertedId == false){
+			$inssertedId = false;
+		}
+		$returnArray = array('affected'=>$this->affectedRows,'id'=>$inssertedId);
+		return $returnArray;
+	}
+
+	//Fetch a results for delete query
+	function deleteResult(){
+		$this->affectedRows = mysql_affected_rows($this->conn);
+		$returnArray = array('affected'=>$this->affectedRows);
+		return $returnArray;
+	}
+
+	//Free a result storage, class vars and posible php vars.
+	function freeResult(){
+		if(!mysql_free_result($this->result)){
+			return FALSE;
+		}
+	}
+}
+?>

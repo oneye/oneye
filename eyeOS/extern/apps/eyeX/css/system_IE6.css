@@ -1,0 +1,90 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+html, body {
+	height: 100%;
+	width: 100%;
+}
+
+.eyeDockText_center {
+	background: url();
+	filter: progid:DXImageTransform.Microsoft.AlphaImageLoader(src='index.php?theme=USERTHEME&extern=images/apps/eyeDock/center_ie6.png', sizingMethod='scale');
+	height: 31px;
+	left: 0px;
+	position: absolute;
+	top: 0;
+}
+
+.eyeDockTextIcon {
+	border-right:1px solid #353B40;
+	color: #ffffff;
+	cursor: pointer;
+	font-size: 12px;
+	line-height: 20px;
+	margin-left: 5px;
+	margin-right: 5px;
+	margin-top: 1px;
+	padding-right: 10px;
+}
+
+.eyeDockTextIcon_active {
+	margin-left: -5px;
+	margin-right: 4px;
+	margin-top: -7px;
+	padding-left: 6px;
+	padding-right: 11px;
+	padding-top: 7px;
+}
+
+.eyeDockTextIcon:hover {
+	background: #cccccc;
+	border-right:1px solid transparent;
+	border-left: 1px groove transparent;
+	color: #000000;
+	height: 25px;
+}
+
+.eyeDockTextIcon_active {
+	background: #dddddd;
+	border-right:1px solid #ffffff;
+	border-left: 1px groove #ffffff;
+	cursor: pointer;
+	font-size: 12px;
+	height: 35px !important;
+	line-height: 20px;
+}
+
+.eyeDockTextMenu {
+	display: none;
+	position: absolute;
+	top: 36px;
+	z-index: 10000;
+}
+
+.eyeDockTextMenuContent {
+	height: 110%;
+	left: -13px;
+}
+
+.eyeDockTextMenuIcon {
+	height: 29px;
+	left: 10px;
+	padding-left: 3px;
+	padding-right: 5px;
+	padding-top:3px;
+	position: absolute;
+	right: 10px;
+	width: 93%
+}

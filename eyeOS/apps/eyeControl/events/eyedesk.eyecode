@@ -1,0 +1,191 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_eyedesk_new($params = '') {
+	$mySelect = eyex('messageBox',array(
+		'buttons' => array(array('eyedesk_new_add','Add'),array('eyedesk_new_cancel','Cancel')),
+		'content' => 'Type the command you want to run at login.',
+		'father' => 'eyeControl_container_big',
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/exec.png',
+		'select_event' => 'eyedesk_new_add',
+		'select_name' => 'eyeControl_eyedesk_new_select',
+		'title' => 'New command',
+		'type' => 3,
+		'win_name' => 'eyeControl_eyedesk_new_window',
+		'win_removepid' => 0,
+		'win_style' => TITLE + CLOSE
+	));
+
+	global $currentUser;
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$applicationsList = vfs('real_getDirContent', array(EYE_ROOT . '/' . APP_DIR . '/'));
+	$currentUser = $oldUser;
+
+	foreach ($applicationsList as $application) {
+		if (is_dir($application)) {
+			$application = basename($application);
+			if ($application != 'share') {
+				$mySelect->addOption($application, $application);
+			}
+		}
+	}
+}
+
+function eyeControl_on_eyedesk_new_add($params = '') {
+	$autorun = $GLOBALS['eyeControl_eyedesk_new_select']->selected;
+	if ($autorun) {
+		$autorunXML = eyeControl_lib_getXMLconfig(array('eyeDesk','conf.xml'));
+		$arrayIds = eyeControl_lib_findIdByText(array($autorunXML['eyeDesk'][0]['autolaunch'],$autorun));
+		if (isset($arrayIds[0])) {
+			eyex('messageBox',array('content' => 'That command is already configured!'));
+		} else {
+			$autorunXML['eyeDesk'][0]['autolaunch'][] = $autorun;
+			eyeControl_lib_setXMLconfig(array('eyeDesk','conf.xml',$autorunXML));
+			eyex('messageBox',array('content' => 'Command successfully added.'));
+			eyeControl_lib_loadContent('system','eyedesk');
+		}
+	} else {
+		eyex('messageBox',array('content' => 'Please type a command!'));
+	}
+}
+
+function eyeControl_on_eyedesk_new_cancel($params = '') {
+	$GLOBALS['eyeControl_eyedesk_new_window']->close();
+}
+
+function eyeControl_on_eyedesk_edit($params = '') {
+	$autorun = $GLOBALS['eyeControl_eyedesk_sortabletable']->selected;
+	if ($autorun) {
+		$mySelect = eyex('messageBox',array(
+			'buttons' => array(array('eyedesk_edit_save','Save'),array('eyedesk_edit_cancel','Cancel')),
+			'content' => 'Type the command you want to run at login.',
+			'father' => 'eyeControl_container_big',
+			'hiddens' => array(array('eyeControl_eyedesk_edit_hidden',$autorun)),
+			'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/exec.png',
+			'select_event' => 'eyedesk_new_save',
+			'select_name' => 'eyeControl_eyedesk_edit_select',
+			'title' => 'Edit command',
+			'type' => 3,
+			'win_name' => 'eyeControl_eyedesk_edit_window',
+			'win_removepid' => 0,
+			'win_style' => TITLE + CLOSE
+		));
+		foreach (vfs('real_getDirContent', array(EYE_ROOT . '/' . APP_DIR . '/')) as $application) {
+			if (is_dir($application)) {
+				$application = basename($application);
+				if ($application != 'share') {
+					$mySelect->addOption($application, $application, ($application == $autorun));
+				}
+			}
+		}
+	} else {
+		eyex('messageBox',array('content' => 'Please choose a command to be edited.'));
+	}
+}
+
+function eyeControl_on_eyedesk_edit_save($params = '') {
+	$autorun_new = $GLOBALS['eyeControl_eyedesk_edit_select']->selected;
+	$autorun_old = $GLOBALS['eyeControl_eyedesk_edit_hidden']->text;
+	if ($autorun_new) {
+		$autorunXML = eyeControl_lib_getXMLconfig(array('eyeDesk','conf.xml'));
+		$arrayIds = eyeControl_lib_findIdByText(array($autorunXML['eyeDesk'][0]['autolaunch'],$autorun_old));
+		$arrayIds = $arrayIds[0];
+		if (isset($arrayIds)) {
+			$autorunXML['eyeDesk'][0]['autolaunch'][$arrayIds] = $autorun_new;
+			eyeControl_lib_setXMLconfig(array('eyeDesk','conf.xml',$autorunXML));
+			eyex('messageBox',array('content' => 'Command successfully saved.'));
+			eyeControl_lib_loadContent('system','eyedesk');
+		} else {
+			eyex('messageBox',array('content' => 'That command does not exist!'));
+		}
+	} else {
+		eyex('messageBox',array('content' => 'Please type a command!'));
+	}
+}
+
+function eyeControl_on_eyedesk_edit_cancel($params = '') {
+	$GLOBALS['eyeControl_eyedesk_edit_window']->close();
+}
+
+function eyeControl_on_eyedesk_default($params = '') {
+	eyex('messageBox',array(
+		'buttons' => array(array('eyedesk_default_yes','Yes'),array('eyedesk_default_no','No')),
+		'content' => 'Do you really want to restore the default eyeDesk settings?',
+		'father' => 'eyeControl_container_big',
+		'img' => '?',
+		'title' => 'Use defaults',
+		'type' => 3,
+		'win_name' => 'eyeControl_eyedesk_default_window',
+		'win_removepid' => 0,
+		'win_style' => TITLE + CLOSE
+	));
+}
+
+function eyeControl_on_eyedesk_default_yes($params = '') {
+	global $currentUser;
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$xmlDef = eyeXML('getXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/skel/' . CONF_USER_DIR . '/eyeDesk/conf.xml'));
+	$currentUser = $oldUser;
+	$xmlNew = eyeControl_lib_getXMLconfig(array('eyeDesk','conf.xml'));
+	$xmlNew['eyeDesk'][0]['autolaunch'] = $xmlDef['eyeDesk'][0]['autolaunch'];
+	eyeControl_lib_setXMLconfig(array('eyeDesk','conf.xml',$xmlNew));
+	eyex('messageBox',array('content' => 'Default settings successfully set.'));
+	eyeControl_lib_loadContent('system','eyedesk');
+}
+
+function eyeControl_on_eyedesk_default_no($params = '') {
+	$GLOBALS['eyeControl_eyedesk_default_window']->close();
+}
+
+function eyeControl_on_eyedesk_delete($params = '') {
+	$autorun = $GLOBALS['eyeControl_eyedesk_sortabletable']->selected;
+	if ($autorun) {
+		eyex('messageBox',array(
+			'buttons' => array(array('eyedesk_delete_yes','Yes'),array('eyedesk_delete_no','No')),
+			'content' => 'Do you really want to remove this command?',
+			'father' => 'eyeControl_container_big',
+			'hiddens' => array(array('eyedesk_delete_hidden',$autorun)),
+			'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/editClean.png',
+			'title' => 'Delete autorun',
+			'type' => 3,
+			'win_name' => 'eyeControl_eyedesk_delete_window',
+			'win_removepid' => 0,
+			'win_style' => TITLE + CLOSE
+		));
+	} else {
+		eyex('messageBox',array('content' => 'Please choose a command to be deleted.'));
+	}
+}
+
+function eyeControl_on_eyedesk_delete_yes($params = '') {
+	$autorun = $GLOBALS['eyedesk_delete_hidden']->text;
+	if ($autorun) {
+		$autorunXML = eyeControl_lib_getXMLconfig(array('eyeDesk','conf.xml'));
+		$x = eyeControl_lib_findIdByText(array($autorunXML['eyeDesk'][0]['autolaunch'],$autorun));
+		$x = $x[0];
+		unset($autorunXML['eyeDesk'][0]['autolaunch'][$x]);
+		eyeControl_lib_setXMLconfig(array('eyeDesk','conf.xml',$autorunXML));
+		eyex('messageBox',array('content' => 'Command successfully deleted.'));
+		eyeControl_lib_loadContent('system','eyedesk');
+	}
+}
+
+function eyeControl_on_eyedesk_delete_no($params = '') {
+	$GLOBALS['eyeControl_eyedesk_delete_window']->close();
+}
+?>

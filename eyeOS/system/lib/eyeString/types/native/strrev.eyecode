@@ -1,0 +1,8 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strrev($string) {
+	return implode('', array_reverse(utf8_str_split($string)));
+}
+?>

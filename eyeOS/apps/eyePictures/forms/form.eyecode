@@ -1,0 +1,291 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+$myMainLabel = new Label(array(
+	'name' => 'mainLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => 19,
+	'x' => 49,
+	'text' => 'Choose the effect you want to apply.'
+));
+$myMainLabel->show();
+$myMainLabel->setCSS(array(
+	'font-weight' => 'bold'
+));
+
+$myTboxLabel = new Label(array(
+	'name' => 'tboxLabel',
+	'father' => 'editColors_Wnd_Content',
+	'vert' => 1,
+	'y' => 68,
+	'x' => 44,
+	'text' => 'Save as:'
+));
+$myTboxLabel->show();
+
+$myTextBox = new Textbox(array(
+	'father' => 'editColors_Wnd_Content',
+	'name' => 'editColors_saveFile_txtBox',
+	'vert' => 1,
+	'horiz' => 1,
+	'x' => 40,
+	'y' => 43,
+	'width' => 236
+));
+$myTextBox->show();
+
+$mySaveBtn = new Button(array(
+	'father' => 'editColors_Wnd_Content',
+	'name' => 'saveFile_btn',
+	'signal' => 'saveFile',
+	'caption' => 'Save',
+	'vert' => 1,
+	'horiz' => 1,
+	'x' => 40,
+	'y' => 14,
+));
+$mySaveBtn->addFriend($myTextBox);
+$mySaveBtn->show();
+
+$originalPic = new Hidden(array(
+	'father' => 'editColors_Wnd_Content',
+	'name' => 'eyePictures_editColors_originalPic',
+	'text' => eyeSessions('getVar', array('eyePictures_originalPic_'.$myPid))
+));
+$originalPic->show(0);
+
+$myUndoBtn = new Button(array(
+	'father' => 'editColors_Wnd_Content',
+	'name' => 'undo_btn',
+	'signal' => 'undoAll',
+	'caption' => 'Undo all',
+	'vert' => 1,
+	'horiz' => 1,
+	'x' => 90,
+	'y' => 14,
+));
+$myUndoBtn->addFriend($myTextBox);
+$myUndoBtn->addFriend($originalPic);
+$myUndoBtn->show();
+
+$x0 = 97;//26
+$y0 = 56;
+$Y0 = 72;
+$y1 = 94;
+$Y1 = 110;
+$y2 = 132;
+$Y2 = 148;
+
+$mySepiaBtn = new Button(array(
+	'name' => 'sepiaBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setSepia',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y0,
+	'caption' => '',
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/sepia.png'
+));
+$mySepiaBtn->addFriend($myTextBox);
+$mySepiaBtn->show();
+
+$mySepiaLabel = new Label(array(
+	'name' => 'sepiaLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y0,
+	'x' => 89,
+	'text' => 'Sepia'
+));
+$mySepiaLabel->show();
+
+$myBWBtn = new Button(array(
+	'name' => 'b&wBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setGrayScale',
+	'caption' => '',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y1,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/blancInegre.png'
+));
+$myBWBtn->addFriend($myTextBox);
+$myBWBtn->show();
+
+$myBWLabel = new Label(array(
+	'name' => 'bwLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y1,
+	'x' => 92,
+	'text' => 'B&W'
+));
+$myBWLabel->show();
+
+$myPencilBtn = new Button(array(
+	'name' => 'pencilBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setPencil',
+	'caption' => '',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y2,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/color-picker-black.png'
+));
+$myPencilBtn->addFriend($myTextBox);
+$myPencilBtn->show();
+
+$myPencilLabel = new Label(array(
+	'name' => 'pencilLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y2,
+	'x' => 75,
+	'text' => 'Contrast -'
+));
+$myPencilLabel->show();
+
+$x0+=62;
+$myEmbossBtn = new Button(array(
+	'name' => 'embossBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setEmboss',
+	'caption' => '',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/relleu.png'
+));
+$myEmbossBtn->addFriend($myTextBox);
+$myEmbossBtn->show();
+
+$myEmbossLabel = new Label(array(
+	'name' => 'embossLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y0,
+	'x' => 147,
+	'text' => 'Emboss'
+));
+$myEmbossLabel->show();
+
+$myDarkenBtn = new Button(array(
+	'name' => 'darkenBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setDarken',
+	'caption' => '',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y1,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/enfosquir.png'
+));
+$myDarkenBtn->addFriend($myTextBox);
+$myDarkenBtn->show();
+
+$myDarkenLabel = new Label(array(
+	'name' => 'darkenLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y1,
+	'x' => 147,
+	'text' => 'Bright -'
+));
+$myDarkenLabel->show();
+
+$myLightenBtn = new Button(array(
+	'name' => 'lightenBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setBrighten',
+	'caption' => '',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y2,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/aclarar.png'
+));
+$myLightenBtn->addFriend($myTextBox);
+$myLightenBtn->show();
+
+$myLightenLabel = new Label(array(
+	'name' => 'lightenLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y2,
+	'x' => 144,
+	'text' => 'Bright +'
+));
+$myLightenLabel->show();
+
+$x0+=62;
+$myReverseBtn = new Button(array(
+	'name' => 'reverseBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setInvert',
+	'caption' => '',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y0,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/invertir.png'
+));
+$myReverseBtn->addFriend($myTextBox);
+$myReverseBtn->show();
+
+$myReverseLabel = new Label(array(
+	'name' => 'reverseLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y0,
+	'x' => 211,
+	'text' => 'Invert'
+));
+$myReverseLabel->show();
+
+$myBlurBtn = new Button(array(
+	'name' => 'blurBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setBlur',
+	'caption' => '',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y1,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/desenfocar.png'
+));
+$myBlurBtn->addFriend($myTextBox);
+$myBlurBtn->show();
+
+$myBlurLabel = new Label(array(
+	'name' => 'blurLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y1,
+	'x' => 217,
+	'text' => 'Blur'
+));
+$myBlurLabel->show();
+
+$mySmoothBtn = new Button(array(
+	'name' => 'smoothBtn',
+	'father' => 'editColors_Wnd_Content',
+	'signal' => 'setSmooth',
+	'caption' => '',
+	'width' => 17,
+	'x' => $x0,
+	'y' => $y2,
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyePictures/FX/color-picker-white.png'
+));
+$mySmoothBtn->addFriend($myTextBox);
+$mySmoothBtn->show();
+
+$mySmoothLabel = new Label(array(
+	'name' => 'smoothLabel',
+	'father' => 'editColors_Wnd_Content',
+	'y' => $Y2,
+	'x' => 200,
+	'text' => 'Contrast +'
+));
+$mySmoothLabel->show();
+?>

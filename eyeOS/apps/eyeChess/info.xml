@@ -1,0 +1,10 @@
+<package>
+	<name>Chess Game</name>
+	<category>Games</category>
+	<version>1.9</version>
+	<description>Application to play chess against the browser</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeChess.png</icon>
+</package>

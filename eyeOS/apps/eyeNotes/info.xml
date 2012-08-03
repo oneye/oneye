@@ -1,0 +1,11 @@
+<package>
+	<name>Text Editor</name>
+	<category>Office</category>
+	<version>1.9</version>
+	<description>Application to edit text files</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeNotes.png</icon>
+	<openWith>1</openWith>
+</package>

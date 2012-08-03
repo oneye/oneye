@@ -1,0 +1,234 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Icon widget abstraction
+*/
+
+class Icon {
+	//pid controller
+
+	var $creatorPid;
+
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//generic widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+	var $visible;
+
+	var $showed = 0;
+
+	//custom widget options
+	var $draggable;
+	var $onclick;
+	var $image;
+	var $text;
+	var $content;
+	var $myOnLoad;
+
+	var $width;
+	var $height;
+
+	var $breaktext;
+	var $tooltip;
+	//event handling
+	var $events;
+	var $overBorder;
+	var $overBorderBg;
+	var $overBorderColor;
+	var $textColor;
+	var $overClass;
+	var $useClass;
+
+	function Icon($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 40;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 40;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+		isset($params['visible'])? $this->visible = $params['visible'] : $this->visible = 1;
+
+		isset($params['text']) ? $this->text = $params['text'] : $this->text = $this->name;
+		isset($params['textColor']) ? $this->textColor = $params['textColor'] : $this->textColor = '#ffffff';
+		isset($params['image']) ? $this->image = $params['image'] : $this->image = 0;
+		isset($params['content']) ? $this->content = $params['content'] : $this->content = 0;
+		isset($params['draggable']) ? $this->draggable = $params['draggable'] : $this->draggable = 1;
+		isset($params['onclick']) ? $this->onclick = $params['onclick'] : $this->onclick = 0;
+		isset($params['myonload']) ? $this->myOnLoad = $params['myonload'] : $this->myOnLoad = '';
+		isset($params['breaktext']) ? $this->breaktext = $params['breaktext'] : $this->breaktext = 9;
+		isset($params['overBorder']) ? $this->overBorder = $params['overBorder'] : $this->overBorder = 0;
+		isset($params['overBorderBg']) ? $this->overBorderBg = $params['overBorderBg'] : $this->overBorderBg = '#c7ddf8';
+		isset($params['overBorderColor']) ? $this->overBorderColor = $params['overBorderColor'] : $this->overBorderColor = '1px solid #9ec8fb';
+		isset($params['moveout']) ? $this->moveout = $params['moveout'] : $this->moveout = 0;
+		isset($params['overClass']) ? $this->overClass = $params['overClass'] : $this->overClass = 'eyeIcon';
+		isset($params['useClass']) ? $this->useClass = $params['useClass'] : $this->useClass = 0;
+
+		if ($this->cent || /* utf8 */ stripos($this->image, 'extern=') !== false && IE > 0 && IE < 7) {
+			$info = @getimagesize(eyex('getThemeImage',array($this->image,3)));
+			$this->width = $info[0];
+			$this->height = $info[1];
+		} else {
+			$this->width = -1;
+			$this->height = -1;
+		}
+	}
+
+	function show() {
+		$eventString = "";
+		if(is_array($this->events)) {
+			foreach($this->events as $key => $value) {
+				$eventString .= $key.'="'.$value.'" ';
+			}
+		}
+		if(!is_array($this->content)) {
+			$this->content = array($this->content);
+		}
+
+		for($i=0;$i<count($this->content);$i++) {
+			$this->content[$i] = $this->content[$i];
+		}
+		$this->content=mmap('array2jsArg',array($this->content,1));
+
+		$realname = utf8_wordwrap($this->text, 10, "\n", true);
+		$text = $realname;
+		if (utf8_strlen($text) > $this->breaktext) {
+			$text = /* utf8 */ trim(utf8_substr($text, 0, $this->breaktext - 1)) . '…';
+		}
+
+		$widgetsparams = array(
+			'content' => $this->content,
+			'image' => $this->image,
+			'text' => utf8_htmlspecialchars($text, ENT_QUOTES),
+			'draggable' => $this->draggable,
+			'onclick' => $this->onclick,
+			'width' => $this->width,
+			'height' => $this->height,
+			'visible' => $this->visible,
+			'myonload' => $this->myOnLoad,
+			'realname' => utf8_htmlspecialchars($realname, ENT_QUOTES),
+			'overBorder' => $this->overBorder,
+			'overBorderBg'=>$this->overBorderBg,
+			'overBorderColor'=>$this->overBorderColor,
+			'textColor'=>$this->textColor,
+			'overClass'=>$this->overClass,
+			'useClass'=>$this->useClass
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+		$myButton = array(
+			'name' => $this->name,
+			'x' => $this->x,
+			'y' => $this->y,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'father' => $this->father,
+			'widgetname' => 'Icon',
+			'params' => $widgetsparams
+		);
+		eyex('createWidget',$myButton);
+		$this->showed=1;
+	}
+
+	function setWidth($width) {
+		global $myPid;
+		$this->width = intval($width);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.width="'.$this->width.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.width="'.$this->width.'px";'));
+	}
+
+	function setHeight($height) {
+		global $myPid;
+		$this->height = intval($height);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.height="'.$this->height.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.height="'.$this->height.'px";'));
+	}
+
+	//event handling
+	function addEvent($event, $action, $args = '') {
+		global $myPid;
+		if (!$this->showed) {
+			$this->show();
+		}
+		eyex('addEvent',array(
+			'action' => $action,
+			'args' => $args,
+			'event' => $event,
+			'name' => $myPid . '_' . $this->name . '_Container'
+		));
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name.'_Container','property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	function setCssText($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name.'_text','property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.top="'.$this->y.'px";'));
+	}
+
+	function remove() {
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="none"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="block"'));
+	}
+}
+
+?>

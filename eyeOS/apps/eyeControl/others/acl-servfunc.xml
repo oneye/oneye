@@ -1,0 +1,646 @@
+<servfunc>
+	<serv>
+		<sname>extern</sname>
+		<sdesc>The extern service is used to load resources such as images or CSS files from the extern directory. These resources can then be used by applications within oneye.</sdesc>
+		<func>
+			<fname>getFile</fname>
+			<fdesc>Retrieves a file located in the oneye extern directory.</fdesc>
+			<fparam>Path to the file</fparam>
+			<hazard />
+		</func>
+	</serv>
+	<serv>
+		<sname>eyex</sname>
+		<sdesc>The eyeX service is responsible for drawing the contents of the page and the manipulation of CSS and JS files. It is also responsible for the control of the layer system, part of which is the 'eyeApps' layer, in which all the applications and the desktop are drawn.</sdesc>
+		<func>
+			<fname>addEvent</fname>
+			<fdesc>Specifies which JavaScript code must be executed every time a widget triggers a JS event.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>concatRich</fname>
+			<fdesc>Concatenates text to the value property of a widget. This function works with Textarea widgets which have been set to contain rich text.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>concatValue</fname>
+			<fdesc>Concatenates text to the value property of a widget.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>concatValueB64</fname>
+			<fdesc>Concatenates text to the value property of a widget. The specified value is encoded in base 64 until it is set.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>createDiv</fname>
+			<fdesc>Draws a new layer on the screen, without serializing it in the eyeX layer table.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>createLayer</fname>
+			<fdesc>Draws a new layer and serializes it into the eyeX layer table.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>createWidget</fname>
+			<fdesc>Draws a new widget in the screen.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>fadeInLayer</fname>
+			<fdesc>Unhides a layer applying a gradual fade in effect.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>fadeOutLayer</fname>
+			<fdesc>Hides a layer applying a gradual fade to black effect.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>hideLayer</fname>
+			<fdesc>Makes a layer invisible.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>isLayer</fname>
+			<fdesc>Checks whether a layer exists or not.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>loadCSS</fname>
+			<fdesc>Loads a CSS file from a specified directory inside the extern folder.</fdesc>
+			<fparam>URL of Stylesheet</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>loadScript</fname>
+			<fdesc>Loads a JS script from a specified URL in the extern folder.</fdesc>
+			<fparam>URL of Script</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>makeDrag</fname>
+			<fdesc>Makes a widget draggable by the user.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>messageBox</fname>
+			<fdesc>Displays a dialog to the user with the specified message.</fdesc>
+			<fparam>Message Content</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>moveWidget</fname>
+			<fdesc>Changes a widget's position.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>rawjs</fname>
+			<fdesc>Executes a specified JS code.</fdesc>
+			<fparam>JS Code</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>removeCSS</fname>
+			<fdesc>Eliminates a loaded CSS resource.</fdesc>
+			<fparam>CSS ID attribute</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>removeLayer</fname>
+			<fdesc>Removes a layer from the user's session.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>removeWidget</fname>
+			<fdesc>Eliminates a widget from the user's session.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>resizeWidget</fname>
+			<fdesc>Changes the size of an existing widget to the specified width and height.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>runjs</fname>
+			<fdesc>Executes a specified JS code. Has better content handling than rawjs().</fdesc>
+			<fparam>JS Code</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>sendMessage</fname>
+			<fdesc>Sends a signal to an application.</fdesc>
+			<fparam>Signal Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>setDiv</fname>
+			<fdesc>Embeds the specified content inside of an existing layer.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>setValue</fname>
+			<fdesc>Changes the value of a widget.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>setValueB64</fname>
+			<fdesc>Changes the value of a widget. The given value is supposed to be encoded in base 64.</fdesc>
+			<fparam>Widget Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>setWallpaper</fname>
+			<fdesc>Changes the wallpaper of the screen.</fdesc>
+			<fparam>Path to new Image</fparam>
+		</func>
+		<func>
+			<fname>showLayer</fname>
+			<fdesc>Makes a layer visible and displays it on top of any other layers or windows in the screen.</fdesc>
+			<fparam>Layer Name</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>updateCSS</fname>
+			<fdesc>Sets a CSS property of an element.</fdesc>
+			<fparam>Element Name</fparam>
+			<hazard />
+		</func>
+	</serv>
+	<serv>
+		<sname>mmap</sname>
+		<sdesc>The mmap service is a key part of the oneye system that connects the client side with the server side via message passing between the two parts. The messages always consist in an XML string giving instructions of the actions to perform to the part.</sdesc>
+		<func>
+			<fname>addToBuffer</fname>
+			<fdesc>Adds a new task to the Buffer.</fdesc>
+			<fparam>XML containing the Task</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>array2js</fname>
+			<fdesc>Transforms a PHP array into string convertible to a JavaScript array.</fdesc>
+			<fparam>PHP array to transform.</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>array2jsArg</fname>
+			<fdesc>Transforms a PHP array into string convertible to a JS array with the use of the JS function getArrayArg.</fdesc>
+			<fparam>Input PHP array</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>releaseBuffer</fname>
+			<fdesc>Returns the contents of the output buffer.</fdesc>
+			<hazard />
+		</func>
+		<func>
+			<fname>routemsg</fname>
+			<fdesc>Calls an event function of an application. This function is automatically called every time an application sends a signal from a user's client.</fdesc>
+			<fparam>Checknum of the application executing the action.</fparam>
+			<hazard />
+		</func>
+	</serv>
+	<serv>
+		<sname>proc</sname>
+		<sdesc>The proc service gives the possibility to manage and get information about running processes.</sdesc>
+		<func>
+			<fname>close</fname>
+			<fdesc>Terminates an application calling its closing function and removes it from the process table.</fdesc>
+			<fparam>Process ID of Application</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>end</fname>
+			<fdesc>Makes an application terminate itself.</fdesc>
+		</func>
+		<func>
+			<fname>findChecknum</fname>
+			<fdesc>Checks whether a process with the given checknum exists in the process table.</fdesc>
+			<fparam>Process Checknum</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>findChecknumByName</fname>
+			<fdesc>Checks whether a process with the given application name exists in the process table and returns its checknum.</fdesc>
+			<fparam>Name of Process</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>findNChecknumByPid</fname>
+			<fdesc>Checks whether a process with the given process ID exists and returns its checknum.</fdesc>
+			<fparam>Process ID</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>findNameByChecknum</fname>
+			<fdesc>Checks whether a process with the given checknum exists in the process table and returns its application name.</fdesc>
+			<fparam>Process Checknum</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>findNameByPid</fname>
+			<fdesc>Checks whether a process with the given process ID exists in the process table and returns its application name.</fdesc>
+			<fparam>Process ID</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>findPid</fname>
+			<fdesc>Checks whether a process with the given process ID exists.</fdesc>
+			<fparam>Process ID</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>findPidByName</fname>
+			<fdesc>Checks whether a process with the given application name exists in the process table and returns its process ID.</fdesc>
+			<fparam>Name of Process</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getProcByChecknum</fname>
+			<fdesc>Checks whether a process with the given checknum exists and returns all its information of its entry in the process table.</fdesc>
+			<fparam>Process Checknum</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getProcByPid</fname>
+			<fdesc>Checks whether a process with the given process ID exists and returns all the information of its entry in the process table.</fdesc>
+			<fparam>Process ID</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getProcessTable</fname>
+			<fdesc>Returns the whole process table of a user's session.</fdesc>
+			<hazard />
+		</func>
+		<func>
+			<fname>getTask</fname>
+			<fdesc>Calls the start function of an already running application.</fdesc>
+			<fparam>Process ID</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getTtyByPid</fname>
+			<fdesc>Returns the 'tty' field of a process.</fdesc>
+			<fparam>Process ID</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>launch</fname>
+			<fdesc>Executes an application by calling its start function. Also adds an entry in the process table.</fdesc>
+			<fparam>Application Name</fparam>
+		</func>
+		<func>
+			<fname>setProcessUser</fname>
+			<fdesc>Sets the user of a process.</fdesc>
+			<fparam>Process ID</fparam>
+			<hazard />
+		</func>
+	</serv>
+	<serv>
+		<sname>um</sname>
+		<sdesc>The User Manager service is responsible for managing users and allowing applications to interact with a user's data.</sdesc>
+		<func>
+			<fname>checkAdminPermissions</fname>
+			<fdesc>Checks if the current user is Root.</fdesc>
+			<hazard />
+		</func>
+		<func>
+			<fname>checkDisabled</fname>
+			<fdesc>Checks to see whether the current user has been disabled.</fdesc>
+			<fparam>Username</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>checkMaintainer</fname>
+			<fdesc>Checks if a user is a maintainer.</fdesc>
+			<fparam>Username</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>createUser</fname>
+			<fdesc>Creates a new user, including his/her 'home' directory.</fdesc>
+			<fparam>Username</fparam>
+		</func>
+		<func>
+			<fname>deleteUser</fname>
+			<fdesc>Deletes a user from the system.</fdesc>
+			<fparam>Username</fparam>
+		</func>
+		<func>
+			<fname>getAllUsers</fname>
+			<fdesc>Returns a list with all the users registered in the system.</fdesc>
+		</func>
+		<func>
+			<fname>getAllUsersByGroup</fname>
+			<fdesc>Returns a list containing all the users belonging to a specific group.</fdesc>
+			<fparam>Group Name</fparam>
+		</func>
+		<func>
+			<fname>getCurrentGroups</fname>
+			<fdesc>Returns a list of the groups that the currently logged in user is a member of.</fdesc>
+			<hazard />
+		</func>
+		<func>
+			<fname>getCurrentUserDir</fname>
+			<fdesc>Returns the path to the current user's 'home' directory.</fdesc>
+			<hazard />
+		</func>
+		<func>
+			<fname>getUserDir</fname>
+			<fdesc>Returns the path of a user's directory.</fdesc>
+			<fparam>Username</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getUserFilePath</fname>
+			<fdesc>Returns the path to a user's account directory.</fdesc>
+			<fparam>Username</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>groupExists</fname>
+			<fdesc>Checks to see if a user exists.</fdesc>
+			<fparam>Username</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>login</fname>
+			<fdesc>Checks if the specified user's credentials are correct.</fdesc>
+			<fparam>Username</fparam>
+		</func>
+		<func>
+			<fname>retrieveUser</fname>
+			<fdesc>Gets the content of a user's account file.</fdesc>
+			<fparam>Username</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>updateUser</fname>
+			<fdesc>Updates a user's information contained in that user's account file.</fdesc>
+			<fparam>Username</fparam>
+		</func>
+		<func>
+			<fname>userExist</fname>
+			<fdesc>Checks to see if a user exists.</fdesc>
+			<fparam>Username</fparam>
+			<hazard />
+		</func>
+	</serv>
+	<serv>
+		<sname>vfs</sname>
+		<sdesc>The vfs service is the layer that must be used to manipulate any file inside oneye. It contains two sets of functions to manipulate files: one to work with the user's personal (virtual) files, and the other one (having always a 'real_' prefix on their name) to work with normal (real) files.</sdesc>
+		<func>
+			<fname>appendToFileBinary</fname>
+			<fdesc>Appends a value to an virtual file's content. This function can be perfectly used by any application, but it is specifically thought to be used remotely using oneye' XML-RPC API.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>checkPermissions</fname>
+			<fdesc>Checks the permissions of a file.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>checkSpecialChars</fname>
+			<fdesc>Checks if a file has illegal characters in its name.</fdesc>
+			<fparam>Path to Check</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>cleanTemp</fname>
+			<fdesc>Empties a user's temporary directory.</fdesc>
+			<hazard />
+		</func>
+		<func>
+			<fname>copy</fname>
+			<fdesc>Copies a virtual file to a specified destination.</fdesc>
+			<fparam>Path to Original File</fparam>
+		</func>
+		<func>
+			<fname>copyDir</fname>
+			<fdesc>Copies a directory and its contents.</fdesc>
+			<fparam>Path to Original Dir</fparam>
+		</func>
+		<func>
+			<fname>create</fname>
+			<fdesc>Creates a virtual file.</fdesc>
+			<fparam>Path to New File</fparam>
+		</func>
+		<func>
+			<fname>delete</fname>
+			<fdesc>Deletes a virtual file.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>erase</fname>
+			<fdesc>Deletes the contents of a virtual file, leaving it blank.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>fileExists</fname>
+			<fdesc>Checks if a virtual file exists.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>filesize</fname>
+			<fdesc>Calculates the size of a virtual file.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getDirContent</fname>
+			<fdesc>Returns a list of the virtual files found in a directory under the specified search pattern.</fdesc>
+			<fparam>Path to Directory</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getExtension</fname>
+			<fdesc>Checks whether a virtual file has the same extension as the one used for storing a virtual file's content (defined by the EYEOS_FILE_EXT constant).</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getRealName</fname>
+			<fdesc>Returns the real filename in which a virtual file is stored.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>getVirtualName</fname>
+			<fdesc>Gets the virtual name of a real file.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>isGroupDir</fname>
+			<fdesc>Checks if a given file or directory is inside of one of the system groups.</fdesc>
+			<fparam>Path to Check</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>isdir</fname>
+			<fdesc>Checks if a given path points to a directory.</fdesc>
+			<fparam>Path to Check</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>mkdir</fname>
+			<fdesc>Used to create a directory in the user's 'home' directory or its descendents.</fdesc>
+			<fparam>Directory Name</fparam>
+		</func>
+		<func>
+			<fname>move</fname>
+			<fdesc>Moves a virtual file.</fdesc>
+			<fparam>Path to Original File</fparam>
+		</func>
+		<func>
+			<fname>open</fname>
+			<fdesc>Opens a virtual file and returns a handler to work with.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>printFile</fname>
+			<fdesc>Echoes the content of a file. This function is the equivalent of the readFile() function for real files.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>readFile</fname>
+			<fdesc>Echoes the content of a file. This function is the equivalent of the printFile() function for virtual files.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>readInfo</fname>
+			<fdesc>Reads a virtual file's info part and returns its contents as an array.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>realToVirtual</fname>
+			<fdesc>Makes a virtual file out of a real one without deleting it.</fdesc>
+			<fparam>Path to Real File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>realToVirtualDir</fname>
+			<fdesc>Transforms a directory's files to virtual mode. Each real file found will have in the same directory an equivalent file in virtual mode.</fdesc>
+			<fparam>Path to Directory</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>real_checkPermissions</fname>
+			<fdesc>Checks the permissions of a real file.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>real_copy</fname>
+			<fdesc>Copies a real file to the specified destination.</fdesc>
+			<fparam>Path to File's Start</fparam>
+		</func>
+		<func>
+			<fname>real_create</fname>
+			<fdesc>Creates a blank real file.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>real_delete</fname>
+			<fdesc>Deletes a real file.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>real_erase</fname>
+			<fdesc>Blanks a real file.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>real_fileExists</fname>
+			<fdesc>Checks if a specified real file exists or not.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>real_filesize</fname>
+			<fdesc>Returns the size of a file.</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>real_getDirContent</fname>
+			<fdesc>Searches the real files in a directory matching a given search pattern.</fdesc>
+			<fparam>Path to Directory</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>real_getExtension</fname>
+			<fdesc>Checks whether a file has the same extension as the one used for storing a virtual file's content (defined by the EYEOS_FILE_EXT constant).</fdesc>
+			<fparam>Path to File</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>real_mkDir</fname>
+			<fdesc>Creates a directory.</fdesc>
+			<fparam>Path to Directory</fparam>
+		</func>
+		<func>
+			<fname>real_move</fname>
+			<fdesc>Changes the location of a real file from one location to another.</fdesc>
+			<fparam>Path to File's Start</fparam>
+		</func>
+		<func>
+			<fname>real_open</fname>
+			<fdesc>Returns a handler to work with a file.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>real_putFileContent</fname>
+			<fdesc>Writes the content of a file to a given value. This function is the equivalent of the writeFile() function for virtual files.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>real_rmdir</fname>
+			<fdesc>Deletes a directory and its content.</fdesc>
+			<fparam>Path to Directory</fparam>
+		</func>
+		<func>
+			<fname>rename</fname>
+			<fdesc>Changes the name of an virtual file.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+		<func>
+			<fname>resolvePath</fname>
+			<fdesc>Returns the resolved path to a specified directory. The path can be part of the user's directory or to a group directory.</fdesc>
+			<fparam>Path to Directory</fparam>
+			<hazard />
+		</func>
+		<func>
+			<fname>rmdir</fname>
+			<fdesc>Deletes a directory and its content.</fdesc>
+			<fparam>Path to Directory</fparam>
+		</func>
+		<func>
+			<fname>writeFile</fname>
+			<fdesc>Writes the content of an virtual file to a given value. This function is the equivalent of the real_putFileContent() function for real files.</fdesc>
+			<fparam>Path to File</fparam>
+		</func>
+	</serv>
+</servfunc>

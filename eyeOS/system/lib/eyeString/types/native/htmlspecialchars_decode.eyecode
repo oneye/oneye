@@ -1,0 +1,24 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_htmlspecialchars_decode($string, $flags = null) {
+	if ($flags === null) {
+		$flags = ENT_COMPAT | ENT_HTML401;
+	}
+	$table = array(
+		'&gt;' => '>',
+		'&lt;' => '<',
+		'&#039;' => '\'',
+		'&quot;' => '"',
+		'&amp;' => '&'
+	);
+	if (($flags & ENT_NOQUOTES) !== 0) {
+		unset($table['&quot;']);
+	}
+	if (($flags & ~ENT_QUOTES) !== 0) {
+		unset($table['&#039;']);
+	}
+	return str_replace(array_keys($table), array_values($table), $string);
+}
+?>

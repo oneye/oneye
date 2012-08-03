@@ -1,0 +1,7 @@
+﻿If you want to upload a file to your oneye, just navigate to the folder you want to upload it, and click on the “Upload” action.
+
+The Upload dialog will pop up and you will be able to select one or more files you want to upload. Note that the system administrator may have limited in the web server's configuration an amount of MegaBytes per file to upload (usually 2MB).
+
+Once the upload has finished, a message will appear with the confirmation of the upload. When you close the upload window, you will see the new files just uploaded in your folder.
+
+Note that if the server allows it, you will see thumbnails of the images instead of the image icon. If you see the image icon and would like to see automatic thumbnails, please ask your system administrator to install the GD library and its module for your PHP installation. 

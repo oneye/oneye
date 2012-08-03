@@ -1,0 +1,8 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strcasecmp($str1, $str2) {
+	return utf8_strcmp(utf8_strtolower($str1), utf8_strtolower($str2));
+}
+?>

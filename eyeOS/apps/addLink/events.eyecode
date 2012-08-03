@@ -1,0 +1,35 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function addLink_on_Close($params = '') {
+	proc('end');
+}
+
+function addLink_on_Do($params = '') {
+	$file = um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . basename($GLOBALS['addLink_Textbox']->text) . '.' . EYEOS_LINK_EXT;
+	eyeXML('setXMLfile',array($file,getConfig('addLink','default.eyeLink')));
+	if ($GLOBALS['addLink_Hidden']->text) {
+		eyex('rawjs',array('js' => $GLOBALS['addLink_Hidden']->text));
+	}
+	eyeFiles('update',array('home://Desktop/'));
+	proc('launch',array('editLink',array($file,$GLOBALS['addLink_Hidden']->text)));
+	proc('end');
+}
+
+function addLink_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+?>

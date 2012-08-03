@@ -1,0 +1,22 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+/*
+ * NOTES
+ * Modes 0, 2 and 4 do not make sense for UTF-8 implementations. Therefore:
+ * Modes 0, 1 and 2 are all handled as mode 1.
+ * Modes 3 and 4 are both handled as mode 3.
+ */
+function utf8_count_chars($string, $mode = 0) {
+	$string = utf8_str_split($string);
+	sort($string);
+	if ($mode === 3 || $mode === 4) {
+		return implode('', array_combine($string, $string));
+	}
+	foreach ($string as $key => $value) {
+		$string[$key] = utf8_ord($value);
+	}
+	return array_count_values($string);
+}
+?>

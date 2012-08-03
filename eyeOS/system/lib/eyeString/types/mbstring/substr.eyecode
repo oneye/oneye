@@ -1,0 +1,19 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_substr($string, $start, $length = null) {
+	if ($length === null) {
+		$encoding = mb_internal_encoding();
+		mb_internal_encoding('UTF-8');
+		$return = mb_substr($string, $start);
+		mb_internal_encoding($encoding);
+	} else {
+		$return = mb_substr($string, $start, $length, 'UTF-8');
+	}
+	if ($return === '') {
+		return false;
+	}
+	return $return;
+}
+?>

@@ -1,0 +1,10 @@
+[list]
+[*]Data transfers are done in passive mode (releases 2.0.3 to 2.0.5 only, mode can be chosen with 3.x.x releases)
+
+[*]Passwords are stored in the user's configuration file without any encryption. Just pay attention to that.
+
+[*]FTP operations performed by eyeFTP are supported by the standard PHP API, which is quite limited. It may partially explain the limitations of the app.
+
+[*]If a problem appears during execution (files list not well refreshed, etc.), close eyeFTP and run it again. This is mainly due to a bad interpretation of special characters in filenames.
+[/list]
+

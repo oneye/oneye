@@ -1,0 +1,163 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+if (!function_exists('exif_imagetype')) {
+	// If EXIF functions are not available, emulate the exif_imagetype function using getimagesize (a bit less efficient, but works)
+	function exif_imagetype($filename) {
+		if ((list($width, $height, $type, $attr) = getimagesize($filename)) !== false) {
+			return $type;
+		} else {
+			return false;
+		}
+	}
+}
+
+function images_ReadBmp($filename, $data = false) {
+	if ($data === true) {
+		$data = $filename;
+	} else {
+		$data = file_get_contents($filename);
+	}
+	
+	$header = unpack('VbfOffBits/x/x/x/x/VbiWidth/VbiHeight/x/x/vbiBitCount/VbiCompression', /* utf8 */ substr($data, 10, 24));
+	$width = $header['biWidth'];
+	$height = $header['biHeight'];
+	
+	if ($header['biBitCount'] !== 24 || $header['biCompression'] !== 0) {
+		return false;
+	}
+	$data = /* utf8 */ substr($data, $header['bfOffBits']);
+	$image = imagecreatetruecolor($width, $height);
+	
+	$length = 3 * $width;
+	if ($length % 4 > 0) {
+		$length += 4 - $length % 4;
+	}
+	$rows = /* utf8 */ str_split($data, $length);
+	foreach ($rows as $y => $row) {
+		for ($x = 0; $x < $width; $x++) {
+			$blue = ord(substr($row, 3 * $x, 1)); // utf8
+			$green = ord(substr($row, 3 * $x + 1, 1)); // utf8
+			$red = ord(substr($row, 3 * $x + 2, 1)); // utf8
+			imagesetpixel($image, $x, $height - $y, imagecolorallocate($image, $red, $green, $blue));
+		}
+	}
+	return $image;
+}
+
+function images_imagecreatefromfile($filename) {
+	$type = exif_imagetype($filename);
+	switch ($type):
+		case IMAGETYPE_JPEG: return imagecreatefromjpeg($filename);
+		case IMAGETYPE_PNG: return imagecreatefrompng($filename);
+		case IMAGETYPE_GIF: return imagecreatefromgif($filename);
+		case IMAGETYPE_BMP: return images_ReadBmp(file_get_contents($filename), true);
+		case IMAGETYPE_WBMP: return imagecreatefromwbmp($filename);
+		case IMAGETYPE_XBM: return imagecreatefromxbm($filename);
+		default: return false;
+	endswitch;
+}
+
+function images_Resize($image, $width = null, $height = null, $color = null, $preserve_aspect_ratio = true) {
+	$oldWidth = imagesx($image);
+	$oldHeight = imagesy($image);
+	if ((!is_int($width) && !is_int($height)) || $oldWidth == false || $oldHeight == false) {
+		// Error: params are not valid OR there was an error in imagesx or imagesy OR the image is 0 pixel.
+		return false;
+	}
+	
+	if ($preserve_aspect_ratio && is_int($width) && is_int($height)) {
+		$oldRatio = $oldWidth / $oldHeight;
+		$ratio = $width / $height;
+		if ($oldRatio == 1 && $ratio != 1) {
+			// a) Squared image: $width and $height should be equal, but they are not, so set both at the lower value
+			if ($width > $height) {
+				$width = $height;
+			} else {
+				$height = $width;
+			}
+		} elseif ($oldRatio != $ratio) {
+			// b) Landscape or portrait image: ratios are not equal. Keep the proportionally lower dimension and set the other according to the original ratio
+			if (($width / $oldWidth) <= ($height / $oldHeight)) {
+				// Keep the width and adjust the height
+				$height = $oldHeight * ($width / $oldWidth);
+			} else {
+				// Keep the height and adjust the width
+				$width = $oldWidth * ($height / $oldHeight);
+			}
+		}
+	} elseif (!is_int($width)) {
+		$width = $oldWidth * ($height / $oldHeight);
+	} elseif (!is_int($height)) {
+		$height = $oldHeight * ($width / $oldWidth);
+	}
+	
+	$return = imagecreatetruecolor($width, $height);
+	imagealphablending($return, false);
+	imagesavealpha($return, true);
+	if ($color !== null) {
+		imagefill($return, 0, 0, $color);
+	}
+	imagecopyresampled($return, $image, 0, 0, 0, 0, $width, $height, $oldWidth, $oldHeight);
+	return $return;
+}
+
+function images_SaveAsBmp($image, $filename = null) {
+	$width = imagesx($image);
+	$height = imagesy($image);
+	$size = 54 + $width * $height * 3;
+	
+	// Bitmap File Header
+	$return = 'BM'; // bfType
+	$return .= pack('V', $size); // bfSize
+	$return .= pack('V', 0); // bfReserved
+	$return .= pack('V', 54); // bfOffBits
+	
+	// Bitmap Information Header
+	$return .= pack('V', 40); // biSize
+	$return .= pack('V', $width); // biWidth
+	$return .= pack('V', $height); // biHeight
+	$return .= pack('v', 1); // biPlanes
+	$return .= pack('v', 24); // biBitCount
+	$return .= pack('V', 0); // biCompression
+	$return .= pack('V', 0); // biSizeImage
+	$return .= pack('V', 0); // biXPelsPerMeter
+	$return .= pack('V', 0); // biYPelsPerMeter
+	$return .= pack('V', 0); // biClrUsed
+	$return .= pack('V', 0); // biClrImportant
+	
+	$chr = array();
+	for ($i = 0; $i < 256; $i++) {
+		$chr[$i] = /* utf8 */ chr($i);
+	}
+	
+	for ($y = $height - 1; $y >= 0; $y--) {
+		for ($x = 0; $x < $width; $x++) {
+			$rgb = imagecolorsforindex($image, imagecolorat($image, $x, $y));
+			$return .= $chr[$rgb['blue']] . $chr[$rgb['green']] . $chr[$rgb['red']];
+		}
+		for ($x = 3 * $width; $x % 4 > 0; $x++) {
+			$return .= $chr[0];
+		}
+	}
+	
+	if ($filename === null) {
+		echo $return;
+		return true;
+	}
+	return file_put_contents($filename, $return) !== false;
+}
+?>

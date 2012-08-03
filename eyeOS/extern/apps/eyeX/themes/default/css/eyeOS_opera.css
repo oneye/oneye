@@ -1,0 +1,121 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+.activeWindow, .eyeWindowTitle, .inactiveWindow {
+	border-bottom: 1px solid #80b5ff;
+	border-left: 0px;
+	border-right: 0px;
+	border-top: 1px solid #80b5ff;
+	left: 5px;
+	right: 5px;
+	top: 0;
+}
+
+.activeWindow_center, .inactiveWindow_center, .eyeWindowTitle_center {
+	height: 4px;
+	top: 0;
+	width: 100%;
+	z-index: 1;
+}
+
+.activeWindow_border_left, .activeWindow_border_right, .inactiveWindow_border_left, .inactiveWindow_border_right, .eyeWindowTitle_border_left, .eyeWindowTitle_border_right {
+	height: 22px;
+	top: 0;
+	width: 5px;
+	z-index: 2;
+}
+
+.activeWindow_border_left {
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/topTitleLeft_a.png');
+	background-repeat: no-repeat;
+	border-bottom: 1px solid #80b5ff;
+	left: -5px;
+	top: -1px;
+}
+
+.activeWindow_border_right {
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/topTitleRight_a.png');
+	background-repeat: no-repeat;
+	border-bottom: 1px solid #80b5ff;
+	right: -5px;
+	top: -1px;
+}
+
+.inactiveWindow_border_left {
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/topTitleLeft_i.png');
+	background-repeat: no-repeat;
+	border-bottom: 1px solid #acacac;
+	left: -5px;
+	top: -1px;
+}
+
+.inactiveWindow_border_right {
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/topTitleRight_i.png');
+	background-repeat: no-repeat;
+	border-bottom: 1px solid #acacac;
+	right: -5px;
+	top: -1px;
+}
+
+.blockbarItem,.blockbarItem_right, .blockbarItemPress, .blockbarItemPress_right {
+	border: 1px solid transparent;
+	cursor: pointer;
+	margin-top: 5px;
+	padding: 2px 4px 3px;
+	text-align: center;
+	width: auto;
+}
+
+.blockbarItem:hover, .blockbarItem_right:hover, .blockbarItemPress, .blockbarItemPress_right {
+	border-style: solid;
+	border-width: 1px;
+}
+
+.blockbarItem:hover, .blockbarItem_right:hover {
+	background-color: #f1f1f1;
+	border-color: #80b5ff;
+}
+
+.blockbarItemPress, .blockbarItemPress_right {
+	background-color: #f1f1f1;
+	border-color: #dddddd;
+}
+
+.eyeBoxText {
+	white-space: nowrap;
+}
+
+/**
+* @TODO fix this menu!!!
+*/
+.eyeDock_bottom_right_menu_entries {
+	margin-right: 0;
+	right: 0;
+}
+
+.eyeDock_bottom_right_datetime_calendar {
+	right: 0;
+}
+
+.eyeDock_bottom_left_menu_entry_icon_arrow, .eyeDock_bottom_right_menu_entry_icon_arrow, .eyeDock_left_top_menu_entry_icon_arrow, .eyeDock_right_top_menu_entry_icon_arrow, .eyeDock_top_left_menu_entry_icon_arrow, .eyeDock_top_right_menu_entry_icon_arrow,.eyeDock_bottom_left_menu_entry_icon_arrow_exists, .eyeDock_bottom_right_menu_entry_icon_arrow_exists, .eyeDock_left_top_menu_entry_icon_arrow_exists, .eyeDock_right_top_menu_entry_icon_arrow_exists, .eyeDock_top_left_menu_entry_icon_arrow_exists, .eyeDock_top_right_menu_entry_icon_arrow_exists {
+	margin-left: 0;
+}
+
+.inactiveWindow {
+	border-bottom: 1px solid #acacac;
+	border-left: 0px;
+	border-right: 0px;
+	border-top: 1px solid #acacac;
+}

@@ -1,0 +1,11 @@
+<package>
+	<name>eyePresentation</name>
+	<category>Office</category>
+	<version>1.9</version>
+	<description>Utility to view presentations</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/filetypes/presentation.png</icon>
+	<openWith>1</openWith>
+</package>

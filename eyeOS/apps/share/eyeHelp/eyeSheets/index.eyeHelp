@@ -1,0 +1,46 @@
+		eyeSheets: general purpose spreadsheet program fully integrated into oneye, You can now start your spreadsheets and save them as OpenOffice sheets or Microsoft Excel sheets. With an [b]eyeOffice-ready server[/b], you will be able to create new spreadsheets and edit your favorite ones.
+
+[b]Opening a WorkSheet[/b]
+		To open a document, you can click on “Open” button at the top of eyeSheets toolbar window or just click on the document from the file manager eyeFiles. Our eyeVisor may pop-up at first if so at the top lift corner of eyeVisor click on "Edit".
+
+
+[b]New WorkSheet[/b]
+		To open a new worksheet, just click on “New” button at the top of eyeSheets window in the toolbar
+
+
+[b]Saving a WorkSheet[/b]
+		To save it, just click on “Save” or “Save As” button at the top of eyeSheets window in the toolbar if you have not saved before the document. Note that if you do not add any extension when saving your document, it will be saved as an oneye Document, with the .ods extension. If you want to save it to be Microsoft Excel compatible, just add the .xls extension at the end of the file name.
+
+
+[b]Rows and Columns[/b]
+		On the bottom right corner of your eyeSheets window you will see "Sheet Size: XX x XX" x=[b],[/b],3,... The first box closes to Sheet Size is your Column's. The one on the far right is your Row's.You may input the value you desired in the text box.
+
+
+[b]Navigating[/b]
+		The bottom lift side you will see 4 arrows. The up and down arrows will navigate through the sheets Row's. The lift and right arrows will navigate through the sheets Column
+
+
+[b]Insert and Deleteing[/b]
+
+[list][*]Rows
+		[b]Insert[/b]
+			On the lift side of eyeSheets there is [b],[/b],3,... select the number of the row you wish to add. To insert the row, you click on “Ins. Row” button in the toolbar at the top of your eyeSheets window.
+
+		[b]Delete[/b]
+			On the lift side of eyeSheets there is [b],[/b],3,... select the number of the row you wish to remove. To delete that row, you click on “Del. Row” button in the toolbar at the top of your eyeSheets window.
+
+
+[*]Column
+		[b]Insert[/b]
+			On the top under your toolbar of eyeSheets window you will see A,B,C,... select the Latter of the Column you wish to add. To insert the column, you click on “Ins. Column” button in the toolbar at the top of your eyeSheets window.
+
+		[b]Delete[/b]
+			On the top under your toolbar of eyeSheets window you will see A,B,C,... select the Latter of the Column you wish to remove. To delete that column, you click on “Del. Column” button in the toolbar at the top of your eyeSheets window.
+[/list]
+
+[b]Print[/b]
+		When you are ready to print simply press the "Print" icon on your Toolbar and a pop-up window will appear that you can review your document and another window for your printing property. After you review click "OK" in the print window to print your document. If you do not want to print then simply "x" out of the window's
+
+
+[b]Content(Formatting Cells)[/b]
+		double click on the cell and type in, and or remove, then prees enter on your keyboard

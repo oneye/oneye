@@ -1,0 +1,12 @@
+<menu>
+	<entry>
+		<icon>launcher</icon>
+		<text>Open trash</text>
+		<action>eyeTrash</action>
+	</entry>
+	<entry>
+		<icon>delete</icon>
+		<text>Empty trash</text>
+		<action>emptyTrash</action>
+	</entry>
+</menu>

@@ -1,0 +1,10 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+if (function_exists('mb_strrchr') === true) {
+	function utf8_strrchr($haystack, $needle) {
+		return mb_strrchr($haystack, $needle, false, 'UTF-8');
+	}
+}
+?>

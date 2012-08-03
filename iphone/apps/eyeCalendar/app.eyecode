@@ -1,0 +1,38 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeCalendar_execute() {
+	if(!eyeCalendar('calendarInfoExists')){
+		eyeCalendar('indexCalendarInfo',array(1));
+	}
+	echo '<div id="eyeCalendar" title="Calendar" selected="true" style="height:100%;width:100%;">';
+	echo '<script>var e = document.createElement("script");e.src = "apps/eyeCalendar/calendar.js";e.type="text/javascript";document.getElementsByTagName("head")[0].appendChild(e);</script>';
+	echo '<div id="notesContainer" class="panel" style="position:absolute;top:370px;left:15px;right:15px;visibility:hidden;">
+	<h2 id="events"></h2>
+	<fieldset>
+	<div id="notes" class="info">
+
+	</div>
+	</fieldset>
+	</div>
+	<input name="newnote" value="New Event" type="button" style="margin-top:320px;width:200px;margin-left:19%;text-align:center;" onclick="
+		var itime = document.getElementById(\'timevalue\').value;
+		location.href=\'index.php?action=eyeCalendar&do=newnote&noPropagate=2&time=\'+itime;
+	">
+	<input type="hidden" name="timevalue" id="timevalue" value="">
+	</div>';
+}
+?>

@@ -1,0 +1,394 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeDesk_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeDesk_on_Refresh($params = '') {
+	eyeDesk_on_OpenPath();
+}
+
+function eyeDesk_on_Upload($params = '') {
+	proc('launch',array('eyeUpload',array('home://Desktop/')));
+}
+
+function eyeDesk_on_NewFolder($params = '') {
+	proc('launch',array('eyeMkDir',array('home://Desktop/')));
+}
+
+function eyeDesk_on_NewFile($params = '') {
+	proc('launch',array('newFile',array('home://Desktop/')));
+}
+
+function eyeDesk_on_NewLauncher($params = '') {
+	proc('launch',array('addLink'));
+}
+
+function eyeDesk_on_Paste($params = '') {
+	proc('launch',array('eyePaste',array('home://Desktop/')));
+}
+
+function eyeDesk_on_Preferences($params = '') {
+	proc('launch',array('eyeControl', array('category' => 'look_and_feel', 'content' => 'desktop')));
+}
+
+function eyeDesk_on_Action($params = '') {
+	global $myPid;
+	if ($params['Action'][0] == 'launch') {
+		$xml = eyeXML('getXMLfile',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $params['File'][0]));
+		eyeFiles('launchCommand',array($xml['eyeLink'][0]['content'][0]));
+	} else {
+		proc('launch',array($params['Action'][0],array('home://Desktop/' . $params['File'][0])));
+	}
+}
+
+function eyeDesk_on_GetThumbnail($params = '') {
+	eyeFiles('createThumbnail',array('home://Desktop/',$params['File'][0]));
+}
+
+function eyeDesk_on_Icon_Clicked($params = '') {
+	$file = $params['arg0'][0];
+	$path = um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file;
+	if (vfs('isdir',array($path))) {
+		proc('launch',array('eyeFiles',array('home://Desktop/' . $file)));
+	} else if (strtolower(substr($file, -strlen('.' . EYEOS_LINK_EXT))) === '.' . strtolower(EYEOS_LINK_EXT)) { // utf8
+		unset($params);
+		$params['Action'][0] = 'launch';
+		$params['File'][0] = $file;
+		eyeDesk_on_Action($params);
+	} else {
+		$xml = getConfig('filetypes', utf8_strtolower(substr(strrchr($file, '.'), 1)) . '.xml'); // utf8
+		if ($xml['fileType'][0]['app'][0]) {
+			proc('launch',array($xml['fileType'][0]['app'][0],$path));
+		} else {
+			proc('launch',array('eyeOpen',$path));
+		}
+	}
+}
+
+function eyeDesk_on_Icon_Moved($params = '') {
+	global $myPid;
+	$x = $params['eyeArg'][0]['newX'][0];
+	$y = $params['eyeArg'][0]['newY'][0];
+	$content = basename($params['eyeArg'][0]['content'][0]);
+	$conf = eyeXML('getXMLconfig',array('eyeDesk','conf.xml'));
+	if ($conf['eyeDesk'][0]['loadIconPositions'][0] == 2) {
+		$x = 30 + round(($x - 30) / 88) * 88;
+		if ($_SESSION['SCREEN']['eyeApps']['width'] - $x - 88 < 0) {
+			$x -= 88;
+		}
+		$y = 30 + round(($y - 30) / 88) * 88;
+		if ($_SESSION['SCREEN']['eyeApps']['height'] - $y - 88 < 0) {
+			$y -= 88;
+		}
+		eyex('rawjs',array('js' => 'i = 0;
+		e = xGetElementById("' . $myPid . '_eyeDesk_View_Icons_Icon_0_Content");
+		while (e) {
+			if (e.value == "' . utf8_htmlentities($content, ENT_QUOTES) . '") {
+				xSlideTo("' . $myPid . '_eyeDesk_View_Icons_Icon_" + i + "_Container",' . $x . ',' . $y . ',500);
+				e = false;
+			} else {
+				i++;
+				e = xGetElementById("' . $myPid . '_eyeDesk_View_Icons_Icon_" + i + "_Content");
+			}
+		}'));
+	}
+	$xml = eyeXML('getXMLconfig',array('eyeDesk','icons.xml'));
+	if (is_array($xml['icon'])) {
+		foreach ($xml['icon'] as $key => $value) {
+			if ($value['name'][0] == $content) {
+				$xml['icon'][$key]['x'][0] = $x;
+				$xml['icon'][$key]['y'][0] = $y;
+				$found = 1;
+			}
+		}
+	}
+	if (!$found) {
+		$xml2['name'][0] = $content;
+		$xml2['x'][0] = $x;
+		$xml2['y'][0] = $y;
+		$xml['icon'][] = $xml2;
+	}
+	eyeXML('setXMLconfig',array('eyeDesk','icons.xml',$xml));
+}
+
+function eyeDesk_on_Icon_Dropped($params = '') {
+	if ( /* utf8 */ strtolower($params['arg0'][0]) === 'app') {
+		$app = $params['arg1'][0];
+		$file = $app;
+		$i = 0;
+		while (vfs('real_fileExists',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file . '.' . EYEOS_LINK_EXT))) {
+			$i++;
+			$file = $app . '_' . $i;
+		}
+		$xml['eyeLink'][0]['content'][0] = $app . '.app';
+		if (vfs('real_fileExists',array(eyex('getThemeImage',array('icons/48x48/' . $app . '.png',2))))) {
+			$xml['eyeLink'][0]['icon'][0] = $app;
+		} else {
+			$xml['eyeLink'][0]['icon'][0] = 'file';
+		}
+		eyeXML('setXMLfile',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file . '.' . EYEOS_LINK_EXT,$xml));
+		eyeFiles('update',array('home://Desktop/'));
+	} else if (in_array( /* utf8 */ strtolower($params['arg0'][0]), array('file', 'folder', 'link'))) {
+		proc('launch',array('moveDrag',array($params['arg1'][0],$params['arg2'][0])));
+	}
+}
+
+function eyeDesk_on_OpenPath($params = '') {
+	global $checknum;
+	global $myPid;
+
+	$confFiles = eyeXML('getXMLconfig',array('eyeFiles','conf.xml'));
+	if (!isset($confFiles['eyeFiles'][0]['clickMethod'][0])) {
+		$confFiles['eyeFiles'][0]['clickMethod'][0] = 1;
+	}
+	$confDesk = eyeXML('getXMLconfig',array('eyeDesk','conf.xml'));
+	if (!isset($confDesk['eyeDesk'][0]['loadIconPositions'][0])) {
+		$confDesk['eyeDesk'][0]['loadIconPositions'][0] = 1;
+	}
+	$icons = eyeXML('getXMLconfig',array('eyeDesk','icons.xml'));
+	$shareConf = getConfig('eyeFiles','conf.xml');
+	$mime = getConfig('mime','mime.xml');
+	$menu_files = getConfig('eyeFiles','menu_files.xml');
+	$menu_links = getConfig('eyeFiles','menu_links.xml');
+	$menu_folders = getConfig('eyeFiles','menu_folders.xml');
+	$_SESSION['eyeDesk'][$myPid]['trashes'] = array();
+
+	if (isset($GLOBALS['eyeDesk_Container']) === true && is_object($GLOBALS['eyeDesk_Container'])) {
+		$GLOBALS['eyeDesk_Container']->remove();
+	}
+	if ($_SESSION['SCREEN']['eyeApps']['height'] == $_SESSION['SCREEN']['height']) {
+		$container_height = $_SESSION['SCREEN']['eyeApps']['height'] - 64; // 64 pixel is eyeDock top + bottom bars' height. This is necessary, because the $_SESSION['SCREEN']['eyeApps']['height'] variable has not been updated yet (eyeDock is loaded AFTER eyeDesk)
+	} else {
+		$container_height = $_SESSION['SCREEN']['eyeApps']['height'];
+	}
+	$myContainer = new Container(array(
+		'father' => 'eyeApps',
+		'name' => 'eyeDesk_Container',
+		'height' => $container_height,
+		'width' => $_SESSION['SCREEN']['eyeApps']['width'],
+		'x' => 0,
+		'y' => 0
+	));
+	$myContainer->show();
+	$myContainer->setCss(array(
+		'display' => 'block',
+		'position' => 'absolute'
+	));
+
+	$myWidgetDrop = new widgetDrop(array(
+		'father' => 'eyeDesk_Container',
+		'name' => 'eyeDesk_View_Icons_WidgetDrop'
+	));
+	$myWidgetDrop->show();
+	$moveType = null;
+	if (!$confDesk['eyeDesk'][0]['loadIconPositions'][0]) {
+		$moveType = 3;
+	}
+	$myWidgetDrop->addBehaviour(array(
+		'type' => 'moveAndClick',
+		'params' => array(
+			'content' => array('home://Desktop/'),
+			'moveMaster' => 1,
+			'moveType' => $moveType,
+			'pid' => $myPid,
+			'signal' => 'Icon_Dropped'
+	)));
+
+	$myContextMenu = new ContextMenu(array(
+		'father' => 'eyeDesk_Container',
+		'name' => 'eyeDesk_View_Icons_ContextMenu'
+	));
+	$myContextMenu->show();
+	$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDesk_View_Icons_ContextMenu_upload_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/upload.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Upload files')), ENT_QUOTES),'eyeFiles_View_Icons_ContextMenu_upload','Upload','',$myPid . '_eyeDesk_View_Icons_ContextMenu_upload_img');
+	$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDesk_View_Icons_ContextMenu_newfolder_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/newfolder.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('New folder')), ENT_QUOTES),'eyeFiles_View_Icons_ContextMenu_newfolder','NewFolder','',$myPid . '_eyeDesk_View_Icons_ContextMenu_newfolder_img');
+	$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDesk_View_Icons_ContextMenu_new_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/new.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('New file')), ENT_QUOTES),'eyeFiles_View_Icons_ContextMenu_new','NewFile','',$myPid . '_eyeDesk_View_Icons_ContextMenu_new_img');
+	$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDesk_View_Icons_ContextMenu_launcher_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/link.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('New launcher')), ENT_QUOTES),'eyeFiles_View_Icons_ContextMenu_launcher','NewLauncher','',$myPid . '_eyeDesk_View_Icons_ContextMenu_launcher_img');
+	$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDesk_View_Icons_ContextMenu_paste_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/paste.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Paste')), ENT_QUOTES),'eyeDesk_View_Icons_ContextMenu_paste','Paste','',$myPid . '_eyeDesk_View_Icons_ContextMenu_paste_img');
+	$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDesk_View_Icons_ContextMenu_refresh_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/refresh.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Refresh')), ENT_QUOTES),'eyeDesk_View_Icons_ContextMenu_refresh','Refresh','',$myPid . '_eyeDesk_View_Icons_ContextMenu_refresh_img');
+	$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDesk_View_Icons_ContextMenu_preferences_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/preferences.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Preferences')), ENT_QUOTES),'eyeDesk_View_Icons_ContextMenu_preferences','Preferences','',$myPid . '_eyeDesk_View_Icons_ContextMenu_preferences_img');
+
+	$i = 0;
+	$x = 30;
+	$y = 30;
+	foreach (eyeFiles('getDeskContent') as $file) {
+		if ($file[1] == 'file') {
+			$menu = $menu_files;
+			$image = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/filetypes/unknown.png';
+			$extension = strtolower(substr(strrchr($file[2], '.'), 1)); // utf8
+			if ($shareConf['eyeFiles'][0]['CreateThumbnails'][0] != '0' && ($extension == 'bmp' || $extension == 'gif' || $extension == 'jpeg' || $extension == 'jpg' || $extension == 'png') && function_exists('gd_info')) {
+				$gd_info = gd_info();
+				if ($extension == 'bmp' || ($extension == 'gif' && $gd_info['GIF Read Support'] && $gd_info['GIF Create Support']) || (($extension == 'jpeg' || $extension == 'jpg') && $gd_info['JPEG Support']) || ($extension == 'png' && $gd_info['PNG Support'])) {
+					$image = 'index.php?checknum=' . $checknum . '&msg=GetThumbnail&params=<File>' . $file[2] . '</File>';
+				}
+			} else {
+				foreach ($mime['mimeTypes'][0]['mime'] as $value) {
+					if ($value['extension'][0] == $extension) {
+						$image = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/filetypes/' . $value['type'][0] . '.png';
+					}
+				}
+			}
+		} elseif ($file[1] == 'link') {
+			$file[2] = i18n('translate',array(basename($file[2],'.' . EYEOS_LINK_EXT)));
+			$xml = eyeXML('getXMLfile',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file[0]));
+			if ($xml['eyeLink'][0]['content'][0] === 'eyeTrash.app' || strtolower(substr($xml['eyeLink'][0]['content'][0], 0, 8)) === 'trash://') { // utf8
+				$menu = getConfig('eyeDesk','menu_trash.xml');
+				if ($xml['eyeLink'][0]['icon'][0] == 'trash') {
+					$_SESSION['eyeDesk'][$myPid]['trashes'][] = $i;
+				}
+			} else {
+				$menu = $menu_links;
+			}
+			if ($xml['eyeLink'][0]['icon'][0]) {
+				$image = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/' . $xml['eyeLink'][0]['icon'][0] . '.png';
+			} else {
+				$image = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/filetypes/link.png';
+			}
+		} else {
+			$menu = $menu_folders;
+			$image = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/filetypes/folder.png';
+		}
+		$notfound = 2;
+		if ($confDesk['eyeDesk'][0]['loadIconPositions'][0] && is_array($icons['icon'])) {
+			foreach ($icons['icon'] as $key => $value) {
+				if ($value['name'][0] == $file[0]) {
+					$notfound = 1;
+					if ($value['x'][0] > 0 && $value['y'][0] > 0) {
+						$x2 = $value['x'][0];
+						$y2 = $value['y'][0];
+						$x3 = 30 + 88 * round(($x2 - 30) / 88);
+						$y3 = 30 + 88 * round(($y2 - 30) / 88);
+						if ($confDesk['eyeDesk'][0]['loadIconPositions'][0] == 2) {
+							$x2 = $x3;
+							$icons['icon'][$key]['x'][0] = $x2;
+							$y2 = $y3;
+							$icons['icon'][$key]['y'][0] = $y2;
+						}
+						if ($myContainer->height - $y2 - 88 > 0) {
+							$fields[$x3][$y3] = 1;
+							$y -= 88;
+							$notfound = 0;
+						}
+					}
+				}
+			}
+		}
+		if ($notfound) {
+			while ($y < 0 || isset($fields[$x]) === true && isset($fields[$x][$y]) === true) {
+				$y += 88;
+				if ($myContainer->height - $y - 88 < 0) {
+					$x += 88;
+					$y = 30;
+				}
+			}
+			if ($notfound == 2) {
+				$icons2['name'][0] = $file[0];
+				$icons2['x'][0] = $x;
+				$icons2['y'][0] = $y;
+				$icons['icon'][] = $icons2;
+			}
+			$fields[$x][$y] = 1;
+			$x2 = $x;
+			$y2 = $y;
+		}
+		$myIcon = new Icon(array(
+			'content' => $file[0],
+			'draggable' => 0,
+			'father' => 'eyeDesk_Container',
+			'image' => $image,
+			'name' => 'eyeDesk_View_Icons_Icon_' . $i,
+			'onclick' => $confFiles['eyeFiles'][0]['clickMethod'][0],
+			'overClass' => 'eyeDesk_iconsOver',
+			'text' => $file[2],
+			'useClass' => 1,
+			'x' => $x2,
+			'y' => $y2
+		));
+		$myIcon->show();
+		eyex('rawjs',array('js' => 'xGetElementById("' . $myPid . '_' . $myIcon->name . '_Container").style.textAlign = "center"; xGetElementById("img_' . $myPid . '_' . $myIcon->name . '").style.marginLeft = "-1px";'));
+
+		$myWidgetDrag = new widgetDrag(array(
+			'content' => array($file[1],'home://Desktop/' . $file[0]),
+			'dragAlpha' => 75,
+			'dragCss' => array(array('border'),array('1px #000000 dotted')),
+			'father' => $myIcon->name . '_Container',
+			'name' => $myIcon->name . '_WidgetDrag'
+		));
+		$myWidgetDrag->show();
+
+		if ($file[1] === 'folder' || $file[1] === 'link' && (strtolower(substr($xml['eyeLink'][0]['content'][0], 0, 7)) === 'home://' || strtolower(substr($xml['eyeLink'][0]['content'][0], 0, 9)) === 'groups://' || strtolower(substr($xml['eyeLink'][0]['content'][0], 0, 8)) === 'trash://' || strtolower(substr($xml['eyeLink'][0]['content'][0], 0, 8)) === 'users://' || strtolower(substr($xml['eyeLink'][0]['content'][0],0,7)) == 'real://' || in_array($xml['eyeLink'][0]['content'][0], array('eyeFiles.app', 'eyeGroups.app', 'eyeTrash.app')) === true)) { // utf8
+			$myWidgetDrop = new widgetDrop(array(
+				'father' => $myIcon->name . '_Container',
+				'name' => $myIcon->name . '_WidgetDrop'
+			));
+			$myWidgetDrop->show();
+			if ($file[1] == 'folder') {
+				$content = 'home://Desktop/' . $file[0] . '/';
+			} elseif ($xml['eyeLink'][0]['content'][0] == 'eyeFiles.app') {
+				$content = 'home:///';
+			} elseif ($xml['eyeLink'][0]['content'][0] == 'eyeGroups.app') {
+				$content = 'groups:///';
+			} elseif ($xml['eyeLink'][0]['content'][0] == 'eyeTrash.app') {
+				$content = 'trash:///';
+			} else {
+				$content = $xml['eyeLink'][0]['content'][0];
+			}
+			$myWidgetDrop->addBehaviour(array(
+				'type' => 'widgetDrop_simpleMsg',
+				'params' => array(
+					'content' => array($content),
+					'pid' => $myPid,
+					'signal' => 'Icon_Dropped'
+			)));
+		}
+
+		if (in_array($i,$_SESSION['eyeDesk'][$myPid]['trashes']) && count(vfs('getDirContent',array(um('getCurrentUserDir') . '/' . TRASH_USER_DIR . '/')))) {
+			eyex('rawjs',array('js' => 'xGetElementById("img_' . $myPid . '_eyeDesk_View_Icons_Icon_' . $i . '").src = "index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/trash_full.png";'));
+		}
+
+		$myContextMenu = new ContextMenu(array(
+			'father' => $myIcon->name . '_globalContainer',
+			'name' => $myIcon->name . '_ContextMenu',
+			'mfather' => 'eyeDesk_Container',
+			'searchFather' => 1
+		));
+		$myContextMenu->show();
+		foreach ($menu['menu'][0]['entry'] as $value) {
+			$myContextMenu->addEntry('<img id="' . $myPid . '_' . $myIcon->name . '_ContextMenu_' . $value['action'][0] . '_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/' . $value['icon'][0] . '.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array($value['text'][0])), ENT_QUOTES),$myIcon->name . '_ContextMenu_' . $value['action'][0],'Action','<Action>' . $value['action'][0] . '</Action><File>' . $file[0] . '</File>',$myPid . '_' . $myIcon->name . '_ContextMenu_' . $value['action'][0] . '_img');
+		}
+		$y += 88;
+		if ($myContainer->height - $y - 88 < 0) {
+			$x += 88;
+			$y = 30;
+		}
+		$i++;
+	}
+	if ($confDesk['eyeDesk'][0]['loadIconPositions'][0]) {
+		eyeXML('setXMLconfig',array('eyeDesk','icons.xml',$icons));
+	}
+}
+
+function eyeDesk_on_getWallpaper($params = '') {
+	$config = eyeXML('getXMLconfig',array('eyeDesk','conf.xml'));
+	$url = $config['eyeDesk'][0]['wallpaper'][0];
+	header('Content-Type: image/jpg');
+	header('Content-Length: ' . vfs('filesize',array($url)));
+	header('Accept-Ranges: bytes');
+	vfs('readFile',array($url));
+	exit;
+}
+?>

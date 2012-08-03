@@ -1,0 +1,10 @@
+<package>
+	<name>eyeSoft</name>
+	<category>Utilities</category>
+	<version>1.9</version>
+	<description>Utilities to download and install applications form oneye repositories</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/software.png</icon>
+</package>

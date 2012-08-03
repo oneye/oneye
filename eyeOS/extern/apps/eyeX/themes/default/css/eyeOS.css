@@ -1,0 +1,1570 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+* {
+	direction: ltr;
+}
+
+.activeWindow, .eyeWindowTitle, .inactiveWindow {
+	background-color: #8cb4de;
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/bg_top.png');
+	background-repeat: repeat-x;
+	border: 1px solid #80b5ff;
+	color: #0861A0;
+	height: 21px;
+	left: 0;
+	position: absolute;
+	right: 0;
+	text-shadow: 1px 1px 3px #ffffff;
+	top: 0;
+}
+
+.activeWindow_center, .inactiveWindow_center, .eyeWindowTitle_center {
+	height: 4px;
+	top: 0;
+	width: 100%;
+	z-index: 1;
+}
+
+.activeWindow_border_left, .activeWindow_border_right, .inactiveWindow_border_left, .inactiveWindow_border_right, .eyeWindowTitle_border_left, .eyeWindowTitle_border_right {
+	height: 4px;
+	top: 0;
+	width: 4px;
+	z-index: 2;
+}
+
+.activeWindow_border_left, .inactiveWindow_border_left, .eyeWindowTitle_border_left {
+	left: 0;
+}
+
+.activeWindow_border_right, .inactiveWindow_border_right, .eyeWindowTitle_border_right {
+	right: 0;
+}
+
+#background {
+	background: #eeeeee url('index.php?theme=USERTHEME&extern=images/wallpapers/default.jpg') repeat top center;
+	height: 100%;
+	min-height: 400px;
+	min-width: 500px;
+	position: absolute;
+	width: 100%;
+}
+.blockbar {
+	background-color: #eeeeee;
+	border-bottom: 2px ridge #ffffff;
+	border-left: 1px solid #cccccc;
+	border-right: 1px solid #cccccc;
+	height: 55px;
+	overflow: hidden;
+}
+
+.blockbarImg {}
+
+.blockbarItem,.blockbarItem_right, .blockbarItemPress, .blockbarItemPress_right {
+	border: 2px solid transparent;
+	cursor: pointer;
+	margin-top: 3px;
+	padding: 2px 4px 3px;
+	text-align: center;
+	width: auto;
+}
+
+.blockbarItem, .blockbarItem:hover, .blockbarItemPress {
+	float: left;
+	margin-left: 5px;
+	width: auto;
+}
+
+.blockbarItem_right, .blockbarItem_right:hover, .blockbarItemPress_right {
+	float: right;
+	margin-right: 5px;
+	width: auto;
+}
+
+.blockbarItem:hover, .blockbarItem_right:hover, .blockbarItemPress, .blockbarItemPress_right {
+	border-style: ridge groove groove ridge;
+	border-width: 2px;
+}
+
+.blockbarItem:hover, .blockbarItem_right:hover {
+	border-color: #80b5ff;
+}
+
+.blockbarItemPress, .blockbarItemPress_right {
+	border-color: #cccccc;
+}
+
+.blockbarline, .blockbarline_right {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/top_menu_line.png') no-repeat center;
+	float: left;
+	height: 40px;
+	margin-left: 4px;
+	margin-top: 7px;
+	width: 3px;
+}
+
+.blockbarText {
+	color: #333333;
+	text-shadow: 2px 2px 2px #ffffff;
+	font-size: 9px;
+	margin-top: 5px;
+}
+
+/*border-radius*/
+
+.activeWindow, .eyeWindowTitle, .inactiveWindow, .eyeWindowMainDrag, .eyeDock_bottom_right_menu_entries, .eyeDock_bottom_right_datetime_calendar, .eyeWindowTitle_text, #noteTitle {
+	-moz-border-radius-topleft: 5px;
+	-moz-border-radius-topright: 5px;
+	-webkit-border-top-left-radius: 5px;
+	-webkit-border-top-right-radius: 5px;
+	border-radius-top-left: 5px;
+	border-radius-top-right: 5px;
+}
+
+.blockbarItem:hover,.blockbarItem_right:hover, .blockbarItemPress, .blockbarItemPress_right, .eyeContextMenu, .eyeWindowMain, .eyeWidgets_icon:hover {
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
+}
+
+.eyeBoxTable, .eyeBoxText, .eyeTabNotSelected, .eyeTabSelected {
+	-moz-border-radius-topleft: 3px;
+	-moz-border-radius-topright: 3px;
+	-webkit-border-top-left-radius: 3px;
+	-webkit-border-top-right-radius: 3px;
+	border-radius-top-left: 3px;
+	border-radius-top-right: 3px;
+}
+
+.eyeButtonClass, .eyeProgress, .eyeTextarea, .eyeTextbox, input, select, .eyeSimpleboxNoBorder div, .eyeLine, .eyeTable, .sort-table-container, .sort-table {
+	-moz-border-radius: 3px;
+	-webkit-border-radius: 3px;
+	border-radius: 3px;
+}
+
+.eyeContextMenu, .eyeWidgets_icon:hover, .eyeTab {
+	-moz-border-radius: 7px;
+	-webkit-border-radius: 7px;
+	border-radius: 7px;
+}
+
+.eyeMessageBoxText, .eyeDesk_iconsOver:hover, .eyeIcon:hover, .eyeFiles_icons:hover {
+	-moz-border-radius: 10px;
+	-webkit-border-radius: 10px;
+	border-radius: 10px;
+}
+
+.eyeWindowContent, .eyeWindowMainDrag, .eyeDock_top_left_menu_entries, .eyeWindowBottom_center {
+	-moz-border-radius-bottomleft: 5px;
+	-moz-border-radius-bottomright: 5px;
+	-webkit-border-bottom-left-radius: 5px;
+	-webkit-border-bottom-right-radius: 5px;
+	border-radius-bottom-left: 5px;
+	border-radius-bottom-right: 5px;
+}
+
+.eyeWindowTitle_border_left {
+	-moz-border-radius-bottomleft: 2px;
+	-webkit-border-bottom-left-radius: 2px;
+	border-radius-bottom-left: 2px;
+}
+
+.eyeWindowTitle_border_right {
+	-moz-border-radius-bottomright: 2px;
+	-webkit-border-bottom-right-radius: 2px;
+	border-radius-bottom-right: 2px;
+}
+
+.calendar_weekDay, .calendar_weekDayClicked, .calendar_weekDayToday{
+	/*text-shadow: 0px 0px 0px;*/
+}
+
+.eyeListbox_box {
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.eyeListbox_over {
+	background-color: #eaeaea;
+}
+
+.eyeListbox_focus {
+	background-color: #d5dde6;
+}
+
+.eyeListbox_out {
+	background-color: transparent;
+}
+
+.eyeListbox_txt {
+	display: inline-block;
+	margin-left: 5px;
+}
+
+.eyeListbox_img {
+	vertical-align: top;
+	margin-left: 5px;
+}
+
+.dynamic-slider-control {
+	-moz-user-focus: normal;
+	-moz-user-select: none;
+	cursor: default;
+	position: relative;
+}
+
+.dynamic-slider-control input {
+	display: none;
+}
+
+.dynamic-slider-control.handle {
+	-moz-user-select: none;
+	cursor: default;
+	font-size: 1px;
+	overflow: hidden;
+	position: absolute;
+}
+
+.dynamic-slider-control.horizontal.handle {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/handle.horizontal.png');
+	height: 14px;
+	width: 31px;
+}
+
+.dynamic-slider-control.horizontal.handle div, .dynamic-slider-control.horizontal.handle.hover {}
+
+.dynamic-slider-control.horizontal.line {
+	height: 3px;
+}
+
+.dynamic-slider-control.line {
+	-moz-box-sizing: content-box;
+	border: 1px solid #5a615a;
+	font-size: 0.01mm;
+	overflow: hidden;
+	position: absolute;
+}
+
+.dynamic-slider-control.line div {
+	border: 1px solid;
+	border-color: #e6e6e6 #bdbebd #bdbebd #e6e6e6;
+	height: 1px;
+	width: 1px;
+}
+
+.dynamic-slider-control.vertical.handle {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/handle.vertical.png');
+	height: 31px;
+	width: 15px;
+}
+
+.dynamic-slider-control.vertical.handle.hover {}
+
+.dynamic-slider-control.vertical.line {
+	width: 3px;
+}
+
+.eyeBoxBottCent {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png') repeat-x bottom;
+	height: 20px;
+}
+
+.eyeBoxSupCent {}
+
+.eyeBoxTable, .eyeBoxText {
+	background-color: #ffffff;
+	border: 1px solid #dddddd;
+}
+
+.eyeBoxText {
+	background-color: #ffffff;
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png');
+	background-repeat: repeat-x;
+	background-position: bottom;
+	color: #0968B0;
+	font-size: 11px;
+	font-weight: bold;
+	height: 15px;
+	left: 0;
+	padding: 4px 0px 3px 8px;
+	position: absolute;
+	right: 0;
+	text-shadow: 2px 2px 2px #ffffff;
+	top: 0px;
+}
+
+.eyeButtonClass {
+	background-color: #ffffff;
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/buttonbg.png');
+	background-repeat: repeat-x;
+	background-position: center;
+	border-color: #cccccc #aaaaaa #aaaaaa #cccccc;
+	border-style: solid;
+	border-width: 1px;
+	cursor: pointer;
+	font-size: 11px;
+	padding: 1px;
+	text-shadow: 1px 1px 2px #ffffff;
+}
+
+.eyeButtonClass:focus {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/buttonbg_press.png');
+}
+
+.eyeButtonClass:hover {
+	border-color: #A1C6F3 #6A9BD8 #6A9BD8 #A1C6F3;
+}
+
+.eyeContextMenu {
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png');
+	background-color: #eeeeee;
+	background-position: bottom;
+	background-repeat: repeat-x;
+	border-color: #ffffff;
+	border-style: groove ridge ridge groove;
+	border-width: 2px;
+	font-weight: normal;
+	padding: 5px 5px;
+	width: 150px;
+	z-index: 1000;
+}
+
+.eyeContextMenuEntry {
+	color: #000000;
+	cursor: pointer;
+	border-bottom: 1px solid transparent;
+	border-top: 1px solid transparent;
+	font-family: Verdana,Arial,sans-serif,FreeSans;
+	font-size: 11px;
+	padding: 3px 5px;
+	text-align: left;
+}
+
+.eyeContextMenuEntry:hover {
+	background: url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/select.png') repeat-y right;
+	background-color: #f5f5f5;
+	border-bottom: 1px solid #ffffff;
+	border-top: 1px solid #cccccc;
+}
+
+.eyecursor {
+	background-image: url('index.php?theme=USERTHEME&extern=images/desktop/loadingcursor/loading.png');
+	display: none;
+	height: 30px;
+	left: 0;
+	position: absolute;
+	top: 0;
+	width: 32px;
+	z-index: 50000;
+}
+
+.eyeDesk_iconsOver, .eyeFiles_icons {
+	color: #333333;
+	cursor: pointer;
+	margin-top: -4px;
+	padding-top: 4px;
+	padding-bottom: 2px;
+}
+
+.eyeIcon:hover, .eyeFiles_icons:hover {
+	background: #f1f1f1 url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png') repeat-x center bottom;
+	position: absolute;
+	z-index: 1;
+}
+
+/* all */
+
+.eyeDock_bottom, .eyeDock_left, .eyeDock_right, .eyeDock_top {
+	color: #ffffff;
+	font-weight: bold;
+	position: absolute;
+	white-space: nowrap;
+}
+
+.eyeDock_bottom_left_icon, .eyeDock_bottom_right_icon, .eyeDock_left_top_icon, .eyeDock_right_top_icon, .eyeDock_top_left_icon, .eyeDock_top_right_icon, .eyeDock_bottom_left_menu, .eyeDock_bottom_right_menu, .eyeDock_left_top_menu, .eyeDock_right_top_menu, .eyeDock_top_left_menu, .eyeDock_top_right_menu {
+	cursor: pointer;
+}
+
+.eyeDock_bottom_left_icon_div, .eyeDock_bottom_right_icon_div, .eyeDock_left_top_icon_div, .eyeDock_right_top_icon_div, .eyeDock_top_left_icon_div, .eyeDock_top_right_icon_div, .eyeDock_bottom_left_menu_div, .eyeDock_bottom_right_menu_div, .eyeDock_left_top_menu_div, .eyeDock_right_top_menu_div, .eyeDock_top_left_menu_div, .eyeDock_top_right_menu_div {
+	height: 24px;
+	padding-left: 2px;
+	padding-right: 2px;
+	padding-top: 8px;
+}
+
+.eyeDock_bottom_left_icon_img, .eyeDock_bottom_right_icon_img, .eyeDock_left_top_icon_img, .eyeDock_top_left_icon_img, .eyeDock_top_right_icon_img {
+	margin-top: 5px;
+	padding-left: 2px;
+	padding-right: 2px;
+	vertical-align: top;
+}
+
+.eyeDock_bottom_right_menu_div, .eyeDock_top_right_menu_div {
+	height: 24px;
+	padding-top: 8px;
+}
+
+.eyeDock_bottom_left_menu_entries, .eyeDock_bottom_right_menu_entries, .eyeDock_left_top_menu_entries, .eyeDock_right_top_menu_entries, .eyeDock_top_left_menu_entries, .eyeDock_top_right_menu_entries {
+	background: #dddddd url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png') repeat-x bottom;
+	border-left: 2px groove #ffffff;
+	border-right: 2px ridge #ffffff;
+	cursor: default;
+	display: none;
+	font-weight: normal;
+	padding-top: 5px;
+	position: absolute;
+}
+
+.eyeDock_bottom_left_menu_entry_icon, .eyeDock_bottom_right_menu_entry_icon, .eyeDock_left_top_menu_entry_icon, .eyeDock_right_top_menu_entry_icon, .eyeDock_top_left_menu_entry_icon, .eyeDock_top_right_menu_entry_icon {
+	border-bottom: 1px solid #cccccc;
+	color: #000000;
+	cursor: pointer;
+	height: 25px;
+	margin: 0 10px;
+	padding: 8px 0 4px 0;
+}
+
+.eyeDock_bottom_left_menu_entry_icon:hover, .eyeDock_bottom_right_menu_entry_icon:hover, .eyeDock_left_top_menu_entry_icon:hover, .eyeDock_right_top_menu_entry_icon:hover, .eyeDock_top_left_menu_entry_icon:hover, .eyeDock_top_right_menu_entry_icon:hover {
+	background: url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/select.png') repeat-y left;
+	background-color: #d1d1d1;
+	border-bottom: 1px solid #ffffff;
+	border-top: 1px solid #888888;
+	height: 25px;
+	margin-left: 0;
+	margin-right: 0;
+	padding: 7px 10px 4px;
+}
+
+.eyeDock_bottom_left_menu_entry_icon_arrow, .eyeDock_bottom_right_menu_entry_icon_arrow, .eyeDock_left_top_menu_entry_icon_arrow, .eyeDock_right_top_menu_entry_icon_arrow, .eyeDock_top_left_menu_entry_icon_arrow, .eyeDock_top_right_menu_entry_icon_arrow,.eyeDock_bottom_left_menu_entry_icon_arrow_exists, .eyeDock_bottom_right_menu_entry_icon_arrow_exists, .eyeDock_left_top_menu_entry_icon_arrow_exists, .eyeDock_right_top_menu_entry_icon_arrow_exists, .eyeDock_top_left_menu_entry_icon_arrow_exists, .eyeDock_top_right_menu_entry_icon_arrow_exists {
+	float: right;
+	height: 20px;
+	margin-left: 15px;
+	width: 20px;
+}
+
+.eyeDock_bottom_left_menu_entry_icon_arrow, .eyeDock_bottom_right_menu_entry_icon_arrow, .eyeDock_left_top_menu_entry_icon_arrow, .eyeDock_right_top_menu_entry_icon_arrow, .eyeDock_top_left_menu_entry_icon_arrow, .eyeDock_top_right_menu_entry_icon_arrow {
+	background-image: url('index.php?theme=USERTHEME&extern=icons/22x22/rating.png');
+	margin-top: 0;
+	opacity: 0.8;
+}
+
+.eyeDock_bottom_left_menu_entry_icon_arrow_exists, .eyeDock_bottom_right_menu_entry_icon_arrow_exists, .eyeDock_left_top_menu_entry_icon_arrow_exists, .eyeDock_right_top_menu_entry_icon_arrow_exists, .eyeDock_top_left_menu_entry_icon_arrow_exists, .eyeDock_top_right_menu_entry_icon_arrow_exists {
+	background-image: url('index.php?theme=USERTHEME&extern=icons/22x22/rating_g.png');
+	cursor: default;
+	margin-top: 0;
+	opacity: 0.8;
+}
+
+.eyeDock_bottom_left_menu_entry_icon_div, .eyeDock_bottom_right_menu_entry_icon_div, .eyeDock_left_top_menu_entry_icon_div, .eyeDock_right_top_menu_entry_icon_div, .eyeDock_top_left_menu_entry_icon_div, .eyeDock_top_right_menu_entry_icon_div {
+	display: inline;
+	padding-left: 5px;
+}
+
+.eyeDock_bottom_left_menu_entry_icon_img, .eyeDock_bottom_right_menu_entry_icon_img, .eyeDock_left_top_menu_entry_icon_img, .eyeDock_right_top_menu_entry_icon_img, .eyeDock_top_left_menu_entry_icon_img, .eyeDock_top_right_menu_entry_icon_img {
+	margin-bottom: 3px;
+	vertical-align: middle;
+}
+
+.eyeDock_bottom_left_menu_entry_line, .eyeDock_bottom_right_menu_entry_line, .eyeDock_left_top_menu_entry_line, .eyeDock_right_top_menu_entry_line, .eyeDock_top_left_menu_entry_line, .eyeDock_top_right_menu_entry_line {
+	border-bottom: 1px solid #0b3256;
+	height: 0;
+	margin-bottom: 10px;
+	width: 100%;
+}
+
+.eyeDock_bottom_left_menu_entry_text, .eyeDock_bottom_right_menu_entry_text, .eyeDock_left_top_menu_entry_text, .eyeDock_right_top_menu_entry_text, .eyeDock_top_left_menu_entry_text, .eyeDock_top_right_menu_entry_text {
+	font-weight: bold;
+	margin-bottom: 15px;
+}
+
+.eyeDock_bottom_left_menu_img, .eyeDock_bottom_right_menu_img, .eyeDock_left_top_menu_img, .eyeDock_right_top_menu_img, .eyeDock_top_left_menu_img, .eyeDock_top_right_menu_img {
+	margin-bottom: 6px;
+	margin-top: 6px;
+	padding-left: 2px;
+	padding-right: 2px;
+	vertical-align: top;
+}
+
+.eyeDock_bottom_left_menu_selected, .eyeDock_bottom_right_menu_selected, .eyeDock_left_top_menu_selected, .eyeDock_right_top_menu_selected, .eyeDock_top_left_menu_selected, .eyeDock_top_right_menu_selected {
+	cursor: pointer;
+	height: 31px;
+}
+
+/* bottom and top */
+
+.eyeDock_bottom, .eyeDock_top {
+	max-height: 31px;
+	width: 100%;
+	z-index: 12;
+}
+
+.eyeDock_bottom_left_datetime_calendar, .eyeDock_top_left_datetime_calendar {
+	background-color: #dddddd;
+	border: 2px groove #ffffff;
+	cursor: default;
+	display: none;
+	font-weight: normal;
+	height: 148px;
+	margin-left: -10px;
+	padding-top: 10px;
+	position: absolute;
+	width: 178px;
+}
+
+.eyeDock_bottom_left_datetime_clock, .eyeDock_top_left_datetime_clock {
+	display: inline-block;
+	height: 21px;
+	padding-top: 11px;
+}
+
+.eyeDock_bottom_left_icon, .eyeDock_top_left_icon {
+	display: inline-block;
+	float: left;
+	padding: 0 0 0 10px;
+	width: auto;
+}
+
+.eyeDock_bottom_left_icon {
+	padding: 0 1px;
+}
+
+.eyeDock_bottom_left_icon_div, .eyeDock_top_left_icon_div, .eyeDock_bottom_left_menu_div, .eyeDock_top_left_menu_div, .eyeDock_left_top_icon:hover, .eyeDock_left_top_icon_div, .eyeDock_right_top_icon:hover, .eyeDock_right_top_icon_div, .eyeDock_left_top_menu:hover, .eyeDock_left_top_menu_div, .eyeDock_right_top_menu:hover, .eyeDock_right_top_menu_div, .eyeDock_top_right_icon_div, .eyeDock_bottom_left_menu_div, .eyeDock_top_left_menu_div, .eyeDock_left_top_icon:hover, .eyeDock_left_top_icon_div, .eyeDock_right_top_icon:hover, .eyeDock_right_top_icon_div, .eyeDock_left_top_menu:hover, .eyeDock_left_top_menu_div, .eyeDock_right_top_menu:hover, .eyeDock_right_top_menu_div, .eyeDock_top_right_icon_div, .eyeDock_top_left_icon_div {
+	display: inline-block;
+}
+
+.eyeDock_bottom_left_line, .eyeDock_bottom_right_line {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/bottom_menu_line.png') no-repeat top;
+	display: inline-block;
+	float: left;
+	height: 31px;
+	width: 3px;
+}
+
+.eyeDock_bottom_left_menu, .eyeDock_top_left_menu {
+	display: inline-block;
+	float: left;
+	padding: 0 10px;
+	width: auto;
+}
+
+.eyeDock_bottom_left_menu:hover, .eyeDock_bottom_right_menu:hover, .eyeDock_bottom_left_icon:hover {
+	background-image: url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/Icon_hover_bottom.png');
+}
+
+.eyeDock_bottom_left_menu:hover,.eyeDock_top_left_menu:hover, .eyeDock_bottom_right_menu:hover, .eyeDock_bottom_left_icon:hover, .eyeDock_top_right_icon:hover, .eyeDock_bottom_right_menu_selected, .eyeDock_top_right_menu_selected, .eyeDock_top_left_menu_selected {
+	background-color: #dddddd;
+	background-position: top;
+	background-repeat: repeat-x;
+	height: 32px;
+}
+
+.eyeDock_top_left_menu:hover, .eyeDock_top_right_icon:hover {
+	color: #333333;
+	height: 32px;
+}
+
+.eyeDock_bottom_left_menu_entries, .eyeDock_top_left_menu_entries {
+	margin-left: -10px;
+}
+
+.eyeDock_bottom_left_menu_selected, .eyeDock_top_left_menu_selected {
+	display: inline-block;
+	float: left;
+	padding: 0 10px;
+	width: auto;
+}
+
+.eyeDock_bottom_left_space, .eyeDock_top_left_space {
+	display: inline-block;
+	float: left;
+	height: 31px;
+	width: auto;
+}
+
+.eyeDock_bottom_left_text, .eyeDock_top_left_text {
+	display: inline-block;
+	float: left;
+	font-weight: bold;
+	height: 21px;
+	padding-top: 11px;
+	width: auto;
+}
+
+.eyeDock_bottom_right_datetime_calendar, .eyeDock_top_right_datetime_calendar {
+	background-color: #dddddd;
+	border-left: 2px groove #ffffff;
+	border-right: 2px ridge #ffffff;
+	border-top: 2px groove #ffffff;
+	cursor: default;
+	direction: ltr;
+	display: none;
+	font-weight: normal;
+	height: 148px;
+	margin-right: -10px;
+	padding-top: 10px;
+	position: absolute;
+	width: 178px;
+}
+
+.eyeDock_bottom_right_datetime_clock, .eyeDock_top_right_datetime_clock {
+	direction: ltr;
+	display: inline-block;
+	height: 21px;
+	padding-top: 11px;
+}
+
+.eyeDock_bottom_right_icon, .eyeDock_top_right_icon {
+	display: inline-block;
+	float: right;
+	padding: 0 10px;
+	width: auto;
+}
+
+.eyeDock_bottom_right_icon_div, .eyeDock_top_right_icon_div {
+	display: inline-block;
+}
+
+.eyeDock_bottom_right_line, .eyeDock_top_right_line {
+	border-right: 1px solid #4e92C5;
+	display: inline-block;
+	float: right;
+	height: 31px;
+	width: 0;
+}
+
+.eyeDock_bottom_right_line, .eyeDock_top_right_line {
+	border: 0;
+	width: 3px;
+}
+
+.eyeDock_bottom_right_menu, .eyeDock_top_right_menu {
+	display: inline-block;
+	float: right;
+	padding: 0 10px;
+	width: auto;
+}
+
+.eyeDock_bottom_right_menu_div, .eyeDock_top_right_menu_div {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/clock.png') no-repeat center center;
+	direction: ltr;
+	display: inline-block;
+}
+
+.eyeDock_bottom_right_menu_entries, .eyeDock_top_right_menu_entries {
+	direction: ltr;
+	margin-right: -12px;
+}
+
+.eyeDock_bottom_right_menu_selected, .eyeDock_top_right_menu_selected {
+	border-left: 2px groove #ffffff;
+	border-right: 2px ridge #ffffff;
+	color: #000000;
+	direction: rtl;
+	display: inline-block;
+	float: right;
+	height: 31px;
+	margin: 0 -2px;
+	padding: 0 10px;
+	width: auto;
+}
+
+.eyeDock_bottom_right_space, .eyeDock_top_right_space {
+	display: inline-block;
+	float: right;
+	height: 31px;
+	width: auto;
+}
+
+.eyeDock_bottom_right_text, .eyeDock_top_right_text {
+	display: inline-block;
+	float: right;
+	font-weight: bold;
+	height: 21px;
+	padding-top: 11px;
+	width: auto;
+}
+
+/* left and right */
+
+.eyeDock_left, .eyeDock_right {
+	border-top: 1px solid #163055;
+	height: 100%;
+	margin-top: 31px;
+	max-width: 31px;
+	z-index: 11;
+}
+
+.eyeDock_left_top_icon, .eyeDock_right_top_icon {
+	padding: 0 7px;
+}
+
+.eyeDock_left_top_icon_div, .eyeDock_right_top_icon_div {
+	display: none;
+}
+
+.eyeDock_left_top_line, .eyeDock_right_top_line {
+	border-bottom: 1px solid #0b3256;
+	height: 0;
+	width: 31px;
+}
+
+.eyeDock_left_top_menu, .eyeDock_right_top_menu {
+	height: 27px;
+	padding: 0 7px 5px;
+}
+
+.eyeDock_left_top_menu_div, .eyeDock_right_top_menu_div {
+	background-color: #224371;
+	border: 1px solid #163055;
+	display: none;
+	margin-top: -1px;
+	padding-left: 7px;
+	padding-right: 7px;
+}
+
+.eyeDock_left_top_menu_entries, .eyeDock_right_top_menu_entries {
+	margin-left: 25px;
+	margin-top: -27px;
+}
+
+.eyeDock_left_top_menu_entry_icon_arrow, .eyeDock_left_top_menu_entry_icon_arrow_exists, .eyeDock_right_top_menu_entry_icon_arrow, .eyeDock_right_top_menu_entry_icon_arrow_exists {
+	position: relative;
+}
+
+.eyeDock_left_top_menu_selected, .eyeDock_right_top_menu_selected {
+	padding: 0 7px;
+}
+
+/* bottom */
+
+.eyeDock_bottom {
+	background-color: #85C2FF;
+	background-image: url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/bottom.png');
+	background-position: bottom;
+	background-repeat: repeat-x;
+	bottom: 0;
+	color: #0968b0;
+}
+
+.eyeDock_bottom_left_datetime_calendar {
+	bottom: 31px;
+}
+
+.eyeDock_bottom_left_menu_entries {
+	border-top: 2px ridge #ffffff;
+	bottom: 31px;
+}
+
+.eyeDock_bottom_left_menu_selected {
+	background-color: #dddddd;
+}
+
+.eyeDock_bottom_left_taskbar {
+	color: #000000;
+	display: inline-block;
+	float: left;
+	font-weight: normal;
+	height: 31px;
+	overflow: hidden;
+	width: auto;
+}
+
+.eyeDock_bottom_left_taskbar_entries {
+	display: inline-block;
+	position: relative;
+}
+
+.eyeDock_bottom_left_taskbar_entry, .eyeDock_bottom_left_taskbar_entry_focus {
+	display: inline-block;
+	margin-top: 2px;
+	width: 163px;
+}
+
+.eyeDock_bottom_left_taskbar_entry {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/minimized/minbar_off.png') no-repeat scroll center top;
+}
+
+.eyeDock_bottom_left_taskbar_entry:hover {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/minimized/minbar_off_x.png') no-repeat scroll center top;
+}
+
+.eyeDock_bottom_left_taskbar_entry_focus {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/minimized/minbar_on.png') no-repeat scroll center top;
+}
+
+.eyeDock_bottom_left_taskbar_entry_focus:hover {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/minimized/minbar_on_x.png') no-repeat scroll center top;
+}
+
+.eyeDock_bottom_left_taskbar_entry_div {
+	cursor: pointer;
+	display: inline-block;
+	height: 29px;
+	overflow: hidden;
+	padding: 7px 0 0 0;
+	text-indent: 5px;
+	width: 156px;
+}
+
+.eyeDock_bottom_left_taskbar_left, .eyeDock_bottom_left_taskbar_right {
+	display: none;
+}
+
+.eyeDock_bottom_left_taskbar_move_left, .eyeDock_bottom_left_taskbar_move_right {
+	background-position: 0 2px;
+	background-repeat: no-repeat;
+	cursor: pointer;
+	display: none;
+	float: left;
+	height: 31px;
+	width: 32px;
+}
+
+.eyeDock_bottom_left_taskbar_move_left {
+	background-image: url('index.php?theme=USERTHEME&extern=images/minimized/arrow_l.png');
+	margin-right: -12px;
+}
+
+.eyeDock_bottom_left_taskbar_move_right {
+	background-image: url('index.php?theme=USERTHEME&extern=images/minimized/arrow_r.png');
+	margin-left: -12px;
+}
+
+.eyeDock_bottom_right_datetime_calendar {
+	bottom: 31px;
+}
+
+.eyeDock_bottom_right_menu_entries {
+	border-top: 2px groove #ffffff;
+	bottom: 31px;
+	float: left;
+	width: 195px;
+}
+
+/* left */
+
+.eyeDock_left {
+	background-image: url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/left.png');
+}
+
+/* right */
+
+.eyeDock_right {
+	background-image: url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/right.png');
+	right: 0;
+}
+
+.eyeDock_right_top_menu {
+	direction: rtl;
+}
+
+.eyeDock_right_top_menu_entries {
+	right: 32px;
+}
+
+/* top */
+
+.eyeDock_top {
+	background-color: #232D34;
+	background-image: url('index.php?theme=USERTHEME&extern=images/apps/eyeDock/backgrounds/top.png');
+	background-repeat: repeat-x;
+	background-position: bottom;
+	border-bottom: 2px ridge #000000;
+	max-height: 32px;
+	width: 100%;
+	z-index: 12;
+}
+
+.eyeDock_top_left_datetime_calendar {
+	background-color: #224371;
+	border: 1px solid #163055;
+	cursor: default;
+	display: none;
+	font-weight: normal;
+	height: 148px;
+	margin-left: -10px;
+	padding-top: 10px;
+	position: absolute;
+	width: 168px;
+}
+
+.eyeDock_top_left_datetime_clock {
+	display: inline-block;
+	height: 21px;
+	padding-top: 11px;
+}
+
+.eyeDock_top_left_icon {
+	display: inline-block;
+	float: left;
+	padding: 0 10px;
+	width: auto;
+}
+
+.eyeDock_top_left_line {
+	border-right: 1px solid #353b40;
+	display: inline-block;
+	float: left;
+	height: 31px;
+	width: 0;
+}
+
+.eyeDock_top_left_menu {
+	display: inline-block;
+	float: left;
+	padding: 0 10px;
+	width: auto;
+}
+
+.eyeDock_top_left_menu_entries {
+	border-bottom: 2px ridge #ffffff;
+	width: 195px;
+}
+
+.eyeDock_top_left_menu_selected {
+	border-left: 2px groove #ffffff;
+	border-right: 2px ridge #ffffff;
+	color: #000000;
+	display: inline-block;
+	float: left;
+	padding: 0 8px;
+	width: auto;
+}
+
+.eyeDock_top_left_space {
+	display: inline-block;
+	float: left;
+	height: 31px;
+	width: auto;
+}
+
+.eyeDock_top_left_text {
+	display: inline-block;
+	float: left;
+	font-weight: bold;
+	height: 21px;
+	padding-top: 11px;
+	width: auto;
+}
+
+.eyeDock_top_right_datetime_calendar {
+	background-color: #224371;
+	border: 1px solid #163055;
+	cursor: default;
+	direction: ltr;
+	display: none;
+	font-weight: normal;
+	height: 148px;
+	margin-right: -10px;
+	padding-top: 10px;
+	position: absolute;
+	width: 168px;
+}
+
+.eyeDock_top_right_datetime_clock {
+	direction: ltr;
+	display: inline-block;
+	height: 21px;
+	padding-top: 11px;
+}
+
+.eyeDock_top_right_icon {
+	display: inline-block;
+	float: right;
+	padding: 0 2px;
+	width: auto;
+}
+
+.eyeDock_top_right_line {
+	border-right: 1px solid #353b40;
+	display: inline-block;
+	float: right;
+	height: 31px;
+	width: 0;
+}
+
+.eyeDock_top_right_menu {
+	display: inline-block;
+	float: right;
+	padding: 0 10px;
+	width: auto;
+}
+
+.eyeDock_top_right_menu_div {
+	direction: ltr;
+	display: inline-block;
+}
+
+.eyeDock_top_right_menu_entries {
+	direction: ltr;
+	margin-right: -10px;
+}
+
+.eyeDock_top_right_menu_selected {
+	background-color: #000000;
+	direction: rtl;
+	display: inline-block;
+	float: right;
+	padding: 0 8px;
+	width: auto;
+}
+
+.eyeDock_top_right_space {
+	display: inline-block;
+	float: right;
+	height: 31px;
+	width: auto;
+}
+
+.eyeDock_top_right_text {
+	display: inline-block;
+	float: right;
+	font-weight: bold;
+	height: 21px;
+	padding-top: 11px;
+	width: auto;
+}
+
+.eyeFiles_icons {
+	color: #000000;
+}
+
+.eyeFiles_icons:hover {/*look in .eyeDesk_iconsOver:hover*/}
+
+.eyeIcon {
+	border: 1px solid transparent;
+	color: #ffffff;
+	margin-top: -5px;
+	padding: 5px 0 0 0;
+}
+
+.eyeIcon_Image {
+	margin-left: 8px;
+}
+
+.eyeIcon_Text {
+	font-size: 11px;
+	text-shadow: 0px 2px 2px #bbbbbb;
+}
+
+.eyeLine {
+	background: #eeeeee url('index.php?theme=USERTHEME&extern=images/windows/border_r.png') repeat-y;
+	position: relative;
+	z-index: 1;
+}
+
+.eyeMessageBox {
+	bottom: 55px;
+	height: 65px;
+	position: absolute;
+	right: 20px;
+	width: 280px;
+	z-index: 5;
+}
+
+.eyeMessageBoxText {
+	background-color: #dddddd;
+	border-color: #ffffff;
+	border-style: groove ridge ridge groove;
+	border-width: 2px;
+	color: #000000;
+	font-size: 10pt;
+	min-width: 180px;
+	min-height: 40px;
+	padding: 15px;
+	text-shadow: 1px 2px 2px #ffffff;
+}
+
+.eyeMessageBoxText:before {
+	content: url('index.php?theme=USERTHEME&extern=images/doowee/message.png');
+	float: left;
+	margin-top: -4px;
+	padding-right: 5px;
+	width: auto;
+}
+
+.eyeNav_url_bar {
+	background: #ffffff url('index.php?theme=USERTHEME&extern=images/windows/tabbgTop.png') repeat-x top;
+	height: 38px;
+	width: 100%;
+}
+
+.eyeProgress {
+	border-color: #bfbfbf;
+	border-style: solid;
+	border-width: 1px;
+	height: 15px;
+}
+
+.eyeProgressBar {
+	background-color: #80a9d3;
+}
+
+.eyeProgressText {
+	color: #333333;
+	font-size: 11px;
+	margin-top: -1px;
+}
+
+.eyeSelect {
+	border-color: #aaaaaa #858585 #858585;
+	border-style: groove solid solid;
+	border-width: 2px 1px 1px;
+	padding-left: 2px;
+}
+
+.eyeSimplebox {
+	border: 0.1px solid #000000;
+}
+
+.eyeSimpleboxNoBorder {
+	border: none;
+}
+
+.eyeSplit {}
+
+.eyeSplitter_horizontal {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/slider_ns.png')no-repeat center center;
+	border-bottom: 1px dotted #eeeeee;
+	height: 5px
+}
+
+.eyeSplitter_vertical {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/slider_ew.png')no-repeat center center;
+	border-right: 1px dotted #eeeeee;
+	width: 5px
+}
+
+.eyeTab {
+	background: #ffffff url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png') repeat-x bottom;
+}
+
+.eyeTabArrowRight, .eyeTabArrowLeft {
+	cursor: Pointer;
+	height: 24px;
+	position: absolute;
+	top: 0px;
+	width: 9px;
+	z-index: 2;
+}
+
+.eyeTabArrowRight {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/arrow_right.png');
+	right: 0px;
+}
+
+.eyeTabArrowLeft {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/arrow_left.png');
+	left: 0px;
+}
+
+.eyeTabBody {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/tabbgTop.png') repeat-x 0 -2px;
+	left: 0;
+	position: absolute;
+	top: 22px;
+}
+
+.eyeTabCross {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/cross.png');
+	background-position: center;
+	background-repeat: no-repeat;
+	color: #7f7f7f;
+	cursor: pointer;
+	font-size: 11px;
+	height: 6px;
+	padding: 4px 2px;
+	position: absolute;
+	right: 5px;
+	top: 2px;
+	width: 8px;
+}
+
+.eyeTabSelected .eyeTabCross {
+	top: 4px;
+}
+
+.eyeTabHeader {
+	background-color: #ffffff;
+	border-bottom: 1px solid #dddddd;
+	height: 21px;
+	left: 0;
+	padding: 0px 4px 0px 5px;
+	position: absolute;
+	top: 0;
+	overflow: hidden;
+}
+
+.eyeTabNotSelected {
+	background: #FFFFFF url('index.php?theme=USERTHEME&extern=images/windows/tabbgTop.png') repeat-x 0 -8px;
+	border-top: 1px solid #dddddd;
+	height: 17px !important;
+	margin-top: 3px;
+}
+
+.eyeTabNotSelected, .eyeTabSelected {
+	border-left: 1px solid #dddddd;
+	border-right: 1px solid #dddddd;
+	cursor: default;
+	margin-left: 11px;
+	vertical-align: middle;
+}
+
+.eyeTabNotSelected:hover {
+	border-color: #A1C6F3 #6A9BD8 #6A9BD8 #A1C6F3; border-style: solid; border-width: 1px 1px 0px 1px;
+}
+
+.eyeTabSelected {
+	background: #fff url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png') repeat-x 0 8px;
+	border-top: 1px solid #cccccc;
+	height: 21px;
+	z-index: 1;
+}
+
+.eyeTabText {
+	color: #3e3e3e;
+	font-size: 11px;
+	margin-top: 2px;
+	text-align: center;
+	vertical-align: middle;
+}
+
+.eyeTabSelected .eyeTabText {
+	margin-top: 4px;
+}
+
+.eyeTextarea {
+	background-color: #ffffff;
+	border-color: #cccccc #bcbcbc #bcbcbc;
+	border-style: groove solid solid;
+	border-width: 2px 1px 1px;
+	font-size: 11px;
+}
+
+.eyeTextarea:hover, .eyeTextarea:focus, .eyeTextbox:hover, .eyeTextbox:focus, select:hover, select:focus, input:hover, input:focus {
+	border-color: #000000;
+	border-style: solid;
+	border-width: 1px;
+}
+
+.eyeTextareaContainer {}
+
+.eyeTextbox, select, input {
+	background-color: #ffffff;
+	border-color: #cccccc #bcbcbc #bcbcbc;
+	border-style: groove solid solid;
+	border-width: 2px 1px 1px;
+	font-size: 11px;
+	padding-left: 2px;
+}
+
+.eyeCheckbox, .eyeCheckbox:hover, .eyeCheckbox:focus, .eyeRadio, .eyeRadio:hover, .eyeRadio:focus {
+	border-style: none;
+}
+
+select, input {
+	padding-left: 0px;
+}
+
+.eyeWidgets {
+	width: 156px;
+}
+
+.eyeWidgets_icon, .eyeWidgets_icon:hover, .eyeWidgets_icon .eyeIcon_Image {
+	background-color: transparent;
+	color: #000000;
+	padding-right: 168px;
+	margin-left: 5px;
+	padding-top: 5px;
+	margin-top: -5px;
+	z-index: 1;
+	cursor: pointer;
+	position: relative;
+}
+
+.eyeWidgets_descript {
+	color: #666666;
+}
+
+.eyeWidgets_icon:hover {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png') repeat-x scroll center bottom;
+	padding-bottom: 5px;
+}
+
+.eyeWidgets_title {
+	color: #333333;
+	font-weight: bold;
+	width: 68px;
+}
+.eyeWidgets_version {
+	color: #666666;
+	float: right;
+}
+
+.eyeWindowBottom_center {
+	bottom: 0;
+	font-size: 1px;
+	height: 4px;
+	width: 100%;
+	z-index: 2;
+}
+
+.eyeWindowBottom_left, .eyeWindowBottom_right {
+	bottom: 0;
+	height: 6px;
+	width: 6px;
+	z-index: 3;
+}
+
+.eyeWindowBottom_left {
+	left: 0;
+}
+
+.eyeWindowBottom_right {
+	right: 0;
+}
+
+.eyeWindowCloseButton, .eyeWindowMaxButton, .eyeWindowMinimizeButton {
+	cursor: pointer;
+	height: 22px;
+	position: absolute;
+	top: 1px;
+	width: 23px;
+	z-index: 4;
+}
+
+.eyeWindowCloseButton {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/close.png') no-repeat;
+}
+
+.eyeWindowCloseButton:hover {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/close_x.png') no-repeat;
+}
+
+.eyeWindowContent, .eyeWindowMainDrag {
+	background-color: #ffffff;
+	border-color: #80b5ff; border-style: solid; border-width: 0px 1px 1px;
+	bottom: 0; left: 0; right: 0; top: 23px;
+	overflow: hidden;
+	position: relative;
+}
+
+.eyeWindowContentInvisible {
+	background-color: transparent;
+	bottom: 0; left: 0; right: 0; top: 23px;
+	overflow: auto;
+	position: absolute;
+}
+
+.eyeWindowLeft, .eyeWindowRight {
+	height: 100%;
+	width: 4px;
+	z-index: 1;
+}
+
+.eyeWindowLeft {
+	left: 0;
+}
+
+.eyeWindowRight {
+	right: 0;
+}
+
+.eyeWindowMain {
+	color: #000000;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+	position: absolute;
+}
+
+.eyeWindowMainDrag {
+	background: #bfdaff url('index.php?theme=USERTHEME&extern=images/windows/eyefilesbg.png') no-repeat top left;
+	overflow: hidden;
+}
+
+.eyeWindowMaxButton {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/max.png') no-repeat;
+}
+
+.eyeWindowMaxButton:hover {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/max_x.png') no-repeat;
+}
+
+.eyeWindowMinimizeButton {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/min.png') no-repeat;
+}
+
+.eyeWindowMinimizeButton:hover {
+	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/min_x.png') no-repeat;
+}
+
+.eyeWindowResizeButton {
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/resizebutton.png');
+	bottom: 2px;
+	cursor: se-resize;
+	height: 12px;
+	position: absolute;
+	right: 2px;
+	width: 12px;
+}
+
+.eyeWindowTitle_text {
+	cursor: move;
+	font-weight: 600;
+	height: 18px;
+	overflow: hidden;
+	padding: 3px 85px 0 7px;
+}
+
+.horizontal {
+	height: 27px;
+	width: 200px;
+}
+
+.inactiveWindow {
+	background-color: #dddddd;
+	border: 1px solid #acacac;
+	color: #777777;
+}
+
+.mktree .liOpen {
+	border-left: 1px solid #f1f1f1;
+	margin-left: 5px;
+}
+
+.multipleSelect {
+	background-color: #6699ff;
+	border: 1px solid #ffffff;
+}
+
+/*opacity*/
+
+.eyeProgressBar, .eyeDock_bottom_left_menu, .eyeDock_top_left_icon, .eyeDesk_iconsOver {
+	opacity: 0.8;
+}
+
+.eyeDesk_iconsOver:hover, .eyeDock_bottom_left_menu:hover, .eyeDock_top_left_icon:hover, .eyeDock_bottom_right_menu_selected, .eyeIcon:hover, .eyeFiles_icons:hover {
+	opacity: 1.0;
+}
+
+.multipleSelect, .eyeLine {
+	opacity: 0.7;
+}
+
+.sort-table td, .eyeIcon, .eyeFiles_icons {
+	opacity: 0.9;
+}
+
+#PI {
+	left: 500px;
+	position: absolute;
+	top: 20px
+}
+
+.shadowLayer {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/bg.png');
+	height: 100%;
+	left: 0;
+	position: absolute;
+	top: 0;
+	width: 100%;
+}
+
+.sort-arrow {
+	background-position: 3px 5px;
+	background-repeat: no-repeat;
+	height: 11px !important;
+	margin: 0 2px;
+	width: 11px;
+}
+
+.sort-arrow.ascending {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/upsimple.png');
+}
+
+.sort-arrow.descending {
+	background-image: url('index.php?theme=USERTHEME&extern=images/widgets/downsimple.png');
+}
+
+.sort-table {
+	background-color: #f6f6f6;
+	color: #000000;
+	font: Icon;
+}
+
+.sort-table td {
+	background-color: #ffffff;
+	cursor: pointer;
+	font-size: 11px;
+	padding: 2px 5px;
+}
+
+.sort-table thead {
+	font-size: 14px;
+	overflow: hidden;
+}
+
+.sort-table thead td {
+	background-color: #ffffff;
+	background-image: url('index.php?theme=USERTHEME&extern=images/windows/toolbar.png');
+	background-repeat: repeat-x;
+	background-position: bottom;
+	border-color: #AEAEAE #7F7F7F #7F7F7F #AEAEAE;
+	border-style: solid;
+	border-width: 1px;
+	cursor: context-menu;
+}
+
+.sort-table thead td:hover {
+	border-color: #A1C6F3 #6A9BD8 #6A9BD8 #A1C6F3;
+}
+
+.sort-table thead td:active {
+	border-color: #000000 #ffffe1 #ffffe1 #000000;
+	padding: 3px 4px 1px 6px;
+}
+
+.sort-table thead td[_sortType=HtmlButNoSort]:active, .sort-table thead td[_sortType=None]:active {
+	border-color: #ffffe1 #000000 #000000 #ffffe1;
+	padding: 2px 5px;
+}
+
+.sort-table tbody {
+	overflow: hidden;
+}
+
+.sort-table tbody tr:hover {
+	background-color: #666666;
+}
+
+.sort-table-container {
+	border: 1px Solid #dddddd;
+	overflow-x: hidden;
+	overflow-y: auto;
+}
+
+.sort-table-select {
+	background-color: #000000;
+}
+
+.sort-table-select:hover {
+	background-color: #333333;
+}
+
+.vertical {
+	height: 200px;
+	width: 29px;
+}

@@ -1,0 +1,83 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function get_dynamic_content($params = '') {
+	i18n('loadLang');
+	return '<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<script type="text/javascript">
+		/*jslint */
+		var currentRow = 0;
+
+		function removeFile(e) {
+			if (!e) {
+				e = window.event;
+			}
+			var target;
+			if (e.target) {
+				target = e.target;
+			} else if (e.srcElement) {
+				target = e.srcElement;
+			}
+			if (target.nodeType == 3) {
+				target = target.parentNode;
+			}
+			var tr = document.getElementById("tr" + target.row);
+			tr.parentNode.removeChild(tr);
+		}
+
+		function addFile() {
+			// Updating the old file input
+			var oldCell = document.getElementById("rm" + currentRow);
+			oldCell.innerHTML = "<img alt=\'\' id=\'rmimg" + currentRow + "\' src=\'index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/delete.png\' />";
+			oldCell.onclick = removeFile;
+			var oldCellImg = document.getElementById("rmimg" + currentRow);
+			oldCellImg.row = currentRow;
+			// Getting the table
+			currentRow++;
+			var table = document.getElementById("tableFiles");
+			var row = table.insertRow(0);
+			// Creating the row
+			row.setAttribute("id","tr" + currentRow);
+			row.insertCell(0).innerHTML = "<input style=\'font-family: Verdana,Arial,sans-serif,FreeSans; font-size: 11px;\' type=\'file\' id=\'file\'+currentRow\' name=\'' . $params[2] . '[" + currentRow + "]\' />";
+			row.insertCell(1).innerHTML = " <div id=\'rm"+currentRow+"\' onClick=\'addFile()\' style=\'cursor: pointer;\'><img alt=\'\' src=\'index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/new.png\' style=\'margin-bottom: -4px;\' /> <span style=\'font-family: Verdana; font-size: 11px;\'>' . utf8_htmlspecialchars(i18n('translate', array('Another file')), ENT_QUOTES) . '</span></div>";
+		}
+	</script>
+	<title></title>
+	<style type="text/css">
+		input {
+			border: 0px solid #dddddd;
+		}
+	</style>
+</head>
+<body>
+	<form action="index.php?checknum=' . $params[0] . '&amp;msg=' . $params[1] . '" enctype="multipart/form-data" method="post">
+		<div>
+			<table border="0" cellspacing="0" id="tableFiles">
+				<tr id="tr0">
+					<td><input id="file0"  name="' . $params[2] . '[0]" style="font-family: Verdana,Arial,sans-serif,FreeSans; font-size: 11px;" type="file" /></td>
+					<td><div id="rm0" onclick="addFile();" style="cursor: pointer;"><img alt="" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/new.png" style="margin-bottom: -4px;" /> <span style="font-family: Verdana,Arial,sans-serif,FreeSans; font-size: 11px;">' . utf8_htmlspecialchars(i18n('translate', array('Another file')), ENT_QUOTES) . '</span></div></td>
+				</tr>
+			</table>
+			<input style=" -moz-border-radius: 3px; -o-border-radius: 3px; -opera-border-radius: 3px; -webkit-border-radius: 3px; border-radius: 3px; background-image: url(index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=images/widgets/buttonbg.png); background-color: #ffffff; background-repeat: repeat-x; background-position: center; border-color:#AEAEAE #7F7F7F #7F7F7F #AEAEAE; border-style: solid; border-width: 1px; cursor: pointer; text-shadow:1px 1px 1px #ffffff; font-family: Verdana; font-size: 11px; height: 22px; margin-top: 18px; margin-left: 30px; text-align: center; width: 100px;" type="submit" value="' . utf8_htmlspecialchars(i18n('translate', array('Upload')), ENT_QUOTES) . '" />
+		</div>
+	</form>
+</body>
+</html>';
+}
+?>

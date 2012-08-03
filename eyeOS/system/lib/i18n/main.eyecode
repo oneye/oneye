@@ -1,0 +1,170 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function lib_i18n_init() {
+	if (isset($_SESSION['lang']) === false) {
+		$_SESSION['lang'] = false;
+	}
+	if (!$_SESSION['lang'] || isset($_REQUEST['lang']) === true && $_REQUEST['lang']) {
+		$dir = EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/i18n/';
+		$langs = array('en');
+		if (is_dir($dir) === true) {
+			foreach (scandir($dir) as $file) {
+				if (substr($file, 0, 1) !== '.' && substr($file, -4) === '.xml') { // utf8
+					$langs[] = basename($file, '.xml');
+				}
+			}
+		}
+		// Use lang from URL
+		$request_lang = $_REQUEST['lang'];
+		if ($request_lang) {
+			if (in_array($request_lang,$langs)) {
+				$_SESSION['lang'] = $request_lang;
+			} elseif (in_array( /* utf8 */ substr($request_lang, 0, 2),$langs)) {
+				$_SESSION['lang'] = /* utf8 */ substr($request_lang, 0, 2);
+			}
+		}
+		// Use lang from the user's browser
+		if (!$_SESSION['lang']) {
+			$temp_user_langs = /* utf8 */ explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
+			foreach ($temp_user_langs as $user_lang) {
+				$user_lang = substr($user_lang, 0, -strpos($user_lang, ';')); // utf8
+				$user_langs[] = substr($user_lang, 0, -strpos($user_lang, '-')); // utf8
+			}
+			foreach ($user_langs as $user_lang) {
+				if (!$_SESSION['lang'] && in_array($user_lang,$langs)) {
+					$_SESSION['lang'] = $user_lang;
+				}
+			}
+			if (!$_SESSION['lang']) {
+				foreach ($user_langs as $user_lang) {
+					if (!$_SESSION['lang'] && in_array( /* utf8 */ substr($user_lang, 0, 2),$langs)) {
+						$_SESSION['lang'] = /* utf8 */ substr($user_lang, 0, 2);
+					}
+				}
+				// If the current session doesn't have a lang, set the default
+				if (!$_SESSION['lang']) {
+					$_SESSION['lang'] = DEFAULT_LANGUAGE;
+				}
+			}
+		}
+	}
+}
+
+/**
+* Loads the desired language file of the specified application.
+*
+* @param $params array(app)
+* @param $app Name of the application.
+* @date 2008/03/11
+*/
+function lib_i18n_loadLang($params) {
+	$paths[] = EYE_ROOT.'/i18n/' . DEFAULT_I18N . EYE_CODE_EXTENSION;
+	$paths[] = EYE_ROOT . '/i18n/' . $_SESSION['lang'] . EYE_CODE_EXTENSION;
+	if ($app = basename($params[0])) {
+		$paths[] = EYE_ROOT . '/' . APP_DIR . '/' . $app . '/lang/' . DEFAULT_I18N . EYE_CODE_EXTENSION;
+		$paths[] = EYE_ROOT . '/' . APP_DIR . '/' . $app . '/lang/' . $_SESSION['lang'] . EYE_CODE_EXTENSION;
+	}
+	foreach ($paths as $path) {
+		if (file_exists($path)) {
+			include_once($path);
+	}
+		}
+		return true;
+}
+
+/**
+* Returns a string translated in the oneye' language of the user.
+*
+* @param $params array(string,[tokens])
+* @param $string Native string of an application to translate.
+* @param $tokens Indexed array containing the value of the tokens appearing
+*	on  the string.
+* @return Returns the translated string into the user's oneye
+*	language.
+* @date 2008/03/11
+*/
+function lib_i18n_translate($params) {
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$string = $params[0];
+	if(isset($params[1])) {
+		$tokens = $params[1];
+	} else {
+		$tokens=null;
+	}
+	//todo: parse tokens
+	global $language;
+	if(isset($language[$string]) && !$tokens) {
+		return $language[$string];
+	}else if(isset($language['share'][$string]) && !$tokens){
+		return $language['share'][$string];
+	}else {
+		if(isset($language[$string])) {
+			$string = $language[$string];
+		}else if(isset($language['share'][$string])){
+			$string = $language['share'][$string];
+		}
+		if(isset($tokens) && !empty($tokens)) {
+			$pieces = /* utf8 */ explode('%s', $string);
+			$string = "";
+			$i = 0;
+			foreach($pieces as $value) {
+				$string .= $pieces[$i];
+				if(isset($tokens[$i])) {
+					$string .= $tokens[$i];
+				}
+				$i++;
+			}
+		}
+		return $string;
+	}
+}
+
+/**
+* Retrieves the oneye language of the user.
+*
+* @return Returns an string with the language of the user's oneye
+*	session.
+* @date 2008/03/11
+*/
+function lib_i18n_getLang($params=null) {
+	return $_SESSION['lang'];
+}
+
+/**
+* Sets the oneye language of the user.
+*
+* @param $params array(lang)
+* @param $lang String containing the international code of the language to
+*	be set as the user's language.
+* @return If the function succeeds, it does not return any value.
+*	Else, if the new language is not specified, return false.
+* @date 2008/03/11
+*/
+function lib_i18n_setLang($params) {
+	if(!isset($params[0])){
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$lang = basename($params[0]);
+	$_SESSION['lang'] = $lang;
+}
+
+?>

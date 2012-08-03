@@ -1,0 +1,10 @@
+<package>
+	<name>killall</name>
+	<category>System</category>
+	<version>1.9</version>
+	<description>Utility to kill a list of processes</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon />
+</package>

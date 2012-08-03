@@ -1,0 +1,246 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+define('EYEFEEDS_WIN_CONFDLG_HEIGHT',260);
+define('EYEFEEDS_WIN_CONFDLG_WIDTH',400);
+
+function eyeFeeds_createSettingsDialog($params=null) {
+	global $checknum, $myPid;
+
+	$savedSettings = eyeFeeds_loadSettings();
+
+	$mainWindow = new Window(array(
+		'name' => 'settings_DLG',
+		'father' => 'eyeFeeds_WND',
+		'cent' => 1,
+		'type' => NOLIST_CLOSE_WINDOW,
+		'width' => EYEFEEDS_WIN_CONFDLG_WIDTH,
+		'height' => EYEFEEDS_WIN_CONFDLG_HEIGHT,
+		'title' => 'eyeFeeds',
+		'removepid' => 0
+	));
+	$mainWindow->show();
+
+	$logo = new Imagebox(array(
+		'name' => 'settings_logo_IMG',
+		'father' => 'settings_DLG_Content',
+		'x' => 10,
+		'y' => 10,
+		'url' => 'index.php?extern=apps/eyeFeeds/gfx/settings_logo.png'
+	));
+	$logo->show();
+
+	//TITLE
+	$title = new Label(array(
+		'name' => 'settings_title_LBL',
+		'father' => 'settings_DLG_Content',
+		'x' => 70,
+		'y' => 16,
+		'text' => 'Settings'
+	));
+	$title->show(0);
+	$title->setCss(array(
+		'font-size' => '16px',
+		'font-weight' => 'bold',
+		'color' => '#004488'
+	));
+
+	//REMARK
+	$remark = new Label(array(
+		'name' => 'settings_remark_LBL',
+		'father' => 'settings_DLG_Content',
+		'x' => 20,
+		'y' => 180,
+		'text' => 'You may restart the application to apply the changes.'
+	));
+	$remark->show(0);
+	$remark->setCss(array(
+		'font-size' => '10px',
+		'font-style' => 'italic',
+		'color' => '#AAAAAA'
+	));
+
+	//LINE
+	$line = new Line(array(
+		'name' => 'settings_line_LIN',
+		'father' => 'settings_DLG_Content',
+		'x' => 10,
+		'y' => 70,
+		'width' => $mainWindow->width -20,
+		'height' => 2
+	));
+	$line->show(0);
+
+	//CANCEL BUTTON
+	$cancelButton = new Button(array(
+		'name' => 'settings_cancel_BTN',
+		'father' => 'settings_DLG_Content',
+		'caption' => 'Cancel',
+		'x' => 230,
+		'y' => 200,
+		'width' => 70,
+		'enabled' => 1
+	));
+	$cancelButton->show(0);
+
+	//SAVE BUTTON
+	$saveButton = new Button(array(
+		'name' => 'settings_save_BTN',
+		'father' => 'settings_DLG_Content',
+		'caption' => 'Accept',
+		'x' => 310,
+		'y' => 200,
+		'width' => 70,
+		'enabled' => 1
+	));
+
+	/**********************************************************/
+	//		INPUT ELEMENTS
+	/**********************************************************/
+
+	//NUMBER OF TITLES LABEL
+	$titlesNumberLabel = new Label(array(
+		'name' => 'settings_titlesNumber_LBL',
+		'father' => 'settings_DLG_Content',
+		'x' => 20,
+		'y' => 90,
+		'text' => 'Number of titles displayed in the list:'
+	));
+	$titlesNumberLabel->show();
+
+	//NUMBER OF TITLES TEXTBOX
+	$titlesNumberTextbox = new Textbox(array(
+		'name' => 'settings_titlesNumber_TXTBOX',
+		'father' => 'settings_DLG_Content',
+		'x' => 270,
+		'y' => 86,
+		'width' => 50,
+		'enabled' => 1,
+		'text' => $savedSettings['titlesNumber'][0]
+	));
+	$titlesNumberTextbox->show();
+
+	//SIZE OF CONTENT PREVIEW LABEL
+	$contentSizeLabel = new Label(array(
+		'name' => 'settings_contentSize_LBL',
+		'father' => 'settings_DLG_Content',
+		'x' => 20,
+		'y' => 110,
+		'text' => 'Size of content preview (char.):'
+	));
+	$contentSizeLabel->show();
+
+	//SIZE OF CONTENT PREVIEW TEXTBOX
+	$contentSizeTextbox = new Textbox(array(
+		'name' => 'settings_contentSize_TXTBOX',
+		'father' => 'settings_DLG_Content',
+		'x' => 270,
+		'y' => 106,
+		'width' => 50,
+		'enabled' => 1,
+		'text' => $savedSettings['contentSize'][0]
+	));
+	$contentSizeTextbox->show();
+
+	//CACHE DURATION LABEL
+	$cacheDurationLabel = new Label(array(
+		'name' => 'settings_cacheDuration_LBL',
+		'father' => 'settings_DLG_Content',
+		'x' => 20,
+		'y' => 130,
+		'text' => 'Feeds cache duration (sec.):'
+	));
+	$cacheDurationLabel->show();
+
+	//CACHE DURATION TEXTBOX
+	$cacheDurationTextbox = new Textbox(array(
+		'name' => 'settings_cacheDuration_TXTBOX',
+		'father' => 'settings_DLG_Content',
+		'x' => 270,
+		'y' => 126,
+		'width' => 50,
+		'enabled' => 1,
+		'text' => $savedSettings['cacheDuration'][0]
+	));
+	$cacheDurationTextbox->show();
+
+	//READING HISTORY DURATION LABEL
+	$readingHistoryDurationLabel = new Label(array(
+		'name' => 'settings_readingHistoryDuration_LBL',
+		'father' => 'settings_DLG_Content',
+		'x' => 20,
+		'y' => 150,
+		'text' => 'Reading history cache duration (days):'
+	));
+	$readingHistoryDurationLabel->show();
+
+	//READING HISTORY DURATION TEXTBOX
+	$readingHistoryDurationTextbox = new Textbox(array(
+		'name' => 'settings_readingHistoryDuration_TXTBOX',
+		'father' => 'settings_DLG_Content',
+		'x' => 270,
+		'y' => 146,
+		'width' => 50,
+		'enabled' => 1,
+		'text' => $savedSettings['readingHistoryDuration'][0]
+	));
+	$readingHistoryDurationTextbox->show();
+
+
+	$saveButton->addFriend($titlesNumberTextbox);
+	$saveButton->addFriend($contentSizeTextbox);
+	$saveButton->addFriend($cacheDurationTextbox);
+	$saveButton->addFriend($readingHistoryDurationTextbox);
+	$saveButton->show(0);
+}
+
+function eyeFeeds_on_settings_cancel_BTN($params=null) {
+	if (is_object($GLOBALS['settings_DLG'])) {
+		$GLOBALS['settings_DLG']->close();
+	}
+}
+
+function eyeFeeds_on_settings_save_BTN($params=null) {
+	$titlesNumber = intval($GLOBALS['settings_titlesNumber_TXTBOX']->text);
+	$contentSize = intval($GLOBALS['settings_contentSize_TXTBOX']->text);
+	$cacheDuration = intval($GLOBALS['settings_cacheDuration_TXTBOX']->text);
+	$readingHistoryDuration = intval($GLOBALS['settings_readingHistoryDuration_TXTBOX']->text);
+
+	$titlesNumber = ($titlesNumber >= 1 && $titlesNumber <= 50)? $titlesNumber : EYEFEEDS_FEEDITEMS_FETCHNUMBER;
+	$contentSize = ($contentSize >= 100 && $contentSize <= 8000)? $contentSize : EYEFEEDS_FEEDITEMS_CONTENT_DISPLAYEDSIZE;
+	$cacheDuration = ($cacheDuration > 0 && $cacheDuration <= 20000)? $cacheDuration : EYEFEEDS_FEEDITEMS_CACHEDURATION;
+	$readingHistoryDuration = ($readingHistoryDuration > 0 && $readingHistoryDuration <= 100)? $readingHistoryDuration : EYEFEEDS_FEEDITEMS_READINGHISTORYDURATION;
+
+	$newSettings = array(
+		'titlesNumber' => array($titlesNumber),
+		'contentSize' => array($contentSize),
+		'cacheDuration' => array($cacheDuration),
+		'readingHistoryDuration' => array($readingHistoryDuration)
+	);
+
+	if (eyeFeeds_saveSettings($newSettings)) {
+		eyeX('messageBox',array('content'=> 'Settings saved successfully'));
+	}
+	else {
+		eyeX('messageBox',array('content'=> 'Error saving settings'));
+	}
+
+	if (is_object($GLOBALS['settings_DLG'])) {
+		$GLOBALS['settings_DLG']->close();
+	}
+}
+
+?>

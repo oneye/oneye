@@ -1,0 +1,15 @@
+[b]Read an item[/b]
+[list]
+[*]Click on a feed in the tree
+[*]The latest items from the feed are loaded in the items list
+[*]Click on an item of the list to display its content in the content area
+[*]Double-click on the item of the list to open eyeNav to the source page
+[/list]
+[i]You can watch or listen to the enclosures element of an item by clicking on the corresponding link at the bottom of the content text.[/i]
+
+
+
+[b]Refresh the items[/b]
+[list]
+[*]While displaying the items of a feed, click the "Refresh" button to force the application fetching the latest items from the source site.
+[/list]

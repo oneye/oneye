@@ -1,0 +1,170 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Toolbar widget abstraction
+*/
+
+class Toolbar {
+	//pid controller
+
+	var $creatorPid;
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//generic widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+
+	var $paintOnClick;
+	var $select;
+	var $friends = array();
+	var $showed = 0;
+
+	function Toolbar($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 0;
+		isset($params['paintOnClick']) ? $this->paintOnClick = $params['paintOnClick'] : $this->paintOnClick = 1;
+		isset($params['select']) ? $this->select = $params['select'] : $this->select = 0;
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function show($noserialize = 1) {
+		$widgetsparams = array(
+			'paintOnClick'=>$this->paintOnClick,
+			'select'=>$this->select
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$myToolbar = array(
+			'name' => $this->name,
+			'x' => 0,
+			'y' => $this->y,
+			'horiz' => 0,
+			'vert' => $this->vert,
+			'father' => $this->father,
+			'widgetname' => 'Toolbar',
+			'params' => $widgetsparams,
+			'center' => 0
+		);
+		$this->showed=1;
+		if ($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+		eyex('createWidget',$myToolbar);
+	}
+
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	function remove() {
+		global $myPid;
+		eyex('removeWidget', array('name' => $this->name));
+	}
+
+	function addGroup($params) {
+		global $myPid;
+		global $checknum;
+		$thefriends = array();
+		$ids = mmap("array2js",array($params));
+		foreach ($params as $value) {
+			isset($friends[$value]) ? $thefriends[$myPid.'_'.$value.'_Container'] = $friends[$value] : $thefriends[$myPid.'_'.$value.'_Container'] = "";
+		}
+		$thefriends = mmap("array2js",array($thefriends));
+		$js = 'Toolbar_groups('.$ids.','.$checknum.','.$myPid.','.$thefriends.');';
+		eyex('rawjs',array('js' => $js));
+	}
+
+	function pressItem($params) {
+		global $myPid;
+		if (is_array($params) === false) {
+			$params = array($params);
+		}
+		foreach ($params as $value) {
+			$js = 'Toolbar_pressed("'.$myPid.'_'.$value.'_Container",true);';
+			eyeX('rawjs',array('js' => $js));
+		}
+	}
+
+	function unpressItem($params) {
+		global $myPid;
+		if (is_array($params) === false) {
+			$params = array($params);
+		}
+		foreach ($params as $value) {
+			$js = 'Toolbar_pressed("'.$myPid.'_'.$value.'_Container",false);';
+			eyeX('rawjs',array('js' => $js));
+		}
+	}
+
+	function addLine($id = '',$right = 0) {
+		global $myPid;
+		$js = 'addLineToBar("'.$myPid.'_'.$this->name.'","' . $id . '",' . $right . ');';
+		eyeX('rawjs',array('js'=>$js));
+	}
+
+	function addItem($itemName,$img,$text,$ofriends=null,$right=0,$height = 22,$width = 22) {
+		global $myPid;
+		global $checknum;
+		$thefriends="''";
+		if(is_array($ofriends)) {
+			foreach($ofriends as $value) {
+				if(method_exists($value,'getSyncString')) {
+					if($thefriends == "''") {
+						$thefriends = $value->getSyncString();
+					} else {
+						$thefriends .= '+'.$value->getSyncString();
+					}
+				}
+			}
+		}
+		$text = i18n('translate',array($text));
+		$thefriends = base64_encode($thefriends);
+		$friends[$itemName] = $thefriends;
+		$tokens = array($itemName,$img,$text);
+		$js = 'addItemToBar("'.$myPid.'_'.$this->name.'", %s , %s , %s ,"'.$thefriends.'",'.$checknum.','.$height.','.$width.','.$right.','.$myPid.');';
+		eyex('runjs',array('js'=>$js,'tokens'=>$tokens));
+		return $itemName;
+	}
+}
+?>

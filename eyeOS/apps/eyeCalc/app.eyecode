@@ -1,0 +1,132 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeCalc_run($params = '') {
+	global $checknum;
+	global $myPid;
+	$xml = eyeXML('getXMLconfig', array('eyeCalc', 'conf.xml'));
+	if ($params['advanced'] || !isset($params['advanced']) && intval($xml['eyeCalc'][0]['advanced'][0])) {
+		$rows = array(
+			array(false, 'delete' => 'Delete', 'ce' => 'CE', 'c' => 'C'),
+			array(false, 'exp' => 'Exp', 'ln' => 'ln', '7' => '7', '8' => '8', '9' => '9', 'divide' => '/', 'sqrt' => 'sqrt'),
+			array('sin' => 'sin', 'xpowy' => 'x^y', 'log' => 'log', '4' => '4', '5' => '5', '6' => '6', 'multiply' => '*', 'percentage' => '%'),
+			array('cos' => 'cos', 'xpowthree' => 'x^3', 'nfactorial' => 'n!', '1' => '1', '2' => '2', '3' => '3', 'minus' => '-', 'onedivx' => '1/x'),
+			array('tan' => 'tan', 'xpowtwo' => 'x^2', 'pi' => 'Pi', 'null' => '0', 'sign' => '+/-', 'dot' => '.', 'plus' => '+', 'equal' => '=')
+		);
+		$caption = 'Simple';
+		$signal = 'Advanced';
+		$width = 288;
+		$xml['eyeCalc'][0]['advanced'][0] = 1;
+	} else {
+		$rows = array(
+			array(false, 'delete' => 'Del', 'ce' => 'CE', 'c' => 'C'),
+			array('7' => '7', '8' => '8', '9' => '9', 'divide' => '/', 'sqrt' => 'sqrt'),
+			array('4' => '4', '5' => '5', '6' => '6', 'multiply' => '*', 'percentage' => '%'),
+			array('1' => '1', '2' => '2', '3' => '3', 'minus' => '-', 'onedivx' => '1/x'),
+			array('null' => '0', 'sign' => '+/-', 'dot' => '.', 'plus' => '+', 'equal' => '=')
+		);
+		$caption = 'Adv.';
+		$signal = 'Simple';
+		$width = 172;
+		$xml['eyeCalc'][0]['advanced'][0] = 0;
+	}
+	eyeXML('setXMLconfig', array('eyeCalc', 'conf.xml', $xml));
+
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => 240,
+		'name' => 'eyeCalc_Window',
+		'savePosition' => 1,
+		'style' => CLOSE + MIN + LISTED + TITLE,
+		'title' => 'Calculator',
+		'width' => $width
+	));
+	$myWindow->show();
+
+	$myTextbox = new Textbox(array(
+		'father' => 'eyeCalc_Window_Content',
+		'name' => 'eyeCalc_Textbox',
+		'text' => '0',
+		'width' => $myWindow->width - 17,
+		'x' => 5,
+		'y' => 5
+	));
+	$myTextbox->show();
+	$myTextbox->focus();
+	$myTextbox->setCss(array(
+		'font-size' => '22px',
+		'height' => '25px',
+		'text-align' => 'right'
+	));
+
+	$myButton = new Button(array(
+		'caption' => $caption,
+		'father' => 'eyeCalc_Window_Content',
+		'height' => 30,
+		'name' => 'eyeCalc_Button_' . $signal,
+		'signal' => $signal,
+		'width' => ($myWindow->width + 3) / 4 - 5,
+		'x' => 5,
+		'y' => 40
+	));
+	$myButton->show();
+	$myButton->setCss(array('color' => 'red'));
+
+	$y = 40;
+	foreach ($rows as $buttons) {
+		$x = 5;
+		foreach ($buttons as $name => $caption) {
+			if ($caption !== false) {
+				if ($name == 'delete' || $name == 'ce' || $name == 'c') {
+					$width = ($myWindow->width + 3) / 4 - 5;
+				} else {
+					$width = 30;
+				}
+				$myButton = new Button(array(
+					'caption' => $caption,
+					'disablemsg' => 1,
+					'father' => 'eyeCalc_Window_Content',
+					'height' => 30,
+					'name' => 'eyeCalc_Button_' . $name,
+					'width' => $width,
+					'x' => $x,
+					'y' => $y
+				));
+				$myButton->show();
+				if ($name == 'delete' || $name == 'ce' || $name == 'c' || $name == 'divide' || $name == 'multiply' || $name == 'minus' || $name == 'plus' || $name == 'equal') {
+					$color = 'red';
+				} else if ($name == 'e' || $name == 'exp' || $name == 'ln' || $name == 'sin' || $name == 'xpowy' || $name == 'log' || $name == 'cos' || $name == 'xpowthree' || $name == 'nfactorial' || $name == 'tan' || $name == 'xpowtwo') {
+					$color = 'fuchsia';
+				} else {
+					$color = 'blue';
+				}
+				$myButton->setCss(array('color' => $color));
+			}
+			$x += ($myWindow->width - 7) / count($buttons);
+		}
+		$y += 35;
+	}
+
+	eyex('loadScript',array('url' => 'index.php?extern=apps/eyeCalc/eyeCalc' . EYE_CODE_EXTENSION . '&type=dynamic&params[]=' . $myPid));
+}
+
+function eyeCalc_end($params = '') {
+	global $myPid;
+	eyeWidgets('unserialize', $params);
+	eyex('rawjs', array('js' => 'eyeCalc_' . $myPid . ' = 0;'));
+}
+?>

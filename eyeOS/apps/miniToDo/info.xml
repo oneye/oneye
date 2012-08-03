@@ -1,0 +1,10 @@
+<package>
+	<name>ToDo Widget</name>
+	<category>Widgets</category>
+	<version>1.0</version>
+	<description>Write a list of thing you need to do.</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Widget</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/repositories.png</icon>
+</package>

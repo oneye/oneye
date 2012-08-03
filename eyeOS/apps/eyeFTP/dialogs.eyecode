@@ -1,0 +1,153 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+include_once(EYE_ROOT.'/'.APP_DIR.'/eyeFTP/hosts'.EYE_CODE_EXTENSION);
+
+/*********************************************************************************************/
+/*   IMAGES URL                                                                              */
+/*********************************************************************************************/
+define('EYEFTP_IMG_CREATEFOLDERDLG_ICON', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/folder.png');
+define('EYEFTP_IMG_RENAMEDLG_ICON', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/rename.png');
+define('EYEFTP_IMG_DELETEDLG_ICON', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/q.png');
+define('EYEFTP_IMG_UPLOADDLG_ICON', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/upload.png');
+/*********************************************************************************************/
+
+
+/**
+ * Creates a dialog box with a textfield in order the user to type the name of the new folder to create
+ *
+ * @see eyeFTP_on_eyeFTP_newFolder_createFolder_BTN()
+ */
+function showCreateFolderDialog() {
+	eyex('messageBox',array(
+		'btn1_capt' => 'Create',
+		'btn1_name' => 'eyeFTP_newFolder_createFolder_BTN',
+		'content' => 'Type the name of the new folder',
+		'father' => 'eyeFTP_WND',
+		'img' => EYEFTP_IMG_CREATEFOLDERDLG_ICON,
+		'textbox_name' => 'eyeFTP_newFolder_TXTBOX',
+		'textbox_event' => 'eyeFTP_newFolder_createFolder_BTN',
+		'title' => 'New folder',
+		'type' => 3,
+		'win_name' => 'eyeFTP_newFolder_DLG',
+		'win_removepid' => 0,
+		'win_style' => TITLE + CLOSE
+	));
+}
+
+
+/**
+ * Creates a dialog box with a textfield in order the user to type the new name of the selected file/folder
+ *
+ * @param array $params
+ * @see eyeFTP_on_eyeFTP_rename_rename_BTN()
+ */
+function showRenameDialog($params = '') {
+	eyex('messageBox',array(
+		'btn1_capt' => 'Rename',
+		'btn1_name' => 'eyeFTP_rename_rename_BTN',
+		'content' => 'Type the new name/location of the file/folder',
+		'father' => 'eyeFTP_WND',
+		'hidden_name' => 'eyeFTP_rename_currentLocation_HID',
+		'hidden_text' => $params['selectedFileLocation'],
+		'img' => EYEFTP_IMG_CREATEFOLDERDLG_ICON,
+		'textbox_name' => 'eyeFTP_rename_TXTBOX',
+		'textbox_event' => 'eyeFTP_rename_rename_BTN',
+		'textbox_text' => $params['displayedFileLocation'],
+		'title' => 'Rename file/folder',
+		'type' => 3,
+		'win_name' => 'eyeFTP_rename_DLG',
+		'win_removepid' => 0,
+		'win_style' => TITLE + CLOSE
+	));
+}
+
+/**
+ * Creates a dialog box asking user for confirmation of file/folder deletion
+ *
+ * @param array $params
+ * @see eyeFTP_on_eyeFTP_delete_deleteYes_BTN()
+ * @see eyeFTP_on_eyeFTP_delete_deleteNo_BTN()
+ */
+function showConfirmDeleteDialog($params = '') {
+	eyex('messageBox',array(
+		'btn1_capt' => 'Yes',
+		'btn1_name' => 'eyeFTP_delete_deleteYes_BTN',
+		'btn2_capt' => 'No',
+		'btn2_name' => 'eyeFTP_delete_deleteNo_BTN',
+		'content' => 'Are you sure you want to delete this file/folder?',
+		'father' => 'eyeFTP_WND',
+		'hidden_name' => 'eyeFTP_delete_serializedFileInfos_HID',
+		'hidden_text' => $params['serializedFileInfos'],
+		'img' => EYEFTP_IMG_DELETEDLG_ICON,
+		'title' => 'Delete file/folder',
+		'type' => 3,
+		'win_name' => 'eyeFTP_delete_DLG',
+		'win_removepid' => 0,
+		'win_style' => TITLE + CLOSE
+	));
+}
+
+/**
+ * Creates a dialog box with a file input in order the user to select a file to upload
+ *
+ * @see
+ */
+function showUploadDialog($params=null) {
+	global $checknum;
+	$uploadWindow = new Window(array(
+		'name' => 'eyeFTP_upload_DLG',
+		'father' => 'eyeFTP_WND',
+		'type' => NOLIST_CLOSE_WINDOW,
+		'cent' => 1,
+		'width' => 350,
+		'height' => 170,
+		'title' => 'Upload a file',
+		'removepid' => 0
+	));
+	$uploadWindow->show();
+	eyeWidgets('serialize',array($uploadWindow));
+
+	$myFrame = new Iframe(array(
+		'name' => 'eyeFTP_upload_FRM',
+		'father' => 'eyeFTP_upload_DLG_Content',
+		'x' => 100,
+		'y' => 5,
+		'height' => 120,
+		'width' => 240,
+		'url' => 'index.php?checknum='.$checknum.'&msg=eyeFTP_uploadRemote_initForm&params[]='.urlencode($params['displayedPath']),
+		'scroll' => 1
+	));
+	$myFrame->show();
+	$myFrame->focus();
+
+	$myHidden = new Hidden(array(
+		'name' => 'eyeFTP_upload_path_HID',
+		'father' => 'eyeFTP_upload_DLG_Content',
+		'text' => $params['path']
+	));
+	eyeWidgets('serialize',array($myHidden));
+
+	$myImage = new Imagebox(array(
+		'name' => 'eyeFTP_upload_IMG',
+		'father' => 'eyeFTP_upload_DLG_Content',
+		'url' => EYEFTP_IMG_UPLOADDLG_ICON,
+		'x' => 30,
+		'y' => 38
+	));
+	$myImage->show();
+}
+?>

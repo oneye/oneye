@@ -1,0 +1,66 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeDownload_on_Close($params = '') {
+	proc('end');
+}
+
+function eyeDownload_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeDownload_on_iframe($params = '') {
+	global $checknum;
+	header('Content-type: text/html');
+	i18n('loadLang',array('eyeUpload'));
+	echo '<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title></title>
+	</head>
+	<body id="body" style="color: #000000; font-family: Verdana,Arial,sans-serif,FreeSans; font-size: 11px; font-weight: bold; margin-top: 35px; text-align: center;">
+		<a href="index.php?msg=download&checknum=' . $checknum . '" style="color: #000000;" onclick="e = document.getElementById(\'body\').innerHTML = \'' . utf8_htmlspecialchars(i18n('translate', array('You can close this window now.')), ENT_QUOTES) . '\';">' . utf8_htmlspecialchars(i18n('translate', array('Download!')), ENT_QUOTES) . '</a>
+	</body>
+</html>';
+	exit;
+}
+
+function eyeDownload_on_download($params = '') {
+	global $myPid;
+	$path = $_SESSION['eyeDownload'][$myPid];
+	$file = basename($path);
+	$path = eyeFiles('cleanPath', array(substr(trim($path, '/\\'), 0, -strlen($file)))); // utf8
+	header('Content-Disposition: attachment; filename="' . $file . '"');
+	if ($path[1] == 'real') {
+		header('Content-Length: ' . vfs('real_filesize',array($path[0] . '/' . $file)));
+	} else {
+		header('Content-Length: ' . vfs('filesize',array($path[0] . '/' . $file)));
+	}
+	header('Content-Type: application/octet-stream');
+	header('Accept-Ranges: bytes');
+	if ($path[1] == 'real') {
+		readfile($path[0] . '/' . $file);
+	} else {
+		vfs('readfile',array($path[0] . '/' . $file));
+	}
+	eyeWidgets('rawunserialize');
+	proc('end');
+	unset($_SESSION['eyeDownload'][$myPid]);
+	exit;
+}
+?>

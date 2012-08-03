@@ -1,0 +1,104 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	oneye security service
+*/
+
+function service_sec_init($params = null) {
+
+}
+
+/**
+* Return the protected ip sessions state
+*
+* @return returns a boolean with the state of protected ip sessions
+* @date 2009/02/24
+*/
+function service_sec_protectedIpSessions($params = null) {
+	$config = eyeXML('getXMLconfig',array('sec','conf.xml'));
+	return $config['security'][0]['PROTECTED_IP_SESSIONS'][0];
+}
+
+/**
+* Cleans a desired string, allowing the possibility to eliminate newline
+* and carriage return characters, replacing HTML special characters to
+* entities or adjusting the string to a given length.
+*
+* @param $params array(var,[maxLen],[nohtml],[noreturn])
+* @param $var String to be cleaned.
+* @param $maxLen If set, limits the length of the string to the specified
+*	value.
+* @param $nohtml If set, converts the special characters to HTML entities.
+* @param $noreturn If set, eliminates all carriage return and newline
+*	characters.
+* @return Returns the string with the specified clean methods applied.
+* @date 2008/03/11
+*/
+function service_sec_cleanOutPutString($params) {
+	if(!isset($params['var'])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$string = $params['var'];
+
+	if(isset($params['nohtml'])) {
+		$string = utf8_htmlspecialchars($string, ENT_QUOTES);
+	}
+	if(isset($params['maxLen']) && is_numeric($params['maxLen']) && $params['maxLen'] > 0) {
+		$string = utf8_substr($string, 0, $params['maxLen']);
+	}
+	if(isset($params['noreturn'])) {
+		$string = str_replace("\n",'',$string);
+		$string = str_replace("\r",'',$string);
+	}
+	return $string;
+}
+
+/**
+* Unsets the global variables and performs a cleanup of predefined PHP
+* variables _POST, _GET, _REQUEST and _COOKIE.
+*
+* @return This function does not return any value.
+* @date 2008/03/11
+*/
+function service_sec_start($params=null){
+	if (ini_get('register_globals')) {
+	    $rg = array_keys($_REQUEST);
+	    foreach($rg as $var) {
+	        if ($_REQUEST[$var] === $$var) {
+	            unset($$var);
+	        }
+	    }
+	}
+
+	if (@get_magic_quotes_gpc() == 1) {
+		$_POST =multidimensionalArrayMap('stripslashes', $_POST);
+		$_REQUEST =multidimensionalArrayMap('stripslashes', $_REQUEST);
+		$_GET = multidimensionalArrayMap('stripslashes', $_GET);
+		$_COOKIE = multidimensionalArrayMap('stripslashes', $_COOKIE);
+	}
+}
+
+function multidimensionalArrayMap($func, $arr) {
+	$newArr = array();
+	foreach($arr as $key => $value) {
+		$newArr[ $key ] = (is_array($value) ? multidimensionalArrayMap($func, $value) : $func($value));
+	}
+	return $newArr;
+}
+
+?>

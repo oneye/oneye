@@ -1,0 +1,10 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_number_format($number, $decimals = 0, $dec_point = '.', $thousands_sep = ',') {
+	$number = explode('.', number_format($number, $decimals));
+	$number[0] = str_replace(',', $thousands_sep, $number[0]);
+	return implode($dec_point, $number);
+}
+?>

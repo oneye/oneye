@@ -1,0 +1,50 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+$displayImage = '';
+$displayText = '';
+if (isset($element[0]['hideImage']) === true && $element[0]['hideImage'][0]) {
+	$displayImage = 'none';
+} else if (isset($element[0]['hideText']) === true && $element[0]['hideText'][0]) {
+	$displayText = 'none';
+}
+
+eyex('createDiv',array(
+	'class' => 'eyeDock_' . $type . '_' . $place . '_icon',
+	'father' => 'eyeDock_' . $type,
+	'name' => 'eyeDock_' . $type . '_' . $place . '_' . $id
+));
+eyex('runjs',array(
+	'js' => 'var e = document.getElementById("' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '"); e.innerHTML = %s; e.onclick = function (e) { if (DockMenu.OnClick(e)) { sendMsg(' . $checknum . ',"Command",eyeParam("type",%s) + eyeParam("place",%s) + eyeParam("id",%s)); } }; var i = document.getElementById("' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '"); i.title = %s; fixPNG(i);',
+	'tokens' => array('<img alt="" class="eyeDock_' . $type . '_' . $place . '_icon_img" id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_img" src="' . str_replace('theme=USERTHEME', 'theme=' . $_SESSION['usertheme'], $element[0]['image'][0]) . '" style="display: ' . $displayImage . '; height: 22px; width: 22px;" /><div class="eyeDock_' . $type . '_' . $place . '_icon_div" id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_div" style="display: ' . $displayText . ';">' . utf8_htmlspecialchars(i18n('translate', array($element[0]['text'][0])), ENT_NOQUOTES, 'UTF-8') . '</div>',$type,$place,$id,i18n('translate', array($element[0]['text'][0])))
+));
+
+$myContextMenu = new ContextMenu(array(
+	'father' => 'eyeDock_' . $type . '_' . $place . '_' . $id,
+	'name' => 'eyeDock_' . $type . '_' . $place . '_' . $id . '_context',
+	'searchFather' => 1
+));
+$myContextMenu->show();
+$params = '<type>' . $type . '</type><place>' . $place . '</place><id>' . $id . '</id>';
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_moveup_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/back.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Move left')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_context_moveup','MoveUp',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_moveup_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_movedown_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/forward.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Move right')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_context_movedown','MoveDown',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_movedown_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changecommand_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/rename.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Change command')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changecommand','ChangeCommand',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changecommand_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changeimage_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/wallpaper.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Change image')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changeimage','ChangeImage',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changeimage_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changetext_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/rename.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Change text')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changetext','ChangeText',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_changetext_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_showhideimage_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/upload.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Show / Hide image')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_context_showhideimage','ShowHideImage',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_showhideeimage_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_showhidetext_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/upload.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Show / Hide text')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_context_showhidetext','ShowHideText',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_showhidetext_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_remove_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/delete.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Remove')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_context_remove','Remove',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_context_remove_img');
+?>

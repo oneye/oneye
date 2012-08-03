@@ -1,0 +1,21 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strrpos($haystack, $needle, $offset = 0) {
+	if ($offset < 0) {
+		$haystack = mb_substr($haystack, 0, $offset + 1, 'UTF-8');
+		if ($haystack === '') {
+			return false;
+		}
+	}
+	$encoding = mb_internal_encoding();
+	mb_internal_encoding('UTF-8');
+	$return = mb_strrpos($haystack, $needle);
+	mb_internal_encoding($encoding);
+	if ($return === false || $offset > 0 && $return < $offset) {
+		return false;
+	}
+	return $return;
+}
+?>

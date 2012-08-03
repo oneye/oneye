@@ -1,0 +1,15 @@
+<eyeMail>
+	<servers>
+		<server>
+			<name>Gmail</name>
+			<domain>gmail.com</domain>
+			<type>imap</type>
+			<typehost>imap.gmail.com</typehost>
+			<typeport>993</typeport>
+			<typessl>1</typessl>
+			<smtphost>smtp.gmail.com</smtphost>
+			<smtpport>465</smtpport>
+			<smtpssl>1</smtpssl>
+		</server>
+	</servers>
+</eyeMail>

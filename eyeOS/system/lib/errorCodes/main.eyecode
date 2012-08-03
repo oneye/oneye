@@ -1,0 +1,95 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Error code library for oneye
+*/
+
+function lib_errorCodes_loadCodes($params=null){
+	global $errorCode;
+	$errorCode = "";
+
+	//kernel & generic errorCodes -1/-99
+	define('ERROR_SERVICE_NOT_EXIST',-1);
+	define('ERROR_LIB_NOT_EXIST',-2);
+	define('SERVICE_FUNC_NOT_FOUND',-3);
+	define('ERROR_FUNC_NOT_FOUND',-4);
+	define('INCORRECT_PARAMS',-5);
+	define('FEATURE_NOT_SUPPORTED',-6);
+
+	//vfs service errorCodes -100/-199
+	define('VFS_INSUFFICIENT_PERMISSIONS',-100);
+	define('VFS_FILE_ALREADY_EXISTS',-102);
+	define('VFS_FILE_NOT_EXISTS',-103);
+	define('VFS_DIR_NOT_EXISTS',-104);
+	define('VFS_FILE_NOT_FOUND',105);
+	define('VFS_INVALID_CHARS',106);
+
+	//Proc service errorCodes -200/-299
+	define('PROC_APP_NOT_ARE_RUNNING',-200);
+	define('PROC_APP_ALREADY_RUNNING',-201);
+	define('PROC_APP_NOT_FOUND',-202);
+	define('PROC_APP_DONT_HAVE_RUN_FUNCTION',-203);
+
+	//um service errorCodes -300/-399
+	define('UM_USER_PERMISSIONS',-300);
+	define('UM_USER_ALREADY_EXISTS',-301);
+	define('UM_USERNAME_REQUIRED',-302);
+	define('UM_USER_NOT_EXISTS',-303);
+	define('UM_USER_IS_DISABLED',-304);
+
+	//php native errorCodes -500/599
+	define('PHP_ERROR_ON_FOPEN',-500);
+	define('PHP_ERROR_ON_UNLINK',-501);
+	define('PHP_ERROR_ON_COPY',-502);
+	define('PHP_ERROR_ON_MKDIR',503);
+}
+
+/**
+* Sets the error code to a given value.
+*
+* @param $params array(ecode)
+* @param $ecode Numerical value of the new error code.
+* @return If no error code is specified, returns false. Else, this
+*	function does not return any value.
+* @date 2008/03/11
+*/
+function lib_errorCodes_setErrorCode($params) {
+
+	if(!is_array($params) || !isset($params[0])) {
+		return false;
+	}
+
+	global $errorCode;
+	$errorCode = $params[0];
+
+	return true;
+}
+
+/**
+* Gets the numerical value of the last error occurred.
+*
+* @return This function always returns the value of the global
+*	'errorCode' variable. It can be null if no error has been
+*	raised or an integer number otherwise.
+* @date 2008/03/11
+*/
+function lib_errorCodes_getErrorCode($params=null) {
+	global $errorCode;
+	return $errorCode;
+}
+
+?>

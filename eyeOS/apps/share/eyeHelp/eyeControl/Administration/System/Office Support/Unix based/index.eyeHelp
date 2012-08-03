@@ -1,0 +1,46 @@
+    [b]Below is a few thing that is needed. How you install them will vary from distribution to distribution. So please navigate to your Distro[/b]
+
+Install OpenOffice (oneye uses OpenOffice to convert formats). 
+Install xvfb (OpenOffice needs a X server to be executed in).
+ 
+	Make sure that the owner of the home directory of the apache user (www-data or nobody in some installations) is the apache user. For example, in Debian installations the apache user is www-data and the home for the user is /var/www but this directory is owned by root. You can change the home for apache user to /tmp if you don't want to change the owner or create a new directory. 
+
+[b]Copy[/b] 
+[code] 
+youroneyeDir/oneye_xxxxxx/extras/OpenOffice/oneye.xba 
+[/code]
+from the oneye installation directory to 
+
+[code]  
+/usr/lib/openoffice/share/basic/Tools/
+[/code]
+
+[b]Edit[/b] 
+
+[code]  
+/usr/lib/openoffice/share/basic/Tools/script.xlb
+[/code]
+
+and add 
+
+[code]library:element library:name="eyeOS"/[/code]
+
+under 
+
+[code]library:element library:name="Debug"/[/code]
+
+:should look like this 
+
+[code]library:element library:name="Debug"/
+library:element library:name="eyeOS"/[/code]
+
+After that you may open a terminal and type in 
+
+[code]  
+Xvfb :1 -ac -screen 0 800x600x16 -fbdir /tmp &
+[/code]
+
+type as shown xvfb will not work must be Xvfb 
+
+
+You may want to visit the [url=http://wiki.eyeos.org/Setting_Up_Office_Linux]our wiki page[/url] for more information and examples  

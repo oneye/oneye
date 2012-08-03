@@ -1,0 +1,237 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Calendar widget abstraction
+*/
+
+class Calendar{
+	//pid controller
+
+	var $creatorPid;
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//generic widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+
+	var $showed = 0;
+
+	//custom widget options
+	var $width;
+	var $height;
+	var $visible;
+	var $rowsAndDate;
+	var $workDays;
+	var $preMonthDays;
+	var $nextMonthDays;
+	var $weekEnd;
+	var	$backgroundNames;
+	var	$todayBorder;
+	var	$todayBackground;
+	var	$todayFontColor;
+	var	$toWeekBackground;
+	var $clickedBorder;
+	var $clickedWeek;
+	var	$dayName;
+	var $selectFunc;
+	var $forceDate;
+	var $drawOnClick;
+	var $drawServerDate;
+	var $drawHighlight;
+	var $startMonday;
+	function Calendar($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
+		isset($params['visible'])? $this->visible = $params['visible'] : $this->visible = 1;
+
+		//especific window options
+		isset($params['width']) ? $this->width = $params['width'] : $this->width = 200;
+		isset($params['height']) ? $this->height = $params['height'] : $this->height = 200;
+		isset($params['rowsAndDate']) ? $this->rowsAndDate = $params['rowsAndDate'] : $this->rowsAndDate = '#145689';
+		isset($params['workDays']) ? $this->workDays = $params['workDays'] : $this->workDays= 'black';
+		isset($params['preMonthDays']) ? $this->preMonthDays = $params['preMonthDays'] : $this->preMonthDays = '#bbbbbb';
+		isset($params['nextMonthDays']) ? $this->nextMonthDays = $params['nextMonthDays'] : $this->nextMonthDays = '#bbbbbb';
+		isset($params['weekEnd']) ? $this->weekEnd = $params['weekEnd'] : $this->weekEnd = '#2E7ABB';
+		isset($params['backgroundNames']) ? $this->backgroundNames = $params['backgroundNames'] : $this->backgroundNames = '#4886CE';
+		isset($params['todayBorder']) ? $this->todayBorder = $params['todayBorder'] : $this->todayBorder = '#5C5C5C';
+		isset($params['todayBackground']) ? $this->todayBackground = $params['todayBackground'] : $this->todayBackground = '#737373';
+		isset($params['todayFontColor']) ? $this->todayFontColor = $params['todayFontColor'] : $this->todayFontColor = '#FFF';
+		isset($params['toWeekBackground']) ? $this->toWeekBackground = $params['toWeekBackground'] : $this->toWeekBackground = '#E1E1E1';
+		isset($params['clickedWeek']) ? $this->clickedWeek = $params['clickedWeek'] : $this->clickedWeek = '#C7DFF6';
+		isset($params['clickedBorder']) ? $this->clickedBorder = $params['clickedBorder'] : $this->clickedBorder = '#558FC7';
+		isset($params['dayName']) ? $this->dayName = $params['dayName'] : $this->dayName = '#FFF';
+		isset($params['selectFunc']) ? $this->selectFunc = $params['selectFunc'] : $this->selectFunc = 'changeDate';
+		isset($params['drawOnClick']) ? $this->drawOnClick = $params['drawOnClick'] : $this->drawOnClick = 0;
+		isset($params['drawServerDate']) ? $this->drawServerDate = $params['drawServerDate'] : $this->drawServerDate = '';
+		isset($params['drawHighlight']) ? $this->drawHighlight = $params['drawHighlight'] : $this->drawHighlight = 0;
+		isset($params['forceDate']) ? $this->forceDate = $params['forceDate'] : $this->forceDate = '';
+		isset($params['startMonday']) ? $this->startMonday = $params['startMonday'] : $this->startMonday = 0;
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function show() {
+		global $myPid;
+		$i18nMonths = array(i18n('translate',array('January')),
+							i18n('translate',array('February')),
+							i18n('translate',array('March')),
+							i18n('translate',array('April')),
+							i18n('translate',array('May')),
+							i18n('translate',array('June')),
+							i18n('translate',array('July')),
+							i18n('translate',array('August')),
+							i18n('translate',array('September')),
+							i18n('translate',array('October')),
+							i18n('translate',array('November')),
+							i18n('translate',array('December')));
+		$months = mmap('array2jsArg',array($i18nMonths,1));
+		$i18nWeekDays = array(i18n('translate',array('S')),
+							i18n('translate',array('M')),
+							i18n('translate',array('T')),
+							i18n('translate',array('W')),
+							i18n('translate',array('TH')),
+							i18n('translate',array('F')),
+							i18n('translate',array('SA')));
+		if($this->startMonday == 1){
+			$sun = $i18nWeekDays[0];
+			array_shift($i18nWeekDays);
+			$i18nWeekDays[] = $sun;
+		}
+		$weekDays = mmap('array2jsArg',array($i18nWeekDays,1));
+		$widgetsparams = array(
+			'height' => $this->height,
+			'width' => $this->width,
+			'visible' => $this->visible,
+			'selectFunc' => $this->selectFunc,
+			'rowsAndDate'=>$this->rowsAndDate,
+			'workDays'=>$this->workDays,
+			'nextMonthDays'=>$this->nextMonthDays,
+			'preMonthDays'=>$this->preMonthDays,
+			'weekEnd'=>$this->weekEnd,
+			'todayBorder'=>$this->todayBorder,
+			'todayBackground'=>$this->todayBackground,
+			'todayFontColor'=>$this->todayFontColor,
+			'toWeekBackground'=>$this->toWeekBackground,
+			'backgroundNames'=>$this->backgroundNames,
+			'dayName'=>$this->dayName,
+			'clickedWeek'=>$this->clickedWeek,
+			'clickedBorder'=>$this->clickedBorder,
+			'forceDate'=>$this->forceDate,
+			'drawOnClick'=>$this->drawOnClick,
+			'drawServerDate'=>$this->drawServerDate,
+			'drawHighlight'=>$this->drawHighlight,
+			'monthNames'=>$months,
+			'weekDays'=>$weekDays,
+			'startMonday'=>$this->startMonday,
+			'myPid'=>$myPid
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$myBox = array(
+			'name' => $this->name,
+			'x' => $this->x,
+			'y' => $this->y,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'father' => $this->father,
+			'widgetname' => 'Calendar',
+			'params' => $widgetsparams,
+			'center' => $this->cent
+		);
+		$this->showed=1;
+		eyex('createWidget',$myBox);
+		eyeWidgets('serialize',array($this));
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	function setWidth($width) {
+		global $myPid;
+		$this->width = intval($width);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.width="'.$this->width.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.width="'.$this->width.'px";'));
+	}
+
+	function setHeight($height) {
+		global $myPid;
+		$this->height = intval($height);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.height="'.$this->height.'px";'));
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.height="'.$this->height.'px";'));
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.top="'.$this->y.'px";'));
+	}
+
+	function remove() {
+		global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="none"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="block"'));
+	}
+}
+?>

@@ -1,0 +1,168 @@
+<map>
+	<infos>
+		<author>Matthew Powell</author>
+		<description>X is not the spot!!</description>
+		<name>mineField</name>
+		<version>1.0</version>
+	</infos>
+	<field>
+		<className>eyeCatch_mineField_field</className>
+		<width>750</width>
+		<height>450</height>
+	</field>
+	<player>
+		<className>eyeCatch_mineField_player</className>
+		<left>650</left>
+		<top>100</top>
+		<width>48</width>
+		<height>48</height>
+	</player>
+	<speed>
+		<0>80</0>
+		<100>60</100>
+		<200>40</200>
+		<300>30</300>
+		<400>20</400>
+		<500>10</500>
+	</speed>
+	<holes>
+		<hole>
+			<className>eyeCatch_mineField_hole_top_center</className>
+			<message />
+			<left>130</left>
+			<top>0</top>
+			<width>210</width>
+			<height>15</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_top_right</className>
+			<message />
+			<left>577</left>
+			<top>0</top>
+			<width>175</width>
+			<height>30</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_x</className>
+			<message />
+			<left>15</left>
+			<top>15</top>
+			<width>18</width>
+			<height>19</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_x</className>
+			<message />
+			<left>173</left>
+			<top>305</top>
+			<width>18</width>
+			<height>19</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_x</className>
+			<message />
+			<left>473</left>
+			<top>285</top>
+			<width>18</width>
+			<height>19</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_x</className>
+			<message />
+			<left>73</left>
+			<top>415</top>
+			<width>18</width>
+			<height>19</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_x</className>
+			<message />
+			<left>373</left>
+			<top>15</top>
+			<width>18</width>
+			<height>19</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_x</className>
+			<message />
+			<left>241</left>
+			<top>124</top>
+			<width>18</width>
+			<height>19</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_right_top</className>
+			<message />
+			<left>520</left>
+			<top>100</top>
+			<width>30</width>
+			<height>90</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_right_bottom</className>
+			<message />
+			<left>520</left>
+			<top>260</top>
+			<width>30</width>
+			<height>90</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_bottom_center</className>
+			<message />
+			<left>130</left>
+			<top>435</top>
+			<width>210</width>
+			<height>15</height>
+		</hole>
+		<hole>
+			<className>eyeCatch_mineField_hole_bottom_right</className>
+			<message />
+			<left>577</left>
+			<top>420</top>
+			<width>175</width>
+			<height>30</height>
+		</hole>
+	</holes>
+	<enemies>
+		<enemy>
+			<className>eyeCatch_mineField_enemy1</className>
+			<message />
+			<left>317</left>
+			<top>60</top>
+			<width>44</width>
+			<height>44</height>
+			<movex>-10</movex>
+			<movey>12</movey>
+		</enemy>
+		<enemy>
+			<className>eyeCatch_mineField_enemy2</className>
+			<message />
+			<left>386</left>
+			<top>339</top>
+			<width>88</width>
+			<height>44</height>
+			<movex>-12</movex>
+			<movey>-20</movey>
+		</enemy>
+		<enemy>
+			<className>eyeCatch_mineField_enemy3</className>
+			<message />
+			<left>70</left>
+			<top>320</top>
+			<width>44</width>
+			<height>44</height>
+			<movex>15</movex>
+			<movey>-13</movey>
+		</enemy>
+		<enemy>
+			<className>eyeCatch_mineField_enemy4</className>
+			<message />
+			<left>70</left>
+			<top>70</top>
+			<width>44</width>
+			<height>88</height>
+			<movex>17</movex>
+			<movey>11</movey>
+		</enemy>
+	</enemies>
+</map>

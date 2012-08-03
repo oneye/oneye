@@ -1,0 +1,35 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+eyex('createDiv',array(
+	'class' => 'eyeDock_' . $type . '_' . $place . '_menu_entry_space',
+	'father' => 'eyeDock_' . $type . '_' . $place . '_' . $id . '_entries',
+	'name' => 'eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2
+));
+eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '").style.height = "' . intval($entry[0]['height'][0]) . 'px";'));
+
+$myContextMenu = new ContextMenu(array(
+	'father' => 'eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2,
+	'name' => 'eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context',
+	'searchFather' => 1
+));
+$myContextMenu->show();
+$params = '<type>' . $type . '</type><place>' . $place . '</place><id>' . $id . '</id><entry>' . $id2 . '</entry>';
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_moveup_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/restore.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Move up')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_moveup','MoveUp',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_moveup_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_movedown_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/download.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Move down')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_movedown','MoveDown',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_movedown_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_changeheight_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/rename.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Change height')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_changeheight','ChangeHeight',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_changeheight_img');
+$myContextMenu->addEntry('<img id="' . $myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_remove_img" style="height: 16px; width: 16px;" src="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/16x16/delete.png" /> &nbsp;' . utf8_htmlspecialchars(i18n('translate', array('Remove')), ENT_QUOTES),'eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_remove','Remove',$params,$myPid . '_eyeDock_' . $type . '_' . $place . '_' . $id . '_entry' . '_' . $id2 . '_context_remove_img');
+?>

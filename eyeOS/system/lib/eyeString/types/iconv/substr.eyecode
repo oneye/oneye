@@ -1,0 +1,15 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_substr($string, $start, $length = null) {
+	if ($length === null) {
+		$encoding = iconv_get_encoding('internal_encoding');
+		iconv_set_encoding('internal_encoding', 'UTF-8');
+		$return = iconv_substr($string, $start);
+		iconv_set_encoding('internal_encoding', $encoding);
+		return $return;
+	}
+	return iconv_substr($string, $start, $length, 'UTF-8');
+}
+?>

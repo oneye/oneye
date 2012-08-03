@@ -1,0 +1,12 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_lcfirst($str) {
+	if ($str === '') {
+		return '';
+	}
+	$char = utf8_substr($str, 0, 1);
+	return utf8_strtolower($char) . substr($str, strlen($char));
+}
+?>

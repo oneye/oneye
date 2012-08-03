@@ -1,0 +1,8 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strpos($haystack, $needle, $offset = 0) {
+	return iconv_strpos($haystack, $needle, $offset, 'UTF-8');
+}
+?>

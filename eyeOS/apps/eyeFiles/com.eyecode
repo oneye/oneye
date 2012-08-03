@@ -1,0 +1,56 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeFiles_com_onEvent($params = '') {
+	global $checknum;
+	global $myPid;
+	eyeWidgets('updateContent');
+	$path = eyeFiles('cleanPath',array($GLOBALS['eyeFiles_Hidden_Path']->text));
+	$load = false;
+	$trash = false;
+	foreach ($params as $value) {
+		$value = eyeFiles('cleanPath',array($value));
+		if ($value[0] == $path[0] || $value[1] . '://' . $value[2] == $path[1] . '://' . $path[2]) {
+			$load = true;
+		}
+		if ($value[1] == 'trash') {
+			$trash = true;
+		}
+	}
+	if ($load === true) {
+		include_once(EYE_ROOT . '/' . APP_DIR . '/eyeFiles/events' . EYE_CODE_EXTENSION);
+		eyeFiles_on_OpenPath();
+	}
+	if ($trash === true) {
+		if (count(vfs('getDirContent',array(um('getCurrentUserDir') . '/' . TRASH_USER_DIR . '/')))) {
+			$full = '_full';
+		}
+		eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeFiles_Toolbar");
+for (var i = 0; i < e.childNodes.length; i++) {
+	if (e.childNodes[i].id == "' . $myPid . '_Trash_Container") {
+		e.childNodes[i].childNodes[0].src = "index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/trash' . $full . '.png";
+	}
+}'));
+	}
+}
+
+function eyeFiles_com_fullResized($params = '') {
+	eyeWidgets('updateContent',$params);
+	if ($GLOBALS['eyeFiles_Window']->fullScreen) {
+		$GLOBALS['eyeFiles_Window']->listenerResizeFullScreen($params);
+	}
+}
+?>

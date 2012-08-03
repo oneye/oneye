@@ -1,0 +1,10 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_str_shuffle($str) {
+	$array = utf8_str_split($str);
+	shuffle($array);
+	return implode('', $array);
+}
+?>

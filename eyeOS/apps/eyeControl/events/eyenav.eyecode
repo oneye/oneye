@@ -1,0 +1,149 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_eyenav_test($params = '') {
+	proc('launch',array('eyeNav',$GLOBALS['eyeControl_eyenav_textbox_startpage']->text));
+}
+
+function eyeControl_on_eyenav_save($params = '') {
+	$xml = eyeControl_lib_getXMLconfig(array('eyeNav','conf.xml'));
+	$xml['eyeNav'][0]['home'][0] = $GLOBALS['eyeControl_eyenav_textbox_startpage']->text;
+	$plugin = $params['eyeControl_eyenav_select_plugin'][0];
+	if (vfs('real_fileExists',array(EYE_ROOT . '/' . APP_DIR . '/eyeNav/plugins/' . $plugin . EYE_CODE_EXTENSION))) {
+		$xml['eyeNav'][0]['plugin'][0] = $plugin;
+	} else {
+		$xml['eyeNav'][0]['plugin'][0] = 'iframe';
+	}
+	eyeControl_lib_setXMLconfig(array('eyeNav','conf.xml',$xml));
+	eyex('messageBox',array('content' => 'Changes successfully saved.'));
+}
+
+function eyeControl_on_eyenav_export($params = '') {
+	global $checknum;
+	proc('launch',array('eyeDialog',array(1,'eyenav_export_now',$checknum,'eyeNav.xml')));
+}
+
+function eyeControl_on_eyenav_export_now($params = '') {
+	$old = eyeControl_lib_getXMLconfig(array('eyeNav','conf.xml'));
+	$xml['eyeNav'][0]['bookmarks'][0] = $old['eyeNav'][0]['bookmarks'][0];
+	$xml['eyeNav'][0]['searches'][0] = $old['eyeNav'][0]['searches'][0];
+	$url = eyeControl_lib_getConfigUserPath() . '/' . FILES_USER_DIR . '/' . $params['arg'][0];
+	vfs('create',array($url));
+	eyeXML('setXMLfile',array(vfs('getRealName',array($url)),$xml));
+	eyex('messageBox',array('content' => 'Bookmarks and search engines successfully exported.'));
+}
+
+function eyeControl_on_eyenav_bookmarks_import($params = '') {
+	global $checknum;
+	proc('launch',array('eyeDialog',array(0,'eyenav_bookmarks_import_now',$checknum)));
+}
+
+function eyeControl_on_eyenav_bookmarks_import_now($params = '') {
+	$url = eyeControl_lib_getConfigUserPath() . '/' . FILES_USER_DIR . '/' . $params['arg'][0];
+	$xml = eyeXML('getXMLfile',array(vfs('getRealName',array($url))));
+	if (!$xml['eyeNav'][0]['bookmarks'][0] || !is_array($xml['eyeNav'][0]['bookmarks'][0])) {
+		eyex('messageBox',array('content' => 'The selected file is not an eyeNav bookmarks file.'));
+	} else {
+		$old = eyeControl_lib_getXMLconfig(array('eyeNav','conf.xml'));
+		$old['eyeNav'][0]['bookmarks'][0] = $xml['eyeNav'][0]['bookmarks'][0];
+		eyeControl_lib_setXMLconfig(array('eyeNav','conf.xml',$old));
+		eyex('messageBox',array('content' => 'Bookmarks successfully imported.'));
+	}
+}
+
+function eyeControl_on_eyenav_bookmarks_default($params = '') {
+	eyex('messageBox',array(
+		'buttons' => array(array('eyenav_bookmarks_default_yes','Yes'),array('eyenav_bookmarks_default_no','No')),
+		'content' => 'Do you really want to restore the default eyeNav bookmarks?',
+		'father' => 'eyeControl_container_big',
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/exec.png',
+		'title' => 'Use defaults',
+		'type' => 3,
+		'win_name' => 'eyeControl_eyenav_window_bookmarks_default',
+		'win_removepid' => 0,
+		'win_style' => TITLE + CLOSE
+	));
+}
+
+function eyeControl_on_eyenav_bookmarks_default_yes($params = '') {
+	global $currentUser;
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$xmlDef = eyeXML('getXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/skel/' . CONF_USER_DIR . '/eyeNav/conf.xml'));
+	$currentUser = $oldUser;
+	$xmlNew = eyeControl_lib_getXMLconfig(array('eyeNav','conf.xml'));
+	$xmlNew['eyeNav'][0]['bookmarks'][0] = $xmlDef['eyeNav'][0]['bookmarks'][0];
+	eyeControl_lib_setXMLconfig(array('eyeNav','conf.xml',$xmlNew));
+	eyex('messageBox',array('content' => 'Default settings successfully set.'));
+	$GLOBALS['eyeControl_eyenav_window_bookmarks_default']->close();
+}
+
+function eyeControl_on_eyenav_bookmarks_default_no($params = '') {
+	$GLOBALS['eyeControl_eyenav_window_bookmarks_default']->close();
+}
+
+function eyeControl_on_eyenav_search_import($params = '') {
+	global $checknum;
+	proc('launch',array('eyeDialog',array(0,'eyenav_search_import_now',$checknum)));
+}
+
+function eyeControl_on_eyenav_search_import_now($params = '') {
+	$url = eyeControl_lib_getConfigUserPath() . '/' . FILES_USER_DIR . '/' . $params['arg'][0];
+	$xml = eyeXML('getXMLfile',array(vfs('getRealName',array($url))));
+	if (!$xml['eyeNav'][0]['searches'][0] || !is_array($xml['eyeNav'][0]['searches'][0])) {
+		eyex('messageBox',array('content' => 'The selected file is not an eyeNav search engine file.'));
+	} else {
+		$old = eyeControl_lib_getXMLconfig(array('eyeNav','conf.xml'));
+		$old['eyeNav'][0]['searches'][0] = $xml['eyeNav'][0]['searches'][0];
+		eyeControl_lib_setXMLconfig(array('eyeNav','conf.xml',$old));
+		eyex('messageBox',array('content' => 'Search engines successfully imported.'));
+	}
+}
+
+function eyeControl_on_eyenav_search_default($params = '') {
+	eyex('messageBox',array(
+		'content' => 'Do you really want to restore the default eyeNav search?',
+		'type' => 3,
+		'title' => 'Use defaults',
+		'win_name' => 'eyeControl_eyenav_window_search_default',
+		'win_style' => TITLE + CLOSE,
+		'win_removepid' => 0,
+		'btn1_capt' => 'Yes',
+		'btn1_name' => 'eyenav_search_default_yes',
+		'btn2_capt' => 'No',
+		'btn2_name' => 'eyenav_search_default_no',
+		'father' => 'eyeControl_container_big',
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/exec.png'
+	));
+}
+
+function eyeControl_on_eyenav_search_default_yes($params = '') {
+	global $currentUser;
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$xmlDef = eyeXML('getXMLfile',array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/skel/' . CONF_USER_DIR . '/eyeNav/conf.xml'));
+	$currentUser = $oldUser;
+	$xmlNew = eyeControl_lib_getXMLconfig(array('eyeNav','conf.xml'));
+	$xmlNew['eyeNav'][0]['searches'][0] = $xmlDef['eyeNav'][0]['searches'][0];
+	eyeControl_lib_setXMLconfig(array('eyeNav','conf.xml',$xmlNew));
+	eyex('messageBox',array('content' => 'Default settings successfully set.'));
+	$GLOBALS['eyeControl_eyenav_window_search_default']->close();
+}
+
+function eyeControl_on_eyenav_search_default_no($params = '') {
+	$GLOBALS['eyeControl_eyenav_window_search_default']->close();
+}
+?>

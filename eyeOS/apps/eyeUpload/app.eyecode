@@ -1,0 +1,89 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeUpload_run($params = '') {
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'name' => 'eyeUpload_Window',
+		'height' => 270,
+		'savePosition' => 1,
+		'style' => TITLE + CLOSE + LISTED,
+		'title' => 'Upload files',
+		'width' => 470
+	));
+	$myWindow->show();
+
+	$myImage = new Imagebox(array(
+		'name' => 'eyeUpload_help',
+		'father' => 'eyeUpload_Window',
+		'horiz' => 1,
+		'x' => 8,
+		'y' => 28,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/eyeHelp.png',
+		'disableMsg' => 0,
+		'signal' => 'help'
+	));
+	$myImage->show();
+	$myImage->setCss(array('cursor' => 'Pointer'));
+
+	$myHidden = new Hidden(array(
+		'father' => 'eyeUpload_Window_Content',
+		'name' => 'eyeUpload_Hidden_Path',
+		'text' => $params[0]
+	));
+	$myHidden->show();
+
+	$myHidden = new Hidden(array(
+		'father' => 'eyeUpload_Window_Content',
+		'name' => 'eyeUpload_Hidden_Callback',
+		'text' => $params[1]
+	));
+	$myHidden->show();
+
+	$myTab = new Tab(array(
+		'father' => 'eyeUpload_Window_Content',
+		'name' => 'eyeUpload_Tab',
+		'height' => 240,
+		'tabwidth' => 90,
+		'useDisplay' => 0,
+		'width' => 466,
+		'x' => intval(!IE || IE > 6),
+		'y' => 5
+	));
+	$myTab->show();
+
+	$simpleTab = $myTab->addTab('Simple',1);
+	include_once(EYE_ROOT . '/' . APP_DIR . '/eyeUpload/tabs/simple.eyecode');
+	if ($_SESSION['SCREEN']['flash'] && $_SESSION['SCREEN']['flash_version'] > 8) {
+		$advancedTab = $myTab->addTab('Advanced', 1);
+		include_once EYE_ROOT . '/' . APP_DIR . '/eyeUpload/tabs/advanced.eyecode';
+	}
+	if (WEB_UPLOAD) {
+		$webTab = $myTab->addTab('Web',1);
+		include_once(EYE_ROOT . '/' . APP_DIR . '/eyeUpload/tabs/web.eyecode');
+	}
+	if (isset($advancedTab)) {
+		$myTab->selectByName('Advanced');
+	} else {
+		$myTab->selectByName('Simple');
+	}
+}
+
+function eyeUpload_end($params = '') {
+	eyeWidgets('unserialize',$params);
+}
+?>

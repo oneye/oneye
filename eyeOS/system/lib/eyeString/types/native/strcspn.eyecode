@@ -1,0 +1,13 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strcspn($str1, $str2, $start = 0, $length = null) {
+	$str1 = utf8_substr($str1, $start, $length);
+	preg_match('/^[^' . preg_quote($str2, '/') . ']+/u', $str1, $matches);
+	if (isset($matches[0]) === true) {
+		return utf8_strlen($matches[0]);
+	}
+	return 0;
+}
+?>

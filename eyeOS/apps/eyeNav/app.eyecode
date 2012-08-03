@@ -1,0 +1,241 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeNav_run($params = '') {
+	global $myPid;
+
+	$xml = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
+	
+	$myWindow = new Window(array(
+		'name' => 'eyeNav_window',
+		'father' => 'eyeApps',
+		'title' => 'Navigator',
+		'cent' => 1,
+		'width' => 800,
+		'height' => 600,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'Resize',
+		'savePosition' => 1
+	));
+	$myWindow->show();
+
+	$myY = 65;
+	if (IE && IE < 8) {
+		$myYimg = 66;
+	} else {
+		$myYimg = 65;
+	}
+
+	$myTextbox = new Textbox(array(
+		'name' => 'eyeNav_url',
+		'father' => 'eyeNav_window_Content',
+		'width' => $myWindow->width - 207,
+		'x' => 24,
+		'y' => $myY,
+		'text' => ''
+	));
+	$myTextbox->show();
+	$myTextbox->focus();
+	$myTextbox->setCss(array(
+		'background-image' => 'url(index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/windows/pathcenter.png)',
+		'background-repeat' => 'repeat-x',
+		'border' => 'none',
+		'height' => '14px',
+		'padding-bottom' => '3px',
+		'padding-top' => '3px',
+		'padding-left' => '5px'
+	));
+	$myTextbox->addEnterEventMsg('OpenURL');
+	$GLOBALS['eyeNav_url'] = $myTextbox;
+
+	$myButton = new Button(array(
+		'name' => 'eyeNav_saveUrl',
+		'father' => 'eyeNav_window_Content',
+		'signal' => 'saveUrl',
+		'caption' => '',
+		'x' => 5,
+		'y' => $myYimg,
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/windows/pathBM.png'
+	));
+	$myButton->addFriend($myTextbox);
+	$myButton->show();
+
+
+	$myImage = new Imagebox(array(
+		'name' => 'eyeNav_image_url_right',
+		'father' => 'eyeNav_window_Content',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/windows/pathgo.png',
+		'x' => $myTextbox->x + $myTextbox->width,
+		'y' => $myYimg,
+		'disableMsg' => 0,
+		'signal' => 'OpenUrl'
+	));
+	$myImage->addFriend($myTextbox);
+	$myImage->show(0);
+	$myImage->setCss(array('cursor' => 'pointer'));
+
+	// Search
+	$myTextboxSearch = new Textbox(array(
+		'name' => 'eyeNav_url_search',
+		'father' => 'eyeNav_window_Content',
+		'horiz' => 1,
+		'text' => i18n('translate', array('Search')),
+		'width' => $myWindow->width - 665,
+		'x' => 24,
+		'y' => $myY,
+	));
+	$myTextboxSearch->show();
+	$myTextboxSearch->setCss(array(
+		'background-image' => 'url(index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/windows/pathcenter.png)',
+		'background-repeat' => 'repeat-x',
+		'border' => 'none',
+		'height' => '14px',
+		'padding-bottom' => '3px',
+		'padding-top' => '3px'
+	));
+	$myTextboxSearch->addEnterEventMsg('searchFor');
+	$myTextboxSearch->addEvent('onfocus', 'var e = document.getElementById("' . $myPid . '_eyeNav_url_search"); if (e.value == "' . utf8_htmlspecialchars(i18n('translate', array('Search')), ENT_QUOTES) . '") { e.value = "" }');
+	$myTextboxSearch->addEvent('onblur', 'var e = document.getElementById("' . $myPid . '_eyeNav_url_search"); if (e.value == "") { e.value = "' . utf8_htmlspecialchars(i18n('translate', array('Search')), ENT_QUOTES) . '" }');
+	$myImageSearch = new Imagebox(array(
+		'name' => 'eyeNav_image_search_left',
+		'father' => 'eyeNav_window_Content',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/windows/pathDiv.png',
+		'horiz' => 1,
+		'x' => $myTextboxSearch->width + 25,
+		'y' => $myYimg
+	));
+	$myImageSearch->show(0);
+
+	$myImageSearch = new Imagebox(array(
+		'name' => 'eyeNav_image_search_right',
+		'father' => 'eyeNav_window_Content',
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/windows/pathsearch.png',
+		'horiz' => 1,
+		'x' => 5,
+		'y' => $myYimg,
+		'disableMsg' => 0,
+		'signal' => 'searchFor'
+	));
+	$myImageSearch->addFriend($myTextboxSearch);
+	$myImageSearch->show(0);
+	$myImageSearch->setCss(array('cursor' => 'pointer'));
+
+	// Main window
+	$myWindow_box = new Window(array(
+		'name' => 'eyeNav_window_box',
+		'father' => 'eyeNav_window_Content',
+		'x' => 10,
+		'y' => $myTextbox->y + 30,
+		'height' => $myWindow->height - $myTextbox->y - 65,
+		'width' => 160,
+		'type' => INVISIBLE_WINDOW
+	));
+	$myWindow_box->show();
+	$myWindow_box->setCss(array(
+		'direction' => 'rtl',
+		'overflow' => 'auto'
+	));
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeNav_window_box"); e.style.visibility = ""; e.style.zIndex = 0;'));
+
+	if (!$xml['eyeNav'][0]['sidebar'][0]) {
+		$visible = 0;
+		$width = $myWindow->width - 20;
+		$x = 10;
+	} else {
+		$visible = 1;
+		$width = $myWindow->width - $myWindow_box->width - 35;
+		$x = $myWindow_box->width + 20;
+	}
+	$myLine = new Line(array(
+		'name' => 'eyeNav_line',
+		'father' => 'eyeNav_window_Content',
+		'x' => 165,
+		'y' => $myWindow_box->y,
+		'width' => 1,
+		'height' => $myWindow_box->height,
+		'visible' => $visible
+	));
+	$myLine->show(0);
+
+	$myIframe = new Iframe(array(
+		'name' => 'eyeNav_frame',
+		'father' => 'eyeNav_window_Content',
+		'x' => $x,
+		'y' => $myWindow_box->y,
+		'height' => $myWindow_box->height,
+		'width' => $width
+	));
+	$myIframe->show();
+	$GLOBALS['eyeNav_frame'] = $myIframe;
+
+	$myToolbar = new Toolbar(array(
+		'name' => 'eyeNav_toolbar',
+		'father' => 'eyeNav_window_Content'
+	));
+	$myToolbar->show();
+	$myToolbar->addItem('Back','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/previous.png','Back',array($myIframe));
+	$myToolbar->addItem('Forward','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/next.png','Forward',array($myIframe));
+	$myToolbar->addLine();
+	$myToolbar->addItem('Refresh','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/refresh.png','Refresh',array($myIframe));
+	$myToolbar->addItem('Startpage','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/home.png','Startpage',array($myTextbox,$myIframe));
+	$myToolbar->addLine();
+	$myToolbar->addItem('Bookmarks','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/bookmark.png','Bookmarks');
+	$myToolbar->addItem('Search','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/search.png','Search');
+	$myToolbar->addLine();
+	$myToolbar->addItem('Settings','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/lin_agt_wrench.png','Settings');
+	$myToolbar->addLine();
+	$myToolbar->addItem('Fullscreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+	$myToolbar->addItem('NewWindow','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/window-duplicate.png','New Window','',1);
+
+	addListenerServiceCall('fullResized','eyex','resizedbrowser');
+
+	include_once(EYE_ROOT . '/' . APP_DIR . '/eyeNav/libs.eyecode');
+	if ($xml['eyeNav'][0]['sidebar'][0] == 2) {
+		eyeNav_lib_ShowSearch();
+		eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeNav_toolbar");
+		for (var i = 0; i < e.childNodes.length; i++) {
+			if (e.childNodes[i].id == "Search_Container") {
+				e.childNodes[i].className = "blockbarItemPress";
+			}
+		}'));
+	} elseif ($xml['eyeNav'][0]['sidebar'][0]) {
+		eyeNav_lib_ShowBookmarks();
+		eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyeNav_toolbar");
+		for (var i = 0; i < e.childNodes.length; i++) {
+			if (e.childNodes[i].id == "Bookmarks_Container") {
+				e.childNodes[i].className = "blockbarItemPress";
+			}
+		}'));
+	}
+
+	if ($params[0]) {
+		eyeNav_lib_doUrl(array('page' => array($params[0])));
+	} else {
+		eyeNav_lib_doUrl();
+	}
+
+	eyeX('createDiv', array(
+		'name' => 'eyeNav_url_bar',
+		'father' => 'eyeNav_window_Content',
+		'class' => 'eyeNav_url_bar'
+	));
+}
+
+function eyeNav_end($params = '') {
+	removeListenerServiceCall('eyex','resizedbrowser');
+	eyeWidgets('unserialize');
+}
+?>

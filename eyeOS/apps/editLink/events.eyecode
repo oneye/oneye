@@ -1,0 +1,37 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function editLink_on_Close($params = '') {
+	proc('end');
+}
+
+function editLink_on_Do($params = '') {
+	$path = um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/';
+	$xml = eyeXML('getXMLfile',array($path . $GLOBALS['editLink_Hidden_File']->text));
+	$xml['eyeLink'][0]['content'][0] = $GLOBALS['editLink_Textbox']->text;
+	$xml['eyeLink'][0]['icon'][0] = $GLOBALS['editLink_Select']->selected;
+	eyeXML('setXMLfile',array($path . $GLOBALS['editLink_Hidden_File']->text,$xml));
+	if ($GLOBALS['editLink_Hidden_Callback']->text) {
+		eyex('rawjs',array('js' => $GLOBALS['editLink_Hidden_Callback']->text));
+	}
+	eyeFiles('update',array('home://Desktop/'));
+	proc('end');
+}
+
+function editLink_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+?>

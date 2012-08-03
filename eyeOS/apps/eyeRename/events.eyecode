@@ -1,0 +1,175 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeRename_on_Close($params = '') {
+	proc('end');
+}
+
+function eyeRename_libs_Dialog($from,$file,$to,$callback) {
+	$from2 = eyeFiles('cleanPath',array($from));
+	$to2 = eyeFiles('cleanPath',array($to));
+	$rename = $file;
+	if ($from2[1] . '://' . $from2[2] == $to2[1] . '://' . $to2[2]) {
+		$buttons = array(array('Rename','Rename'),array('Close','Cancel'));
+		$content = 'Please type the new name here:';
+		$title = 'Rename %s';
+	} else {
+		$buttons = array(array('Rename','Rename'),array('Replace','Replace'),array('Close','Cancel'));
+		$content = '"%s" already exists. Please enter a new name or replace the existing one.';
+		$title = 'Move %s';
+		$tokens = array($file);
+		$count = 0;
+		$extension = /* utf8 */ strrchr($rename, '.');
+		if ($to[1] == 'real') {
+			$fileexists = 'real_fileExists';
+		} else {
+			$fileexists = 'fileExists';
+		}
+		while (vfs($fileexists,array($to2[0] . '/' . $rename))) {
+			$temp = substr($rename, 0, -strlen($extension)); // utf8
+			if ($count) {
+				$temp = substr($temp, 0, -strlen(strrchr($temp, '_'))); // utf8
+			}
+			$count++;
+			$rename = $temp . '_' . $count . $extension;
+		}
+	}
+	if (is_object($GLOBALS['eyeRename_Window'])) {
+		$GLOBALS['eyeRename_Window']->close();
+		eyex('messageBox',array('content' => 'That file already exists!'));
+	}
+	eyex('messageBox',array(
+		'buttons' => $buttons,
+		'content' => $content,
+		'hiddens' => array(array('eyeRename_Hidden_FromPath',$from),array('eyeRename_Hidden_FromFilename',$file),array('eyeRename_Hidden_ToPath',$to),array('eyeRename_Hidden_Callback',$callback)),
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/rename.png',
+		'savePosition' => 1,
+		'textbox_event' => 'Rename',
+		'textbox_name' => 'eyeRename_Textbox',
+		'textbox_text' => $rename,
+		'title' => i18n('translate',array($title,array($file))),
+		'tokens' => $tokens,
+		'type' => 3,
+		'win_name' => 'eyeRename_Window',
+		'win_style' => TITLE + LISTED + MIN + CLOSE
+	));
+}
+
+function eyeRename_libs_Do($from,$file,$to,$file2,$callback,$replace = 0) {
+	$file = basename($file);
+	$file2 = basename($file2);
+	$from = eyeFiles('cleanPath',array($from));
+	$to = eyeFiles('cleanPath',array($to));
+	if ($from[1] == 'trash') {
+		proc('launch',array('restoreTrash',array($file,0,$to[1] . '://' . $to[2])));
+	} elseif ($to[1] == 'trash') {
+		proc('launch',array('eyeDelete',array($from[1] . '://' . $from[2] . '/' . $file)));
+	} elseif ($from[1] !== 'real' && ($from[1] !== 'home' || strtolower(trim($from[2], '/')) !== 'desktop') && strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($from[0] . '/' . $file)) === true) { // utf8
+		eyex('messageBox',array('content' => 'Links cannot be moved!'));
+	} else if (vfs('isdir',array($from[0] . '/' . $file)) === true && substr(realpath($to[0] . '/'), 0, strlen(realpath($from[0] . '/' . $file . '/'))) === realpath($from[0] . '/' . $file . '/')) { // utf8
+		eyex('messageBox',array('content' => 'Error moving folder!'));
+	} else {
+		if ($from[1] . '://' . $from[2] . '/' . $file == $to[1] . '://' . $to[2] . '/' . $file2) {
+			return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
+		} elseif ($replace) {
+			proc('launch',array('eyeDelete',array($to[1] . '://' . $to[2] . '/' . $file2)));
+		}
+		if ($from[1] == 'real') {
+			if (vfs('isdir',array($from[0] . '/' . $file))) {
+				if (!vfs('real_move',array($from[0] . '/' . $file,$to[0] . '/' . $file2))) {
+					return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
+				}
+				if ($to[1] != 'real') {
+					vfs('realToVirtualDir',array($to[0] . '/' . $file2));
+				}
+			} elseif (vfs('real_fileExists',array($from[0] . '/' . $file))) {
+				if (!vfs('real_move',array($from[0] . '/' . $file,$to[0] . '/' . $file2))) {
+					return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
+				}
+				if ($to[1] != 'real') {
+					vfs('realToVirtual',array($to[0] . '/' . $file2));
+				}
+			}
+		} elseif (vfs('isdir',array($from[0] . '/' . $file))) {
+			if (!vfs('rename',array($from[0] . '/' . $file,$to[0] . '/' . $file2))) {
+				return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
+			} elseif ($from[1] === 'home' && strtolower(trim($from[2], '/')) === 'desktop') { // utf8
+				$xml = eyeXML('getXMLconfig',array('eyeDesk','icons.xml'));
+				if (is_array($xml['icon'])) {
+					foreach ($xml['icon'] as $key => $value) {
+						if ($value['name'][0] == $file) {
+							if ($to[1] === 'home' && strtolower(trim($to[2], '/')) === 'desktop') { // utf8
+								$xml['icon'][$key]['name'][0] = $file2;
+							} else {
+								unset($xml['icon'][$key]);
+							}
+						}
+					}
+					eyeXML('setXMLconfig',array('eyeDesk','icons.xml',$xml));
+				}
+			}
+			if ($to[1] == 'real') {
+				vfs('virtualToRealDir',array($to[0] . '/' . $file2));
+			}
+		} elseif (vfs('fileExists',array($from[0] . '/' . $file)) === true || strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists',array($from[0] . '/' . $file)) === true) { // utf8
+			if ($from[1] === 'home' && strtolower(trim($from[2], '/')) === 'desktop') { // utf8
+				$name = $file;
+				if (strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($from[0] . '/' . $file)) === true) { // utf8
+					$xmlLink = eyeXML('getXMLfile',array($from[0] . '/' . $file));
+					$name = $xmlLink['eyeLink'][0]['content'][0];
+				}
+			}
+			if (!vfs('move',array($from[0] . '/' . $file,$to[0] . '/' . $file2))) {
+				return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
+			} elseif ($from[1] === 'home' && strtolower(trim($from[2], '/')) === 'desktop') { // utf8
+				$xml = eyeXML('getXMLconfig',array('eyeDesk','icons.xml'));
+				if (is_array($xml['icon'])) {
+					foreach ($xml['icon'] as $key => $value) {
+						if ($value['name'][0] == $name) {
+							if ($to[1] === 'home' && strtolower(trim($to[2], '/')) === 'desktop') { // utf8
+								$xml['icon'][$key]['name'][0] = $file2;
+							} else {
+								unset($xml['icon'][$key]);
+							}
+						}
+					}
+					eyeXML('setXMLconfig',array('eyeDesk','icons.xml',$xml));
+				}
+			}
+			if ($to[1] == 'real') {
+				vfs('virtualToReal',array($to[0] . '/' . $file2));
+			}
+		}
+		if ($callback) {
+			eyex('rawjs',array('js' => $callback));
+		}
+		eyeFiles('update',array($from[1] . '://' . $from[2],$to[1] . '://' . $to[2]));
+	}
+	proc('end');
+}
+
+function eyeRename_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeRename_on_Rename($params = '') {
+	eyeRename_libs_Do($GLOBALS['eyeRename_Hidden_FromPath']->text,$GLOBALS['eyeRename_Hidden_FromFilename']->text,$GLOBALS['eyeRename_Hidden_ToPath']->text,$GLOBALS['eyeRename_Textbox']->text,$GLOBALS['eyeRename_Hidden_Callback']->text);
+}
+
+function eyeRename_on_Replace($params = '') {
+	eyeRename_libs_Do($GLOBALS['eyeRename_Hidden_FromPath']->text,$GLOBALS['eyeRename_Hidden_FromFilename']->text,$GLOBALS['eyeRename_Hidden_ToPath']->text,$GLOBALS['eyeRename_Hidden_FromFilename']->text,$GLOBALS['eyeRename_Hidden_Callback']->text,1);
+}
+?>

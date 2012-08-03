@@ -1,0 +1,25 @@
+Create new groups to work collaboratively between users. This is one of the most important options inside oneye because it allows you to create shared folders between users, so they can work between them.
+
+[b]New [/b]
+
+	A pop-up window will open and you can input the name of the new group.
+
+	Once it's created, it won't be assigned automatically to any user. You must go then to the Manage users menu, and edit the users to assign them to the new group.
+
+	The next time that those users will log in into their account and go to Groups folder inside eyeFiles they will see their new group and will be able to copy and manage files inside it.
+
+
+[b]Edit [/b]
+
+	Here we can rename groups
+
+
+[b]Delete[/b]
+
+	Delete groups
+
+
+[b]Set as default [/b]
+
+	Set a group as the default group so all new users will belong to this group
+

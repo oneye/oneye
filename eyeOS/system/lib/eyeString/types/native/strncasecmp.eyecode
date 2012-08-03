@@ -1,0 +1,8 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strncasecmp($str1, $str2, $len) {
+	return utf8_strncmp(utf8_strtolower($str1), utf8_strtolower($str2), $len);
+}
+?>

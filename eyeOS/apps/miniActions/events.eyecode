@@ -1,0 +1,98 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function miniActions_on_Message($params) {
+	eyeWidgets('updateContent', $params);
+}
+
+function miniActions_on_Close($params=null) {
+	proc('end');
+}
+
+
+function miniActions_on_closeApp($params=null) {
+	$config = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeDesk/conf.xml';
+	$xml = eyeXML('getXMLfile',array($config));
+	$autorun = $xml['eyeDesk'][0]['autolaunch'];
+	if (in_array("miniActions",$autorun)) {
+		eyex('messageBox',array(
+			'content' => 'Do you want this widget to open automatically on the next session?',
+			'type' => 3,
+			'title' => 'MiniActions',
+			'win_name' => 'eyeActions_autoopen_window',
+			'win_style' => TITLE + CLOSE,
+			'win_removepid' => 0,
+			'btn1_capt' => 'Yes',
+			'btn1_name' => 'auto_yes',
+			'btn2_capt' => 'No',
+			'btn2_name' => 'auto_no',
+			'father' => 'eyeApps',
+			'img' => '?'
+		));
+	} else {
+		eyeWidgets('unserialize');
+		proc('end');
+	}
+}
+
+function miniActions_on_auto_no($params=null) {
+	$config = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeDesk/conf.xml';
+	$xml = eyeXML('getXMLfile',array($config));
+	$autorun = $xml['eyeDesk'][0]['autolaunch'];
+	for($i=0;$i < count($autorun);$i++) {
+		if($autorun[$i] == 'miniActions'){
+			unset($xml['eyeDesk'][0]['autolaunch'][$i]);
+		}
+	}
+	eyeXML('setXMLfile',array($config,$xml));
+	eyeWidgets('unserialize');
+	proc('end');
+}
+
+function miniActions_on_auto_yes($params=null) {
+	eyeWidgets('unserialize');
+	proc('end');
+}
+
+function miniActions_on_Launch1($params=null) {
+	$checknum = proc('findChecknumByName',array('eyeDesk'));
+	$path = um('getCurrentUserDir').'/'.FILES_USER_DIR.'/Desktop/';
+	$callback = 'sendMsg('.$checknum.',"OpenPath","");';
+	proc('launch', array('eyeUpload',array($path,$callback)));
+}
+
+function miniActions_on_Launch2($params=null) {
+	proc('launch', array('eyeMessages'));
+}
+
+function miniActions_on_Launch3($params=null) {
+	proc('launch', array('eyeDocs'));
+}
+
+function miniActions_on_Launch4($params=null) {
+	proc('launch', array('eyeSheets'));
+}
+
+function miniActions_on_Launch($params=null) {
+	$messagesPid = proc('findPidByName', array('eyeCalendar'));
+
+	if($messagesPid == false) {
+		proc('launch', array('eyeCalendar'));
+	}
+}
+
+
+?>

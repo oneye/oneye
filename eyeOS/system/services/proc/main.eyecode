@@ -1,0 +1,721 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Process Manager service
+*/
+/*
+ 	Process table structure
+
+	[pid][appName],[checknum],[time],[currentUser],[pid]
+	[pid]
+	[pid]
+	...
+*/
+
+//Warning: TABLENAME is too generic to be a define, maybe we should change it an break a bit the compatibility.
+define('TABLENAME','ProcessTable');
+
+function service_proc_init() {
+	//create the process table if it hadn't been created
+	if(eyeSessions('checkVar',array(TABLENAME)) == false){
+		eyeSessions('makeArrayVar',array(TABLENAME));
+		eyeSessions('setVar',array('next_tty',0));
+	}
+}
+
+/**
+* Makes an application terminate itself.
+*
+* @return This function does not return any value.
+* @date 2008/03/11
+*/
+function service_proc_end($params=null) {
+	global $myPid;
+	proc('close',array($myPid));
+}
+
+/**
+* Executes an application by calling its start function and adding an
+* entry in the process table.
+*
+* @param $params array(appName,[appArgs])
+* @param $appName String containing the name of the application to execute.
+* @param $appArgs Arguments passed to the start function.
+* @return In eyeOS 1.6 and newer, returns the pid of the executed process, or false
+* 	in case of error and sets the errror code according to the error occurred.
+*
+* In eyeOS 1.5 and older If the function succeeds, returns the result of the
+*	application's start function. In case the function does not
+*	return any value, it returns true. If it doesn't suceed,
+*	returns false and sets the error code according to the error
+*	occurred.
+* @exception INCORRECT_PARAMS No application name is specified.
+* @exception PROC_APP_NOT_FOUND No application can be found with the provided name.
+* @exception PROC_APP_DONT_HAVE_RUN_FUNCTION The application does not have a start function.
+* @date 2008/03/18
+*/
+function service_proc_launch($params) {
+	//Needed params to start
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$appName = basename($params[0]);
+
+	//All params and needed vars.
+	global $currentUser;
+	if(isset($params[1])) {
+		$appArgs = $params[1];
+	} else {
+		$appArgs = array();
+	}
+
+	global $myPid;
+
+	//Get the process table.
+	$processTable = proc('getProcessTable');
+
+	//Getting unique pid.
+	$oldPid = $myPid;
+	$myPid = make_unique_pid();
+
+	//Filling the proc values.
+	global $procInfo;
+	$oldProcInfo = $procInfo;
+	$procInfo['appName'] = $appName;//Provided by argument.
+	$procInfo['checknum'] = make_unique_checknum();
+	$procInfo['time'] = time();
+	$procInfo['currentUser'] = $currentUser;//Provided by global var.
+	$procInfo['pid'] = $myPid;
+	$procInfo['tty'] = get_tty($oldPid);
+	$procInfo['exec'] = 'launch';
+
+	//Try running app.
+	if(!is_readable(EYE_ROOT.'/'.APP_DIR.'/'.$appName.'/app'.EYE_CODE_EXTENSION)) {
+		$myPid = $oldPid;
+		$procInfo = $oldProcInfo;
+		errorCodes('setErrorCode',array(PROC_APP_NOT_FOUND));
+		return false;
+	}
+	//Including app php code.
+	include_once(EYE_ROOT.'/'.APP_DIR.'/'.$appName.'/app'.EYE_CODE_EXTENSION);
+
+	if(function_exists($appName.'_run')){
+		//Adding process in the process table.
+		eyeSessions('AddArrayValueByKey',array(TABLENAME,$procInfo,$myPid));
+		//Setting new cheknum in global
+		global $checknum;
+		$oldchecknum = $checknum;
+		$checknum = $procInfo['checknum'];//Set global for new Checknum.
+		//load i18n
+		i18n('loadLang',array($appName));
+		//Calling the run function and returning the result.
+		if (!is_array($appArgs)) {
+			$appArgs = array($appArgs);
+		}
+		call_user_func($appName.'_run',$appArgs);
+		$return = $myPid;
+		$checknum = $oldchecknum;
+		$myPid = $oldPid;
+		$procInfo = $oldProcInfo;
+		return $return;
+	}else{
+		$myPid = $oldPid;
+		$procInfo = $oldProcInfo;
+		errorCodes('setErrorCode',array(PROC_APP_DONT_HAVE_RUN_FUNCTION));
+		return false;
+	}
+}
+
+/**
+* Calls the start function of an already running application.
+*
+* @param $params array(myPid,[appArgs])
+* @param $myPid ID of the process.
+* @param $appArgs Arguments passed to the application start function. Whether
+*	the form of the arguments must be an array or not depends on
+*	the application.
+* @return If the function succeeds, returns the result of the
+*	application's start function. If it doesn't suceed, returns
+*	false and sets the error code according to the error
+*	occurred.
+* @exception INCORRECT_PARAMS No application name is specified.
+* @exception PROC_APP_NOT_ARE_RUNNING No application with the given name is running.
+* @exception PROC_APP_NOT_FOUND No application with the provided name can be found in the system.
+* @exception PROC_APP_DONT_HAVE_RUN_FUNCTION The application does not have a start function.
+* @date 2008/03/11
+*/
+function service_proc_getTask($params) {
+	//Get the needed arguments to start
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	global $myPid;
+	global $procInfo;
+	global $checknum;
+	$oldPid = $myPid;
+	$myPid = intval($params[0]);
+	$oldProcInfo = $procInfo;
+
+
+
+	$procInfo = proc('getProcByPid',array($myPid));
+	if(!$procInfo['checknum'] || !$procInfo['appName'])
+	{
+		$myPid = $oldPid;
+		$checknum = $oldchecknum;
+		$procInfo = $oldProcInfo;
+		errorCodes('setErrorCode',array(PROC_APP_NOT_ARE_RUNNING));
+		return false;
+	}
+
+	if(!is_readable(EYE_ROOT.'/'.APP_DIR.'/'.$procInfo['appName'].'/app'.EYE_CODE_EXTENSION)) {
+		$myPid = $oldPid;
+		$checknum = $oldchecknum;
+		$procInfo = $oldProcInfo;
+		errorCodes('setErrorCode',array(PROC_APP_NOT_FOUND));
+		return false;
+	}
+	include_once(EYE_ROOT.'/'.APP_DIR.'/'.$procInfo['appName'].'/app'.EYE_CODE_EXTENSION);
+	if(isset($params[1])) {
+		$appArgs = $params[1];
+	} else {
+		$appArgs = "";
+	}
+	//Set the new checknum
+
+	$oldchecknum = $checknum;
+	$checknum = $procInfo['checknum'];
+	if(function_exists($procInfo['appName'].'_run')){
+		i18n('loadLang',array($procInfo['appName']));
+		//Calling the run function and returning the result
+		$procInfo['exec'] = 'task';
+		$return = call_user_func($procInfo['appName'].'_run',array($appArgs));
+		$myPid = $oldPid;
+		$checknum = $oldchecknum;
+		$procInfo = $oldProcInfo;
+		return $return;
+	}else{
+		$myPid = $oldPid;
+		$checknum = $oldchecknum;
+		$procInfo = $oldProcInfo;
+		errorCodes('setErrorCode',array(PROC_APP_DONT_HAVE_RUN_FUNCTION));
+		return false;
+	}
+}
+
+/**
+* Terminates an application calling its closing function and removes it
+* from the process table.
+*
+* @param $params array(pid)
+* @param $pid Natural number containing the process ID of the application
+*	to be closed.
+* @return If the function succeeds, returns the result of the
+*	application's closing function. In case the function does
+*	not return any value, it returns true. If it doesn't suceed,
+*	returns false and sets the error code according to the error
+*	occurred.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @date 2008/03/11
+*/
+function service_proc_close($params) {
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$pid = $params[0];
+	//Get the appName and check if app is running.
+	$appName = proc('findNameByPid',array($pid));
+
+ 	if(empty($appName)){
+		return false;
+ 	}
+	//Calling the _end funciton if it exists
+	include_once(EYE_ROOT.'/'.APP_DIR.'/'.$appName.'/app'.EYE_CODE_EXTENSION);
+	if(function_exists($appName.'_end')) {
+		global $myPid,$checknum,$procInfo;
+		$appProc = proc('getProcByPid',array($pid));
+		$oldPid = $myPid;
+		$myPid = $pid;
+		$oldChecknum = $checknum;
+		$checknum = $appProc['checknum'];
+		$oldProc = $procInfo;
+		$procInfo = $appProc;
+		$procInfo['exec'] = 'close';//Maybe the _end user can call another function not only designed for the close action
+		$myTempVar = call_user_func($appName.'_end');
+		$myPid = $oldPid;
+		$checknum = $oldChecknum;
+		$procInfo = $oldProc;
+	}
+	//Deleting possible listener service calls
+	removeListenerServiceCallByPid($pid);
+	removeListenerServiceCallByPid($pid,1);
+	//Delete the proc
+	eyeSessions('DelArrayValueByKey',array(TABLENAME,$pid));
+
+	//If doesn't have end function, return true.
+	if(isset($myTempVar))
+	{
+		return $myTempVar;
+	}else{
+		return true;
+	}
+}
+
+/**
+* Returns the whole process table of a user's session.
+*
+* @return The session variable that contains the list of all
+*	processes.
+* @date 2008/03/11
+*/
+function service_proc_getProcessTable() {
+	//Get the process table from session.
+	return eyeSessions('getVar',array(TABLENAME));
+}
+
+/**
+* Returns a list of all process PIDS
+*
+* @return Array containing all process pids.
+* @date 2009/02/18
+*/
+function service_proc_getProcessList() {
+	//Get the process table from session.
+	return array_keys(eyeSessions('getVar',array(TABLENAME)));exit;
+}
+
+/**
+* Sets the user of a process.
+*
+* @param $params array(pid)
+* @param $pid ID of the process.
+* @return If the function succeeds, returns true. Otherwise, it
+*	returns false and sets the error code according to the error
+*	occurred.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @exception PROC_APP_NOT_ARE_RUNNING No process with the specified ID exists.
+* @date 2008/03/11
+*/
+function service_proc_setProcessUser($params) {
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$pid = $params[0];
+	global $currentUser;
+
+	$proc = eyeSessions('getArrayValueByKey',array(TABLENAME,$pid));
+	if(!$proc) {
+		errorCodes('setErrorCode',array(PROC_APP_NOT_ARE_RUNNING));
+		return false;
+	}
+
+	$proc['currentUser'] = $currentUser;//Set the current user in proc array.
+	eyeSessions('addArrayValueByKey',array(TABLENAME,$proc,$pid));
+	return true;
+}
+
+/**
+* Checks whether a process with the given application name exists in the
+* process table and returns its process ID.
+*
+* @param $params array(appName)
+* @param $appName Name of the application.
+* @return If a process with the given application name exists, returns
+*	its process ID. Otherwise, returns false. If some error
+*	occurs, returns false and set the error code accordingly.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @date 2008/03/11
+*/
+function service_proc_findPidByName($params) {
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$appName = $params[0];
+	if(!$appName) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$processTable = proc('getProcessTable');
+	foreach ($processTable as $key => $array){
+		//If the apName in the proc are the same that provided by arguments.
+		if($array['appName'] == $appName)
+		{
+			return $key;//return the pid.
+		}
+	}
+	return false;
+}
+
+/**
+* Checks whether a process with the given application name exists in the
+* process table and returns its checknum.
+*
+* @param $params array(appName)
+* @param $appName Name of the application.
+* @return If a process with the given application name exists, returns
+*	its checknum. Otherwise, returns false. If some error
+*	occurs, returns false and set the error code accordingly.
+* @exception INCORRECT_PARAMS No application name is specified.
+* @date 2008/03/11
+*/
+function service_proc_findChecknumByName($params) {
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$appName = $params[0];
+	if(!$appName) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$processTable = proc('getProcessTable');
+	foreach ($processTable as $array){
+		//if the appName in the proc is the same that provided by arguments.
+		if($array['appName'] == $appName)
+		{
+			return $array['checknum'];//Return the checknum.
+		}
+	}
+	return false;//If the name in process table was not found.
+}
+
+/**
+* Checks whether a process with the given process ID exists in the
+* process table and returns its application name.
+*
+* @param $params array(pid)
+* @param $pid ID of the process.
+* @return If a process with the given process ID exists, returns its
+*	application name. Otherwise, returns false. If some error
+*	occurs, returns false and set the error code accordingly.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @date 2008/03/11
+*/
+function service_proc_findNameByPid($params) {
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$pid = $params[0];
+	if(!$pid) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$processTable = proc('getProcessTable');
+	foreach ($processTable as $key => $array){
+		//If the pid in the proc is the same that provided by arguments.
+		if($key == $pid)
+		{
+			return $array['appName'];//Return the appName
+		}
+	}
+	return false;
+}
+
+/**
+* Checks whether a process with the given checknum exists in the process
+* table and returns its application name.
+*
+* @param $params array(checknum)
+* @param $checknum Checknum of the process.
+* @return If a process with the given checknum exists, returns its
+*	application name. Otherwise, returns false. If some error
+*	occurs, returns false and set the error code accordingly.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @date 2008/03/11
+*/
+function service_proc_findNameByChecknum($params) {
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$checknum = $params[0];
+
+	if(!$checknum) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$processTable = proc('getProcessTable');
+	foreach ($processTable as $array){
+		if (floatval($array['checknum']) === floatval($checknum)) { // workaround to prevent infinite loops on some servers
+			return $array['appName'];
+		}
+	}
+	return false;
+}
+
+/**
+* Checks whether a process with the given process ID exists and returns
+* its checknum.
+*
+* @param $params array(pid)
+* @param $pid ID of the process.
+* @return If a process with the given process ID exists, returns its
+*	checknum. Otherwise, returns false. If some error occurs,
+*	returns false and set the error code accordingly.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @date 2008/03/11
+*/
+function service_proc_findNChecknumByPid($params) {
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$pid = $params[0];
+
+	if(!$pid) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$processTable = proc('getProcessTable');
+	foreach ($processTable as $key => $array){
+		//If the pid in the proc is the same that provided by arguments.
+		if($key == $pid)
+		{
+			return $array['checknum'];//Return the checknum
+		}
+	}
+	return false;
+}
+
+/**
+* Checks whether a process with the given checknum exists in the process
+* table.
+*
+* @param $params array(checkNum)
+* @param $checknum Integer containing the checknum to search.
+* @return If a process with the given checknum exists, returns true.
+*	Otherwise, returns false. If some error occurs, returns
+*	false and set the error code accordingly.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @date 2008/03/11
+*/
+function service_proc_findChecknum($params){//Find the checkNum in processTable and return a bool
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$checknum = $params[0];
+	if(!$checknum) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$processTable = proc('getProcessTable');
+
+	foreach ($processTable as $array){
+		if (floatval($array['checknum']) === floatval($checknum)) { // workaround to prevent infinite loops on some servers
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+* Checks whether a process with the given process ID exists.
+*
+* @param $params array(pid)
+* @param $pid Process ID to check.
+* @return If a process with the given ID exists, returns true. Else,
+*	returns false. If an error occurs, sets the error code
+*	accordingly.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @date 2008/03/11
+*/
+function service_proc_findPid($params){
+	//Getting the Process register for given pid
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$pid = $params[0];
+	$processTable = proc('getProcessTable');
+
+	foreach ($processTable as $key => $array){
+		if($key == $pid){
+			return true;
+		}
+	}
+	return false;
+}
+
+/**
+* Checks whether a process with the given checknum exists and returns
+* all its information of its entry in the process table.
+*
+* @param $params array(checknum)
+* @param $checknum Checknum of the process.
+* @return If the process is found, returns an associative array
+*	containing the entry of the process in the process table. If
+*	it is not found, returns false. In case some error occurs,
+*	sets the error code accordingly.
+* @exception INCORRECT_PARAMS No checknum is specified.
+* @date 2008/03/11
+*/
+function service_proc_getProcByChecknum($params) {
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$checknum = $params[0];
+
+	$processTable = proc('getProcessTable');
+	foreach ($processTable as $key => $array){
+		if (floatval($array['checknum']) === floatval($checknum)) { // workaround to prevent infinite loops on some servers
+			return $array;
+		}
+	}
+	return false;
+}
+
+/**
+* Checks whether a process with the given process ID exists and returns
+* all the information of its entry in the process table.
+*
+* @param $params array(pid)
+* @param $pid ID of the process.
+* @return If the process is found, returns an associative array
+*	containing the entry of the process in the process table. If
+*	it is not found, returns false. In case some error occurs,
+*	sets the error code accordingly.
+* @exception INCORRECT_PARAMS No ID is specified.
+* @date 2008/03/11
+*/
+function service_proc_getProcByPid($params) {
+
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$pid = $params[0];
+	$processTable = proc('getProcessTable');
+	foreach ($processTable as $key => $array){
+		if($key == $pid){
+			return $array;
+		}
+	}
+	return false;
+}
+
+/**
+* Returns the 'tty' field of a process.
+*
+* @param $params array(pid)
+* @param $pid ID of the process.
+* @return If a process with the given pid exists, returns its tty.
+*         Otherwise, it returns false and sets the error code
+*         according to the error occurred.
+* @exception INCORRECT_PARAMS No pid is specified.
+* @date 2008/03/11
+*/
+function service_proc_getTtyByPid($params){
+	if(!isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$pid = $params[0];
+	if(!$pid) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$processTable = proc('getProcessTable');
+	foreach ($processTable as $key => $array){
+		if($key == $pid){
+			return $array['tty'];
+		}
+	}
+	return false;
+}
+
+function service_proc_newTty($params=null) {
+	global $procInfo;
+
+	$proc = proc('getProcByPid',array($procInfo['pid']));
+	$tty = eyeSessions('getVar',array('next_tty'));
+	$tty++;
+	eyeSessions('setVar',array('next_tty',$tty));
+	$proc['tty'] = $tty;
+	eyeSessions('addArrayValueByKey',array(TABLENAME,$proc,$procInfo['pid']));
+	$procInfo['tty'] = $tty;
+	return $tty;
+}
+
+//internal functions
+/***
+*
+* Description: make a random 12-digit checknum
+*
+* Arguments: none
+*
+* Return: Return a random 12-digit integer.
+*
+* Last update 2007-02-19
+***/
+function make_unique_checknum() {
+	$myCheckNum = mt_rand(1000,9999).mt_rand(1000,9999).mt_rand(1000,9999);//First checknum.
+	//Check if checknum are unique.
+	while(proc('findChecknum',array($myCheckNum)) != false)
+	{
+		$myCheckNum = mt_rand(1000,9999).mt_rand(1000,9999).mt_rand(1000,9999);
+	}
+	return $myCheckNum;
+}
+
+/***
+*
+* Description: make a random pid
+*
+* Arguments: none
+*
+* Return: random 5-digit integer
+*
+* Last update 2007-02-19
+***/
+function make_unique_pid() {
+	$pid = mt_rand(10000,99999);
+	while(proc('findPid',array($pid)) != false)//If the pid is in process table get new pid.
+	{
+		$pid = mt_rand(10000,99999);
+	}
+	return $pid;
+}
+
+/***
+*
+* Description: get a valid tty
+*
+* Arguments:
+* 	- father: integer containing a pid
+*
+* Return: if a father exists, return the father tty.
+* 	  if it doesn't exist, return a new tty.
+*
+* Last update 2007-02-19
+***/
+function get_tty($father = null)
+{
+	$ret = proc('getTtyByPid',array($father));
+	if(!$ret) {
+		$ret = 0;
+	}
+	return $ret;
+}
+?>

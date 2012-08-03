@@ -1,0 +1,408 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_run($params = '') {
+	global $checknum;
+	global $currentUser;
+	global $myPid;
+// Include all libraries
+	$dir = EYE_ROOT . '/' . APP_DIR . '/eyeControl/libraries/';
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$openDir = vfs('real_getDirContent',array($dir,'*' . EYE_CODE_EXTENSION));
+	$currentUser = $oldUser;
+	foreach ($openDir as $file) {
+		include_once($file);
+	}
+	if (isset($params['user']) === false) {
+		$params['user'] = null;
+	}
+	eyeControl_lib_setConfigUser(array($params['user']));
+// Check for a hidden menu
+	if (isset($params['hidemenu']) === true && $params['hidemenu'] == 1 || isset($params[3]) === true && $params[3] == 1) {
+		$myWindow = new Window(array(
+			'name' => 'eyeControl_window',
+			'father' => 'eyeApps',
+			'cent' => 1,
+			'width' => 585,
+			'height' => 490,
+			'title' => 'System preferences',
+			'style' => TITLE + LISTED + MIN + CLOSE,
+			'savePosition' => 1
+		));
+		$myWindow->show();
+// $myContainer
+		$myContainer = new Container(array(
+			'name' => 'eyeControl_container_big_Content',
+			'father' => 'eyeControl_window_Content',
+			'x' => 10,
+			'y' => 10,
+			'width' => 565,
+			'height' => 455
+		));
+		$myContainer->show();
+		eyeWidgets('serialize',array($myContainer));
+	} else {
+// $myWindow
+		$myWindow = new Window(array(
+			'name' => 'eyeControl_window',
+			'father' => 'eyeApps',
+			'cent' => 1,
+			'width' => 765,
+			'height' => 520,
+			'title' => 'System preferences',
+			'style' => TITLE + LISTED + MIN + CLOSE,
+			'savePosition' => 1
+		));
+		$myWindow->show();
+// $myWindow_box
+		$myWindow_box = new Window(array(
+			'name' => 'eyeControl_window_box',
+			'father' => 'eyeControl_window_Content',
+			'y' => 0,
+			'x' => 15,
+			'width' => 156,
+			'height' => 495,
+			'type' => INVISIBLE_WINDOW
+		));
+		$myWindow_box->show();
+		$myWindow_box->setCss(array(
+			'overflow' => 'auto',
+			'direction' => 'rtl'
+		));
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_eyeControl_window_box_Content").style.left = "0"; document.getElementById("' . $myPid . '_eyeControl_window_box_Content").style.top = "0";'));
+// $myContainer
+		$myContainer = new Container(array(
+			'name' => 'eyeControl_box',
+			'father' => 'eyeControl_window_box',
+			'y' => 0,
+			'x' => 0
+		));
+		$myContainer->show();
+		$myContainer->setCss(array(
+			'direction' => 'ltr'
+		));
+// help icon
+		$myImage = new Imagebox(array(
+			'name' => 'imghelp',
+			'father' => 'eyeControl_window_box',
+			'horiz' => 1,
+			'x' => 7,
+			'y' => 10,
+			'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/eyeHelp.png',
+			'disableMsg' => 0,
+			'signal' => 'help'
+		));
+		$myImage->show();
+		$myImage->setCss(array('cursor' => 'Pointer'));
+// $myLine
+		$myLine = new Line(array(
+			'name' => 'eyeControl_line',
+			'father' => 'eyeControl_window_Content',
+			'x' => 170,
+			'y' => 0,
+			'width' => 1,
+			'height' => 495
+		));
+		$myLine->show();
+// Load content links to $myBox
+		$content = getConfig('eyeControl','categories.xml');
+		$content = $content['eyeControl'][0]['index'][0];
+		$myHiddenCAT = new Hidden(array(
+			'name' => 'eyeControl_box_hiddenCAT_0',
+			'father' => 'eyeControl_box',
+			'text' => 'index'
+		));
+		$myHiddenCAT->show();
+		$myHiddenNAME = new Hidden(array(
+			'name' => 'eyeControl_box_hiddenNAME_0',
+			'father' => 'eyeControl_box',
+			'text' => $content['name'][0]
+		));
+		$myHiddenNAME->show();
+		$myLabel = new Label(array(
+			'name' => 'eyeControl_box_label_0',
+			'father' => 'eyeControl_box',
+			'text' => $content['display'][0],
+			'x' => 0,
+			'y' => 10,
+			'disablemsg' => 0,
+			'signal' => 'box_label'
+		));
+		$myLabel->addFriend($myHiddenCAT);
+		$myLabel->addFriend($myHiddenNAME);
+		$myLabel->show();
+		$myLabel->setCss(array(
+			'font-size'=>'12px',
+			'color' => '#004488',
+			'cursor' => 'Pointer',
+			'font-weight' => 'bold',
+			'white-space' => 'nowrap'
+		));
+		$x = 1;
+		$boxY = 30;
+		$categoriesXML = getConfig('eyeControl','categories.xml');
+		foreach($categoriesXML['eyeControl'][0]['category'] as $category) {
+			if ((isset($category['show']) === false || $category['show'][0] != 'no' && $category['show'][0] != 'nolist') && ($category['permissions'][0] == 'all'
+			|| $category['permissions'][0] == 'root' && eyeControl_lib_getConfigUser() == ROOTUSER
+			|| $category['permissions'][0] == 'maintainer' && (eyeControl_lib_getConfigUser() == ROOTUSER || um('checkMaintainer',array(eyeControl_lib_getConfigUser())))
+			|| $category['permissions'][0] == 'user' && eyeControl_lib_getConfigUser() != ROOTUSER
+			|| $category['permissions'][0] == 'only_real' && eyeControl_lib_getConfigUser() != '[skel]'
+			|| $category['permissions'][0] == 'only_this' && eyeControl_lib_getConfigUser() == $currentUser)) {
+				$myHiddenCAT = new Hidden(array(
+					'name' => 'eyeControl_box_hiddenCAT_' . $x,
+					'father' => 'eyeControl_box',
+					'text' => $category['name'][0]
+				));
+				$myHiddenCAT->show();
+				$myLabel = new Label(array(
+					'name' => 'eyeControl_box_label_' . $x,
+					'father' => 'eyeControl_box',
+					'text' => $category['display'][0],
+					'x' => 10,
+					'y' => $boxY + 10,
+					'disablemsg' => 0,
+					'signal' => 'box_label'
+				));
+				$myLabel->addFriend($myHiddenCAT);
+				$myLabel->show();
+				$myLabel->setCss(array(
+					'font-size'=>'12px',
+					'color' => '#004488',
+					'cursor' => 'Pointer',
+					'white-space' => 'nowrap'
+				));
+				$x++;
+				$boxY += 30;
+				foreach($category['content'] as $content) {
+					if ((isset($content['show']) === false || $content['show'][0] != 'no' && $content['show'][0] != 'nolist') && ($content['permissions'][0] == 'all'
+					|| $content['permissions'][0] == 'root' && eyeControl_lib_getConfigUser() == ROOTUSER
+					|| $content['permissions'][0] == 'maintainer' && (eyeControl_lib_getConfigUser() == ROOTUSER || um('checkMaintainer',array(eyeControl_lib_getConfigUser())))
+					|| $content['permissions'][0] == 'user' && eyeControl_lib_getConfigUser() != ROOTUSER
+					|| $content['permissions'][0] == 'only_real' && eyeControl_lib_getConfigUser() != '[skel]'
+					|| $content['permissions'][0] == 'only_this' && eyeControl_lib_getConfigUser() == $currentUser)) {
+						$myHiddenCAT = new Hidden(array(
+							'name' => 'eyeControl_box_hiddenCAT_' . $x,
+							'father' => 'eyeControl_box',
+							'text' => $category['name'][0]
+						));
+						$myHiddenCAT->show();
+						$myHiddenNAME = new Hidden(array(
+							'name' => 'eyeControl_box_hiddenNAME_' . $x,
+							'father' => 'eyeControl_box',
+							'text' => $content['name'][0]
+						));
+						$myHiddenNAME->show();
+						$myLabel = new Label(array(
+							'name' => 'eyeControl_box_label_' . $x,
+							'father' => 'eyeControl_box',
+							'text' => $content['display'][0],
+							'x' => 20,
+							'y' => $boxY,
+							'disablemsg' => 0,
+							'signal' => 'box_label'
+						));
+						$myLabel->addFriend($myHiddenCAT);
+						$myLabel->addFriend($myHiddenNAME);
+						$myLabel->show();
+						$myLabel->setCss(array(
+							'cursor' => 'Pointer',
+							'white-space' => 'nowrap'
+						));
+						$boxY += 20;
+						$x++;
+					}
+				}
+			}
+		}
+		$dir = EYE_ROOT. '/' . APP_DIR .'/' . APP_CONF_SHARE . '/eyeControl/others/';
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		$openDir = vfs('real_getDirContent',array($dir,'*.xml',2));
+		$currentUser = $oldUser;
+		if (is_array($openDir) && isset($openDir[0]) === true) {
+			$x_others = $x;
+			$x++;
+			$boxY_others = $boxY;
+			$boxY += 30;
+			foreach ($openDir as $file) {
+				$oldUser = $currentUser;
+				$currentUser = ROOTUSER;
+				$content = eyeXML('getXMLfile',array($file));
+				$currentUser = $oldUser;
+				$content = $content['content'][0];
+				if ($content['show'][0] != 'no' && $content['show'][0] != 'nolist' && ($content['permissions'][0] == 'all'
+				|| $content['permissions'][0] == 'root' && eyeControl_lib_getConfigUser() == ROOTUSER
+				|| $content['permissions'][0] == 'maintainer' && (eyeControl_lib_getConfigUser() == ROOTUSER || um('checkMaintainer',array(eyeControl_lib_getConfigUser())))
+				|| $content['permissions'][0] == 'user' && eyeControl_lib_getConfigUser() != ROOTUSER
+				|| $content['permissions'][0] == 'only_real' && eyeControl_lib_getConfigUser() != '[skel]'
+				|| $content['permissions'][0] == 'only_this' && eyeControl_lib_getConfigUser() == $currentUser)) {
+					$myHiddenCAT = new Hidden(array(
+						'name' => 'eyeControl_box_hiddenCAT_' . $x,
+						'father' => 'eyeControl_box',
+						'text' => 'others'
+					));
+					$myHiddenCAT->show();
+					$myHiddenNAME = new Hidden(array(
+						'name' => 'eyeControl_box_hiddenNAME_' . $x,
+						'father' => 'eyeControl_box',
+						'text' => $content['name'][0]
+					));
+					$myHiddenNAME->show();
+					$myLabel = new Label(array(
+						'name' => 'eyeControl_box_label_' . $x,
+						'father' => 'eyeControl_box',
+						'text' => $content['display'][0],
+						'x' => 20,
+						'y' => $boxY,
+						'disablemsg' => 0,
+						'signal' => 'box_label'
+					));
+					$myLabel->addFriend($myHiddenCAT);
+					$myLabel->addFriend($myHiddenNAME);
+					$myLabel->show();
+					$myLabel->setCss(array(
+						'cursor' => 'Pointer',
+						'white-space' => 'nowrap'
+					));
+					$boxY += 20;
+					$x++;
+				}
+			}
+			if ($x > $x_others + 1) {
+				$myHiddenCAT = new Hidden(array(
+					'name' => 'eyeControl_box_hiddenCAT_' . $x_others,
+					'father' => 'eyeControl_box',
+					'text' => 'others'
+				));
+				$myHiddenCAT->show();
+				$myLabel = new Label(array(
+					'name' => 'eyeControl_box_label_' . $x_others,
+					'father' => 'eyeControl_box',
+					'text' => 'Others',
+					'x' => 10,
+					'y' => $boxY_others + 10,
+					'disablemsg' => 0,
+					'signal' => 'box_label'
+				));
+				$myLabel->addFriend($myHiddenCAT);
+				$myLabel->show();
+				$myLabel->setCss(array(
+					'font-size'=>'12px',
+					'color' => '#004488',
+					'cursor' => 'Pointer',
+					'white-space' => 'nowrap'
+				));
+			}
+		}
+// $myContainer
+		$myContainer = new Container(array(
+			'name' => 'eyeControl_container_big_Content',
+			'father' => 'eyeControl_window_Content',
+			'x' => 190,
+			'y' => 10,
+			'width' => 565,
+			'height' => 455
+		));
+		$myContainer->show();
+		eyeWidgets('serialize',array($myContainer));
+// Select user:
+		if ($currentUser == ROOTUSER) {
+			$myLabel = new Label(array(
+					'name' => 'eyeControl_label_User',
+					'father' => 'eyeControl_window_Content',
+					'text' => 'Select user:',
+					'vert' => 1,
+					'horiz' => 1,
+					'x' => 220,
+					'y' => 10,
+				));
+			$myLabel->show();
+			$mySelect = new Select(array(
+				'name' => 'eyeControl_select_User',
+				'father' => 'eyeControl_window_Content',
+				'horiz' => 1,
+				'vert' => 1,
+				'width' => 200,
+				'x' => 10,
+				'y' => 7
+			));
+			$mySelect->show();
+			if (isset($params['user']) === true && $params['user'] == '[skel]') {
+				$mySelect->addOption('[Default user]','[skel]',1);
+				$mySelect->addOption(' - - - - -','[---]');
+				$mySelect->addOption('[Default user]','[skel]');
+				$mySelect->addOption(ROOTUSER,ROOTUSER);
+				$mySelect->addOption('Search user...','');
+			} elseif (isset($params['user']) === false || !$params['user'] || $params['user'] == ROOTUSER) {
+				$mySelect->addOption(ROOTUSER,ROOTUSER,1);
+				$mySelect->addOption(' - - - - -','[---]');
+				$mySelect->addOption('[Default user]','[skel]');
+				$mySelect->addOption(ROOTUSER,ROOTUSER);
+				$mySelect->addOption('Search user...','');
+			} else {
+				$mySelect->addOption($params['user'],$params['user'],1);
+				$mySelect->addOption(' - - - - -','[---]');
+				$mySelect->addOption('[Default user]','[skel]');
+				$mySelect->addOption(ROOTUSER,ROOTUSER);
+				$mySelect->addOption('Search user...','');
+			}
+			$mySelect->addEvent('onchange','sendMsg(' . $checknum . ',"selectUser",eyeParam("selected",this.value));');
+			$mySelect->addEnterEventMsg('selectUser');
+// Used space:
+		} else {
+			$size = vfs('getDirSize',array(eyeControl_lib_getConfigUserPath()));
+			$myLabel = new Label(array(
+					'name' => 'eyeControl_label_Quota',
+					'father' => 'eyeControl_window_Content',
+					'text' => 'Used space:',
+					'vert' => 1,
+					'horiz' => 1,
+					'x' => 220,
+					'y' => 10,
+				));
+			$myLabel->show();
+			$myProgress = new ProgressBar(array(
+				'name' => 'eyeControl_progress_Quota',
+				'father' => 'eyeControl_window_Content',
+				'horiz' => 1,
+				'vert' => 1,
+				'width' => 200,
+				'x' => 10,
+				'y' => 7,
+				'max' => vfs('getQuota'),
+				'progress' => $size
+			));
+			$myProgress->show();
+		}
+	}
+// Load content for start
+	if (isset($params['category']) === true && $params['category']) {
+		if (isset($params['contentParams']) === false) {
+			$params['contentParams'] = '';
+		}
+		eyeControl_lib_loadContent($params['category'], $params['content'], $params['contentParams']);
+	} else if (isset($params[0]) === true) {
+		eyeControl_lib_loadContent($params[0],$params[1],$params[2]);
+	} else {
+		eyeControl_lib_loadContent();
+	}
+}
+
+function eyeControl_end($params = '') {
+	eyeWidgets('unserialize');
+}
+?>

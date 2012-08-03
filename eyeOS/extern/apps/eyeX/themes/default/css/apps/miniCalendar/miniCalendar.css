@@ -1,0 +1,65 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+.cal0, .cal1, .cal2, .cal3, .cal4, .cal5 {
+	color: #ffffff;
+	height: 17px;
+	overflow-x: hidden;
+	padding-left: 5px;
+	width: 80px;
+}
+
+
+.cal0 {
+	background-color: #e46f46;
+}
+
+.cal1 {
+	background-color: #37a3ff;
+}
+
+.cal2 {
+	background-color: #6fba32;
+}
+
+.cal3 {
+	background-color: #8074c9;
+}
+
+.cal4 {
+	background-color: #f19a2a;
+}
+
+.cal5 {
+	background-color: #e26299;
+}
+
+.miniCalendarInnerLeft {
+	height: 145px;
+	left: 4px;
+	position: absolute;
+	top: 18px;
+	width: 160px;
+}
+
+.miniCalendarInnerRight {
+	height: 145px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	position: absolute;
+	right: 6px;
+	top: 19px;
+	width: 301px;
+}

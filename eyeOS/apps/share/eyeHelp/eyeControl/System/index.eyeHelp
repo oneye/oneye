@@ -1,0 +1,20 @@
+[b]oneye Board[/b]
+
+	Change your eyeBoard settings. Show full names: if you would like to see full name or nick name. Refresh interval: set the refresh interval in seconds
+
+
+[b]Autorun Commands[/b]
+
+	Manage your autorun commands. If you would like a eyeApp to open when you login you can set it to do so here or edit, delete ones that are set as well as reseting to the default configuration
+
+
+[b]Web Browser[/b]
+
+            Manage eyeNav's startpage, bookmarks and search engines as well as exporting to a file for backup, sharing, or transporting
+
+
+[b]Security[/b]
+
+	Protect Sessions by IP if checked only one IP address per login permitted so if you are loged in at home and someone finds your username and password at work they will not be able to have access. Caution! If you do not end session at point A you may not be able to login at point B
+
+

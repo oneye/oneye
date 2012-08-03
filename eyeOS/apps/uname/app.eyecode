@@ -1,0 +1,33 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function uname_run($params=null) {
+	if(count($params) == 0) {
+		eyeX('print',array('oneye'));
+	} else {
+		if($params[0] == '-a') {
+			eyeX('print',array('oneye ' . ONEYE_VERSION . ' (' . EYEOS_VERSION . ') ' . EYEOS_HOSTNAME));
+		} elseif($params[0] == '-s') {
+			eyeX('print',array('oneye'));
+		} elseif($params[0] == '-v') {
+			eyeX('print',array(EYEOS_VERSION));
+		} elseif($params[0] == '-n') {
+			eyeX('print',array(EYEOS_HOSTNAME));
+		}
+	}
+	proc('end');
+}
+?>

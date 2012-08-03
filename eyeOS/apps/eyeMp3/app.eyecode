@@ -1,0 +1,89 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeMp3_run($params=null) {
+	global $myPid,$checknum;
+	if ($params[0]) {
+		$processTable = proc('getProcessTable');
+		$count = 0;
+		foreach (proc('getProcessTable') as $process) {
+			if ($process['appName'] == 'eyeMp3' && $checknum != $process['checknum']) {
+				if (!$count) {
+					$proc = $process;
+				}
+				$count++;
+			}
+		}
+		if ($proc) {
+			proc('end');
+			$checknum = $proc['checknum'];
+			$myPid = $proc['pid'];
+		}
+		$myHidden = new Hidden(array(
+			'father' => 'eyeApps',
+			'name' => 'eyeMp3_Hidden',
+			'text' => $params[0]
+		));
+		$myHidden->show();
+		addShortUrl('.mp3','getFile');
+		if ($proc) {
+			eyex('runjs',array('js' => 'eyeMp3_loadSound(' . $myPid . ',"index.php/.mp3",%s);','tokens' => array(basename($params[0]) . ' - eyeMp3')));
+		} else {
+			eyex('loadScript',array('url' => 'index.php?extern=apps/eyeMp3/js/eyeMp3' . EYE_CODE_EXTENSION . '&type=dynamic&params[]=' . $myPid . '&params[]=' . $checknum));
+
+			$myWindow = new Window(array(
+				'cent' => 1,
+				'father' => 'eyeApps',
+				'height' => 88,
+				'name' => 'eyeMp3_Window',
+				'savePosition' => 1,
+				'style' => TITLE + LISTED + MIN + CLOSE,
+				'title' => basename($params[0]) . ' - eyeMp3',
+				'width' => 280
+			));
+			$myWindow->show();
+
+			$myLabel = new Label(array(
+				'father' => 'eyeMp3_Window_Content',
+				'name' => 'eyeMp3_Label',
+				'text' => 'This is not a bug. Unfortunately it is a problem with your Flash player!',
+				'x' => 20,
+				'y' => 20
+			));
+			$myLabel->show();
+
+			$myFlash = new Flash(array(
+				'father' => 'eyeMp3_Window_Content',
+				'flashParamsNames' => array('flashvars','menu','scale','bgcolor'),
+				'flashParamsValues' => array('src=index.php/.mp3&autostart=yes&loop=no&jscontrol=true','false','noscale','#c0c0c0'),
+				'height' => 64,
+				'name' => 'eyeMp3_Flash',
+				'src' => 'index.php?extern=apps/eyeMp3/swf/webplayer.swf&type=swf',
+				'width' => 278,
+				'x' => 0,
+				'y' => 0
+			));
+			$myFlash->show();
+		}
+	} else {
+		proc('end');
+	}
+}
+
+function eyeMp3_end($params = '') {
+	eyeWidgets('unserialize',$params);
+}
+?>

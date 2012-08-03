@@ -1,0 +1,115 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function miniHome_run($params=null) {
+	global $myPid;
+
+	foreach (proc('getProcessTable') as $process) {
+		if ($process['appName'] == 'miniHome' && $process['pid'] != $myPid) {
+			eyex('messageBox', array('content' => 'miniHome is already running!'));
+			return proc('end');
+		}
+	}
+
+	$myWindow = new Window(array(
+		'name' => 'miniHomeWND',
+		'father' => 'eyeWidgets',
+		'removeFatherPid' => 1,
+		'width' => 202,
+		'height' => 105,
+		'type' => WIN_IMAGE_DRAGGABLE_NOTLISTED,
+		'savePosition' => 1,
+		'background' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/miniApps/miniHome/minihome.png'
+	));
+	$myWindow->show();
+
+	/**
+	*@Todo if Windows Widget gets class fix this
+	*/
+	eyeX('rawjs',array('js'=>
+		'document.getElementById("'.$myPid.'_' . $myWindow->name . '").className = "miniWND";
+		document.getElementById("'.$myPid.'_' . $myWindow->name . '_Content").className = "miniWND";
+		'
+	));
+
+
+	$myLabel0 = new Label(array(
+		'name' => 'myQuota',
+		'father' => 'miniHomeWND_Content',
+		'x' => 20,
+		'y' => 2,
+		'text' => 'My Quota',
+	));
+	$myLabel0->show();
+
+	$myImage1 = new Imagebox(array(
+		'name' => 'imgClose',
+		'father' => 'miniHomeWND_Content',
+		'horiz' => 1,
+		'x' => 5,
+		'y' => 4,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/desktop/close.png',
+		'disableMsg' => 0,
+		'signal' => 'Close'
+	));
+	$myImage1->show();
+	$myImage1->setCss(array('cursor' => 'Pointer'));
+
+	$myImage2 = new Imagebox(array(
+		'name' => 'imgRefresh',
+		'father' => 'miniHomeWND_Content',
+		'horiz' => 1,
+		'x' => 20,
+		'y' => 4,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/desktop/refresh.png',
+		'disableMsg' => 0,
+		'signal' => 'Refresh'
+	));
+	$myImage2->show();
+	$myImage2->setCss(array('cursor' => 'Pointer'));
+
+	$dir = um('getCurrentUserDir');
+	$size = vfs('getDirSize',array($dir));
+
+	$quotaBar = new ProgressBar(array(
+		'name' => 'quotaBar',
+		'father' => 'miniHomeWND_Content',
+		'width' => 180,
+		'y' => 50,
+		'x' => 10,
+		'max' => vfs('getQuota'),
+		'progress' => $size
+	));
+	$quotaBar->show();
+	eyeWidgets('serialize', array($quotaBar));
+
+	eyex('rawjs',array('js' =>
+		'document.getElementById("' . $myPid . '_' . $myLabel0->name . '").className = "miniAppTitle";
+		'
+	));
+
+	//CSS
+	eyex('loadCss',array(
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/miniApps/miniApps.css&type=css',
+		'id' => 'miniApps'
+	));
+}
+
+function miniHome_end() {
+	eyeWidgets('unserialize');
+}
+
+?>

@@ -1,0 +1,290 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+$edit = new Hidden(array(
+			'name' => 'edit_target',
+			'father' => 'eyeControl_container_big',
+			'text' => 'NOedit'
+		));
+eyeWidgets('serialize',array($edit));
+
+global $myPid;
+global $checknum;
+
+// Window design
+$myTextBox0 = new Textbox(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_acl_textbox',
+	'x' => 205,
+	'y' => 65,
+	'width' => 159
+));
+$myTextBox0->show();
+
+$myLabel0 = new Label(array(
+	'father' => $eyeContainer,
+	'name' =>  'eyeControl_acl_txtbox_lbl',
+	'text' => 'ACL Name:',
+	'x' => 365,
+	'y' => 67,
+	'horiz' => 1
+));
+$myLabel0->show();
+$myLabel0->setCSS(array('font-weight' => 'bolder'));
+
+$myLabel1 = new Label(array(
+	'father' => $eyeContainer,
+	'name' =>  'eyeControl_acl_service_lbl',
+	'text' => 'Service:',
+	'x' => 365,
+	'y' => 92,
+	'horiz' => 1
+));
+$myLabel1->show();
+$myLabel1->setCSS(array('font-weight' => 'bolder'));
+
+$myLabel2 = new Label(array(
+	'father' => $eyeContainer,
+	'name' =>  'eyeControl_acl_function_lbl',
+	'text' => 'Function:',
+	'x' => 365,
+	'y' => 117,
+	'horiz' => 1
+));
+$myLabel2->show();
+$myLabel2->setCSS(array('font-weight' => 'bolder'));
+
+$myLabel3 = new Label(array(
+	'father' => $eyeContainer,
+	'name' =>  'eyeControl_acl_action_lbl',
+	'text' => 'Action:',
+	'x' => 365,
+	'y' => 142,
+	'horiz' => 1
+));
+$myLabel3->show();
+$myLabel3->setCSS(array('font-weight' => 'bolder'));
+
+$myLabel4 = new Label(array(
+	'father' => $eyeContainer,
+	'name' =>  'eyeControl_acl_serv_desc_subtitle',
+	'text' => 'Service Description:',
+	'x' => 10,
+	'y' => 220
+));
+$myLabel4->show(0);
+$myLabel4->setCSS(array('font-weight' => 'bolder'));
+
+$myLabel5 = new Label(array(
+	'father' => $eyeContainer,
+	'name' =>  'eyeControl_acl_serv_desc',
+	'text' => '---',
+	'x' => 20,
+	'y' => 240
+));
+$myLabel5->show(0);
+
+$myLabel6 = new Label(array(
+	'father' => $eyeContainer,
+	'name' =>  'eyeControl_acl_func_desc_subtitle',
+	'text' => 'Function Description:',
+	'x' => 10,
+	'y' => 300
+));
+$myLabel6->show(0);
+$myLabel6->setCSS(array('font-weight' => 'bolder'));
+
+$myLabel7 = new Label(array(
+	'father' => $eyeContainer,
+	'name' =>  'eyeControl_acl_func_desc',
+	'text' => '---',
+	'x' => 20,
+	'y' => 320
+));
+$myLabel7->show(0);
+
+
+$mySelect = new Select(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_acl_service_select',
+	'x' => 205,
+	'y' => 90,
+	'width' => 163
+));
+$mySelect->show();
+$mySelect->addOption('---',1,1);
+$sf_file = EYE_ROOT .'/'. APP_DIR .'/eyeControl/others/acl-servfunc.xml';
+$servfunc = eyeXML('getXMLfile', array($sf_file));
+$sCnt = 2;
+if ($servfunc) {
+	foreach($servfunc['servfunc'][0]['serv'] as $serv) {
+		$mySelect->addOption($serv['sname'][0],$sCnt);
+		$sCnt++;
+	}
+}
+$mySelect->addEvent('onchange','sendMsg('.$checknum.',"aclServChange",eyeParam("arg0",this.value)+eyeParam("arg1",document.getElementById("'.$mySelect->creatorPid.'_eyeControl_acl_settings_hideHazard").checked));');
+
+$mySelect1 = new Select(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_acl_function_select',
+	'x' => 205,
+	'y' => 115,
+	'width' => 163
+));
+$mySelect1->show();
+$mySelect1->addOption('---',1,1);
+$mySelect1->addEvent('onchange','sendMsg('.$checknum.',"aclFuncChange",eyeParam("arg0",this.value)+eyeParam("arg1",document.getElementById("'.$mySelect1->creatorPid.'_eyeControl_acl_service_select").value));');
+
+$mySelect3 = new Select(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_acl_allowDeny_select',
+	'x' => 205,
+	'y' => 140,
+	'width' => 163
+));
+$mySelect3->show();
+$mySelect3->addOption('---',1);
+$mySelect3->addOption(Allow,2);
+$mySelect3->addOption(Deny,3);
+
+$myButton03 = new Button(array(
+	'name' => 'eyeControl_acl_settings_add_button',
+	'father' => $eyeContainer,
+	'signal' => 'add_settings',
+	'caption' => 'Add Rule',
+	'x' => 235,
+	'y' => 170,
+));
+$myButton03->addFriend($myTextBox0);
+$myButton03->addFriend($mySelect);
+$myButton03->addFriend($mySelect1);
+$myButton03->addFriend($mySelect3);
+$myButton03->show();
+
+$myCheckbox = new Checkbox(array(
+	'name' => 'eyeControl_acl_settings_hideHazard',
+	'father' => $eyeContainer,
+	'text' => 'Hide Hazardous Options',
+	'x' => 10,
+	'y' => 20,
+	'horiz' => 1,
+	'vert' => 1,
+	'checked' => 1
+));
+$myCheckbox->show();
+$myCheckbox->addEvent('onchange','sendMsg('.$checknum.',"acl_hideHazard",eyeParam("arg0",this.checked)+eyeParam("arg1",document.getElementById("'.$myCheckbox->creatorPid.'_eyeControl_acl_service_select").value));');
+
+//Add or edit
+$text=$GLOBALS['addEdit']->text;
+
+if($text == 'add'){
+	$id = uniqid();
+	$myHidden = new Hidden(array(
+			'name' => 'uniqid',
+			'father' => $eyeContainer,
+			'text' => $id
+		));
+	eyeWidgets('serialize',array($myHidden));
+
+} else {
+
+	$mySelect->remove();
+	$mySelect1->remove();
+	$myLabel1->remove();
+	$myLabel2->remove();
+	$myButton03->remove();
+	$myCheckbox->remove();
+	
+	$myLabel3->setY(92);
+	$mySelect3->setY(90);
+	
+	$id = $GLOBALS['eyeControl_acl_sortabletable']->selected;
+	$myHidden = new Hidden(array(
+			'name' => 'uniqid',
+			'father' => $eyeContainer,
+			'text' => $id
+	));
+	eyeWidgets('serialize',array($myHidden));
+
+	$myButton99 = new Button(array(
+		'name' => 'eyeControl_acl_settings_update_button',
+		'father' => $eyeContainer,
+		'signal' => 'update_settings',
+		'caption' => 'Update Rule',
+		'x' => 235,
+		'y' => 120,
+	));
+	$myButton99->addFriend($myTextBox0);
+	$myButton99->addFriend($mySelect3);
+	$myButton99->show();
+
+	$myButton01 = new Button(array(
+		'name' => 'eyeControl_acl_target_button_edit',
+		'father' => $eyeContainer,
+		'signal' => 'target_edit',
+		'caption' => 'Edit Targets',
+		'width' => 88,
+		'x' => 10,
+		'y' => 200,
+		'horiz' => 1,
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/paste.png'
+	));
+	$myButton01->show();
+
+	$id0 = $GLOBALS['eyeControl_acl_sortabletable']->selected;
+
+	$file = EYE_ROOT .'/'. SYSTEM_DIR .'/'. SYSTEM_CONF_DIR .'/ACL/'. 'acl.xml';
+	$config = eyeXML('getXMLfile', array($file));
+	if ($config) {
+		foreach ($config['GACL'][0]['ACL'] as $acl) {
+			$id = $acl['id'][0];
+			if ($id == $id0){
+				$myLabel4->setText($acl['service'][0]);
+				$myLabel6->setText($acl['call'][0]);
+				$myTextBox0->setText($acl['description'][0]);
+				if ($acl['action'][0]=="Allow") {
+					$mySelect3->selectValue(2);
+				} else {
+					$mySelect3->selectValue(3);
+				}
+				if ($servfunc) {
+					foreach($servfunc['servfunc'][0]['serv'] as $serv) {
+						if ($serv['sname'][0] == $acl['service'][0]) {
+							$myLabel5->setText($serv['sdesc'][0]);
+							foreach ($serv['func'] as $func) {
+								if ($func['fname'][0] == $acl['call'][0]) {
+									$myLabel7->setText($func['fdesc'][0]);
+									if (is_array($func['fparam'])) {
+										$fParam = $func['fparam'][0];
+									} else {
+										$fParam = "N/A";
+									}
+									$paramType = new Hidden(array(
+										'name' => 'param_type',
+										'father' => 'eyeControl_container_big',
+										'text' => $fParam
+									));
+									eyeWidgets('serialize',array($paramType));
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+}
+?>

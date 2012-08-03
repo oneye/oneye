@@ -1,0 +1,64 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeArchive_run($params=null) {
+	global $myPid,$checknum;
+
+	$myWindow = new Window(array('name'=>'mainWindow','title'=>'Archive Manager','father'=>'eyeApps',
+		'type'=>NORESIZE_WINDOW,'width'=>548,'height'=>530,'cent'=>1,'savePosition' => 1));
+	$myWindow->show();
+
+	$actionLabel = new Label(array('name'=>'actionLabel','father'=>'mainWindow_Content','text'=>'Open a folder or file','y'=>70,'x'=>5));
+	$actionLabel->show(0);
+
+	$myTextBox = new Textbox(array('name'=>'workingPath','father'=>'mainWindow_Content','width'=>490,'y'=>85,'x'=>5,'text'=>'/'));
+	$myTextBox->show();
+
+	$myToolbar = new Toolbar(array('name'=>'myBar','father'=>'mainWindow_Content'));
+	$myToolbar->show();
+	$myToolbar->addItem('Open','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fileopen.png','Open');
+	$myToolbar->addItem('Extract','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/archive-extract.png','Extract',array($myTextBox));
+	$myToolbar->addItem('Compress','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/archive-insert.png','Compress',array($myTextBox));
+
+
+	$myButton = new Button(array('name'=>'selectDest','father'=>'mainWindow_Content','signal'=>'SelectDest',
+	'caption'=>'...','x'=>505,'y'=>85,'img'=>'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/folder.png'));
+	$myButton->show();
+
+
+	$sortypes = array("String");
+	$myHeader = array('Filename');
+	$myTable = new Sortabletable(array('name'=>'mainTable','father'=>'mainWindow_Content',
+		'sortypes'=>$sortypes,'theader'=>$myHeader,'x'=>5,'y'=>110,'width'=>535,'height'=>388));
+
+	$myTable->show();
+
+	$myHidden = new Hidden(array('name'=>'projectStarted','father'=>'eyeApps','text'=>'false'));
+	eyeWidgets('serialize',array($myHidden));
+
+	if(isset($params[0])){
+		$myHidden->setText('true');
+		$myHidden2 = new Hidden(array('name'=>'argSrc','father'=>'eyeApps','text'=>$params[0]));
+		eyeWidgets('serialize',array($myHidden2));
+		eyex('rawjs',array('js'=>"sendMsg($checknum,'SelectOpenFile');"));
+	}
+}
+
+function eyeArchive_end($params=null) {
+	eyeWidgets('unserialize');
+}
+
+?>

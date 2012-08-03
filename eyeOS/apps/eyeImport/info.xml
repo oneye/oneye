@@ -1,0 +1,10 @@
+<package>
+	<name>eyeImport</name>
+	<category>Core Utilities</category>
+	<version>1.9</version>
+	<description>Utility to import files</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon />
+</package>

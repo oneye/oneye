@@ -1,0 +1,66 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	XML library for oneye
+*/
+function lib_eyeXML_init(){
+	//Before do anything, we've to be sure that we are radically retrocompatibles if XML_COMPAT is set to 1
+	if(XML_COMPAT == 1){
+		include_once 'parsers/pure.eyecode';
+		include_once 'xmlConfiguration.eyecode';
+		return true;
+	}
+	//If the compat mode is not set, we've to load the default parser
+	require_once 'parsers/'.XML_PARSER.EYE_CODE_EXTENSION;
+	include_once 'xmlConfiguration.eyecode';
+}
+
+/**
+* Returns a XML header.
+*
+* @return Returns a XML header.
+* @date 2008/03/11
+*/
+if(!function_exists('lib_eyeXML_getXmlHeader')){
+	function lib_eyeXML_getXmlHeader($params=null) {
+		return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+	}
+}
+
+/**
+* Transforms characters that have HTML entities to their entities.
+*
+* @param $params array(string)
+* @param $string Input string.
+* @return Returns the result of replacing the special HTML characters
+*	to their entities.
+* @date 2008/03/11
+*/
+if(!function_exists('lib_eyeXML_entityEncode')){
+	function lib_eyeXML_entityEncode($params){
+		if(!isset($params[0])){
+			errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+			return false;
+		}
+
+		$string = $params[0];
+		$string = utf8_htmlspecialchars($string, ENT_NOQUOTES);
+
+		return $string;
+	}
+}
+?>

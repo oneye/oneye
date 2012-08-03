@@ -1,0 +1,127 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function parseParams($paramsx) {
+	$params = array();
+	if(is_array($paramsx)) {
+		foreach($paramsx as $value) {
+			$params[] = parseParams($value);
+		}
+		return $params;
+	}
+	if(!is_object($paramsx)) {
+		return $paramsx;
+	}
+	$i = $paramsx->arraysize();
+	for($j=0; $j<$i; $j++) {
+		$position = $paramsx->arraymem($j)->scalarval();
+		$position = parseParams($position);
+		$params[] = $position;
+	}
+	return $params;
+}
+
+function xmlrpc_process($m) {
+	$user = $m->getParam(0)->scalarval();
+	$pass = $m->getParam(1)->scalarval();
+	$paramsx = $m->getParam(2);
+
+	$params = parseParams($paramsx);
+	$what = $m->methodname;
+	$parts = /* utf8 */ explode('.', $what);
+
+	if(count($parts) != 3) {
+		exit;
+	}
+
+	if(um('login', array($user, $pass))) {
+		global $currentUser;
+		$currentUser = $user;
+		if($parts[0] == 'service') {
+			$ret = service($parts[1],$parts[2],$params);
+		} elseif($parts[0] == 'lib') {
+			$ret = reqLib($parts[1],$parts[2],$params);
+		}
+		if(is_array($ret)) {
+			$rv=new xmlrpcval(array(), 'array');
+			foreach($ret as $value) {
+				$rv->addScalar($value, "string");
+			}
+			return new xmlrpcresp($rv);
+		}
+		$data = file_get_contents(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/xml-rpc/config.xml');
+		$xml = eyeXML('xml2array',array($data));
+		if($parts[0] == 'service') {
+			foreach($xml['api'][0]['services'][0]['service'] as $value) {
+				if($value['name'][0] == $parts[1] && $value['function'][0] == $parts[2]) {
+					return new xmlrpcresp(new xmlrpcval($ret,$value['return'][0]));
+				}
+			}
+		}
+
+		if($parts[0] == 'lib') {
+			foreach($xml['api'][0]['libs'][0]['lib'] as $value) {
+				if($value['name'][0] == $parts[1] && $value['function'][0] == $parts[2]) {
+					return new xmlrpcresp(new xmlrpcval($ret,$value['return'][0]));
+				}
+			}
+		}
+
+	}
+}
+
+function xmlrpc_parseRequest() {
+	$data = file_get_contents(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/xml-rpc/config.xml');
+	$xml = eyeXML('xml2array',array($data));
+	require_once(EYE_ROOT.'/xml-rpc/xmlrpc.inc');
+	require_once(EYE_ROOT.'/xml-rpc/xmlrpcs.inc');
+	require_once(EYE_ROOT.'/xml-rpc/xmlrpc_wrappers.inc');
+	$a=array();
+
+	foreach($xml['api'][0]['services'][0]['service'] as $value) {
+		$a['service'.'.'.$value['name'][0].'.'.$value['function'][0]] = array(
+			"function" => 'xmlrpc_process',
+			"signature" => array(array($value['return'][0],'string','string','array')), //func,user,pass,params
+			"docstring" => $value['doc'][0]
+		);
+	}
+
+	foreach($xml['api'][0]['libs'][0]['lib'] as $value) {
+		$a['lib'.'.'.$value['name'][0].'.'.$value['function'][0]] = array(
+			"function" => 'xmlrpc_process',
+			"signature" => array(array($value['return'][0],'string','string','array')), //func,user,pass,params
+			"docstring" => $value['doc'][0]
+		);
+	}
+
+	$a['test'] = array(
+		'function' => 'xmlrpc_test',
+		'signature' => array(array('boolean')),
+		'docstring' => 'test function'
+	);
+
+	$s=new xmlrpc_server($a, false);
+	$s->setdebug(0);
+	$s->compress_response = true;
+
+	$s->service();
+}
+
+function xmlrpc_test($m) {
+	return new xmlrpcresp(new xmlrpcval("hello world"));
+}
+
+?>

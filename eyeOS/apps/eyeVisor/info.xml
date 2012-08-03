@@ -1,0 +1,11 @@
+<package>
+	<name>eyeVisor</name>
+	<category>Core Office</category>
+	<version>1.9</version>
+	<description>Utility to view office files</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/theme.png</icon>
+	<openWith>1</openWith>
+</package>

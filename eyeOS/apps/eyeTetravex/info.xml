@@ -1,0 +1,10 @@
+<package>
+	<name>Tetravex Game</name>
+	<category>Games</category>
+	<version>1.1</version>
+	<description>A Tetravex game for oneye.</description>
+	<author>Nanawel [nanawel@eyeos.org]</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/eyeTetravex.png</icon>
+</package>

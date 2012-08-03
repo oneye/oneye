@@ -1,0 +1,27 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_levenshtein($str1, $str2, $cost_ins = 1, $cost_rep = 1, $cost_del = 1) {
+	$length1 = utf8_strlen($str1);
+	$length2 = utf8_strlen($str2);
+	$table = array();
+	
+	for ($i = 0; $i <= $length1; $i++) {
+		$table[$i] = array($i);
+	}
+	for ($j = 1; $j <= $length2; $j++) {
+		$table[0][$j] = $j;
+	}
+	
+	for ($i = 1; $i <= $length1; $i++) {
+		for ($j = 1; $j <= $length2; $j++) {
+			if (utf8_substr($str1, $i - 1, 1) !== utf8_substr($str2, $j - 1, 1)) {
+				$table[$i - 1][$j - 1] += $cost_rep;
+			}
+			$table[$i][$j] = min($table[$i][$j - 1] + $cost_ins, $table[$i - 1][$j - 1], $table[$i - 1][$j] + $cost_del);
+		}
+	}
+	return $table[$length1][$length2];
+}
+?>

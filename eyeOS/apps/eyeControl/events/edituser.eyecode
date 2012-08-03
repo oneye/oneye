@@ -1,0 +1,149 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_edituser_save($params = '') {
+	global $currentUser;
+	global $myPid;
+
+	if (um('checkMaintainer',array(eyeControl_lib_getConfigUser()))) {
+		$myUserXml = um('retrieveUser',array(eyeControl_lib_getConfigUser()));
+	}
+
+	$array['username'] = $GLOBALS['eyeControl_edituser_hidden']->text;
+
+	if ($currentUser != ROOTUSER && !um('checkMaintainer',array(eyeControl_lib_getConfigUser())) || um('checkMaintainer',array(eyeControl_lib_getConfigUser())) && !in_array($array['username'],$myUserXml['eyeUser'][0]['mngUser'])) {
+		eyex('messageBox',array('content' => 'You are not allowed to manage users!'));
+		eyeControl_lib_loadContent();
+		return;
+	}
+
+	$array['fullname'] = $GLOBALS['eyeControl_edituser_textbox_fullname']->text;
+	$array['email'] = $GLOBALS['eyeControl_edituser_textbox_email']->text;
+	if ( /* utf8 */ strtolower($GLOBALS['eyeControl_edituser_textbox_expire']->text) === 'never' || utf8_strtolower($GLOBALS['eyeControl_edituser_textbox_expire']->text) === utf8_strtolower(i18n('translate', array('Never')))) {
+		$exp = 0;
+	} else {
+		$date = /* utf8 */ explode('/', $GLOBALS['eyeControl_edituser_textbox_expire']->text);
+		$exp = mktime(0,0,0,$date[1],$date[0],$date[2]);
+	}
+	$quota_type = $GLOBALS['eyeControl_edituser_select_quota_type']->selected;
+	if ($quota_type == 'custom') {
+		$quota = $GLOBALS['eyeControl_edituser_textbox_quota_value']->text;
+		if ($quota < 0 || !is_numeric($quota)) {
+			$quota = '';
+		} else {
+			$quota_unit = $GLOBALS['eyeControl_edituser_select_quota_unit']->selected;
+			switch ($quota_unit) {
+			case 'GB':
+				$quota = $quota * 1024 * 1024 * 1024;
+				break;
+			case 'MB':
+				$quota = $quota * 1024 * 1024;
+				break;
+			case 'KB':
+				$quota = $quota * 1024;
+				break;
+			}
+		}
+	} elseif ($quota_type == 'unlimited') {
+		$quota = 0;
+	} else {
+		$quota = '';
+	}
+	$array['quota'] = $quota;
+	$array['resetPassword'] = $GLOBALS['eyeControl_edituser_checkbox_setnewpassword']->checked;
+	$array['expirationDate'] = $exp;
+	if ($array['username'] != ROOTUSER || $currentUser == REAL_ROOTUSER && $array['username'] != REAL_ROOTUSER) {
+		$array['disabled'] = $GLOBALS['eyeControl_edituser_checkbox_block']->checked;
+	}
+	if ($array['username'] != REAL_ROOTUSER) {
+		$permissions = $GLOBALS['eyeControl_edituser_select_permissions']->selected;
+		if ($permissions == 'admin') {
+			$array['admin'] = 1;
+			$array['maintainer'] = 0;
+		} elseif ($permissions == 'maintainer') {
+			$array['admin'] = 0;
+			$array['maintainer'] = 1;
+		} else {
+			$array['admin'] = 0;
+			$array['maintainer'] = 0;
+		}
+	}
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$openDir = vfs('real_getDirContent',array(EYE_ROOT . '/' . GROUPS_DIR . '/'));
+	$array['group'] = array();
+	$array['maintain'] = array();
+	foreach ($openDir as $group) {
+		if (is_dir($group)) {
+			$group = basename($group);
+			if ($GLOBALS['eyeControl_edituser_checkbox_maintain_' . $group]->checked == 1 && $array['maintainer']) {
+				$array['group'][] = $group;
+				$array['maintain'][] = $group;
+			} elseif ($GLOBALS['eyeControl_edituser_checkbox_group_' . $group]->checked == 1) {
+				$array['group'][] = $group;
+			}
+		}
+	}
+	um('updateUser',$array);
+	$currentUser = $oldUser;
+	eyex('messageBox',array('content' => 'Changes successfully saved.'));
+	eyeControl_lib_loadContent('only_root','users',array($_SESSION['eyeControl'][$myPid]['content']['users']));
+}
+
+function eyeControl_on_edituser_add($params = '') {
+	$edituser = $GLOBALS['eyeControl_edituser_hidden']->text;
+	$user = $GLOBALS['eyeControl_edituser_textbox_maintained_users']->text;
+	if (um('userExist',array($user))) {
+		$xml = um('retrieveUser',array($edituser));
+		$array['username'] = $edituser;
+		$array['mngUser'] = $xml['eyeUser'][0]['mngUser'];
+		$array['mngUser'][] = $user;
+		um('updateUser',$array);
+		$xml2 = um('retrieveUser',array($edituser));
+		$mngUsers = '';
+		foreach ($xml2['eyeUser'][0]['mngUser'] as $mngUser) {
+			($mngUsers) ? $mngUsers .= ', ' . $mngUser : $mngUsers = $mngUser;
+		}
+		$GLOBALS['eyeControl_edituser_label_maintained_users_2']->setText($mngUsers);
+		$GLOBALS['eyeControl_edituser_textbox_maintained_users']->setText('');
+		eyex('messageBox',array('content' => 'Changes successfully saved.'));
+	} else {
+		eyex('messageBox',array('content' => 'The user does not exist.'));
+	}
+}
+
+function eyeControl_on_edituser_remove($params = '') {
+	$edituser = $GLOBALS['eyeControl_edituser_hidden']->text;
+	$user = $GLOBALS['eyeControl_edituser_textbox_maintained_users']->text;
+	$xml = um('retrieveUser',array($edituser));
+	$array['username'] = $edituser;
+	$mngUsers = '';
+	$array['mngUser'] = array();
+	foreach ($xml['eyeUser'][0]['mngUser'] as $mngUser) {
+		if ($mngUser != $user) {
+			$array['mngUser'][] = $mngUser;
+			($mngUsers) ? $mngUsers .= ', ' . $mngUser : $mngUsers = $mngUser;
+		}
+	}
+	if (!$mngUsers) {
+		$mngUsers = 'none';
+	}
+	$GLOBALS['eyeControl_edituser_label_maintained_users_2']->setText($mngUsers);
+	$GLOBALS['eyeControl_edituser_textbox_maintained_users']->setText('');
+	um('updateUser',$array);
+	eyex('messageBox',array('content' => 'Changes successfully saved.'));
+}
+?>

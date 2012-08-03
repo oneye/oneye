@@ -1,0 +1,523 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+*GLOBAL configuration event
+*This even create the configuration window, and call to the default or desired config dialog
+*/
+function eyeCalendar_on_globalConfigureCalendar($params=''){
+	if($GLOBALS['configureCalendar']){
+		$GLOBALS['configureCalendar']->focus();
+		return true;
+	}
+	$info = eyeCalendar('getConfig');
+	$info = $info['eyeCalendar'][0];
+	$winWidth = 400;
+	$winHeight = 350;
+	$myWindow1 = new Window(array('title'=>'Configure calendar','name'=>'configureCalendar','father'=>'eyeCalendarWin1','cent'=>1,'width'=>$winWidth,'height'=>$winHeight,'sigClose'=>'configure_Closed','style' => TITLE + CLOSE));
+	$myWindow1->show();
+
+	$myToolbar = new Toolbar(array('name'=>'myConfigBar','father'=>'configureCalendar_Content'));
+	$myToolbar->show();
+	$itemIds = array();
+	$itemIds[] = $myToolbar->addItem('generalConfig','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/lin_agt_wrench.png','General');
+	$itemIds[] = $myToolbar->addItem('workViewConfig','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/work.png','Work View');
+	$itemIds[] = $myToolbar->addItem('calendarConfig','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/today.png','Calendars');
+	$myToolbar->addGroup($itemIds);
+	if(isset($GLOBALS['hiddenWin'])){
+		$GLOBALS['hiddenWin']->close();
+	}
+	$myHiddenWindow = new Window(array('name'=>'hiddenWin','father'=>'configureCalendar_Content','type'=>INVISIBLE_WINDOW,'y'=>60,'x'=>0,'width'=>398,'height'=>266));
+	$myHiddenWindow->show();
+	if($params == ''){
+		$myToolbar->pressItem(array($itemIds[2]));
+ 		eyeCalendar_on_calendarConfig();
+	}elseif($params == 'calendars'){
+		$myToolbar->pressItem(array($itemIds[2]));
+		eyeCalendar_on_calendarConfig();
+	}elseif($params == 'general'){
+		$myToolbar->pressItem(array($itemIds[0]));
+		eyeCalendar_on_generalConfig();
+	}elseif($params == 'work'){
+		$myToolbar->pressItem(array($itemIds[1]));
+		eyeCalendar_on_workViewConfig();
+	}
+}
+/*
+*This dialog configure the calendars, show, remove etc
+*/
+function eyeCalendar_on_calendarConfig($params=""){
+	if(!isset($GLOBALS['configureCalendar'])) {
+		eyeCalendar_on_globalConfigureCalendar('calednars');
+		return true;
+	}
+	if(isset($GLOBALS['hiddenWin'])){
+		$GLOBALS['hiddenWin']->close();
+	}
+	$myHiddenWindow = new Window(array('name'=>'hiddenWin','father'=>'configureCalendar_Content','type'=>INVISIBLE_WINDOW,'y'=>60,'x'=>0,'width'=>398,'height'=>266));
+	$myHiddenWindow->show();
+	$myCalendars = eyeCalendar('getCalendarsInfo');
+
+	$myLabel1 = new Label(array('name' => "nameLabel",'father' => 'hiddenWin',
+			'text' =>"Calendars management",'x' => 10,'y' => 10));
+	$myLabel1->show();
+	$myLabel1->setCSS(array('font-weight'=>'bold','font-size'=>15));
+
+	$myButton = new Button(array('name'=>'updateCalendars','father'=>'hiddenWin','x'=>10,'y'=>5,'horiz'=>1,'caption'=>'Accept','width'=>100));
+
+	$y = 40;
+	$count = count($myCalendars['calendars'][0]['calendarInfo'])+1;
+	foreach($myCalendars['calendars'][0]['calendarInfo'] as $key=>$calendarInfo){
+		//Small hack for close even window
+		$name = $calendarInfo['name'][0];
+		$num = $calendarInfo['num'][0];
+		$show = $calendarInfo['show'][0];
+
+		$mySelect = new Select(array(
+		'name' => $key.'_selectNum',
+		'father' => 'hiddenWin',
+		'width' => 40,
+		'x' => 10,
+		'y' => $y,
+		));
+		$mySelect->show();
+		$mySelect->addOption($num,$num,true);
+
+		$myTextbox1 = new Textbox(array('name'=>$key.'_calendarName','father' => 'hiddenWin',
+		'x' => 65,'y'=>$y,'width'=>150,'text'=>$name));
+		$myTextbox1->show();
+
+		if($show==1){
+			$myCheckBox = new Checkbox(array('name'=>$key.'_Show','father'=>'hiddenWin',
+			'x'=>220,'y'=>$y,'checked'=>1,'text'=>'Show'));
+		}else{
+			$myCheckBox = new Checkbox(array('name'=>$key.'_Show','father'=>'hiddenWin',
+			'x'=>220,'y'=>$y,'text'=>'Show'));
+		}
+		$myCheckBox->show();
+
+		$myCheckBox1 = new Checkbox(array('name'=>$key.'_Delete','father'=>'hiddenWin',
+			'x'=>20,'y'=>$y,'horiz'=>1,'text'=>'Delete'));
+		$myCheckBox1->show();
+		$y += 30;
+
+		//Button friends
+		$myButton->addFriend($mySelect);
+		$myButton->addFriend($myTextbox1);
+		$myButton->addFriend($myCheckBox);
+		$myButton->addFriend($myCheckBox1);
+	}
+	$y += 20;
+	$myButton->y = $y;
+	$myButton->show();
+	$cancelBtn = new Button(array('name'=>'configureCalendarSave2','father'=>'hiddenWin','x'=>120,'y'=>$y,'horiz'=>1,'caption'=>'Cancel','width'=>100,'signal'=>'configure_Closed'));
+	$cancelBtn->show();
+	global $myPid;
+	$js = 'xGetElementById("'.$myPid.'_hiddenWin").style.overflowY = "auto";';
+	eyeX('rawjs',array('js'=>$js));
+	$js = 'xGetElementById("'.$myPid.'_hiddenWin").style.overflowX = "hidden";';
+	eyeX('rawjs',array('js'=>$js));
+}
+
+/*
+*This dialog allow configure the work view
+*/
+function eyeCalendar_on_workViewConfig(){
+	if(!isset($GLOBALS['configureCalendar'])) {
+		eyeCalendar_on_globalConfigureCalendar('work');
+		return true;
+	}
+	if(isset($GLOBALS['hiddenWin'])){
+		$GLOBALS['hiddenWin']->close();
+	}
+	$myHiddenWindow = new Window(array('name'=>'hiddenWin','father'=>'configureCalendar_Content','type'=>INVISIBLE_WINDOW,'y'=>60,'x'=>0,'width'=>398,'height'=>266));
+	$myHiddenWindow->show();
+	global $myPid;
+	$title = new Label(array('name'=>'TittleConfig','father'=>'hiddenWin','text'=>'Work View Configuration:','x'=>15,'y'=>10));
+	$title->show();
+	$title->setCSS(array('font-weight'=>'bold','font-size'=>15));
+
+	$myButton = new Button(array('name'=>'workViewSave','father'=>'hiddenWin','x'=>10,'y'=>5,'horiz'=>1,'vert'=>1,'caption'=>'Accept','width'=>100));
+
+	$x = 35;
+	$y = 40;
+	$xForm = 155;
+	$yForm = 40;
+	$daysByWeek = new Label(array('name'=>'startWeek','father'=>'hiddenWin','text'=>'Week starts on:','x'=>$x,'y'=>$y));
+	$daysByWeek->show();
+	$mySelect = new Select(array('name'=>'weekStartSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
+	$mySelect->show();
+	$myButton->addFriend($mySelect);
+	$mySelect->addOption('Sunday','0',false);
+	$mySelect->addOption('Monday','1',true);
+	$mySelect->addOption('Tuesday','2',false);
+	$mySelect->addOption('Wednesday','3',false);
+	$mySelect->addOption('ThursDay','4',false);
+	$mySelect->addOption('Friday','5',false);
+	$mySelect->addOption('Saturday','6',false);
+
+	$y += 30;
+	$yForm += 30;
+	$daysByWeek = new Label(array('name'=>'endWeek','father'=>'hiddenWin','text'=>'Week ends on:','x'=>$x,'y'=>$y));
+	$daysByWeek->show();
+	$mySelect = new Select(array('name'=>'weekEndSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
+	$mySelect->show();
+	$myButton->addFriend($mySelect);
+	$mySelect->addOption('Sunday','0',true);
+	$mySelect->addOption('Monday','1',false);
+	$mySelect->addOption('Tuesday','2',false);
+	$mySelect->addOption('Wednesday','3',false);
+	$mySelect->addOption('ThursDay','4',false);
+	$mySelect->addOption('Friday','5',false);
+	$mySelect->addOption('Saturday','6',false);
+
+	$y += 30;
+	$yForm += 30;
+	$daysByWeek = new Label(array('name'=>'daysstarthour','father'=>'hiddenWin','text'=>'Day starts at:','x'=>$x,'y'=>$y));
+	$daysByWeek->show();
+
+	$mySelect = new Select(array('name'=>'dayStartSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
+	$mySelect->show();
+	$myButton->addFriend($mySelect);
+
+	for($xy=0;$xy<13;$xy++){
+		if($xy < 10){
+			$xy = '0'.$xy;
+		}
+		$mySelect->addOption($xy.':00',$xy,false);
+	}
+
+	$y += 30;
+	$yForm += 30;
+	$daysByWeek = new Label(array('name'=>'daysendshour','father'=>'hiddenWin','text'=>'Day ends at:','x'=>$x,'y'=>$y));
+	$daysByWeek->show();
+
+	$mySelect = new Select(array('name'=>'dayEndSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
+	$mySelect->show();
+	$myButton->addFriend($mySelect);
+	for($x=13;$x<=24;$x++){
+		if($x < 10){
+			$x = '0'.$x;
+		}
+		$mySelect->addOption($x.':00',$x,false);
+	}
+	$myButton->show();
+	$cancelBtn = new Button(array('name'=>'configureCalendarSave2','father'=>'hiddenWin','x'=>120,'y'=>5,'horiz'=>1,'vert'=>1,'caption'=>'Cancel','width'=>100,'signal'=>'configure_Closed'));
+	$cancelBtn->show();
+}
+/*
+*This dialgo let configure the general optiosn of the calendar
+*/
+function eyeCalendar_on_generalConfig(){
+	if(!isset($GLOBALS['configureCalendar'])) {
+		eyeCalendar_on_globalConfigureCalendar('general');
+		return true;
+	}
+	if(isset($GLOBALS['hiddenWin'])){
+		$GLOBALS['hiddenWin']->close();
+	}
+	$myHiddenWindow = new Window(array('name'=>'hiddenWin','father'=>'configureCalendar_Content','type'=>INVISIBLE_WINDOW,'y'=>60,'x'=>0,'width'=>398,'height'=>266));
+	$myHiddenWindow->show();
+	global $myPid;
+	$title = new Label(array('name'=>'TittleConfig','father'=>'hiddenWin','text'=>'General Configuration:','x'=>15,'y'=>10));
+	$title->show();
+	$title->setCSS(array('font-weight'=>'bold','font-size'=>15));
+
+	$myButton = new Button(array('name'=>'generalViewSave','father'=>'hiddenWin','x'=>10,'y'=>5,'horiz'=>1,'vert'=>1,'caption'=>'Accept','width'=>100));
+
+	$x = 35;
+	$y = 40;
+	$xForm = 155;
+	$yForm = 40;
+	$daysByWeek = new Label(array('name'=>'dayStart','father'=>'hiddenWin','text'=>'Week starts on:','x'=>$x,'y'=>$y));
+	$daysByWeek->show();
+	$mySelect = new Select(array('name'=>'weekStartSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
+	$mySelect->show();
+	$myButton->addFriend($mySelect);
+	$mySelect->addOption('Sunday','0',false);
+	$mySelect->addOption('Monday','1',true);
+	$mySelect->addOption('Tuesday','2',false);
+	$mySelect->addOption('Wednesday','3',false);
+	$mySelect->addOption('ThursDay','4',false);
+	$mySelect->addOption('Friday','5',false);
+	$mySelect->addOption('Saturday','6',false);
+	//Rawjs, sytling the options
+	$js = 'var nodes = xGetElementById("'.$myPid.'_daysSelect").childNodes;
+			for(var x=0;x < nodes.length;x++){
+				nodes[x].style.paddingLeft = "40%";
+			}
+			';
+	eyeX('rawjs',array('js'=>$js));
+
+	$y += 30;
+	$yForm += 30;
+	$daysByWeek = new Label(array('name'=>'endWeek','father'=>'hiddenWin','text'=>'Week ends on:','x'=>$x,'y'=>$y));
+	$daysByWeek->show();
+	$mySelect = new Select(array('name'=>'weekEndSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
+	$mySelect->show();
+	$myButton->addFriend($mySelect);
+	$mySelect->addOption('Sunday','0',true);
+	$mySelect->addOption('Monday','1',false);
+	$mySelect->addOption('Tuesday','2',false);
+	$mySelect->addOption('Wednesday','3',false);
+	$mySelect->addOption('ThursDay','4',false);
+	$mySelect->addOption('Friday','5',false);
+	$mySelect->addOption('Saturday','6',false);
+
+	$y += 30;
+	$yForm += 30;
+	$daysByWeek = new Label(array('name'=>'daysstarthour','father'=>'hiddenWin','text'=>'Day starts at:','x'=>$x,'y'=>$y));
+	$daysByWeek->show();
+	$mySelect = new Select(array('name'=>'dayStartSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
+	$mySelect->show();
+	$myButton->addFriend($mySelect);
+	for($xy=0;$xy<13;$xy++){
+		if($xy < 10){
+			$xy = '0'.$xy;
+		}
+		$mySelect->addOption($xy.':00',$xy,false);
+	}
+
+	$y += 30;
+	$yForm += 30;
+	$daysByWeek = new Label(array('name'=>'daysendshour','father'=>'hiddenWin','text'=>'Day ends at:','x'=>$x,'y'=>$y));
+	$daysByWeek->show();
+	$mySelect = new Select(array('name'=>'dayEndSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
+	$mySelect->show();
+	$myButton->addFriend($mySelect);
+	for($x=13;$x<=24;$x++){
+		if($x < 10){
+			$x = '0'.$x;
+		}
+		$mySelect->addOption($x.':00',$x,false);
+	}
+	$myButton->show();
+	$cancelBtn = new Button(array('name'=>'configureCalendarSave2','father'=>'hiddenWin','x'=>120,'y'=>5,'horiz'=>1,'vert'=>1,'caption'=>'Cancel','width'=>100,'signal'=>'configure_Closed'));
+	$cancelBtn->show();
+}
+//Save functions!
+function eyeCalendar_on_updateCalendars($params=""){
+	$paramsInfo = Array();
+	foreach($params as $key=>$value){
+		$preNum = substr($key, 0, strpos($key, '_')); // utf8
+		if(!is_numeric($preNum)){
+			return false;
+		}
+		$type = substr($key, strpos($key, '_') + 1); // utf8
+		$value =  $value[0];
+		if($type == 'selectNum'){
+			if(!is_numeric($value)){
+				eyeX('messageBox',array('content'=>'Invalid Num %s','tokens'=>array($value)));
+				return false;
+			}
+			$paramsInfo[$preNum]['num'] = $value;
+		}else if($type == 'Show'){
+			$value = /* utf8 */ strtolower($value);
+			if($value == 'true' || $value == 'false'){
+				$paramsInfo[$preNum]['show'] = $value;
+			}else{
+				eyeX('messageBox',array('content'=>'Invalid checkbox value'));
+				return false;
+			}
+		}else if($type == 'calendarName'){
+			$paramsInfo[$preNum]['name'] = $value;
+		}else if($type == 'Delete'){
+			$value = /* utf8 */ strtolower($value);
+			$paramsInfo[$preNum]['delete'] = $value;
+		}
+	}
+	unset($params);
+	$nums = array();
+	$names = array();
+	foreach($paramsInfo as $key =>$info){
+		if($info['delete'] == 'true'){
+			$calednarsNum = eyeCalendar('numOfCalendars');
+			if($calednarsNum > 1){
+				eyeCalendar('deleteCalendar',array($paramsInfo[$key]['name']));
+				$GLOBALS['weekPlanner']->deleteCalendarNotes($paramsInfo[$key]['num']);
+				unset($paramsInfo[$key]);
+				continue;
+			}else{
+				eyeX('messageBox',array('content'=>'At least, one calendar is required!'));
+				break;//We need at least one calendar
+			}
+		}
+		$nums[$info['num']]++ ;
+		$names[$info['name']]++;
+	}
+
+
+	//Checking if the ids are repeated
+	foreach($nums as $num){
+		if($num > 1){
+			eyeX('messageBox',array('content'=>'Two calendars cannot share the same ID!'));
+			return false;
+		}
+	}
+	//Checking if name are differents
+	foreach($names as $name){
+		if($name > 1){
+			eyeX('messageBox',array('content'=>'Two calendars cannot share the same name!'));
+			return false;
+		}
+	}
+	$newCalendars = eyeCalendar('updateCalendarsInfo',array($paramsInfo));
+	if($newCalendars == false){
+		return false;
+	}
+
+	foreach($paramsInfo as $showInfo){
+		if($showInfo['show'] == 'true'){
+			$GLOBALS['weekPlanner']->showNotes($showInfo['num']);
+		}else{
+			$GLOBALS['weekPlanner']->hiddenNotes($showInfo['num']);
+		}
+	}
+
+	foreach($newCalendars['calendars'][0]['calendarInfo'] as $calendarInfo){
+		$num = $calendarInfo['num'][0];
+		break;
+	}
+
+	eyeCalendar('setCurrentCalendar',array($num));
+	$GLOBALS['weekPlanner']->cleanCalendars();
+	$GLOBALS['weekPlanner']->addCalendars($newCalendars);
+	$GLOBALS['weekPlanner']->selectCalendar($num);
+	$myDays = $GLOBALS['weekPlanner']->getDays();
+	$notes = eyeCalendar('getWeekNotes',array($myDays));
+	$GLOBALS['weekPlanner']->cleanNotes();
+	$GLOBALS['weekPlanner']->addNotes($notes);
+	eyeX('messageBox',array('content'=>'Configuration Saved'));
+}
+function eyeCalendar_on_workViewSave($params=''){
+// 	$configDaySelect = intval($params['configDaySelect'][0]);
+	$workStartDay = intval($params['weekStartSelect'][0]);
+	$workEndDay = intval($params['weekEndSelect'][0]);
+	$workStartHour = intval($params['dayStartSelect'][0]);
+	$workEndHour = intval($params['dayEndSelect'][0]);
+	$info = eyeCalendar('getConfig');
+	if($workEndDay == 0 && $workStartDay == 1){
+		$info['eyeCalendar'][0]['workStartMonday'][0] = 1;
+// 		return false;
+	}else{
+		$info['eyeCalendar'][0]['workStartMonday'][0] = 0;
+	}
+
+	if($workStartDay == 0){
+		$info['eyeCalendar'][0]['workStartMonday'][0] = 0;
+// 		return false;
+	}
+
+	//Checking if the user has changed the startMonday
+// // 	$info = eyeCalendar('getConfig');
+	$startDay = $info['eyeCalendar'][0]['workStartMonday'][0];
+	if($startDay == 1){
+		//If the i10n is set as monday
+		if($workStartDay == 1){
+			$workStartDay = 0;
+		}elseif($workStartDay == 0){
+			$workStartDay = 6;
+		}else{
+			$workStartDay--;
+		}
+		if($workEndDay == 1){
+			$workEndDay = 0;
+		}elseif($workEndDay == 0){
+			$workEndDay = 6;
+		}else{
+			$workEndDay--;
+		}
+	}
+
+	/*if($configDaySelect != 0 && $configDaySelect != 1){
+		return false;
+	}*/
+
+	$info['eyeCalendar'][0]['workStartDay'][0] = $workStartDay;
+	$info['eyeCalendar'][0]['workEndDay'][0] = $workEndDay;
+	$info['eyeCalendar'][0]['workStartHour'][0] = $workStartHour;
+	$info['eyeCalendar'][0]['workEndHour'][0] = $workEndHour;
+
+	eyeCalendar('setConfig',array($info));
+	$GLOBALS['configureCalendar']->close();
+	eyeX('messageBox',array('content'=>'Configuration saved correctly'));
+	if($GLOBALS['calendarView']->text == 'work'){
+		_changeView($GLOBALS['calendarView']->text);
+	}
+	return true;
+}
+function eyeCalendar_on_configure_Closed(){
+	$GLOBALS['configureCalendar']->close();
+}
+function eyeCalendar_on_generalViewSave($params=''){
+// 	$configDaySelect = intval($params['configDaySelect'][0]);
+	$workStartDay = intval($params['weekStartSelect'][0]);
+	$workEndDay = intval($params['weekEndSelect'][0]);
+	$workStartHour = intval($params['dayStartSelect'][0]);
+	$workEndHour = intval($params['dayEndSelect'][0]);
+
+	$info = eyeCalendar('getConfig');
+	if($workEndDay == 0 && $workStartDay == 1){
+		$info['eyeCalendar'][0]['startMonday'][0] = 1;
+// 		return false;
+	}else{
+		$info['eyeCalendar'][0]['startMonday'][0] = 0;
+	}
+
+	if($workStartDay == 0){
+		$info['eyeCalendar'][0]['startMonday'][0] = 0;
+// 		return false;
+	}
+
+	//Checking if the user has changed the startMonday
+	$startDay = $info['eyeCalendar'][0]['startMonday'][0];
+	if($startDay == 1){
+		//If the i10n is set as monday
+		if($workStartDay == 1){
+			$workStartDay = 0;
+		}elseif($workStartDay == 0){
+			$workStartDay = 6;
+		}else{
+			$workStartDay--;
+		}
+		if($workEndDay == 1){
+			$workEndDay = 0;
+		}elseif($workEndDay == 0){
+			$workEndDay = 6;
+		}else{
+			$workEndDay--;
+		}
+	}
+
+//Basic checks
+	/*if($configDaySelect != 0 && $configDaySelect != 1){
+		return false;
+	}*/
+
+	$info['eyeCalendar'][0]['generalStartDay'][0] = $workStartDay;
+	$info['eyeCalendar'][0]['generalEndDay'][0] = $workEndDay;
+	$info['eyeCalendar'][0]['generalStartHour'][0] = $workStartHour;
+	$info['eyeCalendar'][0]['generalEndHour'][0] = $workEndHour;
+
+	eyeCalendar('setConfig',array($info));
+	$GLOBALS['configureCalendar']->close();
+	eyeX('messageBox',array('content'=>'Configuration saved correctly'));
+	if($GLOBALS['calendarView']->text == 'work'){
+		_changeView($GLOBALS['calendarView']->text);
+	}
+	return true;
+}
+?>

@@ -1,0 +1,340 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Textarea widget abstraction
+*/
+
+class Textarea {
+	//pid controller
+
+	var $creatorPid;
+
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//global widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+
+	var $showed = 0;
+
+	//custom widget options
+	var $enabled;
+	var $visible;
+	var $text;
+	var $width;
+	var $height;
+	var $rich;
+	var $rows;
+	var $cols;
+	var $cssClass;
+
+	function Textarea($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 10;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 10;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+
+		//especific button options
+		isset($params['enabled']) ? $this->enabled = $params['enabled'] : $this->enabled = 1;
+		isset($params['visible']) ? $this->visible = $params['visible'] : $this->visible = 1;
+		isset($params['text']) ? $this->text = $params['text'] : $this->text = "";
+		isset($params['width']) ? $this->width = $params['width'] : $this->width = "";
+		isset($params['height']) ? $this->height = $params['height'] : $this->height = "";
+		isset($params['rich']) ? $this->rich = $params['rich'] : $this->rich = 0;
+		isset($params['code']) ? $this->code = $params['code'] : $this->code = 0;
+		isset($params['lang']) ? $this->lang = $params['lang'] : $this->lang = "";
+		isset($params['rows']) ? $this->rows = $params['rows'] : $this->rows = -1;
+		isset($params['cols']) ? $this->cols = $params['cols'] : $this->cols = -1;
+		isset($params['cssClass']) ? $this->cssClass = $params['cssClass'] : $this->cssClass = "";
+	}
+
+
+	function show($noserialize=0) {
+		$langCode = 'en';
+		if ($this->rich) {
+			$language = i18n('getLang');
+			if (vfs('real_fileExists', array(EYE_ROOT . '/' . EXTERN_DIR . '/libs/eyeWidgets/tiny_mce/langs/' . $language . '.js'))) {
+				$langCode = $language;
+			} else if (vfs('real_fileExists', array(EYE_ROOT . '/' . EXTERN_DIR . '/libs/eyeWidgets/tiny_mce/langs/' . /* utf8 */ substr($language, 0, 2) . '.js'))) {
+				$langCode = /* utf8 */ substr($language, 0, 2);
+			}
+		}
+
+		$widgetsparams = array(
+			'enabled' => $this->enabled,
+			'visible' => $this->visible,
+			'width' => $this->width,
+			'height' => $this->height,
+			'rich' => $this->rich,
+			'code' => $this->code,
+			'lang' => $this->lang,
+			'rows' => $this->rows,
+			'cols' => $this->cols,
+			'cssClass' => $this->cssClass,
+			'i18nOpenFile' => i18n('translate', array('Open File')),
+			'i18nSaveAs' => i18n('translate', array('Save as')),
+			'language' => $langCode
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$myTextarea = array(
+			'name' => $this->name,
+			'father' => $this->father,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'x' => $this->x,
+			'y' => $this->y,
+			'center' => $this->cent,
+			'widgetname' => 'Textarea',
+			'params' => $widgetsparams
+		);
+		eyex('createWidget',$myTextarea);
+		$this->showed=1;
+		if($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+		if(!empty($this->text)) {
+			$this->setText($this->text);
+		}
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				if ($this->code === 1) {
+					eyex('updateCss', array('name' => $myPid . '_' . $this->name . '_cp', 'property' => $key, 'value' => $value));
+				} else {
+					eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+				}
+			}
+		}
+	}
+
+//set properties functions
+	function disable() {
+		global $myPid;
+		$this->enabled=0;
+		if($this->code == 1) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp_iframe").disabled=true'));
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").disabled=true'));
+		}
+	}
+
+	function enable() {
+		global $myPid;
+		$this->enabled=1;
+		if($this->code == 1) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp_iframe").disabled=false'));
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").disabled=false'));
+		}
+	}
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		if($this->code == 1) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp_iframe").style.display="none"'));
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="none"'));
+		}
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		if($this->code == 1) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp_iframe").style.display="block"'));
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="block"'));
+		}
+	}
+
+	function setText($content) {
+		global $myPid;
+		$this->text = $content;
+		$content = base64_encode($content);
+		$totalContent = $content;
+		if($this->code == 0) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").value=""'));
+			while ( /* utf8 */ strlen($totalContent) > 2000) {
+				$subContent = /* utf8 */ substr($totalContent, 0, 2000);
+				$totalContent = /* utf8 */ substr($totalContent, 2000);
+				eyex('concatValueB64',array('value' => $subContent,'name'=>$myPid.'_'.$this->name));
+			}
+			if($totalContent) {
+				eyex('concatValueB64',array('value' => $totalContent,'name'=>$myPid.'_'.$this->name));
+			}
+			$name = $myPid.'_'.$this->name;
+			if($this->rich != 0) {
+				eyex('rawjs',array('js'=> "txtAreas['".$myPid.'_'.$this->name."_objTxt'].load()"));
+			}
+		} else {
+			$name = $myPid.'_'.$this->name;
+		//	eyex('rawjs',array('js' => 'cp_'.$name.'.setCode("")'));
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp").value=""'));
+			while ( /* utf8 */ strlen($totalContent) > 2000) {
+				$subContent = /* utf8 */ substr($totalContent, 0, 2000);
+				$totalContent = /* utf8 */ substr($totalContent, 2000);
+				eyex('concatValueB64',array('value' => $subContent,'name'=>$myPid.'_'.$this->name.'_cp'));
+			}
+			if($totalContent) {
+				eyex('concatValueB64',array('value' => $totalContent,'name'=>$myPid.'_'.$this->name.'_cp'));
+			}
+			eyex('rawjs',array('js' => 'cp_'.$name.'.setCode(document.getElementById("'.$myPid.'_'.$this->name.'_cp").value)'));
+		}
+	}
+
+	function setRichStatusText($text) {
+		global $myPid;
+		eyex('runjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_path_row").innerHTML = %s;','tokens'=>array($text)));
+	}
+
+	function setValue($content) {
+		$this->text=base64_decode($content);
+	}
+
+	function focus() {
+		global $myPid;
+		if ($this->code === 1) {
+			eyex('rawjs', array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '_cp").focus();'));
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").focus();'));
+		}
+	}
+
+//friend functions
+	function getSyncString() {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->rich!=0) {
+			return "eyeParam('".$this->name."',Base64.encode(txtAreas['".$myPid.'_'.$this->name."_objTxt'].getContent()))+eyeParam('md5',md5(txtAreas['".$myPid.'_'.$this->name."_objTxt'].getContent()))";
+		} elseif ($this->code == 1) {
+			return "eyeParam('$this->name',Base64.encode(cp_$name.getCode()))";
+		} else {
+			return "eyeParam('$this->name',Base64.encode(document.getElementById('$myPid".'_'."$this->name').value))";
+		}
+	}
+
+	function setWidth($width,$noshadow=0) {
+		global $myPid;
+		$this->width = intval($width);
+		if($this->code == 1) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.width="'.$this->width.'px";'));
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp_iframe").style.width="'.$this->width.'px";'));
+		} elseif($this->rich != 0) {
+			$this->width += 17;
+			if($this->rich == 2 && $noshadow == 0) {
+				eyex('rawjs',array('js' => 'disableEdShadow("'.$myPid.'_'.$this->name.'_ifr");'));
+			}
+			eyex('rawjs',array('js' => 'disableEdShadow("'.$myPid.'_'.$this->name.'_ifr");'));
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_tbl").style.width="'.$this->width.'px";'));
+			eyex('rawjs',array('js' => 'enableShadow("'.$myPid.'_'.$this->name.'_ifr");'));
+			if($this->rich == 2 && $noshadow == 0) {
+				eyex('rawjs',array('js' => 'enableShadow("'.$myPid.'_'.$this->name.'_ifr");'));
+			}
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.width="'.$this->width.'px";'));
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.width="'.$this->width.'px";'));
+		}
+	}
+
+	function setHeight($height,$noshadow=0) {
+		global $myPid;
+		$this->height = intval($height);
+		if($this->code == 1) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.height="'.$this->height.'px";'));
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp_iframe").style.height="'.$this->height.'px";'));
+		} elseif($this->rich != 0) {
+			$this->height += 110;
+			if($this->rich == 2 && $noshadow == 0) {
+				eyex('rawjs',array('js' => 'disableEdShadow("'.$myPid.'_'.$this->name.'_ifr");'));
+			}
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_tbl").style.height="'.$this->height.'px";'));
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_ifr").style.height="'.($this->height - 127).'px";'));
+			if($this->rich == 2 && $noshadow == 0) {
+				eyex('rawjs',array('js' => 'enableShadow("'.$myPid.'_'.$this->name.'_ifr");'));
+			}
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").style.height="'.$this->height.'px";'));
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.height="'.$this->height.'px";'));
+		}
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		if($this->code == 1) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp_iframe").style.left="'.$this->x.'px";'));
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.left="'.$this->x.'px";'));
+		}
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		if($this->code == 1) {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_cp_iframe").style.top="'.$this->y.'px";'));
+
+		} else {
+			eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.top="'.$this->y.'px";'));
+		}
+	}
+
+	function richClean() {
+		global $myPid;
+		eyex('runjs', array('js' => 'tinymce.Editor(%s).remove();', 'tokens' => array($myPid . '_' . $this->name)));
+	}
+
+	function remove() {
+		global $myPid;
+		if($this->code == 1) {
+			$name = $this->name.'_cp_iframe';
+		} else {
+			$name = $this->name.'_Container';
+		}
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+}
+?>

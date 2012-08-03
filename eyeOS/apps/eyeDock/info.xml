@@ -1,0 +1,10 @@
+<package>
+	<name>eyeDock</name>
+	<category>Core Utilities</category>
+	<version>1.9</version>
+	<description>Bar at the top of the desktop to access applications</description>
+	<author>oneye Team</author>
+	<license>AGPL</license>
+	<type>Utility</type>
+	<icon />
+</package>

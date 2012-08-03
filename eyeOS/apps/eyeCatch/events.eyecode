@@ -1,0 +1,159 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeCatch_on_ChooseMap($params = '') {
+	global $currentUser;
+	global $myPid;
+	if (!$params['run']) {
+		eyex('rawjs',array('js' => 'eyeCatch.Remove("' . $myPid . '_eyeCatch_Game");'));
+
+		$GLOBALS['eyeCatch_Label']->setText('Please choose a map and click "Play Map". You need to move the player by dragging it. You should try to not fall into holes, while enemies try to catch you. Try to survive as long as possible!');
+		$GLOBALS['eyeCatch_Container']->setContent('');
+		$GLOBALS['eyeCatch_Container']->setWidth($GLOBALS['eyeCatch_Window']->width - 2);
+		$GLOBALS['eyeCatch_Container']->setX(0);
+		$GLOBALS['eyeCatch_Container']->setHeight($GLOBALS['eyeCatch_Window']->height - 133);
+		$GLOBALS['eyeCatch_Container']->setY(109);
+	}
+
+	$mySortabletable = new Sortabletable(array(
+		'dblsignal' => 'PlayMap',
+		'father' => 'eyeCatch_Container',
+		'height' => $GLOBALS['eyeCatch_Container']->height - 2,
+		'name' => 'eyeCatch_Sortabletable',
+		'sortypes' => array('Hidden','String','String'),
+		'theader' => array('id','eyeCatch Map','Author'),
+		'width' => $GLOBALS['eyeCatch_Container']->width - 2,
+		'x' => 0,
+		'y' => 0
+	));
+	$mySortabletable->show();
+	eyeWidgets('serialize',array($mySortabletable));
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$files = vfs('real_getDirContent',array(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/eyeCatch/maps/'));
+	if (is_array($files)) {
+		foreach ($files as $file) {
+			$xml = eyeXML('getXMLfile',array($file));
+			$mySortabletable->addRow(array(basename($file,'.xml'),$xml['map'][0]['infos'][0]['name'][0] . ' ' . $xml['map'][0]['infos'][0]['version'][0],$xml['map'][0]['infos'][0]['author'][0]));
+		}
+	}
+	$currentUser = $oldUser;
+
+	if (!$params['run']) {
+		$GLOBALS['eyeCatch_Toolbar']->remove();
+	}
+	$myToolbar = new Toolbar(array(
+		'father' => 'eyeCatch_Window_Content',
+		'name' => 'eyeCatch_Toolbar'
+	));
+	$myToolbar->show();
+	eyeWidgets('serialize',array($myToolbar));
+	$myToolbar->addItem('PlayMap','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/next.png','Play Map',array($mySortabletable));
+	$myToolbar->addLine();
+	$myToolbar->addItem('Fullscreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+}
+
+function eyeCatch_on_PlayMap($params = '') {
+	global $checknum;
+	global $currentUser;
+	global $myPid;
+	$map = $params['eyeCatch_Sortabletable'][0];
+	if ($map) {
+		eyex('rawjs',array('js' => 'eyeCatch.Remove("' . $myPid . '_eyeCatch_Game");'));
+		if (is_object($GLOBALS['eyeCatch_Sortabletable'])) {
+			$GLOBALS['eyeCatch_Sortabletable']->remove();
+		}
+		eyex('rawjs',array('js' => 'if (!document.getElementById("eyeCatch_' . $map . '")) { dhtmlLoadCSS("index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/eyeCatch/' . $map . '.css","eyeCatch_' . $map . '"); }'));
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		$xml = eyeXML('getXMLfile',array(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/eyeCatch/maps/' . $map . '.xml'));
+		$currentUser = $oldUser;
+
+		$GLOBALS['eyeCatch_Label']->setText($xml['map'][0]['infos'][0]['description'][0]);
+		$GLOBALS['eyeCatch_Container']->setContent('');
+		$GLOBALS['eyeCatch_Container']->setWidth($xml['map'][0]['field'][0]['width'][0]);
+		$GLOBALS['eyeCatch_Container']->setX(($GLOBALS['eyeCatch_Window']->width - 2 - $GLOBALS['eyeCatch_Container']->width) / 2);
+		$GLOBALS['eyeCatch_Container']->setHeight($xml['map'][0]['field'][0]['height'][0]);
+		$GLOBALS['eyeCatch_Container']->setY(89 + ($GLOBALS['eyeCatch_Window']->height - 113 - $GLOBALS['eyeCatch_Container']->height) / 2);
+
+		eyex('runjs',array('js' => 'eyeCatch.CreateField("' . $myPid . '_eyeCatch_Game","' . $myPid . '_eyeCatch_Container","' . $myPid . '_eyeCatch_Label",%s,' . mmap('array2js',array($xml['map'][0]['speed'][0])) . ',0,0,' . intval($xml['map'][0]['field'][0]['width'][0]) . ',' . intval($xml['map'][0]['field'][0]['height'][0]) . ');','tokens' => array($xml['map'][0]['field'][0]['className'][0])));
+		eyex('runjs',array('js' => 'eyeCatch.CreatePlayer("' . $myPid . '_eyeCatch_Game",%s,' . intval($xml['map'][0]['player'][0]['left'][0]) . ',' . intval($xml['map'][0]['player'][0]['top'][0]) . ',' . intval($xml['map'][0]['player'][0]['width'][0]) . ',' . intval($xml['map'][0]['player'][0]['height'][0]) . ');','tokens' => array($xml['map'][0]['player'][0]['className'][0])));
+		foreach ($xml['map'][0]['holes'][0]['hole'] as $hole) {
+			if (!$hole['message'][0]) {
+				$hole['message'][0] = 'You fell into a hole after %s seconds.';
+			}
+			eyex('runjs',array('js' => 'eyeCatch.AddHole("' . $myPid . '_eyeCatch_Game",%s,%s,' . intval($hole['left'][0]) . ',' . intval($hole['top'][0]) . ',' . intval($hole['width'][0]) . ',' . intval($hole['height'][0]) . ');','tokens' => array($hole['className'][0],i18n('translate',array('<div style="font-weight: bold; text-align: center;">' . $hole['message'][0] . '</div>')))));
+		}
+		foreach ($xml['map'][0]['enemies'][0]['enemy'] as $enemy) {
+			if (!$enemy['message'][0]) {
+				$enemy['message'][0] = 'You were caught after %s seconds.';
+			}
+			eyex('runjs',array('js' => 'eyeCatch.AddEnemy("' . $myPid . '_eyeCatch_Game",%s,%s,' . intval($enemy['left'][0]) . ',' . intval($enemy['top'][0]) . ',' . intval($enemy['width'][0]) . ',' . intval($enemy['height'][0]) . ',' . intval($enemy['movex'][0]) . ',' . intval($enemy['movey'][0]) . ');','tokens' => array($enemy['className'][0],i18n('translate',array('<div style="font-weight: bold; text-align: center;">' . $enemy['message'][0] . '</div>')))));
+		}
+
+		$GLOBALS['eyeCatch_Toolbar']->remove();
+		$myToolbar = new Toolbar(array(
+			'father' => 'eyeCatch_Window_Content',
+			'name' => 'eyeCatch_Toolbar'
+		));
+		$myToolbar->show();
+		eyeWidgets('serialize',array($myToolbar));
+		$myToolbar->addItem('ChooseMap','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/details.png','Choose Map');
+		eyex('runjs',array('js' => 'addItemToBar("' . $myPid . '_eyeCatch_Toolbar","PlayMap","index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/refresh.png",%s,"' . base64_encode('eyeParam("eyeCatch_Sortabletable","' . $map . '")') . '",' . $checknum . ',22,22,0,' . $myPid . ');','tokens' => array(i18n('translate',array('Restart Game')))));
+		$myToolbar->addLine();
+		$myToolbar->addItem('Fullscreen','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/fullScreen.png','Full Screen','',1);
+	} else {
+		eyex('messageBox',array('content' => 'Please select a map first.'));
+	}
+}
+
+function eyeCatch_on_Close($params = '') {
+	proc('end');
+}
+
+function eyeCatch_on_Fullscreen($params = '') {
+	global $myPid;
+	$GLOBALS['eyeCatch_Window']->setFullScreen();
+	if ($GLOBALS['eyeCatch_Window']->fullScreen) {
+		$press = 'Press';
+	}
+	eyex('rawjs',array('js' => 'e = document.getElementById("' . $myPid . '_eyeCatch_Toolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "' . $myPid . '_Fullscreen_Container") {
+			e.childNodes[i].className = "blockbarItem' . $press . '_right";
+		}
+	}'));
+}
+
+function eyeCatch_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeCatch_on_Resize($params = '') {
+	$GLOBALS['eyeCatch_Window']->width = $params['arg'][0];
+	$GLOBALS['eyeCatch_Window']->height = $params['arg'][1];
+	$GLOBALS['eyeCatch_Label']->setCss(array('width' => ($GLOBALS['eyeCatch_Window']->width - 42) . 'px'));
+	if (is_object($GLOBALS['eyeCatch_Sortabletable'])) {
+		$GLOBALS['eyeCatch_Container']->setWidth($GLOBALS['eyeCatch_Window']->width - 2);
+		$GLOBALS['eyeCatch_Container']->setHeight($GLOBALS['eyeCatch_Window']->height - 133);
+		$GLOBALS['eyeCatch_Sortabletable']->setWidth($GLOBALS['eyeCatch_Container']->width - 2);
+		$GLOBALS['eyeCatch_Sortabletable']->setHeight($GLOBALS['eyeCatch_Container']->height - 2);
+	} else {
+		$GLOBALS['eyeCatch_Container']->setX(($GLOBALS['eyeCatch_Window']->width - 2 - $GLOBALS['eyeCatch_Container']->width) / 2);
+		$GLOBALS['eyeCatch_Container']->setY(89 + ($GLOBALS['eyeCatch_Window']->height - 113 - $GLOBALS['eyeCatch_Container']->height) / 2);
+	}
+}
+?>

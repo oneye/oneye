@@ -1,0 +1,15 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strstr($haystack, $needle, $before_needle = false) {
+	if (is_string($needle) === false) {
+		$needle = utf8_chr($needle);
+	}
+	$return = strstr($haystack, $needle);
+	if ($before_needle === true) {
+		$return = substr($haystack, 0, - strlen($return));
+	}
+	return $return;
+}
+?>

@@ -1,0 +1,12 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_str_split($string, $split_length = 1) {
+	if (utf8_strlen($string) <= $split_length) {
+		return array($string);
+	}
+	preg_match_all('/.{' . strval($split_length) . '}|.{1,' . strval($split_length) . '}$/su', $string, $matches);
+	return $matches[0];
+}
+?>

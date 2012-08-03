@@ -1,0 +1,10 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+if (function_exists('mb_strripos') === true) {
+	function utf8_strripos($haystack, $needle, $offset = 0) {
+		return mb_strripos($haystack, $needle, $offset, 'UTF-8');
+	}
+}
+?>

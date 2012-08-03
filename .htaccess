@@ -1,0 +1,36 @@
+<IfModule mod_php.c>
+	#
+	# COMPATIBILITY
+	#
+	php_value arg_separator.output        &amp;
+	php_value disable_classes
+	php_value disable_functions
+	php_value display_errors              0
+	php_value error_log                   ./logs/php.txt
+	php_value error_reporting             0
+	php_value html_errors                 0
+	php_value magic_quotes_gpc            0
+	php_value magic_quotes_runtime        0
+	php_value magic_quotes_sybase         0
+	php_value mbstring.func_overload      0
+	php_value register_globals            0
+	php_value safe_mode                   0
+	php_value session.use_cookies         1
+	php_value session.use_only_cookies    1
+	php_value zend.ze1_compatibility_mode 0
+
+	#
+	# CLIENT-DOWNLOAD
+	#
+	php_value file_uploads        1
+	# php_value max_execution_time  30
+	# php_value max_input_time      -1
+	# php_value memory_limit        128M
+	# php_value post_max_size       8M
+	# php_value upload_max_filesize 2M
+
+	#
+	# SERVER-DOWNLOAD
+	#
+	php_value allow_url_fopen 1
+</IfModule>

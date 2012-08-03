@@ -1,0 +1,127 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function miniCalendar_run($params=null) {
+	global $myPid;
+
+	foreach (proc('getProcessTable') as $process) {
+		if ($process['appName'] == 'miniCalendar' && $process['pid'] != $myPid) {
+			eyex('messageBox', array('content' => 'miniCalendar is already running!'));
+			return proc('end');
+		}
+	}
+
+	// Window
+	$myWindow = new Window(array(
+		'name'=>'miniCalendarOuter',
+		'father' => 'eyeWidgets',
+		'removeFatherPid' => 1,
+		'type'=>WIN_IMAGE_DRAGGABLE_NOTLISTED,
+		'title'=>'miniCalendar',
+		'background'=>'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/miniApps/miniCalendar/miniCalendar.png',
+		'width'=>470,
+		'height'=>170,
+		'forceSavePosition'=>1,
+	));
+	$myWindow->show();
+
+	/**
+	*@Todo if Windows Widget gets class fix this
+	*/
+	eyeX('rawjs',array('js'=>
+		'document.getElementById("'.$myPid.'_' . $myWindow->name . '").className = "miniWND";
+		document.getElementById("'.$myPid.'_' . $myWindow->name . '_Content").className = "miniWND";
+		'
+	));
+
+	eyeX('createDiv', array(
+		'name' => 'miniCalendarInnerLeft',
+		'father' => 'miniCalendarOuter',
+		'class' => 'miniCalendarInnerLeft'
+	));
+	eyeX('createDiv', array(
+		'name' => 'miniCalendarInnerRight',
+		'father' => 'miniCalendarOuter',
+		'class' => 'miniCalendarInnerRight'
+	));
+
+	$myImage = new Imagebox(array(
+		'name' => 'imgLaunch',
+		'father' => 'miniCalendarOuter',
+		'x' => 4,
+		'y' => 4,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/desktop/open.png',
+		'disableMsg' => 0,
+		'signal' => 'Launch'
+	));
+	$myImage->show();
+	$myImage->setCss(array('cursor' => 'Pointer'));
+
+	$myLabel0 = new Label(array(
+		'name' => 'Launch',
+		'father' => 'miniCalendarOuter',
+		'x' => 20,
+		'y' => 2,
+		'text' => 'Calendar',
+		'disablemsg' => 0
+	));
+	$myLabel0->show();
+	$myLabel0->setCss(array('cursor' => 'Pointer'));
+
+	$myImage1 = new Imagebox(array(
+		'name' => 'imgClose',
+		'father' => 'miniCalendarOuter',
+		'horiz' => 1,
+		'x' => 5,
+		'y' => 4,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/desktop/close.png',
+		'disableMsg' => 0,
+		'signal' => 'Close'
+	));
+	$myImage1->show();
+	$myImage1->setCss(array('cursor' => 'Pointer'));
+
+	$myCalendar = new Calendar(array(
+		'name' => 'myCalendar',
+		'father' => 'miniCalendarInnerLeft',
+		'width' => 158,
+		'height' => 148,
+		'x'=> 0,
+		'y'=> 5,
+		'drawOnClick'=>1,
+		'drawHighlight'=>1
+	));
+	$myCalendar->show();
+
+	eyeX('sendMessage', array('msg' => 'today', 'params' => '<date>'.time().'</date>'));
+
+	eyex('rawjs',array('js' =>
+		'document.getElementById("' . $myPid . '_' . $myLabel0->name . '").className = "miniAppTitle";
+		'
+	));
+
+	//CSS
+	eyex('loadCss',array(
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/miniApps/miniApps.css&type=css',
+		'id' => 'miniApps'
+	));
+}
+
+function miniCalendar_end() {
+	eyeX('removeWidget', array('name' => 'miniCalendarOuter'));
+}
+
+?>

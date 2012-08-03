@@ -1,0 +1,118 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function editLink_run($params = '') {
+	global $myPid;
+	$file = basename($params[0]);
+	$xml = eyeXML('getXMLfile',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file));
+	if ($xml['eyeLink'][0]) {
+		eyex('systemSound', array('message'));
+		$myWindow = new Window(array(
+			'cent' => 1,
+			'father' => 'eyeApps',
+			'height' => 170,
+			'name' => 'editLink_Window',
+			'savePosition' => 1,
+			'style' => TITLE + CLOSE + LISTED + MIN,
+			'title' => i18n('translate',array('Edit %s',array($file))),
+			'width' => 350
+		));
+		$myWindow->show();
+
+		$myHidden = new Hidden(array(
+			'father' => 'eyeApps',
+			'name' => 'editLink_Hidden_File',
+			'text' => $file
+		));
+		$myHidden->show();
+
+		$myHidden = new Hidden(array(
+			'father' => 'eyeApps',
+			'name' => 'editLink_Hidden_Callback',
+			'text' => $params[1]
+		));
+		$myHidden->show();
+
+		$myImage = new Imagebox(array(
+			'father' => 'editLink_Window_Content',
+			'name' => 'editLink_Imagebox',
+			'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/' . $xml['eyeLink'][0]['icon'][0] . '.png',
+			'x' => 25,
+			'y' => 28
+		));
+		$myImage->show();
+
+		$mySelect = new Select(array(
+			'father' => 'editLink_Window_Content',
+			'name' => 'editLink_Select',
+			'x' => 22,
+			'y' => 100
+		));
+		$mySelect->show();
+		$mySelect->addEvent('onchange','document.getElementById("' . $myPid . '_editLink_Imagebox").src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/" + this.value + ".png";');
+		$files = scandir(eyex('getThemeImage',array('icons/48x48/',2)));
+		foreach ($files as $file) {
+			if (strtolower(substr($file, -4)) === '.png') { // utf8
+				if ($file == $xml['eyeLink'][0]['icon'][0] . '.png') {
+					$mySelect->addOption(basename($file,'.png'),basename($file,'.png'),1);
+				} else {
+					$mySelect->addOption(basename($file,'.png'),basename($file,'.png'));
+				}
+			}
+		}
+
+		$myLabel = new Label(array(
+			'name' => 'editLink_Label',
+			'father' => 'editLink_Window_Content',
+			'text' => 'Command to be executed:',
+			'x' => 105,
+			'y' => 25
+		));
+		$myLabel->show();
+
+		$myTextbox = new Textbox(array(
+			'father' => 'editLink_Window_Content',
+			'name' => 'editLink_Textbox',
+			'text' => $xml['eyeLink'][0]['content'][0],
+			'width' => 200,
+			'x' => 105,
+			'y' => 55
+		));
+		$myTextbox->addFriend($mySelect);
+		$myTextbox->show();
+		$myTextbox->addEnterEventMsg('Do');
+
+		$myButton = new Button(array(
+			'caption' => 'Update',
+			'father' => 'editLink_Window_Content',
+			'horiz' => 1,
+			'name' => 'editLink_Button',
+			'signal' => 'Do',
+			'x' => 40,
+			'y' => 100
+		));
+		$myButton->addFriend($myTextbox);
+		$myButton->addFriend($mySelect);
+		$myButton->show();
+	} else {
+		proc('end');
+	}
+}
+
+function editLink_end($params = '') {
+	eyeWidgets('unserialize');
+}
+?>

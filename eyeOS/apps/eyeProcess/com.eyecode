@@ -1,0 +1,66 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeProcess_com_onClose($params = '') {
+	eyeWidgets('updateContent',$params);
+	$GLOBALS['eyeProcess_Sortabletable']->delRow($params[0]);
+	$GLOBALS['eyeProcess_appSortabletable']->delRow($params[0]);
+}
+
+function eyeProcess_com_onLaunch($params = '') {
+	global $currentUser;
+	eyeWidgets('updateContent',$params);
+	$themeDir = EYE_ROOT . '/' . EXTERN_DIR . '/' . THEMES_DIR . '/'. $_SESSION['usertheme'] .'/icons/22x22';
+	//If user is not root, get root access.
+	if($currentUser != ROOTUSER){
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+	}
+	$dir = EYE_ROOT.'/'.APP_DIR.'/';
+	$dirContent = vfs('real_getDirContent', array($dir));
+	//As process/applications table is filled on every launch process/application, remove all rows.
+	$GLOBALS['eyeProcess_Sortabletable']->delAllRows();
+	$GLOBALS['eyeProcess_appSortabletable']->delAllRows();
+	//Get current process and show them
+	foreach (proc('getProcessTable') as $key => $value) {
+		$GLOBALS['eyeProcess_Sortabletable']->addRow(array($key,$value['appName'],$value['currentUser']));
+		//If one of them is marked as Application in its info.xml show it in application table
+		foreach($dirContent as $appName){
+			if(basename($appName) == $value['appName']){
+				$appName .= '/info.xml';
+				if(vfs('real_fileExists', array($appName))){
+					$config = eyeXML('getXMLfile', array($appName));
+					if($config){
+						if($config['package'][0]['type'][0] == 'Application'){
+							if (file_exists(EYE_ROOT . '/' . EXTERN_DIR . '/' . THEMES_DIR . '/'. $_SESSION['usertheme'] .'/icons/22x22/' . $value['appName'] .'.png') === false && file_exists(EYE_ROOT . '/' . EXTERN_DIR . '/' . THEMES_DIR . '/default/icons/22x22/' . $value['appName'] .'.png') === false) {
+								$urlIcon = 'index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/22x22/exec.png';
+							} else {
+								$urlIcon = 'index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=icons/22x22/'.$value['appName'].'.png';
+							}
+							$GLOBALS['eyeProcess_appSortabletable']->addRow(array($key, '<div style="text-align: center;"><img src="' . $urlIcon . '" /></div>', i18n('translate', array($config['package'][0]['name'][0]))));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	//If we were not root but we got root access undo it.
+	if(isset($oldUser)){
+		$currentUser = $oldUser;
+	}
+}
+?>

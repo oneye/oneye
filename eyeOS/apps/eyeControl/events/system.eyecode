@@ -1,0 +1,128 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_system_system($params = '') {
+// Get the correct quota in bytes
+	$quota_type = $GLOBALS['eyeControl_system_select_quota_type']->selected;
+	if ($quota_type == 'custom') {
+		$quota = $GLOBALS['eyeControl_system_textbox_quota_value']->text;
+		if ($quota <= 0 || !is_numeric($quota)) {
+			$quota = 0;
+		} else {
+			$quota_unit = $GLOBALS['eyeControl_system_select_quota_unit']->selected;
+			switch ($quota_unit) {
+			case 'GB':
+				$quota = $quota * 1024 * 1024 * 1024;
+				break;
+			case 'MB':
+				$quota = $quota * 1024 * 1024;
+				break;
+			case 'KB':
+				$quota = $quota * 1024;
+				break;
+			}
+		}
+	} else {
+		$quota = 0;
+	}
+
+	$file = EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/system.xml';
+	$xml = eyeXML('getXMLfile',array($file));
+	$xml['CONFIG'][0]['EYEOS_HOSTNAME'][0] = $GLOBALS['eyeControl_system_system_textbox_hostname']->text;
+	$xml['CONFIG'][0]['DEFAULT_LANGUAGE'][0] = $GLOBALS['eyeControl_system_system_select_language']->selected;
+	$xml['CONFIG'][0]['DEFAULT_QUOTA'][0] = strval($quota);
+	eyeXML('setXMLFile',array($file,$xml));
+
+	$xml = getConfig('eyeFiles','conf.xml');
+	$xml['eyeFiles'][0]['CreateThumbnails'][0] = $GLOBALS['eyeControl_system_system_checkbox_thumbnails']->checked;
+	setConfig('eyeFiles','conf.xml',$xml);
+
+	eyex('messageBox',array('content' => 'Changes successfully saved.'));
+}
+
+function eyeControl_on_system_permissions($params = '') {
+	$file = EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/system.xml';
+	$xml = eyeXML('getXMLfile',array($file));
+	$xml['CONFIG'][0]['ALLOW_USER_REGISTER'][0] = $GLOBALS['eyeControl_system_permissions_checkbox_registration']->checked;
+	$xml['CONFIG'][0]['ALLOW_PUBLIC_DIRS'][0] = $GLOBALS['eyeControl_system_permissions_checkbox_publicdirs']->checked;
+	$xml['CONFIG'][0]['WEB_UPLOAD'][0] = $GLOBALS['eyeControl_system_permissions_checkbox_webupload']->checked;
+	eyeXML('setXMLFile',array($file,$xml));
+	eyex('messageBox',array('content' => 'Changes successfully saved.'));
+}
+
+function eyeControl_on_system_office($params = '') {
+	if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) {
+		$file = EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/system.xml';
+		$xml = eyeXML('getXMLfile',array($file));
+		$xml['CONFIG'][0]['OFFICE_COMMAND'][0] = $GLOBALS['eyeControl_system_office_textbox_folder']->text;
+		$xml['CONFIG'][0]['OFFICE_SEPARATOR_ARG'][0] = '"';
+		eyeXML('setXMLFile',array($file,$xml));
+		eyex('messageBox',array('content' => 'Changes successfully saved.'));
+	}
+}
+
+function eyeControl_on_system_office_howtowindows($params = '') {
+	proc('launch',array('eyeHelp','eyeControl'));
+}
+
+function eyeControl_on_system_office_howtolinux($params = '') {
+	proc('launch',array('eyeHelp','eyeControl'));
+}
+
+function eyeControl_on_system_uninstall($params = '') {
+	global $currentUser;
+	$password = base64_decode($GLOBALS['eyeControl_system_uninstall_textbox_password']->text);
+	$userInfo = um('retrieveUser',array($currentUser));
+	if ($currentUser == REAL_ROOTUSER && md5($password . md5($password)) == $userInfo['eyeUser'][0]['password'][0]) {
+		eyex('messageBox',array(
+			'buttons' => array(array('system_uninstall_yes','Yes'),array('system_uninstall_no','No')),
+			'content' => 'Do you really want to delete the oneye system? This removes all data from the oneye directory!',
+			'father' => 'eyeControl_container_big',
+			'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/editClean.png',
+			'title' => 'Uninstall oneye',
+			'type' => 3,
+			'win_name' => 'eyeControl_system_uninstall_window',
+			'win_removepid' => 0,
+			'win_style' => TITLE + CLOSE
+		));
+	} else {
+		eyex('messageBox',array('content' => 'Please type the correct root password to uninstall oneye!'));
+	}
+}
+
+function eyeControl_on_system_uninstall_yes($params = '') {
+	global $currentUser;
+	if ($currentUser === REAL_ROOTUSER) {
+		eyeWidgets('unserialize');
+		eyex('messageBox', array('content' => 'Your oneye system was successfully deleted.'));
+		eyex('rawjs', array('js' => 'window.onbeforeunload = ""; setTimeout(window.home, 2000);'));
+		vfs('real_delete', array(EYE_ROOT . '/../.htaccess'));
+		vfs('real_delete', array(EYE_ROOT . '/../browser'));
+		vfs('real_delete', array(EYE_ROOT . '/../index.php'));
+		vfs('real_delete', array(EYE_ROOT . '/../iphone'));
+		vfs('real_delete', array(EYE_ROOT . '/../license.txt'));
+		vfs('real_delete', array(EYE_ROOT . '/../mobile'));
+		vfs('real_delete', array(EYE_ROOT . '/../php-ini'));
+		vfs('real_delete', array(EYE_ROOT . '/../README.txt'));
+		vfs('real_delete', array(EYE_ROOT . '/../settings.php'));
+		vfs('real_rmdir', array(EYE_ROOT . '/'));
+	}
+}
+
+function eyeControl_on_system_uninstall_no($params = '') {
+	$GLOBALS['eyeControl_system_uninstall_window']->close();
+}
+?>

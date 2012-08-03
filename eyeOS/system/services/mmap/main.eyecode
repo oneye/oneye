@@ -1,0 +1,239 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Message Map oneye service
+*/
+
+/**
+* Adds a new task to the Buffer.
+*
+* @param $params array(content)
+* @param $content XML string containing the task.
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false.
+* @exception INCORRECT_PARAMS No task is provided.
+* @date 2008/03/11
+*/
+function service_mmap_addToBuffer($params) {
+	if(!$params[0]) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	global $outputBuffer;
+	$content = $params[0];
+	$outputBuffer .= $content;
+	return true;
+}
+
+/**
+* Returns the contents of the output buffer.
+*
+* @return Returns an XML string containing the output buffer.
+* @date 2008/03/11
+*/
+function service_mmap_releaseBuffer() {
+	//this function release output buffer
+	global $outputBuffer;
+
+	//get possible PHP errors
+	$content = ob_get_contents();
+
+	if(!empty($content)) {
+	  if ($_SESSION['mmap_directOutputEnabled']) {
+		$outputBuffer .= $content;
+	  } else {
+		eyeX('rawjs',array('js'=>'console.log(Base64.decode("'.base64_encode($content).'"));'));
+	  }
+	}
+
+	//flush output buffer if needed
+	ob_clean();
+
+	//Making the xml response.
+	$temp = eyeXML('append',array('eyeMessage',$outputBuffer));
+	$temp = eyeXML('getXmlHeader').$temp;
+	return $temp;
+}
+
+/**
+* Calls an event function of an application. This function is
+* automatically called every time an application sends a signal from a
+* user's client.
+*
+* @param $params array(checknum,action,[args])
+* @param $checknum Checknum of the application executing the action.
+* @param $action Name of the event.
+* @param $args Arguments passed to the function.
+* @return The output buffer of the system, updated.
+* @date 2008/03/11
+*/
+function service_mmap_routemsg($params) {
+	if(!$params[0] || !$params[1]) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	global $checknum;
+	global $currentUser;
+	global $myPid;
+
+	$checknum = $params[0];
+	$action = $params[1];
+	$args = $params[2];
+
+	if($args) {
+		$args = eyeXML('xml2array',array($args));
+	}
+	global $procInfo;
+	$procInfo = proc('getProcByChecknum',array($checknum));
+
+	$currentUser = $procInfo['currentUser'];
+	$myPid = $procInfo['pid'];
+
+	$procInfo['checknum'] = $checknum;//Remove this? maybe
+
+	if(!isset($_SESSION['AUTH_IP']) || empty($_SESSION['AUTH_IP'])) {
+		$_SESSION['AUTH_IP'] = $_SERVER['REMOTE_ADDR'];
+	}
+	if(($_SESSION['AUTH_IP'] != $_SERVER['REMOTE_ADDR']) && sec('protectedIpSessions') || intval(SESSION_EXPIRE) > 0 && time() - intval($_SESSION['ping']) > intval(SESSION_EXPIRE)) {
+		eyeSessions('endSession'); //delete session
+		eyeX('messageBox',array('content'=>'Your session has expired','type'=>2));
+		eyeX('rawjs',array('js'=>'window.location.replace(\'index.php\');')); //refresh the page
+		return mmap('releaseBuffer');
+	}
+
+	//If app does not exist...
+	if(!isset($procInfo['appName']) || empty($procInfo['appName'])) {
+		header("Content-type:text/xml");//override header type
+		echo "<eyeMessage></eyeMessage>";
+		return mmap('releaseBuffer');
+	}
+
+	if(um('UserIsAdmin',array($currentUser))) {
+		define('ROOTUSER',$currentUser);
+	} else {
+		define('ROOTUSER',REAL_ROOTUSER);
+	}
+
+	//If events.eyecode can be included, then include it, else exit.
+	if(is_readable(EYE_ROOT.'/'.APP_DIR.'/'.$procInfo['appName'].'/'.'events'.EYE_CODE_EXTENSION)) {
+		include_once(EYE_ROOT.'/'.APP_DIR.'/'.$procInfo['appName'].'/'.'events'.EYE_CODE_EXTENSION);
+	} else {
+
+		exit;
+	}
+
+	global $outputBuffer;
+	$outputBuffer = "";
+	i18n('loadLang',array($procInfo['appName']));
+	//First call on_Message event if it exists (for example for friends).
+	if(function_exists($procInfo['appName'].'_on_Message')) {
+		call_user_func($procInfo['appName'].'_on_Message',$args);
+	} else {
+		eyeWidgets('updateContent',$args);
+	}
+
+	if(isset($messageTable[$action])) {
+		call_user_func($messageTable[$action]['function'],$messageTable[$action]['args']);
+	} else {
+		//Call the specific event.
+		if(function_exists($procInfo['appName'].'_on_'.$action)) {
+			call_user_func($procInfo['appName'].'_on_'.$action,$args);
+		} else {
+			exit;
+		}
+	}
+
+	return mmap('releaseBuffer');
+}
+
+/**
+* Transforms a PHP array into string convertible to a JavaScript array.
+*
+* @param $params array(arrayinphp)
+* @param $arrayinphp PHP array to transform.
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false.
+* @exception INCORRECT_PARAMS No array is provided.
+* @date 2008/03/11
+*/
+function service_mmap_array2js($params) {
+	if(!$params[0]) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$arrayInPHP = $params[0];
+	$code = json_encode($arrayInPHP);
+	return $code;
+}
+
+/**
+* Transforms a PHP array into string convertible to a JS array with the
+* use of the JS function getArrayArg.
+*
+* @param $params array(arrayinphp)
+* @param $arrayinphp Input PHP array.
+* @return If the function succeeds, returns true. Otherwise, returns
+*	false.
+* @exception INCORRECT_PARAMS No array is provided.
+* @date 2008/03/11
+*/
+function service_mmap_array2jsArg($params) {
+	if(!$params[0]) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	$arrayInPHP = $params[0];
+	$code = '';
+	foreach ($arrayInPHP as $value) {
+		if (!is_null($value)) {
+			if (isset($params[1]) === false || !$params[1]) {
+				$value = str_replace("\\","\\\\",$value);
+				$value = str_replace('"','\\"',$value);
+				$value = str_replace("'","\\'",$value);
+			}
+			$code .= $value.'""';
+		}
+	}
+	$code = /* utf8 */ substr($code, 0, -2);
+	return $code;
+}
+
+/**
+* Enables direct output, so that you can for example "echo $something" without
+* having it being Base64_encoded and sent to the browser console, but instead
+* directly printed to the browser (even PHP errors are!).
+* Use carefully and always remember to enable it only for the time that is
+* necessary, and then re-disable it.
+* It it automatically disabled at every boot (eyeX_run function)
+*
+* @return The function does not return anything
+* @date 2012/02/08
+*/
+function service_mmap_enableDirectOutput() {
+	$_SESSION['mmap_directOutputEnabled'] = TRUE;
+}
+
+/**
+* Disables direct output (see description of service_mmap_enableDirectOutput())
+*
+* @return The function does not return anything
+* @date 2012/02/08
+*/
+function service_mmap_disableDirectOutput() {
+	$_SESSION['mmap_directOutputEnabled'] = FALSE;
+}
+?>

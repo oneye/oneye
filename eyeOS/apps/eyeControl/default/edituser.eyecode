@@ -1,0 +1,582 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $currentUser;
+global $myPid;
+
+if (um('checkMaintainer',array(eyeControl_lib_getConfigUser()))) {
+	$myUserXml = um('retrieveUser',array(eyeControl_lib_getConfigUser()));
+}
+
+$user = $contentParams[0];
+if (!$user) {
+	eyex('messageBox',array('content' => 'Please choose a user to be edited.'));
+	eyeControl_lib_loadContent('only_root','users');
+	return;
+}
+
+if ($currentUser != ROOTUSER && !um('checkMaintainer',array(eyeControl_lib_getConfigUser())) || um('checkMaintainer',array(eyeControl_lib_getConfigUser())) && !in_array($user,$myUserXml['eyeUser'][0]['mngUser'])) {
+	eyex('messageBox',array('content' => 'You are not allowed to manage users!'));
+	eyeControl_lib_loadContent();
+	return;
+}
+
+$oldUser = $currentUser;
+$currentUser = ROOTUSER;
+$UserXML = um('retrieveUser',array($user));
+$currentUser = $oldUser;
+$UserXML = $UserXML['eyeUser'][0];
+$ContentY = 10;
+// $myHidden
+$myHidden = new Hidden(array(
+	'name' => 'eyeControl_edituser_hidden',
+	'father' => $eyeContainer,
+	'text' => $user
+));
+$myHidden->show();
+// Username
+$myLabel = new Label(array(
+	'name' => 'eyeControl_edituser_label_username_1',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'User Name'
+));
+$myLabel->show();
+$myLabel_username = new Label(array(
+	'name' => 'eyeControl_edituser_label_username_2',
+	'father' => $eyeContainer,
+	'x' => 190,
+	'y' => $ContentY + 3,
+	'text' => $user
+));
+$myLabel_username->show();
+$ContentY += 25;
+// Full Name
+$myLabel = new Label(array(
+	'name' => 'eyeControl_edituser_label_fullname',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Full Name'
+));
+$myLabel->show();
+$myTextbox_fullname = new Textbox(array(
+	'name' => 'eyeControl_edituser_textbox_fullname',
+	'father' => $eyeContainer,
+	'x' => 190,
+	'y' => $ContentY,
+	'text' => $UserXML['fullname'][0],
+	'width' => 140
+));
+$myTextbox_fullname->show();
+$myTextbox_fullname->focus();
+$ContentY += 25;
+// E-mail
+$myLabel = new Label(array(
+	'name' => 'eyeControl_edituser_label_email',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'E-mail'
+));
+$myLabel->show();
+$myTextbox_email = new Textbox(array(
+	'name' => 'eyeControl_edituser_textbox_email',
+	'father' => $eyeContainer,
+	'x' => 190,
+	'y' => $ContentY,
+	'text' => $UserXML['email'][0],
+	'width' => 140
+));
+$myTextbox_email->show();
+$ContentY += 25;
+// User quota
+$myLabel = new Label(array(
+	'name' => 'eyeControl_edituser_label_quota',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'User Quota'
+));
+$myLabel->show();
+if (isset($UserXML['quota'][0])) {
+	$quota = $UserXML['quota'][0];
+	if (!is_numeric($quota) || $quota < 0) {
+		$selected = array(1, 0, 0);
+		$quota = DEFAULT_QUOTA;
+	} elseif ($quota == 0) {
+		$selected = array(0, 0, 1);
+	} else {
+		$selected = array(0, 1, 0);
+	}
+} else {
+	$selected = array(1, 0, 0);
+	$quota = DEFAULT_QUOTA;
+}
+if (!is_numeric($quota) || $quota == 0){
+	$quota = '';
+	$temp_sel['GB'] = 1;
+} elseif ($quota / 1024 / 1024 / 1024 >= 1 && round($quota / 1024 / 1024 / 1024) * 1024 * 1024 * 1024 == $quota) {
+	$quota = $quota / 1024 / 1024 / 1024;
+	$temp_sel['GB'] = 1;
+} elseif ($quota / 1024 / 1024 >= 1 && round($quota / 1024 / 1024) * 1024 * 1024 == $quota) {
+	$quota = $quota / 1024 / 1024;
+	$temp_sel['MB'] = 1;
+} elseif ($quota / 1024 >= 1 && round($quota / 1024) * 1024 == $quota) {
+	$quota = $quota / 1024;
+	$temp_sel['KB'] = 1;
+} else {
+	$temp_sel['B'] = 1;
+}
+$myTextbox_quota = new Textbox(array(
+	'name' => 'eyeControl_edituser_textbox_quota_value',
+	'father' => $eyeContainer,
+	'x' => 349,
+	'y' => $ContentY,
+	'text' => $quota,
+	'width' => 50,
+));
+$myTextbox_quota->show();
+if ($selected[1] == 0) {
+	$myTextbox_quota->setCss(array('display' => 'none'));
+}
+$mySelect_quota = new Select(array(
+	'name' => 'eyeControl_edituser_select_quota_unit',
+	'father' => $eyeContainer,
+	'x' => 414,
+	'y' => $ContentY,
+	'width' => 80,
+));
+$mySelect_quota->show();
+if ($selected[1] == 0) {
+	$mySelect_quota->setCss(array('display' => 'none'));
+}
+$mySelect_quota->addOption('Bytes','B',$temp_sel['B']);
+$mySelect_quota->addOption('KBytes','KB',$temp_sel['KB']);
+$mySelect_quota->addOption('MBytes','MB',$temp_sel['MB']);
+$mySelect_quota->addOption('GBytes','GB',$temp_sel['GB']);
+$mySelect_quota_type = new Select(array(
+	'name' => 'eyeControl_edituser_select_quota_type',
+	'father' => $eyeContainer,
+	'width' => 125,
+	'x' => 190,
+	'y' => $ContentY,
+	'width' => 145
+));
+$mySelect_quota_type->show();
+$mySelect_quota_type->addOption('Use system default', 'default', $selected[0]);
+$mySelect_quota_type->addOption('Set custom value:', 'custom', $selected[1]);
+$mySelect_quota_type->addOption('Unlimited', 'unlimited', $selected[2]);
+$mySelect_quota_type->addEvent('onchange','
+if (this.value == "custom") {
+	document.getElementById("' . $myPid . '_eyeControl_edituser_textbox_quota_value").style.display = "block";
+	document.getElementById("' . $myPid . '_eyeControl_edituser_select_quota_unit").style.display = "block";
+} else {
+	document.getElementById("' . $myPid . '_eyeControl_edituser_textbox_quota_value").style.display = "none";
+	document.getElementById("' . $myPid . '_eyeControl_edituser_select_quota_unit").style.display = "none";
+}');
+$ContentY += 25;
+// Created on
+$myLabel = new Label(array(
+	'name' => 'eyeControl_edituser_label_createdate_1',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Created On'
+));
+$myLabel->show();
+$myLabel = new Label(array(
+	'name' => 'eyeControl_edituser_label_createdate_2',
+	'father' => $eyeContainer,
+	'x' => 190,
+	'y' => $ContentY + 3,
+	'text' => '-'
+));
+if (isset($UserXML['createDate'][0])) {
+	$UserXML['createDate'][0] = intval($UserXML['createDate'][0]);
+	if ($UserXML['createDate'][0] > 0) {
+		$myLabel->setText(date('Y-m-d G:i:s',$UserXML['createDate'][0]));
+	}
+}
+$myLabel->show();
+$ContentY += 25;
+if (eyeControl_lib_getConfigUser() == ROOTUSER) {
+	// Permissions
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_edituser_label_permissions',
+		'father' => $eyeContainer,
+		'x' => 20,
+		'y' => $ContentY + 3,
+		'text' => 'Permissions'
+	));
+	$myLabel->show();
+	$mySelect = new Select(array(
+		'name' => 'eyeControl_edituser_select_permissions',
+		'father' => $eyeContainer,
+		'width' => 125,
+		'x' => 190,
+		'y' => $ContentY,
+		'width' => 145
+	));
+	$mySelect->show();
+	if ($user == REAL_ROOTUSER) {
+		$mySelect->addOption('Root','root',1);
+	} elseif ($UserXML['admin'][0]) {
+		$mySelect->addOption('User','user');
+		$mySelect->addOption('Maintainer','maintainer');
+		$mySelect->addOption('Administrator','admin',1);
+	} elseif ($UserXML['maintainer'][0]) {
+		$mySelect->addOption('User','user');
+		$mySelect->addOption('Maintainer','maintainer',1);
+		$mySelect->addOption('Administrator','admin');
+	} else {
+		$mySelect->addOption('User','user',1);
+		$mySelect->addOption('Maintainer','maintainer');
+		$mySelect->addOption('Administrator','admin');
+	}
+	$mySelect->addEvent('onchange','
+	if (this.value == "maintainer") {
+		document.getElementById("' . $myPid . '_eyeControl_edituser_label_maintain").style.display = "block";
+		document.getElementById("' . $myPid . '_eyeControl_edituser_window_maintain").style.display = "block";
+		document.getElementById("' . $myPid . '_eyeControl_edituser_container_maintained_users").style.display = "block";
+	} else {
+		document.getElementById("' . $myPid . '_eyeControl_edituser_label_maintain").style.display = "none";
+		document.getElementById("' . $myPid . '_eyeControl_edituser_window_maintain").style.display = "none";
+		document.getElementById("' . $myPid . '_eyeControl_edituser_container_maintained_users").style.display = "none";
+	}');
+	if ($user != ROOTUSER || $currentUser == REAL_ROOTUSER && $user != REAL_ROOTUSER) {
+		$myCheckbox_block = new Checkbox(array(
+			'name' => 'eyeControl_edituser_checkbox_block',
+			'father' => $eyeContainer,
+			'text' => 'Block User',
+			'x' => 360,
+			'y' => $ContentY,
+			'checked' => intval($UserXML['disabled'][0])
+		));
+		$myCheckbox_block->show();
+	}
+	$ContentY += 25;
+
+	// Full Name
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_edituser_label_expire',
+		'father' => $eyeContainer,
+		'x' => 20,
+		'y' => $ContentY + 3,
+		'text' => 'Expiration Date'
+	));
+	$myLabel->show();
+	if(intval($UserXML['expirationDate'][0]) == 0) {
+		$exp = i18n('translate',array('Never'));
+	} else {
+		$exp = date('Y-m-d',$UserXML['expirationDate'][0]);
+	}
+	$myTextbox_expire = new Textbox(array(
+		'name' => 'eyeControl_edituser_textbox_expire',
+		'father' => $eyeContainer,
+		'x' => 190,
+		'y' => $ContentY,
+		'text' => $exp,
+		'width' => 140
+	));
+	$myTextbox_expire->show();
+	$ContentY += 25;
+}
+// Set new passwort on next login
+$myLabel = new Label(array(
+	'name' => 'eyeControl_edituser_label_setnewpassword',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Set new password on next login'
+));
+$myLabel->show();
+$myCheckbox_setnewpassword = new Checkbox(array(
+	'checked' => $UserXML['resetPassword'][0],
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_edituser_checkbox_setnewpassword',
+	'text' => ' ',
+	'x' => 360,
+	'y' => $ContentY
+));
+$myCheckbox_setnewpassword->show();
+$ContentY += 25;
+// Save Changes
+$myButton = new Button(array(
+	'name' => 'eyeControl_edituser_button_save',
+	'father' => $eyeContainer,
+	'x' => 40,
+	'y' => $ContentY,
+	'caption' => 'Save Changes',
+	'signal' => 'edituser_save'
+));
+$ContentY += 40;
+// $myLine
+$myLine = new Line(array(
+	'name' => 'eyeControl_edituser_line',
+	'father' => $eyeContainer,
+	'x' => 10,
+	'y' => $ContentY,
+	'width' => 545
+));
+$myLine->show();
+$ContentY += 20;
+// Groups
+$myLabel = new Label(array(
+	'name' => 'eyeControl_edituser_label_groups',
+	'father' => $eyeContainer,
+	'x' => 50,
+	'y' => $ContentY + 3,
+	'text' => 'Groups'
+));
+$myLabel->show();
+$myLabel->setCss(array('font-weight' => 'bold'));
+if (eyeControl_lib_getConfigUser() == ROOTUSER) {
+	// Maintain
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_edituser_label_maintain',
+		'father' => $eyeContainer,
+		'x' => 325,
+		'y' => $ContentY + 3,
+		'text' => 'Maintain',
+	));
+	$myLabel->show();
+	if ($UserXML['maintainer'][0]) {
+		$myLabel->setCss(array('font-weight' => 'bold'));
+	} else {
+		$myLabel->setCss(array(
+			'font-weight' => 'bold',
+			'display' => 'none'
+		));
+	}
+}
+$ContentY += 20;
+// $myWindow
+$myWindow = new Window(array(
+	'name' => 'eyeControl_edituser_window_groups',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY,
+	'width' => 250,
+	'height' => 100,
+	'type' => INVISIBLE_WINDOW
+));
+$myWindow->show();
+$myWindow->setCss(array(
+	'overflow' => 'auto',
+	'direction' => 'rtl'
+));
+// $myContainer
+	$myContainer = new Container(array(
+	'name' => 'eyeControl_edituser_container_groups',
+	'father' => 'eyeControl_edituser_window_groups',
+	'y' => 0,
+	'x' => 0,
+	'width' => 230
+));
+$myContainer->show();
+$myContainer->setCss(array(
+	'direction' => 'ltr'
+));
+eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_eyeControl_edituser_window_groups_Content").style.left = "0"; document.getElementById("' . $myPid . '_eyeControl_edituser_window_groups_Content").style.top = "0";'));
+if (eyeControl_lib_getConfigUser() == ROOTUSER) {
+	// $myWindow
+	$myWindow = new Window(array(
+		'name' => 'eyeControl_edituser_window_maintain',
+		'father' => $eyeContainer,
+		'x' => 20,
+		'horiz' => 1,
+		'y' => $ContentY,
+		'width' => 250,
+		'height' => 100,
+		'type' => INVISIBLE_WINDOW
+	));
+	$myWindow->show();
+	if ($UserXML['maintainer'][0]) {
+		$myWindow->setCss(array(
+			'overflow' => 'auto',
+			'direction' => 'rtl'
+		));
+	} else {
+		$myWindow->setCss(array(
+			'overflow' => 'auto',
+			'direction' => 'rtl',
+			'display' => 'none'
+		));
+	}
+	// $myContainer
+	$myContainer = new Container(array(
+		'name' => 'eyeControl_edituser_container_maintain',
+		'father' => 'eyeControl_edituser_window_maintain',
+		'y' => 0,
+		'x' => 0,
+		'width' => 230
+	));
+	$myContainer->show();
+	$myContainer->setCss(array(
+		'direction' => 'ltr'
+	));
+	eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_eyeControl_edituser_window_maintain_Content").style.left = "0"; document.getElementById("' . $myPid . '_eyeControl_edituser_window_maintain_Content").style.top = "0";'));
+}
+// Add all groups as Checkbox to $myWindow
+$ContentY_win = 0;
+
+$openDir = vfs('real_getDirContent',array(EYE_ROOT . '/' . GROUPS_DIR . '/'));
+foreach ($openDir as $group) {
+	if (is_dir($group)) {
+		$group = basename($group);
+		
+		// Groups checkbox
+		$myCheckBox = new Checkbox(array(
+			'name' => 'eyeControl_edituser_checkbox_group_' . $group,
+			'father' => 'eyeControl_edituser_container_groups',
+			'text' => $group,
+			'x' => 0,
+			'y' => $ContentY_win,
+			'checked' => (is_array($UserXML['group'])) ? in_array($group,$UserXML['group']) : 0
+		));
+		$myCheckBox->show();
+		$myButton->addFriend($myCheckBox);
+		
+		if (um('checkMaintainer',array($user))) {
+			$myCheckBox = new Checkbox(array(
+				'name' => 'eyeControl_edituser_checkbox_maintain_' . $group,
+				'father' => 'eyeControl_edituser_container_maintain',
+				'text' => $group,
+				'x' => 0,
+				'y' => $ContentY_win,
+				'checked' => (is_array($UserXML['maintain'])) ? in_array($group,$UserXML['maintain']) : 0
+			));
+			$myCheckBox->show();
+			$myButton->addFriend($myCheckBox);
+		}
+
+		$ContentY_win = $ContentY_win + 20;
+	}
+}
+	
+$myButton->addFriend($myCheckbox_setnewpassword);
+$myButton->addFriend($myHidden);
+$myButton->addFriend($myTextbox_fullname);
+$myButton->addFriend($myTextbox_email);
+$myButton->addFriend($myTextbox_quota);
+$myButton->addFriend($mySelect_quota_type);
+$myButton->addFriend($mySelect_quota);
+if (eyeControl_lib_getConfigUser() == ROOTUSER) {
+	$myButton->addFriend($mySelect);
+	$myButton->addFriend($myTextbox_expire);
+}
+if ($user != ROOTUSER || $currentUser == REAL_ROOTUSER && $user != REAL_ROOTUSER) {
+	$myButton->addFriend($myCheckbox_block);
+}
+$myButton->show();
+if (eyeControl_lib_getConfigUser() == ROOTUSER) {
+	$ContentY += 110;
+// $myContainer
+	$myContainer = new Container(array(
+		'name' => 'eyeControl_edituser_container_maintained_users',
+		'father' => $eyeContainer,
+		'y' => $ContentY + 3,
+		'x' => 0,
+		'height' => 50,
+		'width' => 560
+	));
+	$myContainer->show();
+	if ($UserXML['maintainer'][0] != '1') {
+		$myContainer->setCss(array('display' => 'none'));
+	}
+	// $myLine
+	$myLine = new Line(array(
+		'name' => 'eyeControl_edituser_line_2',
+		'father' => 'eyeControl_edituser_container_maintained_users',
+		'x' => 10,
+		'y' => 0,
+		'width' => 545
+	));
+	$myLine->show();
+	$ContentY += 20;
+// Maintained users
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_edituser_label_maintained_users_1',
+		'father' => 'eyeControl_edituser_container_maintained_users',
+		'x' => 50,
+		'y' => 10,
+		'text' => 'Maintained Users'
+	));
+	$myLabel->show();
+	$myLabel->setCss(array('font-weight' => 'bold'));
+	if (is_array($UserXML['mngUser']) && $UserXML['mngUser'][0] !== '') {
+		foreach ($UserXML['mngUser'] as $mngUser) {
+			($mngUsers) ? $mngUsers .= ', ' . $mngUser : $mngUsers = $mngUser;
+		}
+	} else {
+		$mngUsers = 'none';
+	}
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_edituser_label_maintained_users_2',
+		'father' => 'eyeControl_edituser_container_maintained_users',
+		'x' => 20,
+		'y' => 30,
+		'text' => $mngUsers
+	));
+	$myLabel->show();
+	eyeWidgets('serialize',array($myLabel));
+// $myTextbox
+	$myTextbox = new Textbox(array(
+		'name' => 'eyeControl_edituser_textbox_maintained_users',
+		'father' => 'eyeControl_edituser_container_maintained_users',
+		'x' => 210,
+		'y' => 10,
+		'horiz' => 1
+	));
+	$myTextbox->show();
+	if ($UserXML['maintainer'][0]) {
+// Add
+		$myButton = new Button(array(
+			'name' => 'eyeControl_edituser_button_add',
+			'father' => 'eyeControl_edituser_container_maintained_users',
+			'signal' => 'edituser_add',
+			'caption' => 'Add',
+			'width' => 80,
+			'x' => 100,
+			'y' => 10,
+			'horiz' => 1,
+			'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/plus.png'
+		));
+		$myButton->addFriend($myHidden);
+		$myButton->addFriend($myLabel);
+		$myButton->addFriend($myTextbox);
+		$myButton->show();
+// Remove
+		$myButton = new Button(array(
+			'name' => 'eyeControl_edituser_button_remove',
+			'father' => 'eyeControl_edituser_container_maintained_users',
+			'signal' => 'edituser_remove',
+			'caption' => 'Remove',
+			'width' => 80,
+			'x' => 10,
+			'y' => 10,
+			'horiz' => 1,
+			'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/minus.png'
+		));
+		$myButton->addFriend($myHidden);
+		$myButton->addFriend($myLabel);
+		$myButton->addFriend($myTextbox);
+		$myButton->show();
+	}
+}
+?>

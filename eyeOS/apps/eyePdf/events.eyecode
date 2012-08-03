@@ -1,0 +1,193 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyePdf_on_Init($params = '') {
+	global $checknum, $myPid, $currentUser;
+	$userDir = um('getCurrentUserDir');
+	if (isset($params['arg'][0])) {
+		$params[0] = $userDir . FILES_USER_DIR . '/' . $params['arg'][0];
+	}
+	if (!vfs('real_fileExists',array($userDir . 'conf/eyePdf/conf.xml'))) {
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		vfs('real_mkDir', array($userDir . 'conf/eyePdf'));
+		vfs('real_copy',array(EYE_ROOT . '/' . SYSTEM_DIR . '/conf/skel/' . CONF_USER_DIR . '/eyePdf/conf.xml',$userDir . 'conf/eyePdf/conf.xml'));
+		$currentUser = $oldUser;
+	}
+	$xml = eyeXML('getXMLconfig',array('eyePdf','conf.xml'));
+	if ($xml['eyePdf'][0]['renderer'][0] == 'pdf.js') {
+		eyex('rawjs', array('js' => 'sendMsg(' . $checknum . ',"Load",eyeParam("path","'.$params[0].'") + eyeParam("renderer","pdf.js") + eyeParam("start_maximized","' . $xml['eyePdf'][0]['start_maximized'][0] . '"));'));
+	} elseif ($xml['eyePdf'][0]['renderer'][0] == 'download') {
+		eyex('rawjs', array('js' => 'sendMsg(' . $checknum . ',"downloadPdf",eyeParam("path","'.$params[0].'") + eyeParam("start_maximized","' . $xml['eyePdf'][0]['start_maximized'][0] . '"));'));
+	} else {
+		eyex('runjs',array(
+			'js' => '
+				if ((navigator.userAgent.indexOf("Safari") !== -1) && (navigator.userAgent.indexOf("mobile") !== -1)) {
+					sendMsg(' . $checknum . ',"Load",eyeParam("path",%s) + eyeParam("start_maximized","' . $xml['eyePdf'][0]['start_maximized'][0] . '") + eyeParam("renderer","safari"));
+				} else {
+					if (IEversion || navigator.mimeTypes["application/pdf"] && navigator.mimeTypes["application/pdf"].enabledPlugin != null) {
+						sendMsg(' . $checknum . ',"Load",eyeParam("path",%s) + eyeParam("start_maximized","' . $xml['eyePdf'][0]['start_maximized'][0] . '"));
+					} else  {
+						sendMsg(' . $checknum . ',"downloadPdf",eyeParam("path",%s));
+					}
+				}',
+			'tokens' => array($params[0], $params[0], $params[0])
+		));
+	}
+}
+
+/* THE TOOLBAR HAS BEEN DELETED
+function eyePdf_on_Open($params = '') {
+	global $checknum;
+	proc('launch',array('eyeDialog',array(EYEDIALOG_TYPE_OPENFILE,'OpenDo',$checknum,'',array(
+		'PDF files' => '*.pdf',
+		'All files' => '*.*'
+	),'','','Close')));
+}
+
+function eyePdf_on_OpenDo($params = '') {
+	global $checknum;
+	$GLOBALS['eyePdf_Hidden_Path']->setText(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . $params['arg'][0]);
+	$GLOBALS['eyePdf_Iframe']->setUrl('index.php?checknum=' . $checknum . '&msg=getPdf&time=' . time());
+	$GLOBALS['eyePdf_Window']->setTitle(basename($params['arg'][0]) . ' - eyePdf');
+}
+*/
+
+function eyePdf_on_Close($params = '') {
+	proc('end');
+}
+
+function eyePdf_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+/* THE TOOLBAR HAS BEEN DELETED
+function eyePdf_on_Fullscreen($params = '') {
+	global $myPid;
+	$GLOBALS['eyePdf_Window']->setFullScreen();
+	if ($GLOBALS['eyePdf_Window']->fullScreen) {
+		$press = 'Press';
+	}
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_eyePdf_Toolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "Fullscreen_Container") {
+			e.childNodes[i].className = "blockbarItem' . $press . '_right";
+		}
+	}'));
+}
+*/
+
+function eyePdf_on_downloadPdf($params = '') {
+	proc('launch',array('eyeDownload',array($params['path'][0])));
+	proc('end');
+}
+
+function eyePdf_on_getPdf($params = '') {
+	if (VFS_MODULE === "real") {
+		$functions_prefix = "real_";
+		$function_readfile = 'printFile';
+	} else {
+		$functions_prefix = "";
+		$function_readfile = 'readFile';
+	}
+	if (!empty($params[0]) && vfs($functions_prefix.'fileExists', array($params[0]))) {
+		$path = $params[0];
+	} else {
+		$path = $GLOBALS['eyePdf_Hidden_Path']->text;
+	}
+	header('Content-Type: application/pdf');
+	header('Content-Length: ' . vfs($functions_prefix.'filesize',array($path)));
+	header('Accept-Ranges: bytes');
+	vfs($function_readfile, array($path));
+	exit;
+}
+
+function eyePdf_on_Load($params = '') {
+	global $checknum, $myPid;
+	//THE TOOLBAR HAS BEEN DELETED addListenerServiceCall('fullResized','eyex','resizedbrowser');
+	if ($_SESSION['SCREEN']['eyeApps']['width'] >= 600) {
+		$window_width = $_SESSION['SCREEN']['eyeApps']['width']*0.75;
+		if ($params['start_maximized'][0]) {
+			$start_maximized = TRUE;
+		} else {
+			$start_maximized = FALSE;
+		}
+	} else {
+		$window_width = $_SESSION['SCREEN']['eyeApps']['width'];
+		$start_maximized = FALSE;
+	}
+	if ($_SESSION['SCREEN']['eyeApps']['height'] >= 480) {
+		$window_height = $_SESSION['SCREEN']['eyeApps']['height']*0.75;
+	} else {
+		$window_height = $_SESSION['SCREEN']['eyeApps']['height'];
+		$start_maximized = FALSE;
+	}
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => $window_height,
+		'minHeight' => 200,
+		'minWidth' => 200,
+		'name' => 'eyePdf_Window',
+		'title' => basename($params['path'][0]),
+		'savePosition' => 1,
+		'sendResizeMsg' => 1,
+		'sigResize' => 'Resize',
+		'width' => $window_width
+	));
+	$myWindow->show();
+	if ($start_maximized) {
+		eyex('rawjs', array('js' => "Windows.Maximize('".$myPid."_".$myWindow->name."');"));
+	}
+
+	if ($params['renderer'][0] == 'pdf.js') {
+		$iframe_url = 'index.php?extern=apps/eyePdf/pdf.js' . EYE_CODE_EXTENSION . '&type=dynamic&params[]=' . $checknum . '&params[]=' . urlencode($params['path'][0]);
+	} elseif ($params['renderer'][0] == 'safari') {
+		$rPath = vfs('getRealName',array($params['path'][0]));
+		$tPath = um('getCurrentUserDir').'tmp/'.$myPid.'.pdf';
+		copy($rPath,$tPath);
+		$iframe_url = REAL_EYE_ROOT . /* utf8 */ substr($tPath, 1);
+	} else {
+		$iframe_url = 'index.php?checknum=' . $checknum . '&msg=getPdf&time=' . time();
+	}
+	
+	$myIframe = new Iframe(array(
+		'father' => 'eyePdf_Window_Content',
+		'height' => $myWindow->height - 24,
+		'name' => 'eyePdf_Iframe',
+		'url' => $iframe_url,
+		'width' => $myWindow->width - 3,
+		'x' => 0,
+		'y' => 0
+	));
+	$myIframe->show();
+	$myIframe->focus();
+
+	$myHidden = new Hidden(array(
+		'father' => 'eyePdf_Window_Content',
+		'name' => 'eyePdf_Hidden_Path',
+		'text' => $params['path'][0]
+	));
+	$myHidden->show();
+}
+
+function eyePdf_on_Resize($params = '') {
+	$GLOBALS['eyePdf_Window']->width = $params['arg'][0];
+	$GLOBALS['eyePdf_Window']->height = $params['arg'][1];
+	$GLOBALS['eyePdf_Iframe']->setWidth($GLOBALS['eyePdf_Window']->width - 3);
+	$GLOBALS['eyePdf_Iframe']->setHeight($GLOBALS['eyePdf_Window']->height - 24);
+}
+?>

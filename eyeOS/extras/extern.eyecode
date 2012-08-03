@@ -1,0 +1,109 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/* <?php
+ * // Here is the place for your script part 1.
+ * // Include this file to be able to access eyeOS_start() and eyeOS_stop().
+ * include_once './system_xxxxxxxxxx/extras/extern.eyecode';
+ * // Run eyeOS_start to initialise the oneye system.
+ * eyeOS_start();
+ * // Now you are able to use oneye service functions,
+ * $userdir = um('getCurrentUserDir');
+ * // such as um('getCurrentUserDir') and vfs('real_getDirContent')).
+ * print_r(vfs('real_getDirContent', array($userdir)));
+ * // Finally we should reset some PHP settings back to their original values.
+ * eyeOS_stop();
+ * // Here is the place for your script part 2.
+ * // If you need to use oneye again, simply call eyeOS_start() and afterwards eyeOS_stop().
+ * ?>
+ */
+
+function eyeOS_start() {
+	if (!defined('EYE_INDEX')) {
+		define('EYE_INDEX', 1);
+
+		define('EYE_ROOT', dirname(__FILE__) . '/..');
+		$error_reporting = error_reporting(E_ALL ^ E_NOTICE);
+		require_once(EYE_ROOT . '/../settings.php');
+		error_reporting($error_reporting);
+
+		include_once(EYE_ROOT . '/' . SYSTEM_DIR . '/' . LIB_DIR . '/eyeString/main' . EYE_CODE_EXTENSION);
+		call_user_func('lib_eyeString_start');
+		define('LIB_EYESTRING_LOADED', 1);
+
+		include_once(EYE_ROOT.'/'.SYSTEM_DIR.'/'.KERNEL_DIR.'/kernel'.EYE_CODE_EXTENSION);
+
+		define('INDEX_TYPE', 'extern');
+		define('INDEX_BASE', EYE_ROOT . '../');
+		define('ROOTUSER', REAL_ROOTUSER);
+
+		eyeOS_start();
+
+		errorCodes('loadCodes');
+		eyePear('loadPear');
+
+		if (EYEOS_SECURITY == 1) {
+			sec('start');
+		}
+		global $LOG_RUNNING;
+		$LOG_RUNNING = 0;
+	} else {
+		global $currentUser;
+		if ($currentUser) {
+			eyeOS_stop();
+		}
+		global $ONEYE_EXTERN;
+		$ONEYE_EXTERN['error_reporting'] = error_reporting();
+		$ONEYE_EXTERN['default_charset'] = ini_get('default_charset');
+		$ONEYE_EXTERN['time_limit'] = ini_get('max_execution_time');
+
+		if (EYEOS_DEBUG_MODE == 0) {
+			error_reporting(0);
+		} else if (EYEOS_DEBUG_MODE == 2) {
+			error_reporting(E_ALL);
+		} else if (EYEOS_DEBUG_MODE == 3) {
+			error_reporting(E_ALL ^ E_NOTICE);
+		} else {
+			error_reporting(E_ERROR);
+		}
+		if (ALLOW_BIG_STREAMS == 1) {
+			@set_time_limit(0);
+		}
+		ini_set('default_charset', DEFAULT_CHARSET);
+
+		$currentUser = REAL_ROOTUSER;
+	}
+}
+
+function eyeOS_stop() {
+	global $currentUser;
+	if (defined('EYE_INDEX') || $currentUser) {
+		global $ONEYE_EXTERN;
+
+		error_reporting($ONEYE_EXTERN['error_reporting']);
+
+		if (ALLOW_BIG_STREAMS == 1) {
+			@set_time_limit($ONEYE_EXTERN['time_limit']);
+		}
+		ini_set('default_charset', $ONEYE_EXTERN['default_charset']);
+
+		global $currentUser;
+		$currentUser = null;
+	} else {
+		return false;
+	}
+}
+?>

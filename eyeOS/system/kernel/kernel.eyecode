@@ -1,0 +1,540 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	oneye 1.0 Kernel
+*/
+
+$ua=$_SERVER['HTTP_USER_AGENT'];
+if( /* utf8 */ strpos($ua,'MSIE 6') !== false){
+	define('IE',6);
+} elseif ( /* utf8 */ strpos($ua,'MSIE 7') !== false) {
+	define('IE',7);
+} elseif ( /* utf8 */ strpos($ua,'MSIE 8') !== false) {
+	define('IE',8);
+} elseif ( /* utf8 */ strpos($ua,'MSIE 9') !== false) {
+	define('IE',9);
+} else {
+	define('IE',0);
+}
+
+function service($servicename,$servicefunction=null,$params=null,$noListen=0) {
+	$sec_servicename = basename($servicename);
+	if(ACL_SUPPORT == 1) {
+		if(!checkACL($sec_servicename,$servicefunction,$params)) {
+			return false;
+		}
+	}
+	if(!checkServiceLoaded($sec_servicename)){
+		if(is_readable(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SERVICE_DIR.'/'.$sec_servicename.'/main'.EYE_CODE_EXTENSION)) {
+			include_once(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SERVICE_DIR.'/'.$sec_servicename.'/main'.EYE_CODE_EXTENSION);
+			setServiceLoaded($sec_servicename);
+			if(function_exists('service_'.$sec_servicename.'_init')) {
+				call_user_func('service_'.$sec_servicename.'_init');
+			}
+		} else {
+			return false;
+		}
+	}
+
+	if(!$servicefunction) {
+		return false;
+	}
+
+	if(!function_exists('service_'.$sec_servicename.'_'.$servicefunction)) {
+		return false;
+	}
+	$minfunction = /* utf8 */ strtolower($servicefunction);
+ 
+	genericListener('KListenerList',$sec_servicename,$minfunction,$noListen,$params);
+	
+	if (ONEYE_LOG > 0) {
+		$logs = service_logs_TimerStart('service_' . $sec_servicename . '_' . $servicefunction);
+		$ret = call_user_func('service_' . $sec_servicename . '_' . $servicefunction, $params);
+		service_logs_TimerStop($logs);
+	} else {
+		$ret = call_user_func('service_' . $sec_servicename . '_' . $servicefunction, $params);
+	}
+	
+	genericListener('KListenerListP',$sec_servicename,$minfunction,$noListen,$params);
+	return $ret;
+}
+
+/*
+*The reqLib have noListen as true by default since the libraries listener calls are not usually used
+*/
+function reqLib($libname,$function,$params=null,$noListen=true) {
+	$sec_libname = basename($libname);
+	if(!checkLibraryLoaded($sec_libname)) {
+		if(is_readable(EYE_ROOT.'/'.SYSTEM_DIR.'/'.LIB_DIR.'/'.$sec_libname.'/main'.EYE_CODE_EXTENSION)) {
+			include_once(EYE_ROOT.'/'.SYSTEM_DIR.'/'.LIB_DIR.'/'.$sec_libname.'/main'.EYE_CODE_EXTENSION);
+			setLibraryLoaded($sec_libname);
+			if(function_exists('lib_'.$sec_libname.'_init')) {
+				call_user_func('lib_'.$sec_libname.'_init');
+			}
+		} else {
+			if(!defined('ERROR_LIB_NOT_EXIST')) {
+				return -1;
+			} else {
+				return false;
+			}
+		}
+	}
+	if(function_exists('lib_'.$libname.'_'.$function)){
+		genericListener('LListenerList',$sec_libname,$function,$noListen,$params);
+		
+		if (defined('ONEYE_LOG') === true && ONEYE_LOG > 0) {
+			$logs = service_logs_TimerStart('lib_' . $libname . '_' . $function);
+			$re = call_user_func('lib_' . $libname . '_' . $function, $params);
+			service_logs_TimerStop($logs);
+		} else {
+			$re = call_user_func('lib_' . $libname . '_' . $function, $params);
+		}
+		
+		genericListener('LListenerListP',$sec_libname,$function,$noListen,$params);
+		return $re;
+	} else {
+		return false;
+	}
+}
+
+function genericListener($type,$sec_servicename,$minfunction,$noListen,$params){
+	if(isset($_SESSION[$type][$sec_servicename][$minfunction]) &&
+		is_array($_SESSION[$type][$sec_servicename][$minfunction]) && $noListen == 0){
+
+		foreach($_SESSION[$type][$sec_servicename][$minfunction] as $key=>$value) {
+			global $myPid;
+			global $checknum;
+			global $procInfo;
+			$oldProcInfo = $procInfo;
+			$oldPid = $myPid;
+			$oldChecknum = $checknum;
+			$appName = proc('findNameByPid',array($key));
+			if(!$appName) {
+				unset($_SESSION[$type][$sec_servicename][$minfunction][$key]);
+			} else {
+				$appName = basename($appName);
+				if(is_readable(EYE_ROOT.'/'.APP_DIR.'/'.$appName.'/com'.EYE_CODE_EXTENSION)) {
+					include_once(EYE_ROOT.'/'.APP_DIR.'/'.$appName.'/com'.EYE_CODE_EXTENSION);
+					if(function_exists($appName.'_com_'.$value)) {
+						$myPid = $key;
+						$checknum = proc('findNChecknumByPid',array($myPid));
+						$procInfo = proc('getProcByPid',array($myPid));
+						i18n('loadLang',array($appName));
+						call_user_func($appName.'_com_'.$value,$params);
+						$procInfo = $oldProcInfo;
+						$myPid = $oldPid;
+						$checknum = $oldChecknum;
+					} else {
+						unset($_SESSION[$type][$sec_servicename][$minfunction][$key]);
+					}
+				} else {
+					unset($_SESSION[$type][$sec_servicename][$minfunction][$key]);
+				}
+			}
+		}
+	}
+}
+
+function setServiceLoaded($name) {
+	if(!$name) {
+		return false;
+	}
+	define( /* utf8 */ strtoupper($name) . '_LOADED', 1);
+	return true;
+}
+
+function checkServiceLoaded($name) {
+	if(!$name) {
+		return false;
+	}
+	return defined( /* utf8 */ strtoupper($name) . '_LOADED');
+}
+
+function setLibraryLoaded($name) {
+	if(!$name) {
+		return false;
+	}
+	define('LIB_' . /* utf8 */ strtoupper($name) . '_LOADED', 1);
+	return true;
+}
+
+function checkLibraryLoaded($name) {
+	if(!$name) {
+		return false;
+	}
+	return defined('LIB_' . /* utf8 */ strtoupper($name) . '_LOADED');
+}
+
+function loadServiceConfig() {
+	if ($handler = opendir(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/')) {
+		while (false !== ($file = readdir($handler))) {
+			if(is_file(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/'.$file)) {
+				if ( /* utf8 */ substr($file, 0, 1) !== '.') {
+					$myArray = eyeXML('xml2array', array(file_get_contents(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/' . $file)));
+					if(isset($myArray['CONFIG']) && is_array($myArray['CONFIG'])) {
+						if(is_array($myArray['CONFIG'][0])) {
+							foreach($myArray['CONFIG'][0] as $key => $value) {
+								define($key,$value[0]);
+							}
+						}
+					}
+				}
+			}
+		}
+		closedir($handler);
+	}
+}
+
+function loadConfig($appName) {
+	$appName = basename($appName);
+	if ($handler = opendir(EYE_ROOT.'/'.APP_DIR.'/'.APP_CONF_SHARE.'/'.$appName.'/')) {
+		while (false !== ($file = readdir($handler))) {
+			if ( /* utf8 */ substr($file, 0, 1) !== '.') {
+				$myArray = eyeXML('xml2array', array(file_get_contents(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/' . $appName . '/' . $file)));
+				if(is_array($myArray['CONFIG'][0])) {
+					foreach($myArray['CONFIG'][0] as $key => $value) {
+						define($key,$value[0]);
+					}
+				}
+			}
+		}
+		closedir($handler);
+	}
+}
+
+function getConfig($appName,$file = 'conf.xml') {
+	return eyeXML('xml2array', array(@file_get_contents(EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/' . basename($appName) . '/' . basename($file))));
+}
+
+function setConfig($appName,$file='conf.xml',$arr) {
+	$appName = basename($appName);
+	$file = basename($file);
+	$path = EYE_ROOT.'/'.APP_DIR.'/'.APP_CONF_SHARE.'/'.$appName.'/'.$file;
+	$xml = eyeXML('array2xml',array($arr));
+	file_put_contents($path,$xml);
+}
+
+function getAppInfo($app) {
+	$app = basename($app);
+	$myFile = EYE_ROOT.'/'.APP_DIR.'/'.$app.'/';
+	global $currentUser;
+	$oldUser = $currentUser;
+	$currentUser = ROOTUSER;
+	$xml = eyeXML('getXMLfile', array($myFile.'info.xml'));
+	$currentUser = $oldUser;
+	return $xml;
+}
+
+function addShortUrl($shortUrl,$msg) {
+	global $checknum;
+	$_SESSION['shortUrls'][$shortUrl] = array();
+	$_SESSION['shortUrls'][$shortUrl]['checknum'] = $checknum;
+	$_SESSION['shortUrls'][$shortUrl]['msg'] = $msg;
+}
+
+function delShortUrl($shortUrl) {
+	unset($_SESSION['shortUrls'][$shortUrl]);
+}
+
+//That functions are just wrappers with standar listener names, by default
+//Two are created, one for service and another for libraries
+
+/*
+*Listener Calls for Services (used in service call)
+*/
+function addListenerServiceCall($myCallback,$myService,$myCall,$postExecution=0) {
+   addGenericListenerCall('KListenerList',$myCallback,$myService,$myCall,$postExecution);
+}
+
+function removeListenerServiceCall($myService,$myCall,$postExecution=0) {
+   removeGenericListenerCall('KListenerList',$myService,$myCall,$postExecution);
+}
+
+function removeListenerServiceCallByPid($pid=null,$postExecution=0){
+   removeGenericListenerCallByPid('KListenerList',$pid,$postExecution);
+}
+
+function getListenerServiceCallList($postExecution=0) {
+   getGenericListenerCallList('KListenerList',$postExecution);
+}
+
+/*
+*Listener Calls for Libraries (used in reqLib function)
+*/
+function addListenerLibraryCall($myCallback,$myService,$myCall,$postExecution=0) {
+   addGenericListenerCall('LListenerList',$myCallback,$myService,$myCall,$postExecution);
+}
+
+function removeListenerLibraryCall($myService,$myCall,$postExecution=0) {
+   removeGenericListenerCall('LListenerList',$myService,$myCall,$postExecution);
+}
+
+function removeListenerLibraryCallByPid($pid=null,$postExecution=0){
+   removeGenericListenerCallByPid('LListenerList',$pid,$postExecution);
+}
+
+function getListenerLibraryCallList($postExecution=0) {
+   getGenericListenerCallList('LListenerList',$postExecution);
+}
+
+/*
+*Generic functions for Listener calls, only the name of the array change
+*/
+function addGenericListenerCall($type,$myCallback,$myService,$myCall,$postExecution=0){
+	global $myPid;
+	$call = /* utf8 */ strtolower($myCall);
+	if($postExecution !=0 ) {
+		$type .= 'P';
+	}
+	$_SESSION[$type][$myService][$call][$myPid] = $myCallback;
+	$_SESSION[$type]['pInfo'][$myPid][$myService] = $call;
+}
+
+function removeGenericListenerCall($type,$myService,$myCall,$postExecution=0){
+	global $myPid;
+	$call = /* utf8 */ strtolower($myCall);
+	if($postExecution != 0) {
+		$type .= 'P';
+	}
+	if(isset($_SESSION[$type][$myService][$call][$myPid])) {
+		unset($_SESSION[$type][$myService][$call][$myPid]);
+		unset($_SESSION[$type]['pInfo'][$myPid]);
+	}
+}
+
+function getGenericListenerCallList($type,$postExecution=0){
+   if($postExecution != 0) {
+      $type .= 'P';
+   }
+   return $_SESSION[$type];
+}
+
+function removeGenericListenerCallByPid($type,$pid=null,$postExecution=0){
+	if(!$pid){
+		return false;
+	}
+	if($postExecution != 0){
+		$type .= 'P';
+	}
+	if (isset($_SESSION[$type]) === true && isset($_SESSION[$type]['pInfo'][$pid]) === true && $_SESSION[$type]['pInfo'][$pid]) {
+		foreach($_SESSION[$type]['pInfo'][$pid] as $service=>$func){
+			unset($_SESSION[$type][$service][$func][$pid]);
+		}
+	}
+	unset($_SESSION[$type]['pInfo'][$pid]);
+}
+
+/*
+*That function create dynamically an alias for each service/library
+*/
+function createFunctionAlias() {
+	$servpath = EYE_ROOT.'/'.SYSTEM_DIR.'/'.SERVICE_DIR.'/';
+	$libpath = EYE_ROOT.'/'.SYSTEM_DIR.'/'.LIB_DIR.'/';
+	$alias = _getAlias($servpath,'service',0);
+	$alias .= _getAlias($libpath,'reqLib',1);
+	eval($alias);
+}
+
+function _getAlias($path,$baseFunc,$noListen){
+	$alias = "";
+	if ($handler = opendir($path)) {
+		while (false !== ($file = readdir($handler))) {
+			if ( /* utf8 */ substr($file, 0, 1) !== '.' && is_dir($path . $file) === true) {
+				if(file_exists($path.$file.'/alias'.EYE_CODE_EXTENSION)){
+					include_once($path.$file.'/alias'.EYE_CODE_EXTENSION);
+					if(function_exists($file)){
+						continue;
+					}
+				}
+				$alias .= 'if(!function_exists(\''.$file.'\')) {function '.$file.'($call,$args=null,$noListen='.$noListen.') { return '.$baseFunc.'(\''.$file.'\',$call,$args,$noListen); }}';
+			}
+		}
+		closedir($handler);
+	}
+	return $alias;
+}
+
+function checkACL($sec_servicename,$servicefunction,$params) {
+	global $ACL;
+
+	//if there is not acls, stop.
+	if(!$ACL || !is_array($ACL) || !is_array($ACL['GACL']) || !is_array($ACL['GACL'][0])) {
+		return true;
+	}
+
+	global $currentUser;
+
+	//the real root user is inmune to ACL's.
+	if($currentUser == REAL_ROOTUSER) {
+		return true;
+	}
+
+	$servname = $sec_servicename;
+	$servfunc = $servicefunction;
+
+	foreach($ACL['GACL'][0]['ACL'] as $rule) {
+		if (stripos($rule['service'][0], $servname) === 0 && stripos($rule['call'][0], $servfunc) === 0) { // utf8
+			foreach($rule['target'] as $target) {
+				foreach($target['targetname'] as $targetname) {
+					if( /* utf8 */ strtolower($target['type'][0]) == 'user') {
+						if ($targetname === $currentUser) {
+							if(checkACLparams($target['params'],$params)) {
+								if( /* utf8 */ strtolower($rule['action'][0]) == 'allow') {
+									return true;
+								} else {
+									msgACLreject(array('task'=>$params[0],'func'=>$servfunc));
+									return false;
+								}
+							}
+						}
+					} elseif( /* utf8 */ strtolower($target['type'][0]) == 'group') {
+						$userGroups = um('getCurrentGroups');
+						foreach($userGroups as $groupName=>$value) {
+							if(checkACLparams($target['params'],$params)) {
+								if ($targetname === $groupName) {
+									if( /* utf8 */ strtolower($rule['action'][0]) == 'allow') {
+										return true;
+									} else {
+										msgACLreject(array('task'=>$params[0],'func'=>$servfunc));
+										return false;
+									}
+								}
+							}
+						}
+					} elseif( /* utf8 */ strtolower($target['type'][0]) == 'admin') {
+						if($currentUser == ROOTUSER) {
+							if(checkACLparams($target['params'],$params)) {
+								if ($targetname === $currentUser) {
+									if( /* utf8 */ strtolower($rule['action'][0]) == 'allow') {
+										return true;
+									} else {
+										msgACLreject(array('task'=>$params[0],'func'=>$servfunc));
+										return false;
+									}
+								}
+							}
+						}
+					} else if ( /* utf8 */ strtolower($target['type'][0]) === 'privilege') {
+						$targetname = /* utf8 */ strtolower($targetname);
+						if ($targetname === 'all'
+							|| $targetname === 'admin' && $currentUser === ROOTUSER
+							|| $targetname === 'maintainer' && $currentUser !== ROOTUSER && um('checkMaintainer') === true
+							|| $targetname === 'user' && $currentUser !== ROOTUSER && um('checkMaintainer') === false
+						) {
+							if (checkACLparams($target['params'], $params) === true) {
+								if ( /* utf8 */ strtolower($rule['action'][0]) === 'allow') {
+									return true;
+								} else {
+									msgACLreject(array(
+										'func' => $servfunc,
+										'task' => $params[0]
+									));
+									return false;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
+
+function checkACLparams($ruleParams,$servParams) {
+	global $currentUser;
+	if(!is_array($servParams) || !is_array($ruleParams)) {
+		return true;
+	}
+	$count = 0;
+	$i = 0;
+	$udir = um('getCurrentUserDir');
+	if(empty($ruleParams[0]['param'][0])) {
+		return true;
+	}
+	foreach($ruleParams[0]['param'] as $value) {
+		if(isset($servParams[$i])) {
+			while ( /* utf8 */ strpos($value, '%user') !== false) {
+				$value = str_replace('%user',$currentUser,$value);
+			}
+			while ( /* utf8 */ strpos($value, '%udir') !== false) {
+				$value = str_replace('%udir',$udir,$value);
+			}
+			if($value === $servParams[$i]) {
+				$count++;
+			}
+		}
+	}
+	if($count > 0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function loadACLTables() {
+	global $ACL;
+	$ACL = array();
+	$aclpath = EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ACL/';
+	$found = 0;
+	if ($handler = opendir($aclpath)) {
+		while (false !== ($file = readdir($handler))) {
+			if(is_file($aclpath.$file)) {
+				if ( /* utf8 */ substr($file, 0, 1) !== '.') {
+					$myArray = eyeXML('xml2array', array(file_get_contents($aclpath . $file)));
+					if (is_array($myArray) === true) {
+						$ACL = array_merge($ACL,$myArray);
+						$found = 1;
+					}
+				}
+			}
+		}
+		closedir($handler);
+	}
+
+	if($found == 0) {
+		$ACL = false;
+	}
+}
+
+function msgACLreject($params = null) {
+	if($params == null || count($params) < 1 || !isset($params['func'])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if ($params['func']==="launch") {
+		$disObj = $params['task'];
+	} else {
+		$disObj = $params['func'];
+	}
+	eyeX('messageBox',array('content'=>$disObj.' has been disabled by your admin'));
+}
+
+createFunctionAlias();
+if(ACL_SUPPORT == 1) {
+	loadACLTables();
+}
+//Loading the service configuration from XML
+loadServiceConfig();
+include_once(EYE_ROOT.'/'.SYSTEM_DIR.'/'.KERNEL_DIR.'/compat'.EYE_CODE_EXTENSION);
+
+if (ONEYE_LOG > 0) {
+	include_once EYE_ROOT . '/' . SYSTEM_DIR . '/' . SERVICE_DIR . '/logs/main' . EYE_CODE_EXTENSION;
+	service_logs_Start();
+	register_shutdown_function('service_logs_Stop');
+}
+?>

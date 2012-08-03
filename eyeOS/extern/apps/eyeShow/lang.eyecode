@@ -1,0 +1,54 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+i18n('loadLang', array('eyeShow'));
+?>
+var slang = {
+	'Click to insert a new slide' : '<?php echo /* utf8 */ addcslashes(i18n('translate', array('Click to insert a new slide')), '\'\\'); ?>',
+	'End of slideshow' : '<?php echo /* utf8 */ addcslashes(i18n('translate', array('End of slideshow')), '\'\\'); ?>',
+	'My Images' : '<?php echo /* utf8 */ addcslashes(i18n('translate', array('My Images')), '\'\\'); ?>',
+	'New' : '<?php echo /* utf8 */ addcslashes(i18n('translate', array('New')), '\'\\'); ?>',
+	'Open' : '<?php echo /* utf8 */ addcslashes(i18n('translate', array('Open')), '\'\\'); ?>',
+	'Save as' : '<?php echo /* utf8 */ addcslashes(i18n('translate', array('Save as')), '\'\\'); ?>',
+	'Save' : '<?php echo /* utf8 */ addcslashes(i18n('translate', array('Save')), '\'\\'); ?>',
+	'Size': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('Size')), '\'\\'); ?>',
+	'Slide': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('Slide')), '\'\\'); ?>',
+	'Slideshow' : '<?php echo /* utf8 */ addcslashes(i18n('translate', array('Slideshow')), '\'\\'); ?>',
+	'add a new slide after the selected one': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('add a new slide after the selected one')), '\'\\'); ?>',
+	'bold text': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('bold text')), '\'\\'); ?>',
+	'bring element to the front': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('bring element to the front')), '\'\\'); ?>',
+	'change font color': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('change font color')), '\'\\'); ?>',
+	'change font family': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('change font family')), '\'\\'); ?>',
+	'change font size': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('change font size')), '\'\\'); ?>',
+	'delete element': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('delete element')), '\'\\'); ?>',
+	'delete the selected slide': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('delete the selected slide')), '\'\\'); ?>',
+	'font family': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('font family')), '\'\\'); ?>',
+	'generic fonts': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('generic fonts')), '\'\\'); ?>',
+	'insert image': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('insert image')), '\'\\'); ?>',
+	'insert ordered list': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('insert ordered list')), '\'\\'); ?>',
+	'insert text': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('insert text')), '\'\\'); ?>',
+	'insert unordered list': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('insert unordered list')), '\'\\'); ?>',
+	'italic text': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('italic text')), '\'\\'); ?>',
+	'move the selected slide down one place': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('move the selected slide down one place')), '\'\\'); ?>',
+	'move the selected slide up one place': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('move the selected slide up one place')), '\'\\'); ?>',
+	'redo': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('redo')), '\'\\'); ?>',
+	'send element to the back': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('send element to the back')), '\'\\'); ?>',
+	'some text': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('some text')), '\'\\'); ?>',
+	'specific fonts': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('specific fonts')), '\'\\'); ?>',
+	'underline text': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('underline text')), '\'\\'); ?>',
+	'undo': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('undo')), '\'\\'); ?>',
+	'view source code': '<?php echo /* utf8 */ addcslashes(i18n('translate', array('view source code')), '\'\\'); ?>'
+};

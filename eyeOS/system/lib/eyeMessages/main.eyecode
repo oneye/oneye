@@ -1,0 +1,336 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function lib_eyeMessages_start($params=null) {
+	$msgDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/';
+
+	vfs('real_mkDir', array($msgDir));
+	vfs('real_mkDir', array($msgDir.'read/'));
+	vfs('real_mkDir', array($msgDir.'sent/'));
+	vfs('real_mkDir', array($msgDir.'trash/'));
+}
+
+function lib_eyeMessages_sendMessage($params) {
+	if(!is_array($params) || count($params) < 3) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	$to_users = $params[0];
+	$subject = $params[1];
+	$content = $params[2];
+	$attach = $params[3];
+	$to_groups = $params[4];
+
+	if(empty($to_users) && empty($to_groups)) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	if(empty($subject) || empty($content)) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	if(!empty($to_users)) {
+		$addressees = /* utf8 */ explode(',', $to_users);
+		foreach($addressees as $ad) {
+			$ad = /* utf8 */ trim($ad);
+			if(eyeSwap('send', array($ad, $subject, $content, 'eyeMessages', $attach))) {
+				if(empty($to)) {
+					$to = $ad;
+				} else {
+					$to.= ', '.$ad;
+				}
+			}
+		}
+	}
+
+	if(SEND_TO_GROUPS == 1 && !empty($to_groups)) {
+		$groups = /* utf8 */ explode(',', $to_groups);
+		foreach($groups as $group) {
+			$group = /* utf8 */ trim($group);
+
+			if (in_array($group, array_map('trim', explode(',', BANNED_SEND_GROUPS))) === false && um('groupExists', array($group)) === true) { // utf8
+				$usersInGroup = um('getAllUsersByGroup', array('group' => $group));
+
+				if(is_array($usersInGroup)) {
+					foreach($usersInGroup as $user) {
+						eyeSwap('send', array($user, $subject, $content, 'eyeMessages', $attach));
+					}
+
+					if(empty($to)) {
+						$to = $group;
+					} else {
+						$to.= ', '.$group;
+					}
+				}
+			}
+		}
+	}
+
+	//Save a copy of the message into the sent directory. The attach is NOT saved here
+	$xml = array(
+		'swapMessage' => array(
+			array(
+				'header'=>array(array(
+					'to' => array($to),
+					'date' => array(time()),
+					'subject' => array($subject)
+					)),
+				'body'=>array(array(
+					'content'=>array($content)
+ 					))
+			)
+		)
+	);
+
+	$hash = md5(uniqid(time()));
+	$sentDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/sent/';
+	while(vfs('real_fileExists',array($sentDir.$hash.'.msgSwap'))) {
+		$hash = md5(uniqid(time()));
+	}
+
+	eyeXML('setXMLfile', array($sentDir.$hash.'.msgSwap', $xml));
+	return true;
+}
+
+function lib_eyeMessages_openMessage($params) {
+	if(!is_array($params) || count($params) < 2) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$hash = $params[0];
+	$folder = $params[1];
+
+	if(empty($hash)) {
+		return false;
+	}
+
+	if(empty($folder)) { //The message is not in one of eyeMessage's folders
+		$msg = eyeSwap('read', array($hash, 'eyeMessages'));
+
+		if(!is_array($msg)) {
+			return false;
+		}
+
+		eyeSwap('delete', array($hash, 'eyeMessages'));
+
+		$readDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/read/';
+		$xml = array(
+			'swapMessage' => array($msg)
+		);
+		$hash = md5(uniqid(time()));
+
+		while(vfs('real_fileExists',array($readDir.$hash.'.msgSwap'))) {
+			$hash = md5(uniqid(time()));
+		}
+
+		vfs('real_create', array($readDir.$hash.'.msgSwap'));
+		eyeXML('setXMLfile', array($readDir.$hash.'.msgSwap', $xml));
+	} else {
+		$msg = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/'.$folder.'/'.$hash.'.msgSwap';
+		$msg = eyeXML('getXMLfile', array($msg));
+		$msg = $msg['swapMessage'][0];
+	}
+	return $msg;
+}
+
+function lib_eyeMessages_getAttach($params) {
+	if(!is_array($params) || empty($params[0])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$fileHash = $params[0];
+	$swapDir = um('getCurrentUserDir').'swap/eyeMessages/';
+	$info = eyeXML('getXMLfile', array($swapDir.$fileHash.'.infoSwap'));
+	return $info;
+}
+
+function lib_eyeMessages_deleteMessage($params) {
+	if(!is_array($params) || count($params) < 2) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$hash = $params[0];
+	$folder = $params[1];
+
+	if(empty($hash)) {
+		return false;
+	}
+
+	if(empty($folder)) { //The message is still in the swap directory
+		$msg = eyeSwap('read', array($hash, 'eyeMessages'));
+
+		eyeSwap('delete', array($hash, 'eyeMessages'));
+
+		$trashDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/trash/';
+		$xml = array(
+			'swapMessage' => array($msg)
+		);
+		$hash = md5(uniqid(time()));
+
+		while(vfs('real_fileExists',array($trashDir.$hash.'.msgSwap'))) {
+			$hash = md5(uniqid(time()));
+		}
+
+		vfs('real_create', array($trashDir.$hash.'.msgSwap'));
+		eyeXML('setXMLfile', array($trashDir.$hash.'.msgSwap', $xml));
+	} else {
+		$dir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/'.$folder.'/'.$hash;
+		$trashDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/trash/';
+		_move_message($dir, $trashDir);
+	}
+	return true;
+}
+
+function lib_eyeMessages_empty($params=null) {
+	if(!is_array($params) || empty($params[0])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	$section = $params[0];
+	if($section == "inbox" || $section == "unread") {
+		$list = eyeSwap('list', array('eyeMessages'));
+		$attach = '';
+		foreach($list as $msg) {
+			$body = eyeSwap('read', array($msg['hash'], 'eyeMessages'));
+			if(is_array($body) && is_array($body['swapMessage'][0]['header'][0]['attach'])) {
+				eyeSwap('deleteFile', array($body['swapMessage'][0]['header'][0]['attach'][0]));
+			}
+			eyeSwap('delete', array($msg['hash'], 'eyeMessages'));
+		}
+	}
+
+	if($section != "unread") {
+		//new messages of inbox already deleted, so focus on the already read now
+		if($section == "inbox") {
+			$section = "read";
+		}
+		$dir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/'.$section;
+
+		$list = vfs('real_getDirContent', array($dir));
+
+		if(is_array($list)) {
+			foreach($list as $msg) {
+				$xml = eyeXML('getXMLfile', array($msg));
+				if(is_array($xml['swapMessage'][0]['header'][0]['attach'])) {
+					eyeSwap('deleteFile', array($xml['swapMessage'][0]['header'][0]['attach'][0], 'eyeMessages'));
+				}
+				vfs('real_delete', array($msg));
+			}
+		}
+	}
+	return true;
+}
+
+function lib_eyeMessages_restoreMessage($params) {
+	if(!is_array($params) || empty($params[0])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+
+	$hash = $params[0];
+	$trashDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/trash/';
+	$readDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/read/';
+	_move_message($trashDir.$hash, $readDir);
+}
+
+function lib_eyeMessages_getUnread($params=null) {
+	$list = eyeSwap('list', array('eyeMessages'));
+	if (is_array($list) === true) {
+		return $list;
+	}
+	return array();
+}
+
+function lib_eyeMessages_getRead($params=null) {
+	$readDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/read/';
+
+	$list = vfs('real_getDirContent', array($readDir, '*.msgSwap'));
+
+	$myArray = array();
+	foreach($list as $msg) {
+		$xml = eyeXML('getXMLfile', array($msg));
+		$myArray[] = array(
+			'author' => $xml['swapMessage'][0]['header'][0]['from'][0],
+			'date' => $xml['swapMessage'][0]['header'][0]['date'][0],
+			'hash' => basename($msg, '.msgSwap') . ',read',
+			'subject' => $xml['swapMessage'][0]['header'][0]['subject'][0]
+		);
+	}
+	return $myArray;
+}
+
+function lib_eyeMessages_getInbox($params=null) {
+	$list = array_merge(lib_eyeMessages_getUnread(), lib_eyeMessages_getRead());
+	return $list;
+}
+
+function lib_eyeMessages_getTrash($params=null) {
+	$trashDir =	um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/trash/';
+
+	$list = vfs('real_getDirContent', array($trashDir, '*.msgSwap'));
+
+	$myArray = array();
+	foreach($list as $msg) {
+		$xml = eyeXML('getXMLfile', array($msg));
+		$myArray[] = array(
+			'author' => $xml['swapMessage'][0]['header'][0]['from'][0],
+			'date' => $xml['swapMessage'][0]['header'][0]['date'][0],
+			'hash' => basename($msg, '.msgSwap') . ',trash',
+			'subject' => $xml['swapMessage'][0]['header'][0]['subject'][0]
+		);
+	}
+	return $myArray;
+}
+
+function lib_eyeMessages_getSent($params=null) {
+	$sentDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeMessages/sent/';
+
+	$list = vfs('real_getDirContent', array($sentDir, '*.msgSwap'));
+
+	$myArray = array();
+	foreach($list as $msg) {
+		$xml = eyeXML('getXMLfile', array($msg));
+
+		$myArray[] = array(
+			'to' => $xml['swapMessage'][0]['header'][0]['to'][0],
+			'date' => $xml['swapMessage'][0]['header'][0]['date'][0],
+			'hash' => basename($msg, '.msgSwap') . ',sent',
+			'subject' => $xml['swapMessage'][0]['header'][0]['subject'][0]
+		);
+	}
+	return $myArray;
+}
+
+//Private function
+function _move_message($from, $to) {
+	if(empty($from) || empty($to)) {
+		return;
+	}
+
+	$hash = basename($from);
+
+	while(vfs('real_fileExists',array($to.$hash.'.msgSwap'))) {
+		$hash = md5(uniqid(time()));
+	}
+	vfs('real_move', array($from.'.msgSwap', $to.$hash.'.msgSwap'));
+}
+
+?>

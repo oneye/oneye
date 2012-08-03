@@ -1,0 +1,244 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+$UserXML = um('retrieveUser',array(eyeControl_lib_getConfigUser()));
+$UserXML = $UserXML['eyeUser'][0];
+$ContentY = 10;
+// Username
+$myLabel = new Label(array(
+	'name' => 'eyeControl_account_label_username_1',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'User Name'
+));
+$myLabel->show();
+$myLabel = new Label(array(
+	'name' => 'eyeControl_account_label_username_2',
+	'father' => $eyeContainer,
+	'x' => 160,
+	'y' => $ContentY + 3,
+	'text' => eyeControl_lib_getConfigUser()
+));
+$myLabel->show();
+$ContentY += 30;
+// Change password
+$myLabel = new Label(array(
+	'name' => 'eyeControl_account_label_password',
+	'father' => $eyeContainer,
+	'x' => 40,
+	'y' => $ContentY + 3,
+	'text' => 'Change Password',
+	'disablemsg' => 0,
+	'signal' => 'account_password'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'color' => '#004488',
+	'cursor' => 'Pointer'
+));
+$ContentY += 30;
+// Full Name
+$myLabel = new Label(array(
+	'name' => 'eyeControl_account_label_fullname',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Full Name'
+));
+$myLabel->show();
+$myTextbox_fullname = new Textbox(array(
+	'name' => 'eyeControl_account_textbox_fullname',
+	'father' => $eyeContainer,
+	'x' => 160,
+	'y' => $ContentY + 2,
+	'text' => $UserXML['fullname'][0]
+));
+$myTextbox_fullname->show();
+$myTextbox_fullname->focus();
+$ContentY += 30;
+// E-mail
+$myLabel = new Label(array(
+	'name' => 'eyeControl_account_label_email',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'E-mail'
+));
+$myLabel->show();
+$myTextbox_email = new Textbox(array(
+	'name' => 'eyeControl_account_textbox_email',
+	'father' => $eyeContainer,
+	'x' => 160,
+	'y' => $ContentY + 2,
+	'text' => $UserXML['email'][0]
+));
+$myTextbox_email->show();
+$ContentY += 30;
+// Groups
+$myLabel = new Label(array(
+	'name' => 'eyeControl_account_label_groups_1',
+	'father' => $eyeContainer,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Groups'
+));
+$myLabel->show();
+foreach ($UserXML['group'] as $group) {
+	($groups) ? $groups = $groups . ', ' . $group : $groups = $group;
+}
+$myLabel = new Label(array(
+	'name' => 'eyeControl_account_label_groups_2',
+	'father' => $eyeContainer,
+	'x' => 160,
+	'y' => $ContentY + 3,
+	'text' => $groups
+));
+$myLabel->show();
+$ContentY += 30;
+if (um('checkMaintainer',array(eyeControl_lib_getConfigUser()))) {
+// $myLine
+	$myLine = new Line(array(
+		'name' => 'eyeControl_account_line_1',
+		'father' => $eyeContainer,
+		'x' => 10,
+		'y' => $ContentY,
+		'width' => 545
+	));
+	$myLine->show();
+	$ContentY += 15;
+// Maintained users
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_account_label_maintained_users_1',
+		'father' => $eyeContainer,
+		'x' => 20,
+		'y' => $ContentY + 3,
+		'text' => 'Maintained Users'
+	));
+	$myLabel->show();
+	foreach ($UserXML['mngUser'] as $mngUser) {
+		($mngUsers) ? $mngUsers .= ', ' . $mngUser : $mngUsers = $mngUser;
+	}
+	if (!$mngUsers) {
+		$mngUsers = 'none';
+	}
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_account_label_maintained_users_2',
+		'father' => $eyeContainer,
+		'x' => 160,
+		'y' => $ContentY + 3,
+		'text' => $mngUsers
+	));
+	$myLabel->show();
+	$ContentY += 30;
+// Manage users
+	if (eyeControl_lib_getConfigUser() == $currentUser) {
+		$myLabel = new Label(array(
+			'name' => 'eyeControl_account_label_users',
+			'father' => $eyeContainer,
+			'x' => 40,
+			'y' => $ContentY + 3,
+			'text' => 'Manage Users',
+			'disablemsg' => 0,
+			'signal' => 'account_users'
+		));
+		$myLabel->show();
+		$myLabel->setCss(array(
+			'color' => '#004488',
+			'cursor' => 'Pointer'
+		));
+		$ContentY += 30;
+	}
+// Maintained groups
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_account_label_maintained_groups_1',
+		'father' => $eyeContainer,
+		'x' => 20,
+		'y' => $ContentY + 3,
+		'text' => 'Maintained Groups'
+	));
+	$myLabel->show();
+	foreach ($UserXML['maintain'] as $maintain) {
+		($maintains) ? $maintains .= ', ' . $maintain : $maintains = $maintain;
+	}
+	if (!$maintains) {
+		$maintains = 'none';
+	}
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_account_label_maintained_groups_2',
+		'father' => $eyeContainer,
+		'x' => 160,
+		'y' => $ContentY + 3,
+		'text' => $maintains
+	));
+	$myLabel->show();
+	$ContentY += 30;
+// Manage groups
+	if (eyeControl_lib_getConfigUser() == $currentUser) {
+		$myLabel = new Label(array(
+			'name' => 'eyeControl_account_label_groups',
+			'father' => $eyeContainer,
+			'x' => 40,
+			'y' => $ContentY + 3,
+			'text' => 'Manage Groups',
+			'disablemsg' => 0,
+			'signal' => 'account_groups'
+		));
+		$myLabel->show();
+		$myLabel->setCss(array(
+			'color' => '#004488',
+			'cursor' => 'Pointer'
+		));
+		$ContentY += 30;
+	}
+// $myLine
+	$myLine = new Line(array(
+		'name' => 'eyeControl_account_line_2',
+		'father' => $eyeContainer,
+		'x' => 10,
+		'y' => $ContentY,
+		'width' => 545
+	));
+	$myLine->show();
+	$ContentY += 15;
+}
+// Save Changes
+$myButton = new Button(array(
+	'name' => 'eyeControl_account_button_save',
+	'father' => $eyeContainer,
+	'x' => 425,
+	'horiz' => 1,
+	'y' => $ContentY,
+	'caption' => 'Save Changes',
+	'signal' => 'account_save'
+));
+$myButton->addFriend($myTextbox_fullname);
+$myButton->addFriend($myTextbox_email);
+$myButton->show();
+// Delete user
+if (eyeControl_lib_getConfigUser() != REAL_ROOTUSER) {
+	$myButton = new Button(array(
+		'name' => 'eyeControl_account_button_delete',
+		'father' => $eyeContainer,
+		'x' => 160,
+		'y' => $ContentY,
+		'enabled' => $DeleteEnabled,
+		'caption' => 'Delete User',
+		'signal' => 'account_delete'
+	));
+	$myButton->show();
+}
+?>

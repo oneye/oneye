@@ -1,0 +1,23 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeControl_on_security_save($params = '') {
+	$xml = eyeControl_lib_getXMLconfig(array('sec','conf.xml'));
+	$xml['security'][0]['PROTECTED_IP_SESSIONS'][0] = $GLOBALS['eyeControl_security_checkbox_fullname']->checked;
+	eyeControl_lib_setXMLconfig(array('sec','conf.xml',$xml));
+	eyex('messageBox',array('content' => 'Changes successfully saved.'));
+}
+?>

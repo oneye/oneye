@@ -1,0 +1,13 @@
+<?php
+/*
+ * FUNCTIONS
+ */
+function utf8_strrchr($haystack, $needle) {
+	if (is_string($needle) === false) {
+		$needle = utf8_chr($needle);
+	} else {
+		$needle = utf8_substr($needle, 0, 1);
+	}
+	return substr($haystack, strrpos($haystack, $needle));
+}
+?>

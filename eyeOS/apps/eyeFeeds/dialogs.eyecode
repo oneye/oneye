@@ -1,0 +1,1085 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+include_once(EYE_ROOT.'/'.APP_DIR.'/eyeFeeds/func'.EYE_CODE_EXTENSION);
+
+/*********************************************************************************************/
+//		EYEFEEDS INTERNAL DIALOGS
+/*********************************************************************************************/
+
+function eyeFeeds_prepareForModalDialog() {
+	if ($GLOBALS['addFeed_DLG'])
+		$GLOBALS['addFeed_DLG']->close();
+
+	if ($GLOBALS['editFeed_DLG'])
+		$GLOBALS['editFeed_DLG']->close();
+
+	if ($GLOBALS['addFolder_DLG'])
+		$GLOBALS['addFolder_DLG']->close();
+
+	if ($GLOBALS['editFolder_DLG'])
+		$GLOBALS['editFolder_DLG']->close();
+
+	if ($GLOBALS['delete_DLG'])
+		$GLOBALS['delete_DLG']->close();
+
+	if ($GLOBALS['importFeeds_DLG'])
+		$GLOBALS['importFeeds_DLG']->close();
+
+	if ($GLOBALS['settings_DLG'])
+		$GLOBALS['settings_DLG']->close();
+}
+
+
+
+/*********************************************************************************************/
+//		'ADD FEED' DIALOG
+/*********************************************************************************************/
+function eyeFeeds_createAddFeedDialog($params=null) {
+	global $checknum;
+
+	eyeFeeds_prepareForModalDialog();
+
+	$parentFolderId = 'addFeed_folders_TREE_root';
+	$selectedFeedId = $GLOBALS['selectedFeedId_HID']->text;
+	$feeds = eyeFeeds_getSavedFeeds();
+	$selectedFeed = eyeFeeds_getFeedFromId($feeds['feed'], $selectedFeedId);
+	if ($selectedFeed) {
+		if ($selectedFeed['type'][0] != 'folder') {
+			$parentFolder = eyeFeeds_getParentFeedFromId($feeds, $selectedFeedId);
+		}
+		else {
+			$parentFolder = eyeFeeds_getFeedFromId($feeds['feed'], $selectedFeedId);
+		}
+		$parentFolderId = 'addFeed#item_'.$parentFolder['id'][0];
+	}
+	//echo $parentFolderId; exit;
+
+	$myWindow = new Window(array(
+		'name' => 'addFeed_DLG',
+		'father' => 'eyeFeeds_WND',
+		'type' => NOLIST_CLOSE_WINDOW,
+		'cent' => 1,
+		'width' => 540,
+		'height' => 250,
+		'title' => 'Add Feed',
+		'removepid' => 0
+	));
+	$myWindow->show();
+
+	//TREE LABEL
+	$treeLabel = new Label(array(
+		'name' => 'addFeed_tree_LBL',
+		'father' => 'addFeed_DLG_Content',
+		'x' => 10,
+		'y' => 10,
+		'text' => 'Choose a folder for the new feed:'
+	));
+	$treeLabel->show();
+
+	//FOLDERS TREE
+	$myTree = new Tree(array(
+		'name'=>'addFeed_folders_TREE',
+		'father'=>'addFeed_DLG_Content',
+		'x'=>4,
+		'y'=>24,
+		'width' =>200,
+		'height' => 180,
+		'clickTree'=>1
+	));
+	$myTree->show();
+
+	//root node
+	$myTree->addItem('addFeed_folders_TREE', 'addFeed_folders_TREE_root', i18n('translate',array('Bookmarks')));
+	$myTree->addSubList('addFeed_folders_TREE_root', 'addFeed#folder_root');
+
+	//fill in the tree with folders *only*
+	$data = eyeFeeds_getSavedFeeds();
+	if(is_array($data['feed'])) {
+		foreach($data['feed'] as $node) {
+			$displayedNodeName = utf8_strlen($node['name'][0]) > 20 ? utf8_substr($node['name'][0], 0, 19) . '…' : $node['name'][0];
+			if($node['type'][0] == 'folder') {
+				$myTree->addItem('addFeed#folder_root', 'addFeed#item_'.$node['id'][0], $displayedNodeName);
+				$myTree->addSubList('addFeed#item_'.$node['id'][0], 'addFeed#folder_'.$node['id'][0]);
+				eyeFeeds_drawFeedsTreeNode($myTree, 'addFeed#folder_'.$node['id'][0], $node, true, 'addFeed#');
+			}
+		}
+	}
+	$myTree->processList();
+	$myTree->setCss(array('border' => 'thin solid grey'));
+	$myTree->selectItem($parentFolderId);
+
+	//FEED'S URL LABEL
+	$urlLabel = new Label(array(
+		'name' => 'addFeed_url_LBL',
+		'father' => 'addFeed_DLG_Content',
+		'x' => 230,
+		'y' => 40,
+		'text' => 'Type the URL of the feed:'
+	));
+	$urlLabel->show();
+
+	//FEED'S URL TEXTBOX
+	$urlTextbox = new Textbox(array(
+		'name' => 'addFeed_url_TXTBOX',
+		'father' => 'addFeed_DLG_Content',
+		'x' => 230,
+		'y' => 60,
+		'width' => 294,
+		'enabled' => 1,
+		'text' => 'http://'
+	));
+	$urlTextbox->show();
+
+	//FEED'S NAME LABEL
+	$nameLabel = new Label(array(
+		'name' => 'addFeed_name_LBL',
+		'father' => 'addFeed_DLG_Content',
+		'x' => 230,
+		'y' => 90,
+		'text' => 'Type the name of the feed (optional):'
+	));
+	$nameLabel->show();
+
+	//FEED'S NAME TEXTBOX
+	$nameTextbox = new Textbox(array(
+		'name' => 'addFeed_name_TXTBOX',
+		'father' => 'addFeed_DLG_Content',
+		'x' => 230,
+		'y' => 110,
+		'width' => 294,
+		'enabled' => 1,
+		'text' => ''
+	));
+	$nameTextbox->show();
+	$nameTextbox->addFriend($urlTextbox);
+	$nameTextbox->addEnterEventMsg('addFeed_add_BTN');
+	$urlTextbox->addFriend($nameTextbox);
+	$urlTextbox->addEnterEventMsg('addFeed_add_BTN');
+
+	//ADD BUTTON
+	$addButton = new Button(array(
+		'name' => 'addFeed_add_BTN',
+		'father' => 'addFeed_DLG_Content',
+		'caption' => 'Accept',
+		'x' => 455,
+		'y' => 184,
+		'width' => 70,
+		'enabled' => 1,
+	));
+	$addButton->addFriend($urlTextbox);
+	$addButton->addFriend($nameTextbox);
+	$addButton->show(0);
+
+	//CANCEL BUTTON
+	$cancelButton = new Button(array(
+		'name' => 'addFeed_cancel_BTN',
+		'father' => 'addFeed_DLG_Content',
+		'caption' => 'Cancel',
+		'x' => 370,
+		'y' => 184,
+		'width' => 70,
+		'enabled' => 1,
+	));
+	$cancelButton->show(0);
+
+	$selectedFolder = new Hidden(array(
+		'name' =>'addFeed_selectedFolder_HID',
+		'father' => 'addFeed_DLG_Content',
+		'text' => substr($parentFolderId, strpos($parentFolderId, '_') + 1) // utf8
+	));
+	eyeWidgets('serialize',array($selectedFolder));
+}
+/*********************************************************************************************/
+//		'ADD FEED' DIALOG EVENTS
+/*********************************************************************************************/
+function eyeFeeds_on_addFeed_folders_TREE($params=null) {
+	$folderId = substr($params['itemName'][0], strpos($params['itemName'][0], '_') + 1); // utf8
+	$GLOBALS['addFeed_selectedFolder_HID']->setText($folderId);
+}
+function eyeFeeds_on_addFeed_add_BTN($params=null) {
+	$folderId = $GLOBALS['addFeed_selectedFolder_HID']->text;
+	$feedUrl = $GLOBALS['addFeed_url_TXTBOX']->text;
+	$feedName = $GLOBALS['addFeed_name_TXTBOX']->text;
+
+	$feed = eyeFeeds_fetchFeedFromUrl($feedUrl);
+	if ($feed === false){
+		eyeX('messageBox',array('content'=> 'Unable to fetch entered URL'));
+		return;
+	}
+
+	if ($feedName) {
+		$feed['name'][0] = $feedName;
+	}
+
+	if ($folderId == 'folders_TREE_root')
+		$folderId = null;
+
+	$newFeedsToSave = eyeFeeds_addFeed(eyeFeeds_getSavedFeeds(), $feed, $folderId);
+	//print_r($newFeedsToSave); exit;
+
+	if (eyeFeeds_saveFeedsToFile($newFeedsToSave)) {
+		eyeX('messageBox',array('content'=> 'Feed successfully added'));
+		$GLOBALS['addFeed_DLG']->close();
+	}
+	else
+		eyeX('messageBox',array('content'=> 'Error adding feed'));
+}
+function eyeFeeds_on_addFeed_cancel_BTN($params=null) {
+	if ($GLOBALS['addFeed_DLG'])
+		$GLOBALS['addFeed_DLG']->close();
+}
+
+
+/*********************************************************************************************/
+//		'ADD FOLDER' DIALOG
+/*********************************************************************************************/
+function eyeFeeds_createAddFolderDialog($params=null) {
+	global $checknum;
+
+	eyeFeeds_prepareForModalDialog();
+
+	$parentFolderId = 'addFolder_folders_TREE_root';
+	$selectedFeedId = $GLOBALS['selectedFeedId_HID']->text;
+	$feeds = eyeFeeds_getSavedFeeds();
+	$selectedFeed = eyeFeeds_getFeedFromId($feeds['feed'], $selectedFeedId);
+	if ($selectedFeed) {
+		if ($selectedFeed['type'][0] != 'folder') {
+			$parentFolder = eyeFeeds_getParentFeedFromId($feeds, $selectedFeedId);
+		}
+		else {
+			$parentFolder = eyeFeeds_getFeedFromId($feeds['feed'], $selectedFeedId);
+		}
+		$parentFolderId = 'addFolder#item_'.$parentFolder['id'][0];
+	}
+
+	$myWindow = new Window(array(
+		'name' => 'addFolder_DLG',
+		'father' => 'eyeFeeds_WND',
+		'type' => NOLIST_CLOSE_WINDOW,
+		'cent' => 1,
+		'width' => 540,
+		'height' => 250,
+		'title' => 'Add Folder',
+		'removepid' => 0
+	));
+	$myWindow->show();
+
+	//TREE LABEL
+	$treeLabel = new Label(array(
+		'name' => 'addFolder_tree_LBL',
+		'father' => 'addFolder_DLG_Content',
+		'x' => 10,
+		'y' => 10,
+		'text' => 'Choose a parent folder for the new folder:'
+	));
+	$treeLabel->show();
+
+	//FOLDERS TREE
+	$myTree = new Tree(array(
+		'name'=>'addFolder_folders_TREE',
+		'father'=>'addFolder_DLG_Content',
+		'x'=>4,
+		'y'=>24,
+		'width' =>200,
+		'height' => 180,
+		'clickTree'=>1
+	));
+	$myTree->show();
+
+	//root node
+	$myTree->addItem('addFolder_folders_TREE', 'addFolder_folders_TREE_root', i18n('translate',array('Bookmarks')));
+	$myTree->addSubList('addFolder_folders_TREE_root', 'addFolder#folder_root');
+
+	//fill in the tree with folders *only*
+	$data = eyeFeeds_getSavedFeeds();
+	if(is_array($data['feed'])) {
+		foreach($data['feed'] as $node) {
+			$displayedNodeName = utf8_strlen($node['name'][0]) > 20 ? utf8_substr($node['name'][0], 0, 19) . '…' : $node['name'][0];
+			if($node['type'][0] == 'folder') {
+				$myTree->addItem('addFolder#folder_root', 'addFolder#item_'.$node['id'][0], $displayedNodeName);
+				$myTree->addSubList('addFolder#item_'.$node['id'][0], 'addFolder#folder_'.$node['id'][0]);
+				eyeFeeds_drawFeedsTreeNode($myTree, 'addFolder#folder_'.$node['id'][0], $node, true, 'addFolder#');
+			}
+		}
+	}
+	$myTree->processList();
+	$myTree->setCss(array('border' => 'thin solid grey'));
+	$myTree->selectItem($parentFolderId);
+
+	//FEED'S NAME LABEL
+	$nameLabel = new Label(array(
+		'name' => 'addFolder_name_LBL',
+		'father' => 'addFolder_DLG_Content',
+		'x' => 230,
+		'y' => 90,
+		'text' => 'Type the name of the folder:'
+	));
+	$nameLabel->show();
+
+	//FEED'S NAME TEXTBOX
+	$nameTextbox = new Textbox(array(
+		'name' => 'addFolder_name_TXTBOX',
+		'father' => 'addFolder_DLG_Content',
+		'x' => 230,
+		'y' => 110,
+		'width' => 294,
+		'enabled' => 1,
+		'text' => ''
+	));
+	$nameTextbox->show();
+	$nameTextbox->addEnterEventMsg('addFolder_add_BTN');
+
+	//ADD BUTTON
+	$addButton = new Button(array(
+		'name' => 'addFolder_add_BTN',
+		'father' => 'addFolder_DLG_Content',
+		'caption' => 'Accept',
+		'x' => 457,
+		'y' => 184,
+		'width' =>70,
+		'enabled' => 1,
+	));
+	$addButton->addFriend($nameTextbox);
+	$addButton->show(0);
+
+	//CANCEL BUTTON
+	$cancelButton = new Button(array(
+		'name' => 'addFolder_cancel_BTN',
+		'father' => 'addFolder_DLG_Content',
+		'caption' => 'Cancel',
+		'x' => 372,
+		'y' => 184,
+		'width' => 70,
+		'enabled' => 1,
+	));
+	$cancelButton->show(0);
+
+	$selectedFolder = new Hidden(array(
+		'name' =>'addFolder_selectedFolder_HID',
+		'father' => 'addFolder_DLG_Content',
+		'text' => substr($parentFolderId, strpos($parentFolderId, '_') + 1) // utf8
+	));
+	eyeWidgets('serialize',array($selectedFolder));
+}
+/*********************************************************************************************/
+//		'ADD FOLDER' DIALOG EVENTS
+/*********************************************************************************************/
+function eyeFeeds_on_addFolder_folders_TREE($params=null) {
+	$folderId = substr($params['itemName'][0], strpos($params['itemName'][0], '_') + 1); // utf8
+	$GLOBALS['addFolder_selectedFolder_HID']->setText($folderId);
+}
+function eyeFeeds_on_addFolder_add_BTN($params=null) {
+	$parentFolderId = $GLOBALS['addFolder_selectedFolder_HID']->text;
+	$folderName = $GLOBALS['addFolder_name_TXTBOX']->text;
+
+	if (!$folderName) {
+		eyeX('messageBox',array('content'=> 'You must enter a name'));
+		return;
+	}
+
+	if ($parentFolderId == 'folders_TREE_root')
+		$parentFolderId = null;
+
+	$newFeedsToSave = eyeFeeds_addFolder(eyeFeeds_getSavedFeeds(), $folderName, md5($folderName.microtime()), $parentFolderId);
+	//print_r($newFeedsToSave); exit;
+
+	if (eyeFeeds_saveFeedsToFile($newFeedsToSave)) {
+		eyeX('messageBox',array('content'=> 'Folder successfully added'));
+		$GLOBALS['addFolder_DLG']->close();
+	}
+	else
+		eyeX('messageBox',array('content'=> 'Error adding folder'));
+}
+function eyeFeeds_on_addFolder_cancel_BTN($params=null) {
+	if ($GLOBALS['addFolder_DLG'])
+		$GLOBALS['addFolder_DLG']->close();
+}
+
+
+/*********************************************************************************************/
+//		'DELETE FEED/FOLDER' DIALOG
+/*********************************************************************************************/
+function eyeFeeds_createConfirmDeleteDialog($params=null) {
+	$type = $params['type'][0];
+	$name = $params['name'][0];
+
+	eyeFeeds_prepareForModalDialog();
+
+	eyeX('messageBox',array(
+		'content' => 'Are you sure you want to delete this '.$type.'?',		//$type can be 'feed' or 'folder'
+		'type' => 3,
+		'title' => 'Delete feed/folder',
+		'win_name' => 'delete_DLG',
+		'win_style' => TITLE + CLOSE,
+		'win_removepid' => 0,
+		'btn1_capt' => 'Accept',
+		'btn1_name' => 'delete_deleteYes_BTN',
+		'btn2_capt' => 'Cancel',
+		'btn2_name' => 'delete_deleteNo_BTN',
+		'hidden_name' => 'delete_feedId_HID',
+		'hidden_text' => $params['id'][0],
+		'father' => 'eyeFeeds_WND',
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/editClean.png'
+	));
+}
+/*********************************************************************************************/
+//		'DELETE FEED/FOLDER' DIALOG EVENTS
+/*********************************************************************************************/
+function eyeFeeds_on_delete_deleteYes_BTN($params=null) {
+	$feedId = $GLOBALS['delete_feedId_HID']->text;
+	$selectedFeedId = $GLOBALS['selectedFeedId_HID']->text;
+
+	$newFeedsToSave = eyeFeeds_deleteFeedFolder(eyeFeeds_getSavedFeeds(), $feedId);
+
+	//print_r($newFeedsToSave); exit;
+	if (eyeFeeds_saveFeedsToFile($newFeedsToSave))
+		eyeX('messageBox',array('content'=> 'Element successfully deleted'));
+	else
+		eyeX('messageBox',array('content'=> 'Error deleting the feed'));
+
+	$GLOBALS['delete_DLG']->close();
+
+	if ($selectedFeedId == $feedId) {
+		eyeFeeds_clearFeedItems();
+		eyeFeeds_clearItemContent();
+	}
+}
+function eyeFeeds_on_delete_deleteNo_BTN($params=null) {
+	$GLOBALS['delete_DLG']->close();
+}
+
+
+
+/*********************************************************************************************/
+//		'EDIT FEED' DIALOG
+/*********************************************************************************************/
+function eyeFeeds_createEditFeedDialog($params=null) {
+	global $checknum;
+
+	if (!is_array($params))
+		return;
+
+	eyeFeeds_prepareForModalDialog();
+
+	$feedId = $params['id'][0];
+	$feedName = $params['name'][0];
+	$feedUrl = $params['url'][0];
+	$parentFolder = eyeFeeds_getParentFeedFromId(eyeFeeds_getSavedFeeds(),$params['id'][0]);
+	$parentFolderId = ($parentFolder['id'][0] == 'root')?  'editFeed_folders_TREE_root' : 'editFeed#item_'.$parentFolder['id'][0];
+
+	$myWindow = new Window(array(
+		'name' => 'editFeed_DLG',
+		'father' => 'eyeFeeds_WND',
+		'type' => NOLIST_CLOSE_WINDOW,
+		'cent' => 1,
+		'width' => 540,
+		'height' => 250,
+		'title' => 'Edit Feed',
+		'removepid' => 0
+	));
+	$myWindow->show();
+
+	//TREE LABEL
+	$treeLabel = new Label(array(
+		'name' => 'editFeed_tree_LBL',
+		'father' => 'editFeed_DLG_Content',
+		'x' => 10,
+		'y' => 10,
+		'text' => 'Choose a folder for the feed:'
+	));
+	$treeLabel->show();
+
+	//FOLDERS TREE
+	$myTree = new Tree(array(
+		'name'=>'editFeed_folders_TREE',
+		'father'=>'editFeed_DLG_Content',
+		'x'=>4,
+		'y'=>24,
+		'width' =>200,
+		'height' => 180,
+		'clickTree'=>1
+	));
+	$myTree->show();
+
+	//root node
+	$myTree->addItem('editFeed_folders_TREE', 'editFeed_folders_TREE_root', i18n('translate',array('Bookmarks')));
+	$myTree->addSubList('editFeed_folders_TREE_root', 'editFeed#folder_root');
+
+	//fill in the tree with folders *only*
+	$data = eyeFeeds_getSavedFeeds();
+	if(is_array($data['feed'])) {
+		foreach($data['feed'] as $node) {
+			$displayedNodeName = utf8_strlen($node['name'][0]) > 20 ? utf8_substr($node['name'][0], 0, 19) . '…' : $node['name'][0];
+			if($node['type'][0] == 'folder') {
+				$myTree->addItem('editFeed#folder_root', 'editFeed#item_'.$node['id'][0], $displayedNodeName);
+				$myTree->addSubList('editFeed#item_'.$node['id'][0], 'editFeed#folder_'.$node['id'][0]);
+				eyeFeeds_drawFeedsTreeNode($myTree, 'editFeed#folder_'.$node['id'][0], $node, true, 'editFeed#');
+			}
+		}
+	}
+	$myTree->processList();
+	$myTree->setCss(array('border' => 'thin solid grey'));
+	$myTree->selectItem($parentFolderId);
+
+	//FEED'S URL LABEL
+	$urlLabel = new Label(array(
+		'name' => 'editFeed_url_LBL',
+		'father' => 'editFeed_DLG_Content',
+		'x' => 230,
+		'y' => 40,
+		'text' => 'Type the URL of the feed:'
+	));
+	$urlLabel->show();
+
+	//FEED'S URL TEXTBOX
+	$urlTextbox = new Textbox(array(
+		'name' => 'editFeed_url_TXTBOX',
+		'father' => 'editFeed_DLG_Content',
+		'x' => 230,
+		'y' => 60,
+		'width' => 294,
+		'enabled' => 1,
+		'text' => $feedUrl
+	));
+	$urlTextbox->show();
+
+	//FEED'S NAME LABEL
+	$nameLabel = new Label(array(
+		'name' => 'editFeed_name_LBL',
+		'father' => 'editFeed_DLG_Content',
+		'x' => 230,
+		'y' => 90,
+		'text' => 'Type the name of the feed (optional):'
+	));
+	$nameLabel->show();
+
+	//FEED'S NAME TEXTBOX
+	$nameTextbox = new Textbox(array(
+		'name' => 'editFeed_name_TXTBOX',
+		'father' => 'editFeed_DLG_Content',
+		'x' => 230,
+		'y' => 110,
+		'width' => 294,
+		'enabled' => 1,
+		'text' => $feedName
+	));
+	$nameTextbox->show();
+	$nameTextbox->addFriend($urlTextbox);
+	$nameTextbox->addEnterEventMsg('editFeed_add_BTN');
+	$urlTextbox->addFriend($nameTextbox);
+	$urlTextbox->addEnterEventMsg('editFeed_add_BTN');
+
+	//APPLY BUTTON
+	$applyButton = new Button(array(
+		'name' => 'editFeed_apply_BTN',
+		'father' => 'editFeed_DLG_Content',
+		'caption' => 'Accept',
+		'x' => 457,
+		'y' => 184,
+		'width' => 70,
+		'enabled' => 1,
+	));
+	$applyButton->addFriend($urlTextbox);
+	$applyButton->addFriend($nameTextbox);
+	$applyButton->show(0);
+
+	//CANCEL BUTTON
+	$cancelButton = new Button(array(
+		'name' => 'editFeed_cancel_BTN',
+		'father' => 'editFeed_DLG_Content',
+		'caption' => 'Cancel',
+		'x' => 370,
+		'y' => 184,
+		'width' => 70,
+		'enabled' => 1,
+	));
+	$cancelButton->show(0);
+
+	$feedId = new Hidden(array(
+		'name' =>'editFeed_feedId_HID',
+		'father' => 'editFeed_DLG_Content',
+		'text' => $feedId
+	));
+	eyeWidgets('serialize',array($feedId));
+
+	$selectedFolder = new Hidden(array(
+		'name' =>'editFeed_selectedFolder_HID',
+		'father' => 'editFeed_DLG_Content',
+		'text' => substr($parentFolderId, strpos($parentFolderId, '_') + 1)			//default is current parent folder // utf8
+	));
+	eyeWidgets('serialize',array($selectedFolder));
+}
+/*********************************************************************************************/
+//		'EDIT FEED' DIALOG EVENTS
+/*********************************************************************************************/
+function eyeFeeds_on_editFeed_folders_TREE($params=null) {
+	$folderId = substr($params['itemName'][0], strpos($params['itemName'][0], '_') + 1); // utf8
+	$GLOBALS['editFeed_selectedFolder_HID']->setText($folderId);
+}
+function eyeFeeds_on_editFeed_apply_BTN($params=null) {
+	$feedId = $GLOBALS['editFeed_feedId_HID']->text;
+	$feedUrl = $GLOBALS['editFeed_url_TXTBOX']->text;
+	$feedName = $GLOBALS['editFeed_name_TXTBOX']->text;
+	$newFolderId = $GLOBALS['editFeed_selectedFolder_HID']->text;
+
+	$feeds = eyeFeeds_getSavedFeeds();
+	$feed = eyeFeeds_getFeedFromId($feeds['feed'], $feedId);
+	$fetchedFeed = eyeFeeds_fetchFeedFromUrl($feedUrl);
+	if ($feed === false){
+		eyeX('messageBox',array('content'=> 'Error applying changes'));
+		return;
+	}
+	if ($fetchedFeed === false){
+		eyeX('messageBox',array('content'=> 'Unable to fetch entered URL'));
+		return;
+	}
+
+	$feed['url'][0] = $feedUrl;
+	if ($feedName)
+		$feed['name'][0] = $feedName;
+	else
+		$feed['name'][0] = $fetchedFeed['name'][0];
+
+	if ($newFolderId == 'folders_TREE_root')
+		$newFolderId = null;
+
+	$newFeedsToSave = eyeFeeds_deleteFeedFolder(eyeFeeds_getSavedFeeds(), $feedId);
+	$newFeedsToSave = eyeFeeds_addFeed($newFeedsToSave, $feed, $newFolderId);
+	//print_r($newFeedsToSave); exit;
+
+	if (eyeFeeds_saveFeedsToFile($newFeedsToSave)) {
+		eyeX('messageBox',array('content'=> 'Feed successfully changed'));
+		$GLOBALS['editFeed_DLG']->close();
+	}
+	else
+		eyeX('messageBox',array('content'=> 'Error saving feed'));
+}
+function eyeFeeds_on_editFeed_cancel_BTN($params=null) {
+	if ($GLOBALS['editFeed_DLG'])
+		$GLOBALS['editFeed_DLG']->close();
+}
+
+/*********************************************************************************************/
+//		'EDIT FOLDER' DIALOG
+/*********************************************************************************************/
+function eyeFeeds_createEditFolderDialog($params=null) {
+	global $checknum;
+
+	if (!is_array($params))
+		return;
+
+	eyeFeeds_prepareForModalDialog();
+
+	$feedId = $params['id'][0];
+	$feedName = $params['name'][0];
+	$parentFolder = eyeFeeds_getParentFeedFromId(eyeFeeds_getSavedFeeds(),$params['id'][0]);
+	$parentFolderId = ($parentFolder['id'][0] == 'root')?  'editFolder_folders_TREE_root' : 'editFolder#item_'.$parentFolder['id'][0];
+
+	$myWindow = new Window(array(
+		'name' => 'editFolder_DLG',
+		'father' => 'eyeFeeds_WND',
+		'type' => NOLIST_CLOSE_WINDOW,
+		'cent' => 1,
+		'width' => 540,
+		'height' => 250,
+		'title' => 'Edit Folder',
+		'removepid' => 0
+	));
+	$myWindow->show();
+
+	//TREE LABEL
+	$treeLabel = new Label(array(
+		'name' => 'editFolder_tree_LBL',
+		'father' => 'editFolder_DLG_Content',
+		'x' => 10,
+		'y' => 10,
+		'text' => 'Choose a parent for the folder:'
+	));
+	$treeLabel->show();
+
+	//FOLDERS TREE
+	$myTree = new Tree(array(
+		'name'=>'editFolder_folders_TREE',
+		'father'=>'editFolder_DLG_Content',
+		'x'=>4,
+		'y'=>24,
+		'width' =>200,
+		'height' => 180,
+		'clickTree'=>1
+	));
+	$myTree->show();
+
+	//root node
+	$myTree->addItem('editFolder_folders_TREE', 'editFolder_folders_TREE_root', i18n('translate',array('Bookmarks')));
+	$myTree->addSubList('editFolder_folders_TREE_root', 'editFolder#folder_root');
+
+	//fill in the tree with folders *only*
+	$data = eyeFeeds_getSavedFeeds();
+	if(is_array($data['feed'])) {
+		foreach($data['feed'] as $node) {
+			$displayedNodeName = utf8_strlen($node['name'][0]) > 20 ? utf8_substr($node['name'][0], 0, 19) . '…' : $node['name'][0];
+			if($node['type'][0] == 'folder') {
+				$myTree->addItem('editFolder#folder_root', 'editFolder#item_'.$node['id'][0], $displayedNodeName);
+				$myTree->addSubList('editFolder#item_'.$node['id'][0], 'editFolder#folder_'.$node['id'][0]);
+
+				//hide subfolders of the edited folder (to prevent the user from moving it inside of one of them)
+				if ($node['id'][0] != $feedId) {
+					eyeFeeds_drawFeedsTreeNode($myTree, 'editFolder#folder_'.$node['id'][0], $node, true, 'editFolder#');
+				}
+			}
+		}
+	}
+	$myTree->processList();
+	$myTree->setCss(array('border' => 'thin solid grey'));
+	$myTree->selectItem($parentFolderId);
+
+	//FEED'S NAME LABEL
+	$nameLabel = new Label(array(
+		'name' => 'editFolder_name_LBL',
+		'father' => 'editFolder_DLG_Content',
+		'x' => 230,
+		'y' => 90,
+		'text' => 'Type the name of the folder:'
+	));
+	$nameLabel->show();
+
+	//FEED'S NAME TEXTBOX
+	$nameTextbox = new Textbox(array(
+		'name' => 'editFolder_name_TXTBOX',
+		'father' => 'editFolder_DLG_Content',
+		'x' => 230,
+		'y' => 110,
+		'width' => 294,
+		'enabled' => 1,
+		'text' => $feedName
+	));
+	$nameTextbox->show();
+	$nameTextbox->addEnterEventMsg('editFolder_add_BTN');
+
+	//APPLY BUTTON
+	$applyButton = new Button(array(
+		'name' => 'editFolder_apply_BTN',
+		'father' => 'editFolder_DLG_Content',
+		'caption' => 'Apply',
+		'x' => 350,
+		'y' => 184,
+		'width' => 60,
+		'enabled' => 1,
+		'img' => 'index.php?extern=apps/eyeFeeds/gfx/editfolder.png'
+	));
+	$applyButton->addFriend($nameTextbox);
+	$applyButton->show(0);
+
+	//CANCEL BUTTON
+	$cancelButton = new Button(array(
+		'name' => 'editFolder_cancel_BTN',
+		'father' => 'editFolder_DLG_Content',
+		'caption' => 'Cancel',
+		'x' => 440,
+		'y' => 184,
+		'width' => 70,
+		'enabled' => 1,
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/button_cancel.png'
+	));
+	$cancelButton->show(0);
+
+	$feedId = new Hidden(array(
+		'name' =>'editFolder_feedId_HID',
+		'father' => 'editFolder_DLG_Content',
+		'text' => $feedId
+	));
+	eyeWidgets('serialize',array($feedId));
+
+	$selectedFolder = new Hidden(array(
+		'name' =>'editFolder_selectedFolder_HID',
+		'father' => 'editFolder_DLG_Content',
+		'text' => substr($parentFolderId, strpos($parentFolderId, '_') + 1)			//default is current parent folder // utf8
+	));
+	eyeWidgets('serialize',array($selectedFolder));
+}
+/*********************************************************************************************/
+//		'EDIT FOLDER' DIALOG EVENTS
+/*********************************************************************************************/
+function eyeFeeds_on_editFolder_folders_TREE($params=null) {
+	$folderId = substr($params['itemName'][0], strpos($params['itemName'][0], '_') + 1); // utf8
+	$GLOBALS['editFolder_selectedFolder_HID']->setText($folderId);
+}
+function eyeFeeds_on_editFolder_apply_BTN($params=null) {
+	$feedId = $GLOBALS['editFolder_feedId_HID']->text;
+	$feedName = $GLOBALS['editFolder_name_TXTBOX']->text;
+	$newFolderId = $GLOBALS['editFolder_selectedFolder_HID']->text;
+
+	if (!$feedName){
+		eyeX('messageBox',array('content'=> 'You must enter a name'));
+		return;
+	}
+
+	$feeds = eyeFeeds_getSavedFeeds();
+	$feed = eyeFeeds_getFeedFromId($feeds['feed'], $feedId);
+	if ($feed === false){
+		eyeX('messageBox',array('content'=> 'Error applying changes'));
+		return;
+	}
+
+	if ($newFolderId == 'folders_TREE_root')
+		$newFolderId = null;
+	$feed['name'][0] = $feedName;
+
+	$newFeedsToSave = eyeFeeds_deleteFeedFolder(eyeFeeds_getSavedFeeds(), $feedId);
+	$newFeedsToSave = eyeFeeds_addFeed($newFeedsToSave, $feed, $newFolderId);
+	//print_r($newFeedsToSave); exit;
+
+	if (eyeFeeds_saveFeedsToFile($newFeedsToSave)) {
+		eyeX('messageBox',array('content'=> 'Folder successfully changed'));
+		$GLOBALS['editFolder_DLG']->close();
+	}
+	else
+		eyeX('messageBox',array('content'=> 'Error saving folder'));
+}
+function eyeFeeds_on_editFolder_cancel_BTN($params=null) {
+	if ($GLOBALS['editFolder_DLG'])
+		$GLOBALS['editFolder_DLG']->close();
+}
+
+
+
+
+
+
+
+/*********************************************************************************************/
+//		'IMPORT FEEDS' DIALOG
+/*********************************************************************************************/
+function eyeFeeds_createImportFeedsDialog($params=null) {
+	global $checknum;
+
+	eyeFeeds_prepareForModalDialog();
+
+	$parentFolderId = 'importFeeds_folders_TREE_root';
+	$selectedFeedId = $GLOBALS['selectedFeedId_HID']->text;
+	$feeds = eyeFeeds_getSavedFeeds();
+	$selectedFeed = eyeFeeds_getFeedFromId($feeds['feed'], $selectedFeedId);
+	if ($selectedFeed) {
+		if ($selectedFeed['type'][0] != 'folder') {
+			$parentFolder = eyeFeeds_getParentFeedFromId($feeds, $selectedFeedId);
+		}
+		else {
+			$parentFolder = eyeFeeds_getFeedFromId($feeds['feed'], $selectedFeedId);
+		}
+		$parentFolderId = 'importFeeds#item_'.$parentFolder['id'][0];
+	}
+	//echo $parentFolderId; exit;
+
+	$myWindow = new Window(array(
+		'name' => 'importFeeds_DLG',
+		'father' => 'eyeFeeds_WND',
+		'type' => NOLIST_CLOSE_WINDOW,
+		'cent' => 1,
+		'width' => 540,
+		'height' => 250,
+		'title' => 'Import Feeds from OPML',
+		'removepid' => 0
+	));
+	$myWindow->show();
+
+	//TREE LABEL
+	$treeLabel = new Label(array(
+		'name' => 'importFeeds_tree_LBL',
+		'father' => 'importFeeds_DLG_Content',
+		'x' => 10,
+		'y' => 10,
+		'text' => 'Choose a folder for the imported feeds:'
+	));
+	$treeLabel->show();
+
+	//FOLDERS TREE
+	$myTree = new Tree(array(
+		'name'=>'importFeeds_folders_TREE',
+		'father'=>'importFeeds_DLG_Content',
+		'x'=>4,
+		'y'=>24,
+		'width' =>200,
+		'height' => 180,
+		'clickTree'=>1
+	));
+	$myTree->show();
+
+	//root node
+	$myTree->addItem('importFeeds_folders_TREE', 'importFeeds_folders_TREE_root', i18n('translate',array('Bookmarks')));
+	$myTree->addSubList('importFeeds_folders_TREE_root', 'importFeeds#folder_root');
+
+	//fill in the tree with folders *only*
+	$data = eyeFeeds_getSavedFeeds();
+	if(is_array($data['feed'])) {
+		foreach($data['feed'] as $node) {
+			$displayedNodeName = utf8_strlen($node['name'][0]) > 20 ? utf8_substr($node['name'][0], 0, 19) . '…' : $node['name'][0];
+			if($node['type'][0] == 'folder') {
+				$myTree->addItem('importFeeds#folder_root', 'importFeeds#item_'.$node['id'][0], $displayedNodeName);
+				$myTree->addSubList('importFeeds#item_'.$node['id'][0], 'importFeeds#folder_'.$node['id'][0]);
+				eyeFeeds_drawFeedsTreeNode($myTree, 'importFeeds#folder_'.$node['id'][0], $node, true, 'importFeeds#');
+			}
+		}
+	}
+	$myTree->processList();
+	$myTree->setCss(array('border' => 'thin solid grey'));
+	$myTree->selectItem($parentFolderId);
+
+	//SELECT FILE BUTTON
+	$selectFileButton = new Button(array(
+		'name' => 'importFeeds_selectFile_BTN',
+		'father' => 'importFeeds_DLG_Content',
+		'caption' => 'Select file',
+		'x' => 230,
+		'y' => 30,
+		'enabled' => 1
+	));
+	$selectFileButton->show(0);
+
+	//FILE PATH TEXTBOX
+	$filePathTextbox = new Textbox(array(
+		'name' => 'importFeeds_filePath_TXTBOX',
+		'father' => 'importFeeds_DLG_Content',
+		'x' => 230,
+		'y' => 60,
+		'width' => 294,
+		'enabled' => 0,
+		'text' => 'Choose a file to import'
+	));
+	$filePathTextbox->show();
+
+	//CONTAINER FOLDER LABEL
+	$folderNameLabel = new Label(array(
+		'name' => 'importFeeds_folderName_LBL',
+		'father' => 'importFeeds_DLG_Content',
+		'x' => 230,
+		'y' => 90,
+		'text' => 'Type the name of the folder to create (optional):'
+	));
+	$folderNameLabel->show();
+
+	//CONTAINER FOLDER TEXTBOX
+	$folderNameTextbox = new Textbox(array(
+		'name' => 'importFeeds_folderName_TXTBOX',
+		'father' => 'importFeeds_DLG_Content',
+		'x' => 230,
+		'y' => 110,
+		'width' => 294,
+		'enabled' => 1,
+		'text' => ''
+	));
+	$folderNameTextbox->show();
+	$folderNameTextbox->addFriend($filePathTextbox);
+
+	//IMPORT BUTTON
+	$importButton = new Button(array(
+		'name' => 'importFeeds_import_BTN',
+		'father' => 'importFeeds_DLG_Content',
+		'caption' => 'Import',
+		'x' => 457,
+		'y' => 184,
+		'width' => 70,
+		'enabled' => 1,
+	));
+	$importButton->addFriend($filePathTextbox);
+	$importButton->addFriend($folderNameTextbox);
+	$importButton->show(0);
+
+	//CANCEL BUTTON
+	$cancelButton = new Button(array(
+		'name' => 'importFeeds_cancel_BTN',
+		'father' => 'importFeeds_DLG_Content',
+		'caption' => 'Cancel',
+		'x' => 370,
+		'y' => 184,
+		'width' => 70,
+		'enabled' => 1,
+	));
+	$cancelButton->show(0);
+
+	$selectedFolder = new Hidden(array(
+		'name' =>'importFeeds_selectedFolder_HID',
+		'father' => 'importFeeds_DLG_Content',
+		'text' => substr($parentFolderId, strpos($parentFolderId, '_') + 1) // utf8
+	));
+	eyeWidgets('serialize',array($selectedFolder));
+}
+/*********************************************************************************************/
+//		'IMPORT FEEDS' DIALOG EVENTS
+/*********************************************************************************************/
+function eyeFeeds_on_importFeeds_selectFile_BTN($params=null) {
+	global $checknum;
+	$options = array(
+		EYEDIALOG_TYPE_OPENFILE,
+		'importFeeds_selectFile',
+		$checknum,
+		'',
+		array(
+			'OPML files' => '*.opml|*.xml',
+			'All files' => '*'
+		)
+	);
+	proc('launch',array('eyeDialog',$options));
+}
+function eyeFeeds_on_importFeeds_selectFile($params=null) {
+	if (! is_array($params['arg']) || !$params['arg'][0]) {
+		return;
+	}
+	$GLOBALS['importFeeds_filePath_TXTBOX']->setText($params['arg'][0]);
+}
+function eyeFeeds_on_importFeeds_folders_TREE($params=null) {
+	$folderId = substr($params['itemName'][0], strpos($params['itemName'][0], '_') + 1); // utf8
+	$GLOBALS['importFeeds_selectedFolder_HID']->setText($folderId);
+}
+function eyeFeeds_on_importFeeds_import_BTN($params=null) {
+	$folderId = $GLOBALS['importFeeds_selectedFolder_HID']->text;
+	$filePath = $GLOBALS['importFeeds_filePath_TXTBOX']->text;
+	$folderName = $GLOBALS['importFeeds_folderName_TXTBOX']->text;
+
+	$filePath = um('getCurrentUserDir').FILES_USER_DIR.$filePath;
+	$savedFeeds = eyeFeeds_getSavedFeeds();
+
+	$parentFolderId = $folderId;
+	if ($folderId == 'folders_TREE_root')
+		$parentFolderId = null;
+
+	if ($folderName) {
+		$newFolderId = md5($folderName.microtime());
+		$savedFeeds = eyeFeeds_addFolder(eyeFeeds_getSavedFeeds(), $folderName, $newFolderId, $parentFolderId);
+		$parentFolderId = $newFolderId;
+	}
+
+	$newFeedsToSave = eyeFeeds_importFeeds($savedFeeds, $parentFolderId, $filePath);
+	if ($newFeedsToSave === false){
+		eyeX('messageBox',array('content'=> 'Unable to import feeds from specified file'));
+		return;
+	}
+	//print_r($newFeedsToSave); exit;
+
+	if (eyeFeeds_saveFeedsToFile($newFeedsToSave)) {
+		eyeX('messageBox',array('content'=> 'Feeds successfully imported'));
+		$GLOBALS['importFeeds_DLG']->close();
+	}
+	else {
+		eyeX('messageBox',array('content'=> 'Error importing feeds'));
+	}
+}
+function eyeFeeds_on_importFeeds_cancel_BTN($params=null) {
+	if ($GLOBALS['importFeeds_DLG'])
+		$GLOBALS['importFeeds_DLG']->close();
+}
+
+?>

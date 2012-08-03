@@ -1,0 +1,72 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeBoard_on_Message($params="") {
+	eyeWidgets('updateContent',$params);
+}
+
+function eyeBoard_on_getMessages($params=null) {
+	echo eyeBoard('getMessagesHtml');
+	exit;
+}
+
+function eyeBoard_on_mainResize($params) {
+	global $currentUser;
+	
+	$width = intval($params['arg'][0]);
+	$height = intval($params['arg'][1]);
+
+	$GLOBALS['eyeBoard']->width = $width;
+	$GLOBALS['eyeBoard']->height = $height;
+
+	$GLOBALS['eyeBoardFrame']->setWidth($GLOBALS['eyeBoard']->width - 2);
+	$GLOBALS['eyeBoardFrame']->setHeight($GLOBALS['eyeBoard']->height - 60);
+
+	if ($currentUser === ROOTUSER) {
+		$width = $GLOBALS['eyeBoard']->width - 120;
+	} else {
+		$width = $GLOBALS['eyeBoard']->width - 70;
+	}
+	$GLOBALS['MessageB']->setWidth($width);
+
+}
+
+function eyeBoard_on_addMsg($params=null) {
+	global $checknum;
+	$content = $GLOBALS['MessageB']->text;
+	if(empty($content)) {
+		return;
+	}
+	$GLOBALS['MessageB']->setText("");
+	eyeBoard('newMessage',array($content));
+	$GLOBALS['eyeBoardFrame']->setUrl("index.php?checknum=$checknum&msg=getMessages");
+}
+
+function eyeBoard_on_clear($params=null){
+	global $checknum;
+	eyeBoard('clear');
+	$GLOBALS['eyeBoardFrame']->setUrl("index.php?checknum=$checknum&msg=getMessages");
+}
+
+function eyeBoard_on_newMessage($params = null) {
+	proc('launch', array('newMessage', array('to' => $params['to'][0])));
+}
+
+function eyeBoard_on_Close(){
+	proc('end');
+}
+
+?>

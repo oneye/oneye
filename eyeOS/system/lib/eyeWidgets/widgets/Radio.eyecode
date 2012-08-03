@@ -1,0 +1,203 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+/*
+	Radio widget abstraction
+*/
+
+class Radio {
+	//pid controller
+
+	var $creatorPid;
+
+	//global widgets options without default
+	var $name;
+	var $father;
+
+	//global widget options with default
+	var $x;
+	var $y;
+	var $horiz;
+	var $vert;
+	var $cent;
+
+	var $showed;
+
+	//custom widget options
+	var $enabled;
+	var $visible;
+	var $checked;
+	var $content;
+
+	function Radio($params) {
+		global $myPid;
+		$this->creatorPid = $myPid;
+		//generic widget options without default
+		$this->name = $params['name'];
+		$this->father = $params['father'];
+
+		//generic widget options with default
+		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['vert']) ? $this->vert = $params['vert'] : $this->vert = 0;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 10;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 10;
+		isset($params['cent']) ? $this->cent = $params['cent'] : $this->cent = 0;
+
+		//especific button options
+		isset($params['enabled']) ? $this->enabled = $params['enabled'] : $this->enabled = 1;
+		isset($params['visible']) ? $this->visible = $params['visible'] : $this->visible = 1;
+		isset($params['text']) ? $this->text = $params['text'] : $this->text = $this->name;
+		isset($params['tokens']) ? $this->tokens = $params['tokens'] : $this->tokens = 0;
+		isset($params['checked']) ? $this->checked = $params['checked'] : $this->checked = 0;
+		isset($params['group']) ? $this->group = $params['group'] : $this->group = '';
+	}
+
+
+	function show($noserialize=0) {
+		global $myPid;
+		$this->text = i18n('translate',array($this->text,$this->tokens));
+		$this->text = $this->text;
+		$widgetsparams = array(
+			'enabled' => $this->enabled,
+			'visible' => $this->visible,
+			'text' => $this->text,
+			'checked' => $this->checked,
+			'group' => $myPid . '_' . $this->group
+		);
+		$widgetsparams = mmap('array2js',array($widgetsparams));
+
+		$myRadio = array(
+			'name' => $this->name,
+			'father' => $this->father,
+			'horiz' => $this->horiz,
+			'vert' => $this->vert,
+			'x' => $this->x,
+			'y' => $this->y,
+			'center' => $this->cent,
+			'widgetname' => 'Radio',
+			'params' => $widgetsparams
+		);
+		eyex('createWidget',$myRadio);
+		$this->showed=1;
+		if($noserialize == 0) {
+			eyeWidgets('serialize',array($this));
+		}
+	}
+
+	function setText($text){
+		global $myPid;
+		$this->text = $text;
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '").nextSibling.nodeValue="' . $text . '";'));
+		eyex('rawjs',array('js' => 'document.getElementById("' . $myPid . '_' . $this->name . '").value="' . $text . '";'));
+	}
+
+	//event handling
+	function addEvent($eventName,$eventFunc,$args="") {
+		global $myPid;
+		$name = $myPid.'_'.$this->name;
+		if($this->showed == 0) {
+			$this->show();
+		}
+		eyex('addEvent',array('name' => $name, 'action' => $eventFunc, 'event' => $eventName,'args'=>$args));
+	}
+
+	function setCss($params) {
+		global $myPid;
+		if(is_array($params)) {
+			foreach($params as $key => $value) {
+				eyex('updateCss',array('name' => $myPid.'_'.$this->name,'property' => $key,'value' => $value));
+			}
+		}
+	}
+
+	function setGroup($group){
+    	global $myPid;
+		$this->group = $group;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").name="'.$myPid.'_'.$group.'";'));
+	}
+
+	function setValue($check) {
+		if($check == 'true') {
+			$this->checked = 1;
+		} else {
+			$this->checked = 0;
+		}
+	}
+
+	function getSyncString() {
+		global $myPid;
+		return 'eyeParam("' . $this->name . '",xGetElementById("' . $myPid . '_' . $this->name . '").checked)';
+	}
+
+	function setX($x) {
+		global $myPid;
+		$this->x = intval($x);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.left="'.$this->x.'px";'));
+	}
+
+	function setY($y) {
+		global $myPid;
+		$this->y = intval($y);
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.top="'.$this->y.'px";'));
+	}
+	function focus() {
+		global $myPid;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").focus();'));
+	}
+
+	function disable() {
+		global $myPid;
+		$this->enabled=0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").disabled=true'));
+	}
+
+	function enable() {
+		global $myPid;
+		$this->enabled=1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").disabled=false'));
+	}
+
+	function hide() {
+		global $myPid;
+		$this->visible = 0;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="none"'));
+	}
+
+	function unhide() {
+		global $myPid;
+		$this->visible = 1;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'_Container").style.display="block"'));
+	}
+
+	function check($num) {
+		global $myPid;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").checked=true'));
+	}
+
+	function uncheck($num) {
+		global $myPid;
+		eyex('rawjs',array('js' => 'document.getElementById("'.$myPid.'_'.$this->name.'").checked=false'));
+	}
+
+	function remove() {
+		global $myPid;
+		$name = $this->name.'_Container';
+		eyex('removeWidget',array('name'=>$name));
+		eyeWidgets('singleUnserialize',array($this->name));
+	}
+}
+
+?>

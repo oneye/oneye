@@ -1,0 +1,1841 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeMail_preferencesWindow($params=null) {
+	$prefConfig = eyeXML('getXMLfile', array (um('getCurrentUserDir').CONF_USER_DIR.'/eyeMail/settings.xml'));
+
+	if(is_object($GLOBALS['eyeMail_preferencesWND'])) {
+		$GLOBALS['eyeMail_preferencesWND']->close();
+	}
+	$prefWindow = new Window(array(
+		'name' => 'eyeMail_preferencesWND',
+		'title' => 'Preferences',
+		'father' => 'eyeMail_WND_1_Content',
+		'width' => 500,
+		'height' => 400,
+		'x' => 77,
+		'y' => 18,
+		'style' => CLOSE + TITLE,
+		'removepid' => 1,
+		'sigClose' => 'closePreferences'
+	));
+	$prefWindow->show();
+	$prefToolbar = new Toolbar(array('name'=>'preferencesToolbar','father'=>'eyeMail_preferencesWND_Content'));
+	$prefToolbar->show();
+	$prefToolbar->addItem('prefGeneral','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/eyeNav.png','General');
+	$prefToolbar->addItem('prefAccounts','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/groups.png','Accounts');
+	//$prefToolbar->addItem('prefSecurity','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/apps/eyeMail/security.png','Security');
+
+
+	// General Window in Preferences
+
+
+	$generalContainer = new Simplebox(array(
+		'name' => 'eyeMail_generalContainer',
+		'father' => 'eyeMail_preferencesWND_Content',
+		'x' => 0,
+		'y' => 59,
+		'width' => $prefWindow->width-2,
+		'height' => $prefWindow->height-83,
+		'border' => 0
+	));
+	$generalContainer->show(0);
+	// $generalContainer->setCSS(array(
+		// 'background-color'=>'orange'
+	// ));
+	$label1General = new Label(array(
+		'name' => 'eyeMail_label1General',
+		'father' => 'eyeMail_generalContainer',
+		'x' => 125,
+		'y' => 32,
+		'text' => 'Check for new mail:'
+	));
+	$label1General->show();
+
+	$select1General = new Select(array(
+		'name' => 'eyeMail_select1General',
+		'father' => 'eyeMail_generalContainer',
+		'x' => 250,
+		'y' => 30
+	));
+	$select1General->show();
+
+	if ($prefConfig['eyeMail'][0]['checkDelay'][0] == 5) {
+		$select1General->addOption('Manually',1);
+		$select1General->addOption('Every 5 minutes',5,1);
+		$select1General->addOption('Every 15 minutes',15);
+		$select1General->addOption('Every 30 minutes',30);
+		$select1General->addOption('Every hour',60);
+	} else if ($prefConfig['eyeMail'][0]['checkDelay'][0] == 15) {
+		$select1General->addOption('Manually',1);
+		$select1General->addOption('Every 5 minutes',5);
+		$select1General->addOption('Every 15 minutes',15,1);
+		$select1General->addOption('Every 30 minutes',30);
+		$select1General->addOption('Every hour',60);
+	} else if ($prefConfig['eyeMail'][0]['checkDelay'][0] == 30) {
+		$select1General->addOption('Manually',1);
+		$select1General->addOption('Every 5 minutes',5);
+		$select1General->addOption('Every 15 minutes',15);
+		$select1General->addOption('Every 30 minutes',30,1);
+		$select1General->addOption('Every hour',60);
+	} else if ($prefConfig['eyeMail'][0]['checkDelay'][0] == 60) {
+		$select1General->addOption('Manually',1);
+		$select1General->addOption('Every 5 minutes',5);
+		$select1General->addOption('Every 15 minutes',15);
+		$select1General->addOption('Every 30 minutes',30);
+		$select1General->addOption('Every hour',60,1);
+	} else {
+		$select1General->addOption('Manually',1,1);
+		$select1General->addOption('Every 5 minutes',5);
+		$select1General->addOption('Every 15 minutes',15);
+		$select1General->addOption('Every 30 minutes',30);
+		$select1General->addOption('Every hour',60);
+	}
+
+	$check1General = new Checkbox(array(
+		'name' => 'eyeMail_check1General',
+		'father' => 'eyeMail_generalContainer',
+		'x' => 245,
+		'y' => 70,
+		'text' => 'Check mail at startup'
+	));
+	$check1General->show();
+
+	if ($prefConfig['eyeMail'][0]['startupCheck'][0] == 1) {
+		$check1General->check();
+	}
+
+	$check3General = new Checkbox(array(
+		'name' => 'eyeMail_check3General',
+		'father' => 'eyeMail_generalContainer',
+		'x' => 245,
+		'y' => 110,
+		'text' => 'Visual alert'
+	));
+	$check3General->show();
+
+	if ($prefConfig['eyeMail'][0]['visualAlert'][0] == 1) {
+		$check3General->check();
+	}
+
+	$saveGeneral = new Button(array(
+		'name' => 'eyeMail_saveGeneral',
+		'father' => 'eyeMail_generalContainer',
+		'horiz' => 1,
+		'vert' => 1,
+		'x' => 200,
+		'y' => 32,
+		'caption' => 'Save',
+		// 'width' => $addButton->width,
+		// 'height' => $addButton->height,
+		'signal' => 'saveGeneral'
+	));
+	$saveGeneral->addFriend($select1General);
+	$saveGeneral->addFriend($check1General);
+	$saveGeneral->addFriend($check3General);
+	$saveGeneral->show();
+
+	// Accounts Window Preferences //
+
+	$accountsContainer = new Simplebox(array(
+		'name' => 'eyeMail_accountsContainer',
+		'father' => 'eyeMail_preferencesWND_Content',
+		'x' => 0,
+		'y' => 59,
+		'width' => $prefWindow->width-2,
+		'height' => $prefWindow->height-83,
+		'border' => 0
+	));
+	$accountsContainer->show(0);
+	// $accountsContainer->hide();
+	// $accountsContainer->setCSS(array(
+		// 'background-color'=>'red'
+	// ));
+
+	$addButton = new Button(array(
+		'name' => 'eyeMail_addButton',
+		'father' => 'eyeMail_accountsContainer',
+		'x' => 20,
+		'y' => 286,
+		'caption' => '+'
+	));
+	$addButton->show();
+	$addButton->setCSS(array(
+		'font-size' => '14px',
+		'font-weight' => 'bolder'
+	));
+
+	$delButton = new Button(array(
+		'name' => 'eyeMail_delButton',
+		'father' => 'eyeMail_accountsContainer',
+		'x' => 49,
+		'y' => 286,
+		'caption' => '-',
+		'width' => $addButton->width,
+		'height' => $addButton->height,
+		'signal' => 'delButton'
+	));
+	$delButton->show();
+	$delButton->setCSS(array(
+		'font-size' => '14px',
+		'font-weight' => 'bolder',
+		'padding'=> '1px 4px '
+	));
+
+			// subList Accounts Preferences
+	eyeMail_refreshListAcc(true);
+
+	// Security Window Preferences
+
+	$securityContainer = new Simplebox(array(
+		'name' => 'eyeMail_securityContainer',
+		'father' => 'eyeMail_preferencesWND_Content',
+		'x' => 0,
+		'y' => 59,
+		'width' => $prefWindow->width-2,
+		'height' => $prefWindow->height-83,
+		'border' => 0
+	));
+	$securityContainer->show(0);
+	$securityContainer->hide();
+	// $securityContainer->setCSS(array(
+		// 'background-color'=>'brown'
+	// ));
+
+	$check1Security = new Checkbox(array(
+		'name' => 'eyeMail_check1Security',
+		'father' => 'eyeMail_securityContainer',
+		'x' => 245,
+		'y' => 60,
+		'text' => 'Send Rich Text'
+	));
+	$check1Security->show();
+
+	if ($prefConfig['eyeMail'][0]['sendRich'][0] == 1) {
+		$check1Security->check();
+	}
+
+	$check2Security = new Checkbox(array(
+		'name' => 'eyeMail_check2Security',
+		'father' => 'eyeMail_securityContainer',
+		'x' => 245,
+		'y' => 80,
+		'text' => 'Recive Rich Text'
+	));
+	$check2Security->show();
+
+	if ($prefConfig['eyeMail'][0]['recvRich'][0] == 1) {
+		$check2Security->check();
+	}
+
+	$saveSecurity = new Button(array(
+		'name' => 'eyeMail_saveSecurity',
+		'father' => 'eyeMail_securityContainer',
+		'horiz' => 1,
+		'vert' => 1,
+		'x' => 200,
+		'y' => 32,
+		'caption' => 'Save',
+		// 'width' => $addButton->width,
+		// 'height' => $addButton->height,
+		'signal' => 'saveSecurity'
+	));
+
+	$saveSecurity->addFriend($check1Security);
+	$saveSecurity->addFriend($check2Security);
+	$saveSecurity->show();
+	eyeMail_generalClick();
+
+}
+
+function eyeMail_on_saveGeneral($params=null) {
+	$prefConfig = eyeXML('getXMLconfig', array ('eyeMail', 'settings.xml'));
+	$prefConfig['eyeMail'][0]['startupCheck'][0] = $GLOBALS['eyeMail_check1General']->checked;
+	$prefConfig['eyeMail'][0]['visualAlert'][0] = $GLOBALS['eyeMail_check3General']->checked;
+	$prefConfig['eyeMail'][0]['checkDelay'][0] = $GLOBALS['eyeMail_select1General']->selected;
+	eyeXML('setXMLconfig',array('eyeMail','settings.xml', $prefConfig));
+	eyex('messageBox', array('content' => 'General settings has been updated.'));
+	$GLOBALS['eyeMail_preferencesWND']->close();
+
+}
+
+function eyeMail_on_saveSecurity($params=null) {
+	$prefConfig = eyeXML('getXMLconfig', array ('eyeMail', 'settings.xml'));
+	$prefConfig['eyeMail'][0]['sendRich'][0] = $GLOBALS['eyeMail_check1Security']->checked;
+	$prefConfig['eyeMail'][0]['recvRich'][0] = $GLOBALS['eyeMail_check2Security']->checked;
+	eyeXML('setXMLconfig',array('eyeMail','settings.xml', $prefConfig));
+	eyex('messageBox', array('content' => 'Security settings has been updated.'));
+	$GLOBALS['eyeMail_preferencesWND']->close();
+}
+
+function eyeMail_on_delButton($params=null) {
+	$accountsFile = eyeXML('getXMLconfig',array('eyeMail','accounts.xml'));
+	$thekey = $GLOBALS['eyeMail_tabInfoHidden']->text;
+	eyex('messageBox', array(
+		'title' => 'Remove Account',
+		'win_name' => 'eyeMail_messageRemoveAccount',
+		'father' => 'eyeMail_WND_1',
+		'btn1_capt' => 'Yes',
+		'btn1_name' => 'messageRemoveYes',
+		'btn2_capt' => 'No',
+		'btn2_name' => 'messageRemoveNo',
+		'content' => 'Are you sure you want to remove the account "%s"?',
+		'tokens' => array($accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['description'][0]),
+		'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/editClean.png',
+		'type' => 3
+	));
+}
+
+function eyeMail_on_messageRemoveNo($params=null) {
+	$GLOBALS['eyeMail_messageRemoveAccount']->close();
+}
+
+function eyeMail_on_messageRemoveYes($params=null) {
+	$accountsFile = eyeXML('getXMLconfig',array('eyeMail','accounts.xml'));
+	$thekey = $GLOBALS['eyeMail_tabInfoHidden']->text;
+	unset($accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]);
+	eyeXML('setXMLconfig',array('eyeMail','accounts.xml', $accountsFile));
+	if (is_object($GLOBALS['eyeMail_listAccContainer'])) {
+		$GLOBALS['eyeMail_listAccContainer']->remove();
+	}
+	eyeMail_refreshListAcc();
+	if (is_object($GLOBALS['eyeMail_boxTabContainer'])) {
+		$GLOBALS['eyeMail_boxTabContainer']->remove();
+	}
+	$GLOBALS['eyeMail_messageRemoveAccount']->close();
+}
+
+function eyeMail_refreshListAcc($params=null) {
+	$listAccContainer = new Simplebox(array(
+		'name' => 'eyeMail_listAccContainer',
+		'father' => 'eyeMail_accountsContainer',
+		'x' => 20,
+		'y' => 20,
+		'width' => 180,
+		'height' => $GLOBALS['eyeMail_preferencesWND']->height-143,
+		'border' => 0
+	));
+	$listAccContainer->show(0);
+	$listAccContainer->setCSS(array(
+		// 'background-color' => 'yellow',
+		'border' => 'thin solid #C5C5C5'
+	));
+
+	$listAccHeader = new Simplebox(array(
+		'name' => 'eyeMail_listAccHeader',
+		'father' => 'eyeMail_listAccContainer',
+		'x' => 0,
+		'y' => 0,
+		'width' => 180,
+		'height' => 20,
+		'border' => 0
+	));
+	$listAccHeader->show();
+	$listAccHeader->setCSS(array(
+		'background-color' => '#E9EAEA',
+		'border' => 'thin solid #C5C5C5'
+	));
+
+	$labelListAcc = new Label(array(
+		'name' => 'eyeMail_labelListAcc',
+		'father' => 'eyeMail_listAccHeader',
+		'height' => 20,
+		'width' => 120,
+		'text' => 'Accounts',
+		'x' => 4,
+		'y' => 4
+	));
+	$labelListAcc->show();
+	$accConfig = eyeXML('getXMLfile', array (um('getCurrentUserDir').CONF_USER_DIR.'/eyeMail/accounts.xml'));
+	$accConfig = $accConfig['eyeMail'][0]['accounts'][0]['account'];
+	$accPosIndex=22;
+	global $checknum;
+	if(!is_array($accConfig)) {
+		return;
+	}
+	foreach ($accConfig as $key=>$value) {
+		$accUserBox = new Simplebox(array(
+			'name' => 'eyeMail_accUserBox'.$key,
+			'father' => 'eyeMail_listAccContainer',
+			'x' => 1,
+			'y' => $accPosIndex,
+			'height' => 20,
+			'width' => 180,
+			'border' => 0
+		));
+		$accUserBox->show(0);
+		$accUserBox->setCSS(array(
+			// 'background-color' => '#3875D7',
+			// 'border' => '1px solid #89D0FD',
+			'cursor' => 'Pointer'
+		));
+		$accUserBox->addEvent('onclick','sendMsg(' . $checknum . ',"accountFocus",eyeParam("focus",' . $key . '));');
+		if ($key==0 && $params !== true) {
+			$js = 'sendMsg(' . $checknum . ',"accountFocus",eyeParam("focus",' . $key . '));';
+			eyex('rawjs', array('js' => $js));
+		}
+		$imageAccUser = new Imagebox(array(
+			'name' => 'eyeMail_imageAccUser'.$key,
+			'father' => 'eyeMail_accUserBox'.$key,
+			'x'=>10,
+			'y'=>4,
+			'alt' => $accConfig[$key]['name'][0],
+			'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/sendmessage.png'
+		));
+		$imageAccUser->show(0);
+		$imageAccUser->setCSS(array(
+			'cursor' => 'pointer'
+		));
+		$labelpost = $accConfig[$key]['description'][0];
+		if (utf8_strlen($labelpost) > 23) {
+			$labelpost = utf8_substr($labelpost, 0, 22) . '…';
+		}
+
+		$accUserLabel = new Label(array(
+			'name' => 'eyeMail_accUserLabel'.$key,
+			'father' => 'eyeMail_accUserBox'.$key,
+			'x' => 35,
+			'y' => 4,
+			'height' =>20,
+			'width' => 120,
+			'text' => $labelpost
+		));
+		$accUserLabel->show();
+		$accPosIndex+=21;
+	}
+}
+
+function eyeMail_on_accountFocus($params=null) {
+	global $myPid;
+	$accountsFile = eyeXML('getXMLconfig',array('eyeMail','accounts.xml'));
+	$accountsFile = $accountsFile['eyeMail'][0]['accounts'][0]['account'];
+	$thefocus = $params['focus'][0];
+	eyeMail_on_unlightAll();
+	$GLOBALS['eyeMail_accUserBox'.$thefocus]->setCSS(array(
+		'background-color' => '#D5DDE6'
+		// 'border' => '1px solid black'
+	));
+
+	$boxTabContainer = new Simplebox (array(
+		'name' => 'eyeMail_boxTabContainer',
+		'father' => 'eyeMail_accountsContainer',
+		'width' => 258,
+		'height' => 295,
+		'border' => 1,
+		'x' => 220,
+		'y' => 20,
+		'border' => 0
+	));
+	$boxTabContainer->show(0);
+
+	$GLOBALS['eyeMail_accountsContainer']->unhide();
+	$tabAcc = new Tab(array(
+		'name' => 'eyeMail_prefTabAcc',
+		'father' => 'eyeMail_boxTabContainer',
+		'x' => 0,
+		'y' => 0,
+		'width' => 247,
+		'height' => 250
+	));
+	$tabAcc->show();
+	eyex('rawjs', array('js' => 'document.getElementById("' . $myPid . '_eyeMail_prefTabAcc_header").style.backgroundColor = "#ffffff";'));
+	$tabInfo = $tabAcc->addTab('Information',1);
+	// $tabMailbox = $tabAcc->addTab('Mailbox',1);
+	$tabAdvanced = $tabAcc->addTab('Advanced',1);
+	$tabAcc->selectByName('Information');
+	$tabInfoBox = new Simplebox (array(
+		'name' => 'eyeMail_tabInfoBox',
+		'father' => $tabInfo,
+		'width' => 258,
+		'height' => 234,
+		'border' => 0,
+		'x' => 0,
+		'y' => 0
+	));
+	$tabInfoBox->show();
+	$tabInfoBox->setCSS(array(
+		'border' => '1px solid #ACACAC',
+		'background-color' => '#F2F2F2'
+	));
+
+	// $tabMailBox = new Simplebox (array(
+		// 'name' => 'eyeMail_tabMailBox',
+		// 'father' => $tabMailbox,
+		// 'width' => 258,
+		// 'height' => 234,
+		// 'border' => 0,
+		// 'x' => 0,
+		// 'y' => 0
+	// ));
+	// $tabMailBox->show();
+	// $tabMailBox->setCSS(array(
+		// 'border' => '1px solid #ACACAC',
+		// 'background-color' => '#F2F2F2'
+	// ));
+
+	$tabAdvancedBox = new Simplebox (array(
+		'name' => 'eyeMail_tabAdvancedBox',
+		'father' => $tabAdvanced,
+		'width' => 258,
+		'height' => 234,
+		'border' => 0,
+		'x' => 0,
+		'y' => 0
+	));
+	$tabAdvancedBox->show();
+	$tabAdvancedBox->setCSS(array(
+		'border' => '1px solid #ACACAC',
+		'background-color' => '#F2F2F2'
+	));
+
+	//Tab Info
+
+	$tabInfoSelect = new Select(array(
+		'name' => 'eyeMail_tabInfoSelect',
+		'father' => 'eyeMail_tabInfoBox',
+		'x' => 115,
+		'y' => 31
+	));
+	$tabInfoSelect->show();
+	if($accountsFile[$thefocus]['type'][0] == 'imap') {
+		$tabInfoSelect->addOption('IMAP', 'imap', 1);
+		$tabInfoSelect->addOption('POP3', 'pop3');
+	} else {
+		$tabInfoSelect->addOption('IMAP', 'imap');
+		$tabInfoSelect->addOption('POP3', 'pop3', 1);
+	}
+
+
+	$tabInfoHidden = new Hidden(array(
+		'name' => 'eyeMail_tabInfoHidden',
+		'father' => 'eyeMail_eyeMail_tabInfoBox',
+		'text' => $thefocus
+	));
+	eyeWidgets('serialize',array($tabInfoHidden));
+
+	$tabInfoLabel = new Label(array(
+		'name' => 'eyeMail_tabInfoLabel1',
+		'father' => 'eyeMail_tabInfoBox',
+		'text' => 'Account Type:',
+		'y' => 31,
+		'x' => 21,
+	));
+	$tabInfoLabel->show();
+
+	$tabInfoLabel = new Label(array(
+		'name' => 'eyeMail_tabInfoLabel2',
+		'father' => 'eyeMail_tabInfoBox',
+		'text' => 'Account Name:',
+		'y' => 71,
+		'x' => 16,
+	));
+	$tabInfoLabel->show();
+
+	$tabInfoLabel = new Label(array(
+		'name' => 'eyeMail_tabInfoLabel3',
+		'father' => 'eyeMail_tabInfoBox',
+		'text' => 'Full Name:',
+		'y' => 101,
+		'x' => 42,
+	));
+	$tabInfoLabel->show();
+
+	$tabInfoLabel = new Label(array(
+		'name' => 'eyeMail_tabInfoLabel4',
+		'father' => 'eyeMail_tabInfoBox',
+		'text' => 'Email:',
+		'y' => 131,
+		'x' => 67,
+	));
+	$tabInfoLabel->show();
+
+	$tabInfoText1 = new Textbox(array(
+		'name' => 'eyeMail_tabInfoText_1',
+		'father' => 'eyeMail_tabInfoBox',
+		'width' => 120,
+		'y' => 69,
+		'x' => 115,
+		'text' => $accountsFile[$thefocus]['description'][0]
+	));
+	$tabInfoText1->show();
+
+	$tabInfoText2 = new Textbox(array(
+		'name' => 'eyeMail_tabInfoText_2',
+		'father' => 'eyeMail_tabInfoBox',
+		'width' => 120,
+		'y' => 99,
+		'x' => 115,
+		'text' => $accountsFile[$thefocus]['name'][0]
+	));
+	$tabInfoText2->show();
+
+	$tabInfoText3 = new Textbox(array(
+		'name' => 'eyeMail_tabInfoText_3',
+		'father' => 'eyeMail_tabInfoBox',
+		'width' => 120,
+		'y' => 129,
+		'x' => 115,
+		'text' => $accountsFile[$thefocus]['email'][0]
+	));
+	$tabInfoText3->show();
+
+	//Tab Advanced
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel_Incoming',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'Incoming',
+		'y' => 10,
+		'x' => 16,
+	));
+	$tabAdvLabel->show();
+	$tabAdvLabel->setCSS(array('font-weight' => 'bold'));
+	$y = 30;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel1',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'Server Host:',
+		'y' => $y,
+		'x' => 16,
+	));
+	$tabAdvLabel->show();
+	$y += 20;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel2',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'Server Port:',
+		'y' => $y,
+		'x' => 18,
+	));
+	$tabAdvLabel->show();
+
+	$tabAdvCheck1 = new Checkbox (array(
+		'name' => 'eyeMail_tabAdvCheck_1',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'y' => $y - 2,
+		'horiz' => 1,
+		'x' => 40,
+		'text' => 'SSL'
+	));
+	$tabAdvCheck1->show();
+	$y += 20;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel3',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'User:',
+		'y' => $y,
+		'x' => 58,
+	));
+	$tabAdvLabel->show();
+	$y += 20;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel4',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'Password:',
+		'y' => $y,
+		'x' => 30,
+	));
+	$tabAdvLabel->show();
+	$y += 30;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel_Outgoing',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'Outgoing',
+		'y' => $y,
+		'x' => 16,
+	));
+	$tabAdvLabel->show();
+	$tabAdvLabel->setCSS(array('font-weight' => 'bold'));
+	$y += 20;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel5',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'Server Host:',
+		'y' => $y,
+		'x' => 16,
+	));
+	$tabAdvLabel->show();
+	$y += 20;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel6',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'Server Port:',
+		'y' => $y,
+		'x' => 18,
+	));
+	$tabAdvLabel->show();
+
+	$tabAdvCheck2 = new Checkbox (array(
+		'name' => 'eyeMail_tabAdvCheck_2',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'y' => $y - 2,
+		'horiz' => 1,
+		'x' => 40,
+		'text' => 'SSL'
+	));
+	$tabAdvCheck2->show();
+	$y += 20;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel7',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'User:',
+		'y' => $y,
+		'x' => 58,
+	));
+	$tabAdvLabel->show();
+	$y += 20;
+
+	$tabAdvLabel = new Label(array(
+		'name' => 'eyeMail_tabAdvLabel8',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'text' => 'Password:',
+		'y' => $y,
+		'x' => 30,
+	));
+	$tabAdvLabel->show();
+	$y = 28;
+
+	$tabAdvText1 = new Textbox(array(
+		'name' => 'eyeMail_tabAdvText_1',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'width' => 140,
+		'y' => $y,
+		'x' => 100,
+		'text' => $accountsFile[$thefocus]['typehost'][0]
+	));
+	$tabAdvText1->show();
+	$y += 20;
+
+	$tabAdvText2 = new Textbox(array(
+		'name' => 'eyeMail_tabAdvText_2',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'width' => 40,
+		'y' => $y,
+		'x' => 100,
+		'text' => $accountsFile[$thefocus]['typeport'][0]
+	));
+	$tabAdvText2->show();
+	$y += 20;
+
+	$tabAdvText3 = new Textbox(array(
+		'name' => 'eyeMail_tabAdvText_3',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'width' => 140,
+		'y' => $y,
+		'x' => 100,
+		'text' => $accountsFile[$thefocus]['typeuser'][0]
+	));
+	$tabAdvText3->show();
+	$y += 20;
+
+	$tabAdvText4 = new Textbox(array(
+		'name' => 'eyeMail_tabAdvText_4',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'width' => 140,
+		'y' => $y,
+		'x' => 100,
+		'password' => 1,
+		'text' => $accountsFile[$thefocus]['typepassword'][0]
+	));
+	$tabAdvText4->show();
+	$y += 50;
+
+	$tabAdvText5 = new Textbox(array(
+		'name' => 'eyeMail_tabAdvText_5',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'width' => 140,
+		'y' => $y,
+		'x' => 100,
+		'text' => $accountsFile[$thefocus]['smtphost'][0]
+	));
+	$tabAdvText5->show();
+	$y += 20;
+
+	$tabAdvText6 = new Textbox(array(
+		'name' => 'eyeMail_tabAdvText_6',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'width' => 40,
+		'y' => $y,
+		'x' => 100,
+		'text' => $accountsFile[$thefocus]['smtpport'][0]
+	));
+	$tabAdvText6->show();
+	$y += 20;
+
+	$tabAdvText7 = new Textbox(array(
+		'name' => 'eyeMail_tabAdvText_7',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'width' => 140,
+		'y' => $y,
+		'x' => 100,
+		'text' => $accountsFile[$thefocus]['smtpuser'][0]
+	));
+	$tabAdvText7->show();
+	$y += 20;
+
+	$tabAdvText8 = new Textbox(array(
+		'name' => 'eyeMail_tabAdvText_8',
+		'father' => 'eyeMail_tabAdvancedBox',
+		'width' => 140,
+		'y' => $y,
+		'x' => 100,
+		'password' => 1,
+		'text' => $accountsFile[$thefocus]['smtppassword'][0]
+	));
+	$tabAdvText8->show();
+
+	if ($accountsFile[$thefocus]['typessl'][0]==1) {
+		$tabAdvCheck1->check();
+	}
+	if ($accountsFile[$thefocus]['smtpssl'][0]==1) {
+		$tabAdvCheck2->check();
+	}
+
+	$saveButton = new Button(array(
+		'name' => 'eyeMail_saveButton',
+		'father' => 'eyeMail_boxTabContainer',
+		'horiz' => 1,
+		'vert' => 1,
+		'x' => 100,
+		'y' => 6,
+		'caption' => 'Save',
+		// 'width' => $addButton->width,
+		// 'height' => $addButton->height,
+		'signal' => 'saveButton'
+	));
+	$saveButton->addFriend($tabInfoText1);
+	$saveButton->addFriend($tabInfoText2);
+	$saveButton->addFriend($tabInfoText3);
+	$saveButton->addFriend($tabAdvText1);
+	$saveButton->addFriend($tabAdvText2);
+	$saveButton->addFriend($tabAdvText3);
+	$saveButton->addFriend($tabAdvText4);
+	$saveButton->addFriend($tabAdvText5);
+	$saveButton->addFriend($tabAdvText6);
+	$saveButton->addFriend($tabAdvText7);
+	$saveButton->addFriend($tabAdvText8);
+	$saveButton->addFriend($tabAdvCheck1);
+	$saveButton->addFriend($tabAdvCheck2);
+	$saveButton->addFriend($tabInfoSelect);
+	$saveButton->show();
+}
+
+function eyeMail_on_saveButton($params=null) {
+	$thekey = $GLOBALS['eyeMail_tabInfoHidden']->text;
+	$accountsFile = eyeXML('getXMLconfig',array('eyeMail','accounts.xml'));
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['name'][0] = $GLOBALS['eyeMail_tabInfoText_2']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['description'][0] = $GLOBALS['eyeMail_tabInfoText_1']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['email'][0] = $GLOBALS['eyeMail_tabInfoText_3']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['type'][0] = $GLOBALS['eyeMail_tabInfoSelect']->selected;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['typehost'][0] = $GLOBALS['eyeMail_tabAdvText_1']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['typeport'][0] = $GLOBALS['eyeMail_tabAdvText_2']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['typeuser'][0] = $GLOBALS['eyeMail_tabAdvText_3']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['typessl'][0] = $GLOBALS['eyeMail_tabAdvCheck_1']->checked;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['smtphost'][0] = $GLOBALS['eyeMail_tabAdvText_5']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['smtpport'][0] = $GLOBALS['eyeMail_tabAdvText_6']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['smtpuser'][0] = $GLOBALS['eyeMail_tabAdvText_7']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['typepassword'][0] = $GLOBALS['eyeMail_tabAdvText_4']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['smtppassword'][0] = $GLOBALS['eyeMail_tabAdvText_8']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$thekey]['smtpssl'][0] = $GLOBALS['eyeMail_tabAdvCheck_2']->checked;
+	eyeXML('setXMLconfig',array('eyeMail','accounts.xml', $accountsFile));
+	eyex('messageBox', array('content' => 'Email account has been updated.'));
+	$GLOBALS['eyeMail_preferencesWND']->close();
+}
+
+function eyeMail_on_unlightAll($params=null) {
+	$accConfig = eyeXML('getXMLfile', array (um('getCurrentUserDir').CONF_USER_DIR.'/eyeMail/accounts.xml'));
+	$accConfig = $accConfig['eyeMail'][0]['accounts'][0]['account'];
+	foreach ($accConfig as $key=>$value) {
+		$GLOBALS['eyeMail_accUserBox'.$key]->setCSS(array(
+			'background-color' => 'transparent',
+			'border' => 'none'
+		));
+	}
+	if (is_object($GLOBALS['eyeMail_boxTabContainer'])) {
+		$GLOBALS['eyeMail_boxTabContainer']->remove();
+	}
+}
+
+function eyeMail_generalClick($params=null) {
+	global $myPid;
+	$GLOBALS['eyeMail_accountsContainer']->hide();
+	$GLOBALS['eyeMail_securityContainer']->hide();
+	$GLOBALS['eyeMail_generalContainer']->unhide();
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_preferencesToolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "' . $myPid . '_prefGeneral_Container") {
+			e.childNodes[i].className = "blockbarItemPress";
+		} else {
+			e.childNodes[i].className = "blockbarItem";
+		}
+	}'));
+
+}
+
+function eyeMail_accountsClick($params=null) {
+	global $myPid;
+	$GLOBALS['eyeMail_generalContainer']->hide();
+	$GLOBALS['eyeMail_securityContainer']->hide();
+	$GLOBALS['eyeMail_accountsContainer']->unhide();
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_preferencesToolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "' . $myPid . '_prefAccounts_Container") {
+			e.childNodes[i].className = "blockbarItemPress";
+		} else {
+			e.childNodes[i].className = "blockbarItem";
+		}
+	}'));
+}
+
+function eyeMail_securityClick($params=null) {
+	global $myPid;
+	$GLOBALS['eyeMail_accountsContainer']->hide();
+	$GLOBALS['eyeMail_generalContainer']->hide();
+	$GLOBALS['eyeMail_securityContainer']->unhide();
+	eyex('rawjs',array('js' => 'e = xGetElementById("' . $myPid . '_preferencesToolbar");
+	for (var i = 0; i < e.childNodes.length; i++) {
+		if (e.childNodes[i].id == "' . $myPid . '_prefSecurity_Container") {
+			e.childNodes[i].className = "blockbarItemPress";
+		} else {
+			e.childNodes[i].className = "blockbarItem";
+		}
+	}'));
+}
+
+function eyeMail_createAccount($params=null) {
+	$addAccWindow = new Window(array(
+		'name' => 'eyeMail_createAccountWND',
+		'title' => 'Create a new account',
+		'father' => 'eyeMail_WND_1_Content',
+		'cent' => 1,
+		'height' => 350,
+		'width' => 350,
+		'style' => CLOSE + TITLE,
+		'sigClose' => 'cancelAccButton'
+	));
+	$addAccWindow->show();
+	if (is_object($GLOBALS['eyeMail_preferencesWND'])) {
+		$GLOBALS['eyeMail_preferencesWND']->hide();
+	}
+	$createAccBox = new Simplebox(array(
+		'name' => 'eyeMail_createAccountBox',
+		'father' => 'eyeMail_createAccountWND_Content',
+		'x' => 0,
+		'y' => 0,
+		'height' => 326,
+		'width' => 348,
+		'border' => 0
+	));
+	$createAccBox->show(0);
+	$createAccBox->setCSS(array(
+		'background-color' => '#F2F2F2'
+	));
+
+	$textAcc1 = new Textbox(array(
+		'name' => 'eyeMail_textAcc1',
+		'father' => 'eyeMail_createAccountBox',
+		'width' => 130,
+		'y' => 70,
+		'x' => 150
+	));
+	$textAcc1->show();
+
+	$textAcc4 = new Textbox(array(
+		'name' => 'eyeMail_textAcc4',
+		'father' => 'eyeMail_createAccountBox',
+		'width' => 130,
+		'y' => 130,
+		'x' => 150
+	));
+	$textAcc4->show();
+
+	$textAcc2 = new Textbox(array(
+		'name' => 'eyeMail_textAcc2',
+		'father' => 'eyeMail_createAccountBox',
+		'width' => 130,
+		'y' => 220,
+		'x' => 150
+	));
+	$textAcc2->show();
+
+	$textAcc3 = new Textbox(array(
+		'name' => 'eyeMail_textAcc3',
+		'father' => 'eyeMail_createAccountBox',
+		'width' => 130,
+		'y' => 240,
+		'x' => 150,
+		'password' => 1
+	));
+	$textAcc3->show();
+
+	$cancelAccButton = new Button(array(
+		'name' => 'cancelAccButton',
+		'father' => 'eyeMail_createAccountBox',
+		'caption' => 'Cancel',
+		'x' => 20,
+		'y' => 293
+	));
+	$cancelAccButton->show();
+
+	$nextAccButton = new Button(array(
+		'name' => 'eyeMail_nextAccButton',
+		'father' => 'eyeMail_createAccountBox',
+		'caption' => 'Next',
+		'x' => 285,
+		'y' => 293,
+		'signal' => 'nextAccButton'
+	));
+	$nextAccButton->addFriend($textAcc1);
+	$nextAccButton->addFriend($textAcc2);
+	$nextAccButton->addFriend($textAcc3);
+	$nextAccButton->addFriend($textAcc4);
+	$nextAccButton->show();
+
+
+	$subLineCreate = new Line(array(
+		'name' => 'eyeMail_subLineCreate',
+		'father' => 'eyeMail_createAccountBox',
+		'vert' => 1,
+		'y' => 45,
+		'x' => 0,
+		'width' => 348,
+		'height' => 1
+	));
+	$subLineCreate->show();
+	$subLineCreate->setCSS(array(
+		'border-bottom' => '0.25px solid #A6A6A6'
+	));
+
+	$textName1 = 'Enter the name you would like to appear in the "From" field of your outgoing messages (for example, "John Doe").';
+	$labelAccName = new Label(array(
+		'name' => 'eyeMail_labelAccName',
+		'father' => 'eyeMail_createAccountBox',
+		'text' => $textName1,
+		'y' => 16,
+		'x' => 13,
+	));
+	$labelAccName->show();
+
+	$textName1 = 'Enter your email address and password. This is the address others will use to send email to you (for example, "user@server.net").';
+	$labelAccMail = new Label(array(
+		'name' => 'eyeMail_labelAccMail',
+		'father' => 'eyeMail_createAccountBox',
+		'text' => $textName1,
+		'y' => 163,
+		'x' => 13
+	));
+	$labelAccMail->show();
+
+
+	$labelAccInfo = new Label(array(
+		'name' => 'eyeMail_labelAccInfo',
+		'father' => 'eyeMail_createAccountBox',
+		'text' => 'Enter an account name to be identified later.',
+		'y' => 100,
+		'x' => 13
+	));
+	$labelAccInfo->show();
+
+	$labelAcc1 = new Label(array(
+		'name' => 'eyeMail_labelAcc1',
+		'father' => 'eyeMail_createAccountBox',
+		'text' => 'Full Name:',
+		'y' => 70,
+		'x' => 83
+	));
+	$labelAcc1->show();
+
+	$labelAcc2 = new Label(array(
+		'name' => 'eyeMail_labelAcc2',
+		'father' => 'eyeMail_createAccountBox',
+		'text' => 'Account Name:',
+		'y' => 130,
+		'x' => 59
+	));
+	$labelAcc2->show();
+
+	$labelAcc3 = new Label(array(
+		'name' => 'eyeMail_labelAcc3',
+		'father' => 'eyeMail_createAccountBox',
+		'text' => 'Email Address:',
+		'y' => 220,
+		'x' => 59
+	));
+	$labelAcc3->show();
+
+	$labelAcc4 = new Label(array(
+		'name' => 'eyeMail_labelAcc4',
+		'father' => 'eyeMail_createAccountBox',
+		'text' => 'Password:',
+		'y' => 240,
+		'x' => 86
+	));
+	$labelAcc4->show();
+
+	// Create Account 2
+
+	$createAccBox2 = new Simplebox(array(
+		'name' => 'eyeMail_createAccountBox2',
+		'father' => 'eyeMail_createAccountWND_Content',
+		'x' => 0,
+		'y' => 0,
+		'height' => 326,
+		'width' => 348,
+		'border' => 0
+	));
+	$createAccBox2->show(0);
+	$createAccBox2->setCSS(array(
+		'background-color' => '#F2F2F2'
+	));
+	$createAccBox2->hide();
+
+	$subLineCreate = new Line(array(
+		'name' => 'eyeMail_subLineCreate2',
+		'father' => 'eyeMail_createAccountBox2',
+		'vert' => 1,
+		'y' => 45,
+		'x' => 0,
+		'width' => 348,
+		'height' => 1
+	));
+	$subLineCreate->show();
+	$subLineCreate->setCSS(array(
+		'border-bottom' => '0.25px solid #A6A6A6'
+	));
+}
+
+function eyeMail_createAccount2($params=null) {
+	$serversConfig= getConfig('eyeMail','servers.xml');
+	$serversConfig = $serversConfig['eyeMail'][0]['servers'][0]['server'];
+	$finded = false;
+	foreach ($serversConfig as $key => $value) {
+		if (strtolower(substr(strstr($GLOBALS['eyeMail_textAcc2']->text, '@'), 1)) === $serversConfig[$key]['domain'][0]) { // utf8
+			$finded = true;
+			$infoHidden = new Hidden(array(
+				'name' => 'eyeMail_infoHidden',
+				'father' => 'eyeMail_createAccountBox2',
+				'text' => $serversConfig[$key]
+			));
+			eyeWidgets('serialize',array($infoHidden));
+			eyeMail_createAccountAuto();
+		}
+	}
+	if (!$finded) {
+		eyeMail_on_manualButton();
+	}
+}
+
+function eyeMail_finalize1($params=null) {
+	$accountsFile = eyeXML('getXMLconfig',array('eyeMail','accounts.xml'));
+	if (!is_array($accountsFile['eyeMail'][0]['accounts'][0]['account'])) {
+		$accountsFile['eyeMail'][0]['accounts'][0] = array('account' => array( 0 => array()));
+		$i = 0;
+	} else {
+		$i = count($accountsFile['eyeMail'][0]['accounts'][0]['account']);
+	}
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['id'][0] = uniqid();
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['name'][0] = $GLOBALS['eyeMail_textAcc1']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['description'][0] = $GLOBALS['eyeMail_textAcc4']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['email'][0] = $GLOBALS['eyeMail_textAcc2']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['type'][0] = $GLOBALS['eyeMail_infoHidden']->text['type'][0];
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typehost'][0] = $GLOBALS['eyeMail_infoHidden']->text['typehost'][0];
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typeport'][0] = $GLOBALS['eyeMail_infoHidden']->text['typeport'][0];
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typeuser'][0] = substr($GLOBALS['eyeMail_textAcc2']->text, 0, strpos($GLOBALS['eyeMail_textAcc2']->text, '@')); // utf8
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typessl'][0] = $GLOBALS['eyeMail_infoHidden']->text['typessl'][0];
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtphost'][0] = $GLOBALS['eyeMail_infoHidden']->text['smtphost'][0];
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtpport'][0] = $GLOBALS['eyeMail_infoHidden']->text['smtpport'][0];
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtpuser'][0] = substr($GLOBALS['eyeMail_textAcc2']->text, 0, strpos($GLOBALS['eyeMail_textAcc2']->text, '@')); // utf8
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typepassword'][0] = $GLOBALS['eyeMail_textAcc3']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtppassword'][0] = $GLOBALS['eyeMail_textAcc3']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtpssl'][0] = $GLOBALS['eyeMail_infoHidden']->text['smtpssl'][0];
+	eyeXML('setXMLconfig',array('eyeMail','accounts.xml', $accountsFile));
+	eyex('messageBox', array('content' => 'Email account has been created.'));
+	if(is_object($GLOBALS['eyeMail_listAccContainer'])) {
+		$GLOBALS['eyeMail_listAccContainer']->remove();
+	}
+	eyeMail_refreshListAcc();
+	eyeMail_on_cancelAccButton();
+	if (is_object($GLOBALS['eyeMail_listAccContainer'])) {
+		$GLOBALS['eyeMail_menuContainer']->remove();
+	}
+	eyeMail_drawBoxes();
+	$myHidden = new Hidden(array(
+		'name'=>'defaultMail',
+		'father'=>'eyeApps',
+		'text'=>$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]
+	));
+	eyeWidgets('serialize',array($myHidden));
+	eyeMail_createXMLmail();
+}
+
+function eyeMail_finalize2($params=null) {
+	$accountsFile = eyeXML('getXMLconfig',array('eyeMail','accounts.xml'));
+	if (!is_array($accountsFile['eyeMail'][0]['accounts'][0]['account'])) {
+		$accountsFile['eyeMail'][0]['accounts'][0] = array('account' => array( 0 => array()));
+		$i = 0;
+	} else {
+		$i = count($accountsFile['eyeMail'][0]['accounts'][0]['account']);
+	}
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['id'][0] = uniqid();
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['name'][0] = $GLOBALS['eyeMail_textAcc1']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['description'][0] = $GLOBALS['eyeMail_textAcc4']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['email'][0] = $GLOBALS['eyeMail_textAcc2']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['type'][0] = $GLOBALS['eyeMail_typeSelect']->selected;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typehost'][0] = $GLOBALS['eyeMail_thetextbox1']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typeport'][0] = $GLOBALS['eyeMail_thetextbox2']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typeuser'][0] = $GLOBALS['eyeMail_thetextbox3']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typessl'][0] = $GLOBALS['eyeMail_typesslcheck']->checked;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtphost'][0] = $GLOBALS['eyeMail_thetextbox4']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtpport'][0] = $GLOBALS['eyeMail_thetextbox5']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtpuser'][0] = $GLOBALS['eyeMail_thetextbox6']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['typepassword'][0] = $GLOBALS['eyeMail_thetextbox7']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtppassword'][0] = $GLOBALS['eyeMail_thetextbox8']->text;
+	$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]['smtpssl'][0] = $GLOBALS['eyeMail_smtpsslcheck']->checked;
+	eyeXML('setXMLconfig',array('eyeMail','accounts.xml', $accountsFile));
+	eyex('messageBox', array('content' => 'Email account has been created.'));
+	eyeMail_refreshListAcc();
+	eyeMail_on_cancelAccButton();
+	if (is_object($GLOBALS['eyeMail_menuContainer'])) {
+		$GLOBALS['eyeMail_menuContainer']->remove();
+	}
+	eyeMail_drawBoxes();
+	$myHidden = new Hidden(array(
+		'name'=>'defaultMail',
+		'father'=>'eyeApps',
+		'text'=>$accountsFile['eyeMail'][0]['accounts'][0]['account'][$i]
+	));
+	eyeWidgets('serialize',array($myHidden));
+	eyeMail_createXMLmail();
+}
+
+function eyeMail_createAccountAuto($params=null) {
+	if(isset($GLOBALS['eyeMail_createAccountOption1'])) {
+		$GLOBALS['eyeMail_createAccountOption1']->remove();
+	}
+	if(isset($GLOBALS['eyeMail_createAccountOption2'])) {
+		$GLOBALS['eyeMail_createAccountOption2']->remove();
+	}
+
+	$createAccOption1 = new Simplebox(array(
+		'name' => 'eyeMail_createAccountOption1',
+		'father' => 'eyeMail_createAccountBox2',
+		'x' => 0,
+		'y' => 0,
+		'height' => 326,
+		'width' => 348,
+		'border' => 0
+	));
+	$createAccOption1->show(0);
+	$textFind = 'eyeMail has found the %s server settings. Please, verify that the information below is correct. To enter the settings manually click on "Manual".';
+	$labelFind = new Label(array(
+		'name' => 'eyeMail_labelFind',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $textFind,
+		'tokens' => array($GLOBALS['eyeMail_infoHidden']->text['name'][0]),
+		'y' => 20,
+		'x' => 10
+	));
+	$labelFind->show();
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label1',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Account Name:',
+		'y' => 80,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label2',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Full Name:',
+		'y' => 100,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label3',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Email Address:',
+		'y' => 120,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label4',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Incoming Server Type:',
+		'y' => 150,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label5',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Incoming Server Host:',
+		'y' => 170,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label6',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Port:',
+		'y' => 170,
+		'x' => 50,
+		'horiz' => 1
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label7',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Incoming Username:',
+		'y' => 190,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label8',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Outgoing Server Host:',
+		'y' => 220,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label9',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Port:',
+		'y' => 220,
+		'horiz' => 1,
+		'x' => 50
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_label10',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => 'Outgoing Username:',
+		'y' => 240,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+
+	$labelName = new Label(array(
+		'name' => 'eyeMail_labelName',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $GLOBALS['eyeMail_textAcc4']->text,
+		'y' => 80,
+		'x' => 120
+	));
+	$labelName->show();
+
+	$labelFull = new Label(array(
+		'name' => 'eyeMail_labelFull',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $GLOBALS['eyeMail_textAcc1']->text,
+		'y' => 100,
+		'x' => 120
+	));
+	$labelFull->show();
+
+	$labelMail = new Label(array(
+		'name' => 'eyeMail_labelMail',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => utf8_strtolower($GLOBALS['eyeMail_textAcc2']->text),
+		'y' => 120,
+		'x' => 120
+	));
+	$labelMail->show();
+
+	$labelType = new Label(array(
+		'name' => 'eyeMail_labelType',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => utf8_strtoupper($GLOBALS['eyeMail_infoHidden']->text['type'][0]),
+		'y' => 150,
+		'x' => 167
+	));
+	$labelType->show();
+
+	$labeliServer = new Label(array(
+		'name' => 'eyeMail_labeliServer',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $GLOBALS['eyeMail_infoHidden']->text['typehost'][0],
+		'y' => 170,
+		'x' => 167
+	));
+	$labeliServer->show();
+
+	$iUser = utf8_strtolower(substr($GLOBALS['eyeMail_textAcc2']->text, 0, strpos($GLOBALS['eyeMail_textAcc2']->text, '@'))); // utf8
+
+	$labeliUser = new Label(array(
+		'name' => 'eyeMail_labeliUser',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $iUser,
+		'y' => 190,
+		'x' => 167
+	));
+	$labeliUser->show();
+
+	$labeliPort = new Label(array(
+		'name' => 'eyeMail_labeliPort',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $GLOBALS['eyeMail_infoHidden']->text['typeport'][0],
+		'y' => 170,
+		'x' => 23,
+		'horiz' => 1
+	));
+	$labeliPort->show();
+
+	$labeloServer = new Label(array(
+		'name' => 'eyeMail_labeloServer',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $GLOBALS['eyeMail_infoHidden']->text['smtphost'][0],
+		'y' => 220,
+		'x' => 167
+	));
+	$labeloServer->show();
+
+	$labeloPort = new Label(array(
+		'name' => 'eyeMail_labeloPort',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $GLOBALS['eyeMail_infoHidden']->text['smtpport'][0],
+		'y' => 220,
+		'x' => 23,
+		'horiz' => 1
+	));
+	$labeloPort->show();
+
+	$labeloUser = new Label(array(
+		'name' => 'eyeMail_labeloUser',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $iUser,
+		'y' => 240,
+		'x' => 167
+	));
+	$labeloUser->show();
+
+	$hiddenTSSL = new Hidden(array(
+		'name' => 'eyeMail_hiddenTSSL',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $GLOBALS['eyeMail_infoHidden']->text['typessl'][0]
+	));
+	$hiddenTSSL->show();
+
+	$hiddenSSSL = new Hidden(array(
+		'name' => 'eyeMail_hiddenSSSL',
+		'father' => 'eyeMail_createAccountOption1',
+		'text' => $GLOBALS['eyeMail_infoHidden']->text['smtpssl'][0]
+	));
+	$hiddenSSSL->show();
+
+	$backAccButton = new Button(array(
+		'name' => 'backAccButton2',
+		'father' => 'eyeMail_createAccountOption1',
+		'caption' => 'Back',
+		'x' => 235,
+		'y' => 293,
+		'signal' => 'backAccButton'
+	));
+	$backAccButton->show();
+
+	$cancelAccButton = new Button(array(
+		'name' => 'cancelAccButton2',
+		'father' => 'eyeMail_createAccountOption1',
+		'caption' => 'Cancel',
+		'x' => 20,
+		'y' => 293,
+		'signal' => 'cancelAccButton'
+	));
+	$cancelAccButton->show();
+
+	$manualAccButton = new Button(array(
+		'name' => 'eyeMail_manualAccButton',
+		'father' => 'eyeMail_createAccountOption1',
+		'caption' => 'Manual',
+		'x' => 175,
+		'y' => 293,
+		'signal' => 'manualButton'
+	));
+	$manualAccButton->show();
+ 	$finishAccButton = new Button(array(
+		'name' => 'eyeMail_finishAccButton',
+		'father' => 'eyeMail_createAccountOption1',
+		'caption' => 'Finish',
+		'x' => 285,
+		'y' => 293,
+		'signal' => 'finishButton'
+	));
+	$finishAccButton->show();
+}
+
+function eyeMail_on_manualButton($paramsA=null) {
+	global $myPid;
+	if(isset($GLOBALS['eyeMail_createAccountOption1'])) {
+		$GLOBALS['eyeMail_createAccountOption1']->remove();
+	}
+	if(isset($GLOBALS['eyeMail_createAccountOption2'])) {
+		$GLOBALS['eyeMail_createAccountOption2']->remove();
+	}
+	$createAccOption2 = new Simplebox(array(
+		'name' => 'eyeMail_createAccountOption2',
+		'father' => 'eyeMail_createAccountBox2',
+		'x' => 0,
+		'y' => 0,
+		'height' => 326,
+		'width' => 348,
+		'border' => 0
+	));
+	$createAccOption2->show(0);
+	$y = 10;
+
+	$labelOption2 = new Label(array(
+		'name' => 'eyeMail_labelOption2',
+		'father' => 'eyeMail_createAccountOption2',
+		'x' => 10,
+		'y' => $y,
+		'text' => 'Please fill out all fields.'
+	));
+	$labelOption2->show();
+	$y += 30;
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel_Incoming',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Incoming',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+	$y += 25;
+
+	$typeSelect = new Select(array(
+		'name' => 'eyeMail_typeSelect',
+		'father' => 'eyeMail_createAccountOption2',
+		'x' => 110,
+		'y' => $y - 2
+	));
+	$typeSelect->show();
+	$typeSelect->addOption('IMAP', 'imap', 1);
+	$typeSelect->addOption('POP3', 'pop3');
+	$typeSelect->addEvent('onchange', '
+	if (this.value == "imap") {
+		if (document.getElementById("' . $myPid . '_eyeMail_typesslcheck").checked) {
+			document.getElementById("' . $myPid . '_eyeMail_thetextbox2").value = "993";
+		} else {
+			document.getElementById("' . $myPid . '_eyeMail_thetextbox2").value = "143";
+		}
+	} else {
+		if (document.getElementById("' . $myPid . '_eyeMail_typesslcheck").checked) {
+			document.getElementById("' . $myPid . '_eyeMail_thetextbox2").value = "995";
+		} else {
+			document.getElementById("' . $myPid . '_eyeMail_thetextbox2").value = "110";
+		}
+	}');
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel1',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Server Type:',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+	$y += 25;
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel2',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Server Host:',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel3',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Port:',
+		'y' => $y,
+		'x' => 50,
+		'horiz' => 1
+	));
+	$thelabel->show();
+	$y += 25;
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel4',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Username:',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+	$y += 25;
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel9',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Password:',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+	$y += 30;
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel_Outgoing',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Outgoing',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+	$thelabel->setCSS(array('font-weight' => 'bold'));
+	$y += 25;
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel5',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Server Host:',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel6',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Port:',
+		'y' => $y,
+		'horiz' => 1,
+		'x' => 50
+	));
+	$thelabel->show();
+	$y += 25;
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel7',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Username:',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+	$y += 25;
+
+	$thelabel = new Label(array(
+		'name' => 'eyeMail_thelabel8',
+		'father' => 'eyeMail_createAccountOption2',
+		'text' => 'Password:',
+		'y' => $y,
+		'x' => 10
+	));
+	$thelabel->show();
+	$y = 88;
+
+	$thetextbox1 = new Textbox(array(
+		'name' => 'eyeMail_thetextbox1',
+		'father' => 'eyeMail_createAccountOption2',
+		'y'=> $y,
+		'x' => 110,
+		'width' => 140
+	));
+	$thetextbox1->show();
+
+	$thetextbox2 = new Textbox(array(
+		'name' => 'eyeMail_thetextbox2',
+		'father' => 'eyeMail_createAccountOption2',
+		'y'=> $y,
+		'x' => 12,
+		'horiz' => 1,
+		'text' => '143',
+		'width' => 26
+	));
+	$thetextbox2->show();
+	$y += 25;
+
+	$thetextbox3 = new Textbox(array(
+		'name' => 'eyeMail_thetextbox3',
+		'father' => 'eyeMail_createAccountOption2',
+		'y'=> $y,
+		'x' => 110,
+		'width' => 140
+	));
+	$thetextbox3->show();
+
+	$typesslcheck = new Checkbox (array(
+		'name' => 'eyeMail_typesslcheck',
+		'father' => 'eyeMail_createAccountOption2',
+		'y' => $y,
+		'horiz' => 1,
+		'x' => 38,
+		'text' => 'SSL'
+	));
+	$typesslcheck->show();
+	$typesslcheck->addEvent('onchange', '
+	if (document.getElementById("' . $myPid . '_eyeMail_typeSelect").value == "imap") {
+		if (this.checked) {
+			document.getElementById("' . $myPid . '_eyeMail_thetextbox2").value = "993";
+		} else {
+			document.getElementById("' . $myPid . '_eyeMail_thetextbox2").value = "143";
+		}
+	} else {
+		if (this.checked) {
+			document.getElementById("' . $myPid . '_eyeMail_thetextbox2").value = "995";
+		} else {
+			document.getElementById("' . $myPid . '_eyeMail_thetextbox2").value = "110";
+		}
+	}');
+	$y += 25;
+
+	$thetextbox7 = new Textbox(array(
+		'name' => 'eyeMail_thetextbox7',
+		'father' => 'eyeMail_createAccountOption2',
+		'y'=> $y,
+		'x' => 110,
+		'width' => 140,
+		'password' => 1
+	));
+	$thetextbox7->show();
+	$y += 55;
+
+	$thetextbox4 = new Textbox(array(
+		'name' => 'eyeMail_thetextbox4',
+		'father' => 'eyeMail_createAccountOption2',
+		'y'=> $y,
+		'x' => 110,
+		'width' => 140
+	));
+	$thetextbox4->show();
+
+	$thetextbox5 = new Textbox(array(
+		'name' => 'eyeMail_thetextbox5',
+		'father' => 'eyeMail_createAccountOption2',
+		'y'=> $y,
+		'x' => 12,
+		'horiz' => 1,
+		'text' => '25',
+		'width' => 26
+	));
+	$thetextbox5->show();
+	$y += 25;
+
+	$thetextbox6 = new Textbox(array(
+		'name' => 'eyeMail_thetextbox6',
+		'father' => 'eyeMail_createAccountOption2',
+		'y'=> $y,
+		'x' => 110,
+		'width' => 140
+	));
+	$thetextbox6->show();
+
+	$smtpsslcheck = new Checkbox (array(
+		'name' => 'eyeMail_smtpsslcheck',
+		'father' => 'eyeMail_createAccountOption2',
+		'y' => $y,
+		'horiz' => 1,
+		'x' => 38,
+		'text' => 'SSL'
+	));
+	$smtpsslcheck->show();
+	$smtpsslcheck->addEvent('onchange', '
+	if (this.checked) {
+		document.getElementById("' . $myPid . '_eyeMail_thetextbox5").value = "465";
+	} else {
+		document.getElementById("' . $myPid . '_eyeMail_thetextbox5").value = "25";
+	}');
+	$y += 25;
+
+	$thetextbox8 = new Textbox(array(
+		'name' => 'eyeMail_thetextbox8',
+		'father' => 'eyeMail_createAccountOption2',
+		'y'=> $y,
+		'x' => 110,
+		'width' => 140,
+		'password' => 1
+	));
+	$thetextbox8->show();
+
+	$backAccButton = new Button(array(
+		'name' => 'backAccButton3',
+		'father' => 'eyeMail_createAccountOption2',
+		'caption' => 'Back',
+		'x' => 235,
+		'y' => 293,
+		'signal' => 'backAccButton'
+	));
+	$backAccButton->show();
+
+	$cancelAccButton = new Button(array(
+		'name' => 'cancelAccButton3',
+		'father' => 'eyeMail_createAccountOption2',
+		'caption' => 'Cancel',
+		'x' => 20,
+		'y' => 293,
+		'signal' => 'cancelAccButton'
+	));
+	$cancelAccButton->show();
+
+	$finishAccButton = new Button(array(
+		'name' => 'eyeMail_finishAccButton2',
+		'father' => 'eyeMail_createAccountOption2',
+		'caption' => 'Finish',
+		'x' => 285,
+		'y' => 293,
+		'signal' => 'finishButton2'
+	));
+	$finishAccButton->addFriend($thetextbox1);
+	$finishAccButton->addFriend($thetextbox2);
+	$finishAccButton->addFriend($thetextbox3);
+	$finishAccButton->addFriend($thetextbox4);
+	$finishAccButton->addFriend($thetextbox5);
+	$finishAccButton->addFriend($thetextbox6);
+	$finishAccButton->addFriend($thetextbox7);
+	$finishAccButton->addFriend($thetextbox8);
+	$finishAccButton->addFriend($smtpsslcheck);
+	$finishAccButton->addFriend($typesslcheck);
+	$finishAccButton->addFriend($typeSelect);
+	$finishAccButton->show();
+}
+?>

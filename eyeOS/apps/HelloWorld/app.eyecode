@@ -1,0 +1,73 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function HelloWorld_run($params = '') {
+	// First we create a new Window:
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => 150,
+		'name' => 'HelloWorld_Window',
+		'title' => 'Example Application',
+		'width' => 250
+	));
+	$myWindow->show();
+
+	// Now we create the initial "Hello World!" Label:
+	$myLabel = new Label(array(
+		'father' => 'HelloWorld_Window_Content',
+		'name' => 'HelloWorld_Label',
+		'text' => 'Hello World!',
+		'x' => 20,
+		'y' => 20
+	));
+	$myLabel->show(0);
+
+	// Afterwards we create the Textbox, where the user
+	// will add the new "Hello World!" message:
+	$myTextbox = new Textbox(array(
+		'father' => 'HelloWorld_Window_Content',
+		'name' => 'HelloWorld_Textbox',
+		'width' => 150,
+		'x' => 20,
+		'y' => 50
+	));
+	$myTextbox->show();
+	// Because the user should be able to start typing
+	// from the moment he opens the application without
+	// having to click into the Textbox we focus it:
+	$myTextbox->focus();
+
+	//
+	$myButton = new Button(array(
+		'caption' => 'Change Label Text',
+		'father' => 'HelloWorld_Window_Content',
+		'name' => 'HelloWorld_Button',
+		'x' => 20,
+		'y' => 80
+	));
+	// The Textbox need to be a friend of the Button:
+	// So every time the user clicks the Button the Textbox
+	// text will be sent.
+	// A button can have as many friends as you want.
+	$myButton->addFriend($myTextbox);
+	$myButton->show();
+}
+
+function HelloWorld_end($params = '') {
+	eyeWidgets('unserialize',$params);
+}
+?>

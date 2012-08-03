@@ -1,0 +1,52 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeFiles_lib_CreateTree($type,$cleaned,$path,$myTree,$tree,$expand) {
+	global $currentUser;
+	global $myPid;
+	if ($currentUser == ROOTUSER && $type == 'real') {
+		$content = vfs('real_getDirContent',array($path));
+	} else {
+		$content = vfs('getDirContent',array($path));
+	}
+	foreach ($content as $folder) {
+		if (vfs('isdir',array($folder))) {
+			if ($type == 'users' && /* utf8 */ substr_count($folder,'/') == 2) {
+				$folder .= FILES_USER_DIR . '/';
+			}
+			$md5 = md5(realpath($folder));
+			$basename = basename($folder);
+			$myTree->addItem($tree,'item_' . $basename . '_' . $md5,$basename);
+			$myWidgetDrop = new widgetDrop(array(
+				'father' => 'item_' . $basename . '_' . $md5,
+				'name' => 'item_' . $basename . '_' . $md5 . '_WidgetDrop'
+			));
+			$myWidgetDrop->show();
+			$myWidgetDrop->addBehaviour(array(
+				'type' => 'widgetDrop_simpleMsg',
+				'params' => array(
+					'content' => array($cleaned . '/' . $basename),
+					'pid' => $myPid,
+					'signal' => 'Icon_Dropped'
+			)));
+			$myTree->addSubList('item_' . $basename . '_' . $md5,'list_'.$basename . '_' . $md5);
+			if ( /* utf8 */ strpos($expand, realpath($path)) === 0 && $expand !== realpath($path . '/')) {
+				eyeFiles_lib_CreateTree($type,$cleaned . '/' . $basename,$folder,$myTree,'list_' . $basename . '_' . $md5,$expand);
+			}
+		}
+	}
+}
+?>

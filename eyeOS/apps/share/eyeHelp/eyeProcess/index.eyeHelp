@@ -1,0 +1,12 @@
+[b]Here you can get a list of all runing applications, as well as kill any runing runing ones.[/b]
+
+
+[b]Applications Tab[/b]
+This tab will only show applications or eyeApps and will not show things like wedgits and systume apps for your desktop
+
+[b]Processes Tab [/b]
+This tab shows all applications
+
+
+[b]Closing an Application[/b]
+To close an opened application, just select it by clicking on it's name at the Process or Applications sortable table, and click on the “Kill Process” or "Close Application" button. [b]Note:[/b] [i]that if there is more than one instance of a single application, you will only close one of the instances.[/i]

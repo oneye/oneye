@@ -1,0 +1,181 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+//Exit when requested
+if(isset($_REQUEST['exit'])) {
+	eyeSessions('endSession');
+}
+global $currentUser;
+//Check for logged user
+$currentUser = $_SESSION["mobile_user"];
+$messageBox = "";
+
+//Do login on username and password requests receivement
+if(empty($currentUser) && isset($_REQUEST["username"]) && isset($_REQUEST["password"])) {
+	if(um('login', array($_REQUEST["username"], $_REQUEST["password"]))) {
+		$currentUser = $_REQUEST["username"];
+		$_SESSION["mobile_user"] = $_REQUEST["username"];
+	} else $messageBox = "<div class='messageBox'>Wrong user or password.</div>";
+}
+
+if(empty($currentUser)) {
+	//Draw login page
+	echo '<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html>
+	<head>
+		<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>' . "\n";
+	if (!IE || IE > 7) { // We need a better workaround for this IE6 and IE7 problem!
+		echo "\t\t" . '<base href="' . INDEX_BASE . 'mobile/" />' . "\n";
+	}
+	echo "\t\t" . '<title>Welcome to ' . utf8_htmlspecialchars(EYEOS_HOSTNAME, ENT_QUOTES) . ' Mobile</title>
+		<style type="text/css">
+			body {
+				background-color:#FFFFFF;
+				font-family:sans-serif;
+				margin:0px;
+			}
+			.messageBox {
+				padding: 10px 4px;
+				background-color: #e6f3fc;
+			}
+		</style>
+	</head>
+	<body>
+		<img style="margin-left: 5px; margin-top: 5px;" src="mobile-logo.png" />
+		'.$messageBox.'
+		<div class="messageBox">
+			<strong>oneye Mobile login:</strong><br />
+			<form action="index.php" method="post">
+				<input name="username" type="text" /><br /><br />
+				<input name="password" type="password" /><br /><br />
+				<input type="submit" value="Login" />
+			</form>
+		</div>
+	</body>
+</html>';
+} else {
+	//Draw file list
+
+
+	//Pick current userdir and path
+	$dir = um('getCurrentUserDir')."files/";
+	$userPath = "";
+
+	if(isset($_REQUEST["path"]) && vfs('isdir', array($dir.$userPath))) {
+		$userPath = /* utf8 */ trim($_REQUEST['path']);
+		$dir = $dir.$userPath;
+	}
+
+	//Include some functions -create directory, upload files, download files-
+	include_once("../mobile/mobile_functions.eyecode");
+
+	echo '<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//WAPFORUM//DTD XHTML Mobile 1.0//EN" "http://www.wapforum.org/DTD/xhtml-mobile10.dtd">
+<html>
+	<head>
+		<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>' . "\n";
+	if (!IE || IE > 7) { // We need a better workaround for this IE6 and IE7 problem!
+		echo "\t\t" . '<base href="' . INDEX_BASE . 'mobile/" />' . "\n";
+	}
+	echo "\t\t" . '<title>' . utf8_htmlspecialchars(EYEOS_HOSTNAME, ENT_QUOTES) . ' Mobile</title>
+		<style type="text/css">
+			body {
+				background-color:#FFFFFF;
+				font-family:sans-serif;
+				margin:0px;
+				font-size:90%;
+			}
+			a:link, a:visited {
+				text-decoration: none;
+				color: #2560d9;
+			}
+
+			a:hover {
+				text-decoration: none;
+			}
+
+			.listfile {
+				border-top: 1px solid #ddd;
+				padding: 4px;
+			}
+
+			.path {
+				background-color: #e6f3fc;
+				border-bottom: 1px solid #88c2e8;
+				font-size:90%;
+				padding: 4px;
+			}
+			.graybg {
+				border-top: 1px solid #ddd;
+				padding: 10px 4px;
+				background-color: #f7f7f7;
+			}
+			.optionsText {
+				color: #555;
+			}
+		</style>
+	</head>
+	<body>
+	';
+
+	//Display the path links
+	$link = "";
+	$splittedPath = /* utf8 */ explode ('/', $userPath);
+	echo "<div class='path'><img style='margin-bottom: -3px;' src='index.php?theme=" . $_SESSION['usertheme'] . "&extern=icons/16x16/folder_open.png' /> <a href='index.php'>Home</a>";
+	foreach ($splittedPath as $i) {
+		if (!empty($i)) {
+			$link .= $i."/";
+			echo " / "."<a href='index.php?path=".$link."'>$i</a>";
+		}
+	}
+	echo "</div><br />";
+
+	//List the files
+	$fileList = vfs('getDirContent', array($dir));
+	if(is_array($fileList)) {
+		sort($fileList);
+		foreach($fileList as $file) {
+			if(vfs('isdir', array($file))) {
+				$file = basename($file);
+				echo "\n\t\t<div class='listfile'><a href='index.php?path=".$userPath.$file."/'><img style='margin-bottom: -1px;' border='0' src='index.php?theme=" . $_SESSION['usertheme'] . "&extern=icons/16x16/folder.png' /> $file</a></div>";
+			} else {
+				$file = basename($file);
+				echo "\n\t\t<div class='listfile'><a href='index.php?download=".$userPath.$file."'><img style='margin-bottom: -1px;' border='0' src='index.php?theme=" . $_SESSION['usertheme'] . "&extern=icons/16x16/file.png' /> $file</a></div>";
+			}
+		}
+	} else {
+		echo "This directory is empty.<br />";
+	}
+
+	//Draw the bottom forms -create directory, upload files-
+	echo '<div class="graybg">
+	  <img style="margin-bottom: -2px;" border="0" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/upload.png" /> <span class="optionsText">Upload a file:</span> <br />
+	  <form action="index.php?action=upload" enctype="multipart/form-data" method="post">
+	    <input name="file" type="file" />
+	    <input type="hidden" name="path" value="'.$userPath.'" />
+	    <input name="Submit" type="Submit" value="Upload" />
+	  </form><br />
+	  <img style="margin-bottom: -2px;" border="0" src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/newfolder.png" /> <span class="optionsText">Create a directory:</span><br />
+	  <form action="index.php" method="post">
+	    <input type="hidden" name="path" value="'.$userPath.'" />
+	    <input type="text" name="dirname" maxlength="15" />
+	    <input name="Submit" type="Submit" value="Create" />
+	  </form></div>	<small><a href="index.php?exit">Sign out</a> - <a href="../index.php">Desktop version</a></small>
+	</body>
+	</html>';
+}
+?>

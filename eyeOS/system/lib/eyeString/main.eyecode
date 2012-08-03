@@ -1,0 +1,196 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+@define('PATH_SYSTEM_SERVICES_UTF8_TYPES', EYE_ROOT . '/' . SYSTEM_DIR . '/' . LIB_DIR . '/eyeString/types');
+if (defined('UTF8_TYPE') === false) {
+	if (extension_loaded('mbstring') === true) {
+		define('UTF8_TYPE', 'mbstring');
+	} else if (extension_loaded('iconv') === true) {
+		define('UTF8_TYPE', 'iconv');
+	} else {
+		define('UTF8_TYPE', 'native');
+	}
+}
+
+global $lib_eyeString;
+$lib_eyeString = array();
+
+/*
+ * FUNCTIONS
+ */
+$functions = array(
+	// UTF-8
+	'addcslashes',
+	'chr',
+	'chunk_split',
+	'count_chars',
+	'explode',
+	'html_entity_decode', // TODO: table
+	'htmlentities', // TODO: table
+	'htmlspecialchars',
+	'htmlspecialchars_decode',
+	'lcfirst',
+	'levenshtein',
+	'ltrim',
+	'nl2br',
+	'number_format',
+	'ord',
+	'rtrim',
+	'str_ireplace',
+	'str_pad',
+	'str_shuffle',
+	'str_split',
+	'str_word_count',
+	'strcasecmp',
+	'strcspn',
+	'stripos',
+	'stristr',
+	'strlen',
+	'strnatcasecmp',
+	'strncasecmp',
+	'strncmp',
+	'strpbrk',
+	'strpos',
+	'strrchr',
+	'strrev',
+	'strripos',
+	'strrpos',
+	'strspn',
+	'strstr',
+	'strtolower',
+	'strtoupper',
+	'substr', // TODO: rewrite
+	'substr_compare',
+	'substr_count',
+	'substr_replace',
+	'trim',
+	'ucfirst',
+	'ucwords',
+	'wordwrap'
+);
+private_lib_eyeString_Create($functions);
+
+$functions = array(
+	// TODO
+	'get_html_translation_table', // TODO: table
+	'hebrev',
+	'hebrevc',
+	'str_getcsv',
+	
+	// NATIVE
+	'addslashes',
+	'bin2hex',
+	'chop' => 'rtrim',
+	'convert_cyr_string',
+	'convert_uudecode',
+	'convert_uuencode',
+	'crc32',
+	'crypt',
+	'echo',
+	'fprintf',
+	'hex2bin',
+	'implode',
+	'join' => 'implode',
+	'localeconv',
+	'md5_file',
+	'md5',
+	'metaphone',
+	'money_format',
+	'parse_str',
+	'print',
+	'printf',
+	'quoted_printable_decode',
+	'quoted_printable_encode',
+	'quotemeta',
+	'setlocale',
+	'sha1_file',
+	'sha1',
+	'similar_text',
+	'soundex',
+	'sprintf',
+	'sscanf',
+	'str_repeat',
+	'str_replace',
+	'str_rot13',
+	'strchr' => 'strstr',
+	'strcmp',
+	'strcoll',
+	'strip_tags',
+	'stripcslashes',
+	'stripslashes',
+	'strnatcmp',
+	'strtok',
+	'strtr',
+	'vfprintf',
+	'vprintf',
+	'vsprintf',
+	
+	// LEGACY
+	'basename',
+	'ireplace' => 'str_ireplace',
+	'pathinfo'
+);
+private_lib_eyeString_Create($functions, true);
+
+/*
+ * PRIVATE
+ */
+function private_lib_eyeString_Create($functions, $native = false) {
+	foreach ($functions as $key => $value) {
+		if ($native === false) {
+			foreach (array(UTF8_TYPE, 'native', 'compat') as $type) {
+				if (function_exists('utf8_' . $value) === false) {
+					$path = PATH_SYSTEM_SERVICES_UTF8_TYPES . '/' . $type . '/' . $value . '.eyecode';
+					if (file_exists($path) === true) {
+						include_once $path;
+					}
+				}
+			}
+		}
+		if (is_string($key) === false) {
+			$key = $value;
+		} else {
+			$value = 'utf8_' . $value;
+		}
+		if (function_exists('utf8_' . $key) === false) {
+			eval('
+function utf8_' . $key . '() {
+	$args = func_get_args();
+	return call_user_func_array(\'' . $value . '\', $args);
+}');
+		}
+	}
+}
+
+function private_lib_eyeString_PrepareCharlist($charlist) {
+	return str_replace('\\.\\.', '-', preg_quote($charlist, '/'));
+}
+
+/*
+ * LEGACY
+ */
+function utf8_getExtension($path) {
+	return pathinfo($path, PATHINFO_EXTENSION);
+}
+
+function utf8_getFileName($path) {
+	$path = basename($path);
+	if (is_string($path) === true && /* utf8 */ strpos($path, '.') !== false) {
+		return substr($path, 0, strpos($path, '.')); // utf8
+	}
+	return $path;
+}
+?>
