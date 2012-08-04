@@ -1,5 +1,5 @@
 <eyeNav>
-	<home>http://lars-sh.de/</home>
+	<home>http://oneye-project.org/</home>
 	<plugin>iframe</plugin>
 	<sidebar>1</sidebar>
 	<bookmarks>
@@ -11,19 +11,19 @@
 			<bookmark>
 				<name>Website</name>
 				<id>2</id>
-				<url>http://lars-sh.de/</url>
+				<url>http://oneye-project.org/</url>
 				<type>url</type>
 			</bookmark>
 			<bookmark>
 				<name>Forums</name>
 				<id>4</id>
-				<url>http://forums.lars-sh.de/</url>
+				<url>http://forums.oneye-project.org/</url>
 				<type>url</type>
 			</bookmark>
 			<bookmark>
 				<name>Wiki</name>
 				<id>5</id>
-				<url>http://wiki.lars-sh.de/</url>
+				<url>http://wiki.oneye-project.org/</url>
 				<type>url</type>
 			</bookmark>
 		</bookmark>

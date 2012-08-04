@@ -1,5 +1,5 @@
 /*global Base64, CodePress, createWidget, enableShadow, escape, EventHandler, evilEval, eyeKeyDown, eyeParam, fixPNG, getArrayArg, html_entity_decode, IEversion, makeDrag, md5, raiseZIndex, sendMsg, Taskbars, tinymce, tinyMCE, unescape, updateCss, updateOpacityOnce, USERTHEME, xAddEventListener, xEnableDrag, xEnableDrag2, xEnableDrop, xEvent, xGetElementById, xHeight, xLeft, xMoveTo, xPageX, xPageY, xTop, xWidth, xZIndex, zindex */
-/*jslint browser: true, devel: true, newcap: true, sloppy: true, windows: true */
+/*jslint browser: true, devel: true, newcap: true, sloppy: true, todo: true, windows: true */
 /*
   ___  _ __   ___ _   _  ___
  / _ \| '_ \ / _ \ | | |/ _ \

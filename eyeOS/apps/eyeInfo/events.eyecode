@@ -23,6 +23,6 @@ function eyeInfo_on_Message($params = '') {
 }
 
 function eyeInfo_on_Navigate($params = '') {
-	proc('launch',array('eyeNav','http://lars-sh.de/'));
+	proc('launch',array('eyeNav','http://oneye-project.org/'));
 }
 ?>

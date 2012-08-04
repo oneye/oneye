@@ -1135,7 +1135,7 @@ function eyeNav_lib_doUrl($params = array()) {
 	if (!$params['page'][0]) {
 		$config = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
 		$page = $config['eyeNav'][0]['home'][0];
-		if ($page == 'http://lars-sh.de/') {
+		if ($page == 'http://oneye-project.org/') {
 			$page .= '?lang=' . i18n('getLang');
 			if ($currentUser == ROOTUSER) {
 				$page .='&version=' . urlencode(EYEOS_VERSION);

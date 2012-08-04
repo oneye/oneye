@@ -63,7 +63,7 @@ define('REAL_ROOTUSER','root');
 
 //Extras
 define('EYEOS_TMP_DIR','tmp');
-define('EYEOS_VERSION','1.11.0.1');
+define('EYEOS_VERSION','1.11.0.2');
 define('ONEYE_VERSION','0.9.0');
 define('XML_COMPAT',1);
 define('XML_PARSER','pure');

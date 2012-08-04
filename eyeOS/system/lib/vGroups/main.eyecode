@@ -20,7 +20,7 @@ define('VMEMBERS_INFO_EXTENSION','xInfo');
 
 function lib_vGroups_isValidGroupname($params = null) {
 	if (isset($params[0]) === true
-	&& preg_match('/^[-_a-zA-Z0-9]+$/', $params[0])) {
+	&& /* utf8 */ preg_match('/^[-_a-zA-Z0-9]+$/', $params[0])) {
 		return true;
 	}
 	errorCodes('setErrorCode',array(INCORRECT_PARAMS));

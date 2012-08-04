@@ -1,8 +1,8 @@
 ﻿[list=1][*]goto: [goto=/]This link opens eyeHelp codes list[/goto] and [goto=/../eyeDesk]this one goes to the page "Your screen's parts"[/goto], which is outside of eyeHelp's topic.
 The codes used were: &#91;goto=/]This link opens eyeHelp codes list&#91;/goto] and &#91;goto=/../eyeDesk]this one goes to the page "Your screen's parts"&#91;/goto], which is outside of eyeHelp's topic.
 
-[*]url: [url=http://lars-sh.de/]This opens a link to the oneye website[/url], as does this one: [url]http://lars-sh.de/[/url].
-The codes used were: &#91;url=http://lars-sh.de/]This opens a link to the oneye website&#91;/url] and &#91;url]http://lars-sh.de/&#91;/url]
+[*]url: [url=http://oneye-project.org/]This opens a link to the oneye website[/url], as does this one: [url]http://oneye-project.org/[/url].
+The codes used were: &#91;url=http://oneye-project.org/]This opens a link to the oneye website&#91;/url] and &#91;url]http://oneye-project.org/&#91;/url]
 
 [*]mail: [mail=danielrs12345@gmail.com]This sends an e-mail to the developer[/mail], as does this one: [mail]danielrs12345@gmail.com[/mail].
 The codes used were: &#91;mail=danielrs12345@gmail.com]This sends an e-mail to the developer&#91;/mail] and &#91;mail]danielrs12345@gmail.com&#91;/mail]

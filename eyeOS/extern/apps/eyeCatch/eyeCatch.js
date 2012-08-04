@@ -1,6 +1,5 @@
 /*global xDisableDrag, xEnableDrag, xHeight, xLeft, xTop, xWidth */
-/*jslint browser: true, devel: true, newcap: true, sloppy: true, windows: true */
-/*jslint evil: true */
+/*jslint browser: true, devel: true, newcap: true, sloppy: true, todo: true, windows: true */
 /*
   ___  _ __   ___ _   _  ___
  / _ \| '_ \ / _ \ | | |/ _ \
@@ -64,7 +63,9 @@ var eyeCatch = {
 		eyeCatch.Infos[id].round = 0;
 		eyeCatch.Infos[id].speed = [];
 		eyeCatch.Infos[id].speed.current = 0;
+		/*jslint evil: true */
 		eyeCatch.Infos[id].speed.increase = eval(speed); // JSON
+		/*jslint evil: false */
 		eyeCatch.Infos[id].starttime = 0;
 
 		fieldDiv = document.createElement('div');

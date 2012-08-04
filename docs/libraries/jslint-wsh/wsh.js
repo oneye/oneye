@@ -1,5 +1,5 @@
 /*global JSLINT */
-/*jslint browser: true, confusion: true, devel: true, sloppy: true, windows: true */
+/*jslint browser: true, devel: true, newcap: true, sloppy: true, todo: true, windows: true */
 
 (function () {
 	var content, filename, handler, index, line;

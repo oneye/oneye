@@ -1,5 +1,5 @@
 /*global eyeParam, sendMsg */
-/*jslint browser: true, devel: true, newcap: true, sloppy: true, windows: true */
+/*jslint browser: true, devel: true, newcap: true, sloppy: true, todo: true, windows: true */
 /*
   ___  _ __   ___ _   _  ___
  / _ \| '_ \ / _ \ | | |/ _ \
