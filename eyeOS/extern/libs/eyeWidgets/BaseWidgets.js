@@ -2696,12 +2696,16 @@ var Windows = {
 		}
 		if (params.savePosition) {
 			if (params.saveFunc) {
-				Windows.List[id].moveChecknum = checknum;
-				Windows.List[id].moveMessage = params.saveFunc;
+				Windows.List[id].saveposChecknum = checknum;
+				Windows.List[id].saveposMessage = params.saveFunc;
 			} else {
-				Windows.List[id].moveChecknum = params.xChecknum;
-				Windows.List[id].moveMessage = 'saveWinPosition';
+				Windows.List[id].saveposChecknum = params.xChecknum;
+				Windows.List[id].saveposMessage = 'saveWinPosition';
 			}
+		}
+		if (params.saveSize) {
+			Windows.List[id].savesizeChecknum = params.xChecknum;
+			Windows.List[id].savesizeMessage = 'saveWinSize';
 		}
 		if (params.sendResizeMsg) {
 			Windows.List[id].resizeMessage = params.sigResize;
@@ -2953,11 +2957,11 @@ var Windows = {
 	MoveAfter: function (id) {
 		if (!Windows.List[id].noDrag) {
 			Windows.DragAfter(id);
-			if (!Windows.List[id].maximized && typeof Windows.List[id].moveMessage !== 'undefined') {
-				if (Windows.List[id].moveChecknum === Windows.List[id].checknum) {
-					sendMsg(Windows.List[id].checknum, Windows.List[id].moveMessage, eyeParam('x', xLeft(id)) + eyeParam('y', xTop(id)) + eyeParam('winName', id));
+			if (!Windows.List[id].maximized && typeof Windows.List[id].saveposMessage !== 'undefined') {
+				if (Windows.List[id].saveposChecknum === Windows.List[id].checknum) {
+					sendMsg(Windows.List[id].checknum, Windows.List[id].saveposMessage, eyeParam('x', xLeft(id)) + eyeParam('y', xTop(id)) + eyeParam('winName', id));
 				} else {
-					sendMsg(Windows.List[id].moveChecknum, 'saveWinPosition', eyeParam('left', xLeft(id)) + eyeParam('top', xTop(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
+					sendMsg(Windows.List[id].saveposChecknum, 'saveWinPosition', eyeParam('left', xLeft(id)) + eyeParam('top', xTop(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
 				}
 			}
 		}
@@ -3001,12 +3005,15 @@ var Windows = {
 				if (typeof Windows.List[id].resizeMessage !== 'undefined') {
 					sendMsg(Windows.List[id].checknum, Windows.List[id].resizeMessage, eyeParam('arg', xWidth(id)) + eyeParam('arg', xHeight(id)));
 				}
-				if ((xtype === 2 || ytype === 2) && typeof Windows.List[id].moveMessage !== 'undefined') {
-					if (Windows.List[id].moveChecknum === Windows.List[id].checknum) {
-						sendMsg(Windows.List[id].checknum, Windows.List[id].moveMessage, eyeParam('x', xLeft(id)) + eyeParam('y', xTop(id)) + eyeParam('winName', id));
+				if ((xtype === 2 || ytype === 2) && typeof Windows.List[id].saveposMessage !== 'undefined') {
+					if (Windows.List[id].saveposChecknum === Windows.List[id].checknum) {
+						sendMsg(Windows.List[id].checknum, Windows.List[id].saveposMessage, eyeParam('x', xLeft(id)) + eyeParam('y', xTop(id)) + eyeParam('winName', id));
 					} else {
-						sendMsg(Windows.List[id].moveChecknum, 'saveWinPosition', eyeParam('left', xLeft(id)) + eyeParam('top', xTop(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
+						sendMsg(Windows.List[id].saveposChecknum, 'saveWinPosition', eyeParam('left', xLeft(id)) + eyeParam('top', xTop(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
 					}
+				}
+				if (typeof Windows.List[id].savesizeMessage !== 'undefined') {
+					sendMsg(Windows.List[id].savesizeChecknum, 'saveWinSize', eyeParam('width', xWidth(id)) + eyeParam('height', xHeight(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
 				}
 			}
 		}
@@ -3166,7 +3173,9 @@ var Windows = {
 		var e, father, heightE, heightEparent;
 		e = document.getElementById(id);
 		if (typeof force === 'undefined' || !force) {
-			if (y > 0) {
+			if (y < 0) {
+				y = 0;
+			} else {
 				father = e.parentNode.id;
 				heightE = xHeight(e);
 				heightEparent = xHeight(e.parentNode);
@@ -3175,9 +3184,6 @@ var Windows = {
 				} else if (y > heightEparent - 25) {
 					y = heightEparent - 25;
 				}
-			}
-			if (y < 0) {
-				y = 0;
 			}
 		}
 		if (e) {

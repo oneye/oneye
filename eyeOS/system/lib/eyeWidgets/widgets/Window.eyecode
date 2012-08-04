@@ -236,37 +236,36 @@ class Window {
 		
 		
 		$position = $this->getSavedPositions();
-		if (!$position) {
-			isset($params['height']) ? $this->height = $params['height'] : $this->height = 200;
-			isset($params['width']) ? $this->width = $params['width'] : $this->width = 200;
-			isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
-			isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
-		} else {
-			if ($this->saveSize == NO_SAVE) {
-				isset($params['height']) ? $this->height = $params['height'] : $this->height = 200;
-				isset($params['width']) ? $this->width = $params['width'] : $this->width = 200;
-			}
-			if ($this->savePosition == NO_SAVE) {
-				isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
-				isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
-			}
-		}
+		isset($params['height']) ? $this->height = $params['height'] : $this->height = 200;
+		isset($params['width']) ? $this->width = $params['width'] : $this->width = 200;
+		isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
+		isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
 		
+		error_log(print_r($position, true), 0);
 		
-		 else {
+		if (is_array($position) == true) {
 			
-			if (!$position || $this->removeFatherPid === 1 && ($this->father === 'eyeApps' || $this->father === 'eyeWidgets') && ($position['top'][0] >= $_SESSION['SCREEN']['eyeApps']['height'] || $position['left'][0] >= $_SESSION['SCREEN']['eyeApps']['width'])) {
-				isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
-				isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
-			} else {
-				$this->cent = 0;
-				$this->x = intval($position['left'][0]);
-				$this->y = intval($position['top'][0]);
+			if ($this->saveSize != NO_SAVE) {
+				if (is_array($position['height'])) { $this->height = intval($position['height'][0]); }
+				if (is_array($position['width'])) { $this->width = intval($position['width'][0]); }
+				
+				
 			}
+			
+			if ($this->savePosition != NO_SAVE) {
+				$this->cent = 0;
+				if (is_array($position['left'])) { $this->x = intval($position['left'][0]); }
+				if (is_array($position['top'])) { $this->y = intval($position['top'][0]); }
+				
+				if ($this->x > ($_SESSION['SCREEN']['eyeApps']['width'] - 32)) {
+					$this->x = $_SESSION['SCREEN']['eyeApps']['width'] - $this->width;
+				}
+				if ($this->y > ($_SESSION['SCREEN']['eyeApps']['height'] - 32)) {
+					$this->y = $_SESSION['SCREEN']['eyeApps']['height'] - $this->height;
+				}
+			}
+			
 		}
-		
-		
-		
 		
 		if ($this->resize) {
 			if ($this->height > $_SESSION['SCREEN']['eyeApps']['height']) {
@@ -652,6 +651,7 @@ class Window {
 			'resize' => $this->resize,
 			'saveFunc' => $this->saveFunc,
 			'savePosition' => $this->savePosition,
+			'saveSize' => $this->saveSize,
 			'sendCloseMsg' => $this->removepid,
 			'sendResizeMsg' => $this->sendResizeMsg,
 			'showDragContent' => $this->showDragContent,
