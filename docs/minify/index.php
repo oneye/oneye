@@ -115,7 +115,7 @@ function getContent($folder, $excludeJ = array(), $excludeM = array(), $excludeO
 				}
 			} else if (substr($file, -4) === '.css' && substr($file, -8) !== '.min.css') {
 				if ($excludeC !== '*' && in_array($folder . $file, $excludeC) === false) {
-					$content['c'] .= '"C:\Program Files (x86)\Java\jre6\bin\java.exe" -jar "docs\\libraries\\YUI Compressor\\yuicompressor.jar" "' . $folder . $file . '" -o "' . $folder . substr($file, 0, -4) . '.min.css"' . "\n";
+					$content['c'] .= '"C:\Program Files (x86)\Java\jre7\bin\java.exe" -jar "docs\\libraries\\YUI Compressor\\yuicompressor.jar" "' . $folder . $file . '" -o "' . $folder . substr($file, 0, -4) . '.min.css"' . "\n";
 				}
 			}
 		}
