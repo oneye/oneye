@@ -8,13 +8,13 @@
 				<id>2</id>
 				<type>feed</type>
 				<name>Blog</name>
-				<url>http://lars-sh.de/feed/</url>
+				<url>http://oneye-project.org/feed/</url>
 			</feed>
 			<feed>
 				<id>3</id>
 				<type>feed</type>
 				<name>Forums</name>
-				<url>http://forums.lars-sh.de/extern.php?action=feed&type=atom</url>
+				<url>http://forums.oneye-project.org/extern.php?action=feed&type=atom</url>
 			</feed>
 		</feed>
 	</base>
