@@ -1,5 +1,5 @@
 /*global Base64, DOMParser, htmlspecialchars, localEngine, oApps, oCursor, tinyMCE, USERTHEME, xAddEventListener, xEnableDrag2, xEvent, xGetElementById, xHeight, xRemoveEventListener, xShow, xTop, xWidth, xZIndex */
-/*jslint browser: true, devel: true, newcap: true, sloppy: true, windows: true */
+/*jslint browser: true, devel: true, newcap: true, sloppy: true, todo: true, windows: true */
 /*
   ___  _ __   ___ _   _  ___
  / _ \| '_ \ / _ \ | | |/ _ \
