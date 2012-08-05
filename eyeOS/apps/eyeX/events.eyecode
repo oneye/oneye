@@ -108,4 +108,49 @@ function eyeX_on_saveWinPosition($params = '') {
 		eyex('messageBox',array('content' => 'Unable to save position!'));
 	}
 }
+
+function eyeX_on_saveWinSize($params = '') {
+	// Height and Width
+	$w = intval($params['width'][0]);
+	$h = intval($params['height'][0]);
+
+	// $app, $pid and $name
+	$app = proc('findNameByChecknum', array($params['appChecknum'][0]));
+	$pid = substr($params['winName'][0], 0, strpos($params['winName'][0], '_')); // utf8
+	$name = substr($params['winName'][0], 1 + strlen($pid)); // utf8
+	
+	if (is_object($_SESSION[WTABLE][$pid][$name])) {
+		// Update PHP object
+		$_SESSION[WTABLE][$pid][$name]->height = $h;
+		$_SESSION[WTABLE][$pid][$name]->width = $w;
+		// Update XML file
+		$xml = eyeXML('getXMLconfig',array('eyex',$app . '.xml'));
+		$xml[$name][0]['height'][0] = $h;
+		$xml[$name][0]['width'][0] = $w;
+		eyeXML('setXMLconfig',array('eyex',$app . '.xml',$xml));
+	} else {
+		eyex('messageBox',array('content' => 'Unable to save size!'));
+	}
+}
+
+function eyeX_on_saveWinMax($params = '') {
+	// Read value
+	intval($params['maximized'][0]) > 0 ? $m = 1 : $m = 0;
+
+	// $app, $pid and $name
+	$app = proc('findNameByChecknum', array($params['appChecknum'][0]));
+	$pid = substr($params['winName'][0], 0, strpos($params['winName'][0], '_')); // utf8
+	$name = substr($params['winName'][0], 1 + strlen($pid)); // utf8
+	
+	if (is_object($_SESSION[WTABLE][$pid][$name])) {
+		// Update PHP object
+		$_SESSION[WTABLE][$pid][$name]->maximized = $m;
+		// Update XML file
+		$xml = eyeXML('getXMLconfig',array('eyex',$app . '.xml'));
+		$xml[$name][0]['maximized'][0] = $m;
+		eyeXML('setXMLconfig',array('eyex',$app . '.xml',$xml));
+	} else {
+		eyex('messageBox',array('content' => 'Unable to save maximize state!'));
+	}
+}
 ?>

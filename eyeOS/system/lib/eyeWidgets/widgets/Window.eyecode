@@ -79,6 +79,7 @@ class Window {
 	var $max = 0;
 	var $maxHeight;
 	var $maxWidth;
+	var $maximized = 0;
 	var $max_pos;
 	var $min = 0;
 	var $minHeight;
@@ -241,9 +242,11 @@ class Window {
 		isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
 		isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
 		
-		error_log(print_r($position, true), 0);
-		
 		if (is_array($position) == true) {
+			
+			if ($this->max == 1 && is_array($position['maximized'])) {
+				$this->maximized = intval($position['maximized'][0]);
+			}
 			
 			if ($this->saveSize != NO_SAVE) {
 				if (is_array($position['height'])) { $this->height = intval($position['height'][0]); }
@@ -639,6 +642,7 @@ class Window {
 			'max' => $this->max,
 			'maxHeight' => $this->maxHeight,
 			'maxWidth' => $this->maxWidth,
+			'maximized' => $this->maximized,
 			'max_pos' => $this->max_pos,
 			'min' => $this->min,
 			'minHeight' => $this->minHeight,

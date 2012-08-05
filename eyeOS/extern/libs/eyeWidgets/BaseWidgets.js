@@ -2616,7 +2616,7 @@ var Windows = {
 		Windows.List[id].dragBgColor = params.dragBgColor;
 		Windows.List[id].maxHeight = params.maxHeight;
 		Windows.List[id].maxWidth = params.maxWidth;
-		Windows.List[id].maximized = 0;
+		Windows.List[id].maximized = 0;	// 0 = not max, 1 = partial max, 2 = full max
 		Windows.List[id].minHeight = params.minHeight;
 		Windows.List[id].minWidth = params.minWidth;
 		Windows.List[id].minimized = 0;
@@ -2625,6 +2625,7 @@ var Windows = {
 		Windows.List[id].noZIndex = params.noZindex;
 		Windows.List[id].resizing = 0;
 		Windows.List[id].user = params.user;
+		Windows.List[id].xChecknum = params.xChecknum;
 		if (params.closeElement) {
 			params.closeElement.onclick = function () {
 				Windows.Close(id);
@@ -2704,11 +2705,29 @@ var Windows = {
 			}
 		}
 		if (params.saveSize) {
-			Windows.List[id].savesizeChecknum = params.xChecknum;
 			Windows.List[id].savesizeMessage = 'saveWinSize';
 		}
 		if (params.sendResizeMsg) {
 			Windows.List[id].resizeMessage = params.sigResize;
+		}
+		if (params.maximized) {
+			e = document.getElementById(id);
+			if (!Windows.List[id].maximized) {
+				Windows.List[id].height = xHeight(id);
+				Windows.List[id].width = xWidth(id);
+				Windows.List[id].x = xLeft(id);
+				Windows.List[id].y = xTop(id);
+			}
+			height = xHeight(e.parentNode);
+			Windows.SetHeight(id, height, 2);
+			width = xWidth(e.parentNode);
+			Windows.SetWidth(id, width, 2);
+			Windows.SetX(id, 0, 1);
+			Windows.SetY(id, 0, 1);
+			Windows.List[id].maximized = 2;
+			if (typeof Windows.List[id].resizeMessage !== 'undefined') {
+				sendMsg(Windows.List[id].checknum, Windows.List[id].resizeMessage, eyeParam('arg', width) + eyeParam('arg', height));
+			}
 		}
 		if (params.titleElement && !params.allDrag) {
 			xEnableDrag(params.titleElement, function () { Windows.MoveBefore(id); }, function (e, x, y) { Windows.MoveEvent(id, x, y); }, function () { Windows.MoveAfter(id); });
@@ -2863,6 +2882,7 @@ var Windows = {
 			if (typeof Windows.List[id].resizeMessage !== 'undefined') {
 				sendMsg(Windows.List[id].checknum, Windows.List[id].resizeMessage, eyeParam('arg', width) + eyeParam('arg', height));
 			}
+			sendMsg(Windows.List[id].xChecknum, 'saveWinMax', eyeParam('maximized', Windows.List[id].maximized) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
 		}
 	},
 
@@ -3013,7 +3033,7 @@ var Windows = {
 					}
 				}
 				if (typeof Windows.List[id].savesizeMessage !== 'undefined') {
-					sendMsg(Windows.List[id].savesizeChecknum, 'saveWinSize', eyeParam('width', xWidth(id)) + eyeParam('height', xHeight(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
+					sendMsg(Windows.List[id].xChecknum, 'saveWinSize', eyeParam('width', xWidth(id)) + eyeParam('height', xHeight(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
 				}
 			}
 		}
