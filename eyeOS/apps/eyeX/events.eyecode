@@ -99,6 +99,13 @@ function eyeX_on_saveWinPosition($params = '') {
 		// Update PHP object
 		$_SESSION[WTABLE][$pid][$name]->x = $x;
 		$_SESSION[WTABLE][$pid][$name]->y = $y;
+		// Convert to Relative if Appropriate
+		if ($_SESSION[WTABLE][$pid][$name]->savePosition === RELATIVE) {
+			$x = ($x / $_SESSION['SCREEN']['eyeApps']['width']) * 100;
+			$x = round($x, 2);	// gives a percentage
+			$y = ($y / $_SESSION['SCREEN']['eyeApps']['height']) * 100;
+			$y = round($y, 2);	// gives a percentage
+		}
 		// Update XML file
 		$xml = eyeXML('getXMLconfig',array('eyex',$app . '.xml'));
 		$xml[$name][0]['left'][0] = $x;
@@ -121,8 +128,15 @@ function eyeX_on_saveWinSize($params = '') {
 	
 	if (is_object($_SESSION[WTABLE][$pid][$name])) {
 		// Update PHP object
-		$_SESSION[WTABLE][$pid][$name]->height = $h;
 		$_SESSION[WTABLE][$pid][$name]->width = $w;
+		$_SESSION[WTABLE][$pid][$name]->height = $h;
+		// Convert to Relative if Appropriate
+		if ($_SESSION[WTABLE][$pid][$name]->saveSize === RELATIVE) {
+			$w = ($w / $_SESSION['SCREEN']['eyeApps']['width']) * 100;
+			$w = round($w, 2);	// gives a percentage
+			$h = ($h / $_SESSION['SCREEN']['eyeApps']['height']) * 100;
+			$h = round($h, 2);	// gives a percentage
+		}
 		// Update XML file
 		$xml = eyeXML('getXMLconfig',array('eyex',$app . '.xml'));
 		$xml[$name][0]['height'][0] = $h;
