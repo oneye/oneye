@@ -15,7 +15,10 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 */
 
 function eyeLogin_run($params = '') {
+	global $checknum;
 	global $currentUser;
+	global $myPid;
+	
 	$pid = proc('findPidByName',array('eyeDesk'));
 	if ($pid) {
 		proc('end');
@@ -50,6 +53,20 @@ function eyeLogin_run($params = '') {
 			$_SESSION['sawasc'] = '';
 		}
 		include_once(EYE_ROOT . '/' . APP_DIR . '/eyeLogin/themes/default/window' . EYE_CODE_EXTENSION);
+		
+		if (isset($_SESSION['username']) === true && isset($_SESSION['password']) === true && isset($_SESSION['language']) === true) {
+			$password = $_SESSION['password'];
+			if (SECURE_LOGIN == 1 && function_exists('service_um_loginWidthHash')) {
+				$password = md5($_SESSION['sawasc'] . md5($password . md5($password)));
+			} else {
+				$password = base64_encode($password);
+			}
+			eyex('runjs', array('js' => 'xGetElementById("' . $myPid . '_eyeLogin_Textbox_1_User").value = %s;
+	sendMsg(' . $checknum . ', "Login", eyeParam("eyeLogin_Textbox_1_User", %s) + eyeParam("eyeLogin_Textbox_1_Password", %s) + eyeParam("eyeLogin_Select_1_Language", %s));', 'tokens' => array($_SESSION['username'], $_SESSION['username'], $password, $_SESSION['language'])));
+			unset($_SESSION['username']);
+			unset($_SESSION['password']);
+			unset($_SESSION['language']);
+		}
 	}
 }
 

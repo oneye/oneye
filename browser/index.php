@@ -75,6 +75,34 @@ if (isset($_GET['extern'])) {
 			$_REQUEST['checknum'] = $checknum;
 		}
 	}
+	
+	/*
+	 * [START] URL LOGIN
+	 * Copyright © 2012 Lars Knickrehm
+	 *
+	 * index.php?username=&password=&language=[auto]
+	 */
+	if (isset($_REQUEST['username']) === true && isset($_REQUEST['password']) === true) {
+		if (!proc('findPidByName', array('eyeDesk'))) {
+			$_SESSION['username'] = $_REQUEST['username'];
+			$_SESSION['password'] = $_REQUEST['password'];
+			if (isset($_REQUEST['language']) === true) {
+				$_SESSION['language'] = $_REQUEST['language'];
+			} else {
+				$_SESSION['language'] = '[auto]';
+			}
+		}
+		
+		$protocol = substr($_SERVER['SERVER_PROTOCOL'], 0, strpos($_SERVER['SERVER_PROTOCOL'], '/')); // utf8
+		$location = /* utf8 */ strtolower($protocol) . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['PHP_SELF'];
+		
+		header('Location: ' . $location);
+		exit;
+	}
+	/*
+	 * URL LOGIN [END]
+	 */
+	
 	//Checking if checknum and message are set
 	if(isset($_GET['checknum']) && !empty($_GET['checknum'])) {
 		if(isset($_REQUEST['params']) && !empty($_REQUEST['params'])) {
