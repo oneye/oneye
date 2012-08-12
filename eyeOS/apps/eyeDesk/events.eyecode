@@ -50,7 +50,7 @@ function eyeDesk_on_Action($params = '') {
 	global $myPid;
 	if ($params['Action'][0] == 'launch') {
 		$xml = eyeXML('getXMLfile',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $params['File'][0]));
-		eyeFiles('launchCommand',array($xml['eyeLink'][0]['content'][0]));
+		eyeFiles('launchCommand',array($xml['eyeLink'][0]['content'][0], $xml['eyeLink'][0]['xArgs'][0]));
 	} else {
 		proc('launch',array($params['Action'][0],array('home://Desktop/' . $params['File'][0])));
 	}

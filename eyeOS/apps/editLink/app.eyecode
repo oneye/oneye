@@ -20,92 +20,143 @@ function editLink_run($params = '') {
 	$xml = eyeXML('getXMLfile',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file));
 	if ($xml['eyeLink'][0]) {
 		eyex('systemSound', array('message'));
+		
+		$inpWid = 200;
+		$elY = 24;
+		$elYoff = 12;
+		$inpYoff = 4;
+		
 		$myWindow = new Window(array(
 			'cent' => 1,
 			'father' => 'eyeApps',
-			'height' => 170,
 			'name' => 'editLink_Window',
 			'savePosition' => 1,
 			'style' => TITLE + CLOSE + LISTED + MIN,
 			'title' => i18n('translate',array('Edit %s',array($file))),
-			'width' => 350
+			'height' => $elYoff * 2 + $elY * 8,
+			'width' => 336
 		));
 		$myWindow->show();
 
 		$myHidden = new Hidden(array(
-			'father' => 'eyeApps',
+			'father' => $myWindow->name . "_Content",
 			'name' => 'editLink_Hidden_File',
 			'text' => $file
 		));
 		$myHidden->show();
 
 		$myHidden = new Hidden(array(
-			'father' => 'eyeApps',
+			'father' => $myWindow->name . "_Content",
 			'name' => 'editLink_Hidden_Callback',
 			'text' => $params[1]
 		));
 		$myHidden->show();
 
 		$myImage = new Imagebox(array(
-			'father' => 'editLink_Window_Content',
+			'father' => $myWindow->name . "_Content",
 			'name' => 'editLink_Imagebox',
 			'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/' . $xml['eyeLink'][0]['icon'][0] . '.png',
-			'x' => 25,
-			'y' => 28
+			'x' => 24,
+			'y' => 24
 		));
 		$myImage->show();
 
-		$mySelect = new Select(array(
-			'father' => 'editLink_Window_Content',
-			'name' => 'editLink_Select',
-			'x' => 22,
-			'y' => 100
+		$myLabel = new Label(array(
+			'father' => $myWindow->name . "_Content",
+			'name' => 'editLink_Label_Command',
+			'text' => 'Command to be executed:',
+			'x' => 96,
+			'y' => $elYoff
 		));
-		$mySelect->show();
-		$mySelect->addEvent('onchange','document.getElementById("' . $myPid . '_editLink_Imagebox").src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/" + this.value + ".png";');
+		$myLabel->show();
+		$myLabel->setCSS(array('font-weight' => 'bolder'));
+
+		$myTextbox1 = new Textbox(array(
+			'father' => $myWindow->name . "_Content",
+			'name' => 'editLink_Textbox_Command',
+			'text' => $xml['eyeLink'][0]['content'][0],
+			'width' => $inpWid,
+			'x' => 112,
+			'y' => $elYoff + $elY - $inpYoff
+		));
+	//	$myTextbox1->addFriend($mySelect1);
+		$myTextbox1->show();
+	//	$myTextbox1->addEnterEventMsg('Do');
+	
+		$myLabel = new Label(array(
+			'father' => $myWindow->name . "_Content",
+			'name' => 'editLink_Label_Icon',
+			'text' => 'Icon for Link:',
+			'x' => 96,
+			'y' => $elYoff + $elY * 2
+		));
+		$myLabel->show();
+		$myLabel->setCSS(array('font-weight' => 'bolder'));
+
+		$mySelect1 = new Select(array(
+			'father' => $myWindow->name . "_Content",
+			'name' => 'editLink_Select_Icon',
+			'width' => $inpWid + 2,
+			'x' => 112,
+			'y' => $elYoff + $elY * 3 - $inpYoff
+		));
+		$mySelect1->show();
+		$mySelect1->addEvent('onchange','document.getElementById("' . $myPid . '_editLink_Imagebox").src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/" + this.value + ".png";');
 		$files = scandir(eyex('getThemeImage',array('icons/48x48/',2)));
 		foreach ($files as $file) {
 			if (strtolower(substr($file, -4)) === '.png') { // utf8
 				if ($file == $xml['eyeLink'][0]['icon'][0] . '.png') {
-					$mySelect->addOption(basename($file,'.png'),basename($file,'.png'),1);
+					$mySelect1->addOption(basename($file,'.png'),basename($file,'.png'),1);
 				} else {
-					$mySelect->addOption(basename($file,'.png'),basename($file,'.png'));
+					$mySelect1->addOption(basename($file,'.png'),basename($file,'.png'));
 				}
 			}
 		}
-
+		
 		$myLabel = new Label(array(
-			'name' => 'editLink_Label',
-			'father' => 'editLink_Window_Content',
-			'text' => 'Command to be executed:',
-			'x' => 105,
-			'y' => 25
+			'father' => $myWindow->name . "_Content",
+			'name' => 'editLink_Label_State',
+			'text' => 'Window State:',
+			'x' => 96,
+			'y' => $elYoff + $elY * 4
 		));
 		$myLabel->show();
-
-		$myTextbox = new Textbox(array(
-			'father' => 'editLink_Window_Content',
-			'name' => 'editLink_Textbox',
-			'text' => $xml['eyeLink'][0]['content'][0],
-			'width' => 200,
-			'x' => 105,
-			'y' => 55
+		$myLabel->setCSS(array('font-weight' => 'bolder'));
+		
+		$mySelect2 = new Select(array(
+			'father' => $myWindow->name . "_Content",
+			'name' => 'editLink_Select_State',
+			'width' => $inpWid + 2,
+			'x' => 112,
+			'y' => $elYoff + $elY * 5 - $inpYoff
 		));
-		$myTextbox->addFriend($mySelect);
-		$myTextbox->show();
-		$myTextbox->addEnterEventMsg('Do');
+		$mySelect2->show();
+		$mySelect2Opts = array(
+			"def" => "Default",
+			"win" => "Windowed",
+			"max" => "Maximized",
+			"fs" => "Full Screen"
+		);
+		foreach($mySelect2Opts as $key => $val) {
+			if (($key == $xml['eyeLink'][0]['xArgs'][0]['winState'][0]) || (!isset($xml['eyeLink'][0]['xArgs'][0]['winState'][0]) &&  $key == "def")){
+				$mySelect2->addOption("*".$val, $key, 1);
+			} else {
+				$mySelect2->addOption($val, $key);
+			}
+		}
 
 		$myButton = new Button(array(
-			'caption' => 'Update',
-			'father' => 'editLink_Window_Content',
-			'horiz' => 1,
+			'father' => $myWindow->name . "_Content",
 			'name' => 'editLink_Button',
+			'caption' => 'Update',
 			'signal' => 'Do',
-			'x' => 40,
-			'y' => 100
+			'cent' => 2,
+			'x' => 0,
+			'y' => $elYoff + $elY * 6 + $inpYoff
 		));
-		$myButton->addFriend($myTextbox);
-		$myButton->addFriend($mySelect);
+		$myButton->addFriend($myTextbox1);
+		$myButton->addFriend($mySelect1);
+		$myButton->addFriend($mySelect2);
 		$myButton->show();
 	} else {
 		proc('end');
