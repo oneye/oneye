@@ -139,7 +139,7 @@ function editLink_run($params = '') {
 		);
 		foreach($mySelect2Opts as $key => $val) {
 			if (($key == $xml['eyeLink'][0]['xArgs'][0]['winState'][0]) || (!isset($xml['eyeLink'][0]['xArgs'][0]['winState'][0]) &&  $key == "def")){
-				$mySelect2->addOption("*".$val, $key, 1);
+				$mySelect2->addOption($val, $key, 1);
 			} else {
 				$mySelect2->addOption($val, $key);
 			}

@@ -281,7 +281,7 @@ class Window {
 					$this->maximized = 0;
 					break;
 				case "fs":
-				//	$this->fullScreen = 1;
+					$this->fullScreen = 1;
 					break;
 			}
 		}
@@ -737,6 +737,9 @@ class Window {
 		eyex('createWidget',$widget);
 		if (!$this->noZindex) {
 			$this->focus();
+		}
+		if ($this->fullScreen > 0) {
+			$this->setFullScreen(1,1);
 		}
 		eyeWidgets('serialize',array($this));
 	}
