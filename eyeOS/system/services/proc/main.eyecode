@@ -52,7 +52,7 @@ function service_proc_end($params=null) {
 * Executes an application by calling its start function and adding an
 * entry in the process table.
 *
-* @param $params array(appName,[appArgs])
+* @param $params array(appName,[appArgs, [xArgs]])
 * @param $appName String containing the name of the application to execute.
 * @param $appArgs Arguments passed to the start function.
 * @return In eyeOS 1.6 and newer, returns the pid of the executed process, or false
@@ -103,7 +103,12 @@ function service_proc_launch($params) {
 	$procInfo['pid'] = $myPid;
 	$procInfo['tty'] = get_tty($oldPid);
 	$procInfo['exec'] = 'launch';
-
+	if (isset($params[2])) {
+		$procInfo['xArgs'] = $params[2];
+	} else {
+		$procInfo['xArgs'] = "";
+	}
+	
 	//Try running app.
 	if(!is_readable(EYE_ROOT.'/'.APP_DIR.'/'.$appName.'/app'.EYE_CODE_EXTENSION)) {
 		$myPid = $oldPid;
