@@ -164,7 +164,7 @@ function eyeFiles_on_Action($params = '') {
 	if (isset($params['File']) === true && $params['File'][0]) {
 		if ($params['Action'][0] == 'launch') {
 			$xml = eyeXML('getXMLfile',array($path[0] . '/' . $params['File'][0]));
-			eyeFiles('launchCommand',array($xml['eyeLink'][0]['content'][0]));
+			eyeFiles('launchCommand',array($xml['eyeLink'][0]['content'][0], $xml['eyeLink'][0]['xArgs'][0]));
 		} else {
 			proc('launch',array($params['Action'][0],array($path[1] . '://' . $path[2] . '/' . $params['File'][0])));
 		}
@@ -214,7 +214,7 @@ function eyeFiles_on_Icon_Clicked($params = '') {
 			eyeFiles_on_OpenPath(array($path[2] . '/' . $file,$path[1]));
 		} elseif (strtolower(substr($path[0], -strlen('.' . EYEOS_LINK_EXT))) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($path[0])) === true) { // utf8
 			$xml = eyeXML('getXMLfile', array($path[0]));
-			eyeFiles('launchCommand', array($xml['eyeLink'][0]['content'][0]));
+			eyeFiles('launchCommand', array($xml['eyeLink'][0]['content'][0], $xml['eyeLink'][0]['xArgs'][0]));
 		} elseif ($path[1] != 'real') {
 			$xml = getConfig('filetypes', utf8_strtolower(substr(strrchr($path[0], '.'), 1)) . '.xml'); // utf8
 			if ($xml['fileType'][0]['app'][0]) {

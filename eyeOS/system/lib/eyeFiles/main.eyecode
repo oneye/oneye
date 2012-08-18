@@ -398,12 +398,15 @@ $params[0] -> command
 */
 function lib_eyeFiles_launchCommand($params = '') {
 	$link = /* utf8 */ explode(' ', /* utf8 */ trim($params[0]));
+	if (!isset($params[1]) || is_array($params[1]) === 0) {
+		$params[1] = array();
+	}
 	if ( /* utf8 */ strrchr($link[0], '.') === '.app') {
-		proc('launch',array(basename($link[0],'.app'),array_slice($link,1)));
+		proc('launch',array(basename($link[0],'.app'),array_slice($link,1),$params[1]));
 	} elseif (strtolower(substr($params[0], 0, 7)) === 'http://' || strtolower(substr($params[0], 0, 8)) === 'https://') { // utf8
-		proc('launch',array('eyeNav',$params[0]));
+		proc('launch',array('eyeNav',$params[0],$params[1]));
 	} elseif (strtolower(substr($params[0], 0, 7)) == 'ftp://') { // utf8
-		proc('launch',array('eyeFTP',$params[0]));
+		proc('launch',array('eyeFTP',$params[0],$params[1]));
 	} else {
 		$params[0] = str_replace('\\','/',$params[0]);
 		if ( /* utf8 */ substr($params[0], -1) === '/') {
@@ -417,7 +420,7 @@ function lib_eyeFiles_launchCommand($params = '') {
 			$path[0] .= '/' . $file;
 		}
 		if (vfs('isdir',array($path[0]))) {
-			proc('launch',array('eyeFiles',array($params[0])));
+			proc('launch',array('eyeFiles',array($params[0]),$params[1]));
 		} else {
 			$xml = getConfig('filetypes', strtolower(substr(strrchr($path[0], '.'), 1)) . '.xml'); // utf8
 			if ($xml['fileType'][0]['app'][0]) {

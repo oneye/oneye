@@ -21,8 +21,9 @@ function editLink_on_Close($params = '') {
 function editLink_on_Do($params = '') {
 	$path = um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/';
 	$xml = eyeXML('getXMLfile',array($path . $GLOBALS['editLink_Hidden_File']->text));
-	$xml['eyeLink'][0]['content'][0] = $GLOBALS['editLink_Textbox']->text;
-	$xml['eyeLink'][0]['icon'][0] = $GLOBALS['editLink_Select']->selected;
+	$xml['eyeLink'][0]['content'][0] = $GLOBALS['editLink_Textbox_Command']->text;
+	$xml['eyeLink'][0]['icon'][0] = $GLOBALS['editLink_Select_Icon']->selected;
+	$xml['eyeLink'][0]['xArgs'][0]['winState'][0] = $GLOBALS['editLink_Select_State']->selected;
 	eyeXML('setXMLfile',array($path . $GLOBALS['editLink_Hidden_File']->text,$xml));
 	if ($GLOBALS['editLink_Hidden_Callback']->text) {
 		eyex('rawjs',array('js' => $GLOBALS['editLink_Hidden_Callback']->text));
