@@ -35,8 +35,7 @@ function eyeControl_on_edituser_save($params = '') {
 	if ( /* utf8 */ strtolower($GLOBALS['eyeControl_edituser_textbox_expire']->text) === 'never' || utf8_strtolower($GLOBALS['eyeControl_edituser_textbox_expire']->text) === utf8_strtolower(i18n('translate', array('Never')))) {
 		$exp = 0;
 	} else {
-		$date = /* utf8 */ explode('/', $GLOBALS['eyeControl_edituser_textbox_expire']->text);
-		$exp = mktime(0,0,0,$date[1],$date[0],$date[2]);
+		$exp = strtotime($GLOBALS['eyeControl_edituser_textbox_expire']->text);
 	}
 	$quota_type = $GLOBALS['eyeControl_edituser_select_quota_type']->selected;
 	if ($quota_type == 'custom') {
