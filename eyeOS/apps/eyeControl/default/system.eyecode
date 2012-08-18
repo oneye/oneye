@@ -315,39 +315,61 @@ $myLabel = new Label(array(
 ));
 $myLabel->show();
 eyex('runjs',array('js' => 'document.getElementById("' . $myPid . '_eyeControl_system_office_label_text").innerHTML = %s;','tokens' => array($text)));
+
+$ContentY += 50;
+// Python path
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_office_label_folder',
+	'father' => $officeTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Python path:'
+));
+$myLabel->show();
+$ContentY += 20;
+$myTextbox = new Textbox(array(
+	'name' => 'eyeControl_system_office_textbox_folder',
+	'father' => $officeTab,
+	'x' => 60,
+	'y' => $ContentY + 2,
+	'text' => OFFICE_PYTHON_PATH,
+	'width' => 360
+));
+$myTextbox->show();
+$ContentY += 40;
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_office_label_folder_default0',
+	'father' => $officeTab,
+	'x' => 20,
+	'y' => $ContentY + 3,
+	'text' => 'Default value:'
+));
+$myLabel->show();
+$ContentY += 20;
 if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) {
-	$ContentY += 50;
-	// OpenOffice.org program folder
-	$myLabel = new Label(array(
-		'name' => 'eyeControl_system_office_label_folder',
-		'father' => $officeTab,
-		'x' => 20,
-		'y' => $ContentY + 3,
-		'text' => 'OpenOffice program folder:'
-	));
-	$myLabel->show();
-	$ContentY += 20;
-	$myTextbox = new Textbox(array(
-		'name' => 'eyeControl_system_office_textbox_folder',
-		'father' => $officeTab,
-		'x' => 60,
-		'y' => $ContentY + 2,
-		'text' => OFFICE_COMMAND,
-		'width' => 240
-	));
-	$myTextbox->show();
-	$ContentY += 50;
-	$myButton = new Button(array(
-		'name' => 'eyeControl_system_office_button_folder',
-		'father' => $officeTab,
-		'x' => 40,
-		'y' => $ContentY,
-		'caption' => 'Save Changes',
-		'signal' => 'system_office'
-	));
-	$myButton->addFriend($myTextbox);
-	$myButton->show();
+	$default = 'C:\\Program Files (x86)\\LibreOffice 3.6\\program\\python.exe';
+} else {
+	$default = 'python';
 }
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_office_label_folder_default1',
+	'father' => $officeTab,
+	'x' => 60,
+	'y' => $ContentY + 3,
+	'text' => $default
+));
+$myLabel->show();
+$ContentY += 50;
+$myButton = new Button(array(
+	'name' => 'eyeControl_system_office_button_folder',
+	'father' => $officeTab,
+	'x' => 40,
+	'y' => $ContentY,
+	'caption' => 'Save Changes',
+	'signal' => 'system_office'
+));
+$myButton->addFriend($myTextbox);
+$myButton->show();
 
 // uninstallTab
 

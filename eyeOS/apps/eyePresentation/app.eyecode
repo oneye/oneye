@@ -15,6 +15,8 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 */
 
 function eyePresentation_run($params=null) {
+	global $myPid;
+
 	$myWindow = new Window(array('name'=>'presentationWND','father'=>'eyeApps',
 		'cent'=>1,'width'=>680,'height'=>590,'title'=>'Presentations','sendResizeMsg'=>1,'sigResize'=>'Resize','savePosition' => 1));
 	$myWindow->show();
@@ -33,12 +35,15 @@ function eyePresentation_run($params=null) {
 	$myFrame->focus();
 	if($params[0]) {
 		$file = $params[0];
-		$fp = vfs('open',array($file,'r'));
-		if(!$fp) {
+		if (!vfs('checkPermissions', array($file, 'r'))) {
 			eyex('messageBox',array('content'=>'Sorry, you do not have sufficient permissions.'));
 			return;
 		}
-		fclose($fp);
+
+		$dest = realpath(um('getCurrentUserDir') . '/tmp') . DIRECTORY_SEPARATOR . $myPid . '_' . basename($file) . DIRECTORY_SEPARATOR;
+		vfs('real_mkDir', array($dest));
+		eyeConverter('convert', array(vfs('getRealName', array($file)), $dest, 'html', true, '--doctype=presentation'));
+
 		$myHidden = new Hidden(array('name'=>'filepath','father'=>'presentationWND','text'=>$file));
 		eyeWidgets('serialize',array($myHidden));
 		$GLOBALS['filepath'] = $myHidden;
@@ -53,18 +58,7 @@ function eyePresentation_run($params=null) {
 
 function eyePresentation_end($params=null) {
 	global $myPid;
-	$dir = um('getCurrentUserDir').'/tmp/';
-	if ($handle = opendir($dir)) {
-	    while (false !== ($file = readdir($handle))) {
-			if ( /* utf8 */ substr($file, 0, 1) !== '.') {
-	        	$pid = /* utf8 */ substr($file, 0, 5);
-	        	if(intval($pid) == $myPid) {
-	           		vfs('real_delete',array($dir.$file));
-	        	}
-	        }
-	    }
-	    closedir($handle);
-	}
+	eyeConverter('cleanTmp');
 	eyeWidgets('unserialize');
 }
 
