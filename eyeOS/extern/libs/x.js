@@ -1042,7 +1042,7 @@ function xEvent(evt) // object prototype
   }
   if (xDef(e.pageX)) { this.pageX = e.pageX; this.pageY = e.pageY; }
   else if (xDef(e.clientX)) { this.pageX = e.clientX + xScrollLeft(); this.pageY = e.clientY + xScrollTop(); }
-  if (xDef(e.offsetX)) { this.offsetX = e.offsetX; this.offsetY = e.offsetY; }
+  if (e.offsetX != undefined && xDef(e.offsetX)) { this.offsetX = e.offsetX; this.offsetY = e.offsetY; }
   else if (xDef(e.layerX)) { this.offsetX = e.layerX; this.offsetY = e.layerY; }
   else { this.offsetX = this.pageX - xPageX(this.target); this.offsetY = this.pageY - xPageY(this.target); }
   if (xDef(e.changedTouches)) { this.changedTouches = e.changedTouches; }

@@ -64,14 +64,11 @@ function eyeControl_on_system_permissions($params = '') {
 }
 
 function eyeControl_on_system_office($params = '') {
-	if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) {
-		$file = EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/system.xml';
-		$xml = eyeXML('getXMLfile',array($file));
-		$xml['CONFIG'][0]['OFFICE_COMMAND'][0] = $GLOBALS['eyeControl_system_office_textbox_folder']->text;
-		$xml['CONFIG'][0]['OFFICE_SEPARATOR_ARG'][0] = '"';
-		eyeXML('setXMLFile',array($file,$xml));
-		eyex('messageBox',array('content' => 'Changes successfully saved.'));
-	}
+	$file = EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/system.xml';
+	$xml = eyeXML('getXMLfile', array($file));
+	$xml['CONFIG'][0]['OFFICE_PYTHON_PATH'][0] = $GLOBALS['eyeControl_system_office_textbox_folder']->text;
+	eyeXML('setXMLFile', array($file, $xml));
+	eyex('messageBox',array('content' => 'Changes successfully saved.'));
 }
 
 function eyeControl_on_system_office_howtowindows($params = '') {

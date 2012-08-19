@@ -31,6 +31,12 @@ function lib_eyeConverter_convert($params) {
 		$useReal = false;
 	}
 
+	if (isset($params[4])) {
+		$args = ' ' . trim(strval($params[4]));
+	} else {
+		$args = '';
+	}
+
 	if(!vfs('real_checkPermissions',array($orig)) && !vfs('checkPermissions',array($orig))) {
 		errorCodes('setErrorCode',array(VFS_INSUFFICIENT_PERMISSIONS));
 		return false;
@@ -41,62 +47,30 @@ function lib_eyeConverter_convert($params) {
 		return false;
 	}
 
-	if($useReal) {
-		$forig = $orig;
+	if (!$useReal) {
+		$orig = vfs('getRealName', array($orig));
+	}
+
+	$orig = realpath(dirname($orig)) . DIRECTORY_SEPARATOR . basename($orig);
+	$dest = realpath(dirname($dest)) . DIRECTORY_SEPARATOR . basename($dest);
+
+	if ($format === 'MS Word 97') {
+		$format = 'doc';
+	} else if ($format === 'HTML (StarWriter)') {
+		$format = 'html';
+	} else if ($format === 'calc8') {
+		$format = 'ods';
+	} else if ($format === 'writerglobal8_writer') {
+		$format = 'odt';
+	} else if ($format === 'MS Excel 97') {
+		$format = 'xls';
 	} else {
-		$forig = vfs('getRealName',array($orig));
+		$format = escapeshellarg($format);
 	}
 
-	$forig = realpath(dirname($forig)).'/'.basename($forig);
-	$dest = realpath(dirname($dest)).'/'.basename($dest);
-
-	$format = escapeshellarg($format);
-	$format = /* utf8 */ substr($format, 1, -1);
-
-	$forig = escapeshellarg($forig);
-	$forig = /* utf8 */ substr($forig, 1, -1);
-
-	$dest = escapeshellarg($dest);
-	$dest = /* utf8 */ substr($dest, 1, -1);
-
-	if(FORMAT_PARSER == 'OpenOffice') {
-		if($format == 'pdf') {
-			$format = 'writer_pdf_Export';
-		}
-		if (strtolower(substr(PHP_OS, 0, 3)) === 'win') { // Check for windows systems // utf8
-			$forig = str_replace('/','\\',$forig);
-			$dest = str_replace('/','\\',$dest);
-			$content = 'cd /d "' . OFFICE_COMMAND . '"' . "\n" . 'soffice.exe -nofirststartwizard -headless -norestore macro:///Tools.eyeOS.ConvertAny(' . OFFICE_SEPARATOR_ARG . $forig . OFFICE_SEPARATOR_ARG . ',' . OFFICE_SEPARATOR_ARG . $dest . OFFICE_SEPARATOR_ARG . ',' . OFFICE_SEPARATOR_ARG . $format . OFFICE_SEPARATOR_ARG . ')';
-			file_put_contents($dest . '.bat',$content);
-			$cmd = '"' . $dest . '.bat"';
-		} elseif(OFFICE_USE_DISPLAY == 1) {
-			$cmd = OFFICE_COMMAND.' -invisible -nologo -nodefault -nofirststartwizard -headless -norestore -display :'.intval(OFFICE_SCREEN).'.0 '.OFFICE_SEPARATOR_ARG.'macro:///Tools.eyeOS.ConvertAny('.$forig.','.$dest.','.$format.')'.OFFICE_SEPARATOR_ARG;
-		} else {
-			$cmd = OFFICE_COMMAND.' -invisible -nologo -nodefault -nofirststartwizard -headless -norestore '.OFFICE_SEPARATOR_ARG.'macro:///Tools.eyeOS.ConvertAny('.$forig.','.$dest.','.$format.')'.OFFICE_SEPARATOR_ARG;
-		}
-		$env = array();
-		$pipe = array();
-		$desc = array();
-		proc_open($cmd,$desc,$pipe,null,$env);
-		return true;
-	} else if(FORMAT_PARSER == 'unoconv') {
-		if($format == 'writerglobal8_writer') {
-			$format = 'odt';
-		} else if($format == 'MS Word 97') {
-			$format = 'doc';
-		} else if($format == 'HTML (StarWriter)') {
-			$format = 'html';
-		} else if($format == 'calc8') {
-			$format = 'ods';
-		} else if($format == 'MS Excel 97') {
-			$format = 'xls';
-		}
-
-		$cmd = 'unoconv --format='.$format.' --output=file://'.$dest.' '.$forig;
-		shell_exec($cmd);
-		return true;
-	}
-	return false;
+	$args = ' --format=' . $format . ' --output=' . escapeshellarg($dest) . $args;
+	shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' ' . escapeshellarg(realpath(EYE_ROOT . '/extras/unoconv/unoconv')) . $args . ' ' . escapeshellarg($orig));
+	return file_exists($dest);
 }
 
 function lib_eyeConverter_cleanTmp(){
