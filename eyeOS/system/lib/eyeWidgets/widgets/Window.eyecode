@@ -260,7 +260,7 @@ class Window {
 			}
 			
 			if ($this->savePosition !== NO_SAVE) {
-				$this->cent = 0;
+				if (is_array($position['left']) || is_array($position['top'])) { $this->cent = 0; }
 				if (is_array($position['left'])) { $this->x = intval($position['left'][0]); }
 				if (is_array($position['top'])) { $this->y = intval($position['top'][0]); }
 				
