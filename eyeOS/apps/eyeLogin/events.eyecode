@@ -254,16 +254,4 @@ function eyeLogin_on_ResetPassword($params = '') {
 	}
 }
 
-function eyeLogin_on_resizedBrowser($params = NULL) {
-	$GLOBALS['eyeLogin_1']->setX(round($_SESSION['SCREEN']['width'] / 2) - 150);
-	$y = round($_SESSION['SCREEN']['height'] / 2) - 110;
-	if ($y < 280) {
-		$y -= 280 - $y;
-	}
-	if ($y < 0) {
-		$y = 0;
-	}
-	$GLOBALS['eyeLogin_1']->setY($y);
-}
-
 ?>

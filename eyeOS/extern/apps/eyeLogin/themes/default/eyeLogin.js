@@ -1,5 +1,5 @@
 /*global Base64, eyeParam, IEversion, md5, sendMsg, updateOpacity, updateOpacityOnce, USERTHEME, xEvent, xGetElementById, xLeft */
-/*jslint browser: true, devel: true, newcap: true, sloppy: true, todo: true, windows: true */
+/*jslint browser: true, devel: true, newcap: true, sloppy: true, windows: true */
 /*
   ___  _ __   ___ _   _  ___
  / _ \| '_ \ / _ \ | | |/ _ \
@@ -15,8 +15,6 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
              since 2010 Lars Knickrehm (mail@lars-sh.de)
 */
 
-var eyeLogin_original_X = 0;
-var eyeLogin_original_Y = 0;
 var movecount = 0;
 
 function eyeLogin_Disable_On(pid) {
@@ -75,30 +73,14 @@ function eyeLogin_2_Clean(pid) {
 	xGetElementById(pid + '_eyeLogin_Textbox_2_User').style.display = 'none';
 }
 
-function eyeLogin_Light_Off(id) {
-	if (!IEversion || IEversion > 7) {
-		xGetElementById(id).style.backgroundImage = 'url(index.php?theme=' + USERTHEME + '&extern=images/apps/eyeLogin/box.png)';
-	}
-}
-
-function eyeLogin_Light_On(id) {
-	if (!IEversion || IEversion > 7) {
-		xGetElementById(id).style.backgroundImage = 'url(index.php?theme=' + USERTHEME + '&extern=images/apps/eyeLogin/box_x.png)';
-	}
-}
-
 function eyeLogin_2_Launch(pid, checknum) {
 	if (xGetElementById(pid + '_eyeLogin_2_Container').style.display === 'block') {
 		if (IEversion) {
 			xGetElementById(pid + '_eyeLogin_2_Container').style.display = 'none';
 		} else {
-			updateOpacity(pid + '_eyeLogin_2_Container', 100, 0, 500, 'xGetElementById("' + pid + '_eyeLogin_2_Container").style.display = "none";');
+			updateOpacity(pid + '_eyeLogin_2_Container', 100, 0, 500, 'xGetElementById("' + pid + '_eyeLogin_2_Container").style.display = "none"; eyeLogin_centerDialog('+pid+');');
 		}
-		eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_2_User');
-		eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_2_Password_1');
-		eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_2_Password_2');
 		xGetElementById(pid + '_eyeLogin_Textbox_1_User').focus();
-		eyeLogin_Light_On(pid + '_eyeLogin_Textbox_1_User');
 	} else {
 		if (!IEversion) {
 			updateOpacityOnce(0, pid + '_eyeLogin_2_Container');
@@ -107,10 +89,8 @@ function eyeLogin_2_Launch(pid, checknum) {
 		if (!IEversion) {
 			updateOpacity(pid + '_eyeLogin_2_Container', 0, 100, 500, '');
 		}
-		eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_1_User');
-		eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_1_Password');
 		xGetElementById(pid + '_eyeLogin_Textbox_2_User').focus();
-		eyeLogin_Light_On(pid + '_eyeLogin_Textbox_2_User');
+		eyeLogin_centerDialog(pid);
 	}
 
 	var obj = xGetElementById(pid + '_eyeLogin_Imagebox_2_Create_Container');
@@ -126,30 +106,25 @@ function eyeLogin_2_Launch(pid, checknum) {
 		var event = new xEvent(e);
 		eyeLogin_2_KeyPressed(event.keyCode, checknum, pid);
 	};
-	obj.onfocus = function () { eyeLogin_Light_On(pid + '_eyeLogin_Textbox_2_User'); };
-	obj.onblur = function () { eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_2_User'); };
 
 	obj = xGetElementById(pid + '_eyeLogin_Textbox_2_Password_1');
 	obj.onkeypress = function (e) {
 		var event = new xEvent(e);
 		eyeLogin_2_KeyPressed(event.keyCode, checknum, pid);
 	};
-	obj.onfocus = function () { eyeLogin_Light_On(pid + '_eyeLogin_Textbox_2_Password_1'); };
-	obj.onblur = function () { eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_2_Password_1'); };
 
 	obj = xGetElementById(pid + '_eyeLogin_Textbox_2_Password_2');
 	obj.onkeypress = function (e) {
 		var event = new xEvent(e);
 		eyeLogin_2_KeyPressed(event.keyCode, checknum, pid);
 	};
-	obj.onfocus = function () { eyeLogin_Light_On(pid + '_eyeLogin_Textbox_2_Password_2'); };
-	obj.onblur = function () { eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_2_Password_2'); };
 }
 
 function eyeLogin_Start(pid, checknum) {
 	var obj_lbl_enter, obj_lbl_enter_cnt, obj_img_cnt, obj_sel_lang, obj_txt_pwd, obj_txt_user;
-	eyeLogin_original_X = xGetElementById(pid + '_eyeLogin_1_Container').style.left;
-	eyeLogin_original_Y = xGetElementById(pid + '_eyeLogin_1_Container').style.top;
+	
+	xGetElementById($myPid+'_eyeLogin_window_Content').setAttribute("class", "eyeLoginWindow");
+	
 	obj_lbl_enter = xGetElementById(pid + '_eyeLogin_Label_1_Enter');
 	obj_lbl_enter.onclick = function () { eyeLogin_SendLogin(checknum, pid); };
 	obj_lbl_enter.style.zIndex = '10000';
@@ -172,22 +147,16 @@ function eyeLogin_Start(pid, checknum) {
 	obj_txt_pwd.onkeypress = function (e) {
 		eyeLogin_1_KeyPressed(new xEvent(e).keyCode, checknum, pid);
 	};
-	obj_txt_pwd.onfocus = function () { eyeLogin_Light_On(pid + '_eyeLogin_Textbox_1_Password'); };
-	obj_txt_pwd.onblur = function () { eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_1_Password'); };
 
 	obj_txt_user = xGetElementById(pid + '_eyeLogin_Textbox_1_User');
 	obj_txt_user.onkeypress = function (e) {
 		eyeLogin_1_KeyPressed(new xEvent(e).keyCode, checknum, pid);
 	};
-	obj_txt_user.onfocus = function () { eyeLogin_Light_On(pid + '_eyeLogin_Textbox_1_User'); };
-	obj_txt_user.onblur = function () { eyeLogin_Light_Off(pid + '_eyeLogin_Textbox_1_User'); };
 
 	obj_sel_lang = xGetElementById(pid + '_eyeLogin_Select_1_Language');
 	obj_sel_lang.onkeypress = function (e) {
 		eyeLogin_1_KeyPressed(new xEvent(e).keyCode, checknum, pid);
 	};
-	obj_sel_lang.onfocus = function () { eyeLogin_Light_On(pid + '_eyeLogin_Select_1_Language'); };
-	obj_sel_lang.onblur = function () { eyeLogin_Light_Off(pid + '_eyeLogin_Select_1_Language'); };
 }
 
 function eyeLogin_Move_L(widget, pid) {
@@ -202,8 +171,7 @@ function eyeLogin_Disable_Off(pid) {
 
 function eyeLogin_Move_R(widget, pid) {
 	if (movecount > 5) {
-		xGetElementById(widget).style.left = eyeLogin_original_X;
-		xGetElementById(widget).style.top = eyeLogin_original_Y;
+		eyeLogin_centerDialog(pid);
 		eyeLogin_Disable_Off(pid);
 	} else {
 		if (!movecount) {
@@ -216,4 +184,27 @@ function eyeLogin_Move_R(widget, pid) {
 	}
 }
 
+function eyeLogin_centerDialog (pid) {
+	var dialog, diaWidth, diaHeight, dia2, x, y;
+	dialog = xGetElementById(pid + '_eyeLogin_1_Container');
+	diaWidth = dialog.style.width.slice(0, -2);
+	diaHeight = parseInt(dialog.style.height.slice(0, -2), 10);
+	
+	dia2 = xGetElementById(pid + '_eyeLogin_2_Container');
+	if (dia2 !== null && dia2.style.display === "block") {
+		diaHeight += parseInt(getComputedStyle(dia2).height.slice(0, -2), 10);
+	}
+
+	x = (window.innerWidth - diaWidth) / 2;
+	y = (window.innerHeight - diaHeight) / 2;
+	
+	dialog.style.left = x + "px";
+	dialog.style.top = y + "px";
+}
+
 eyeLogin_Start('$myPid', '$checknum');
+xAddEventListener(window, "resize", function () {
+	xGetElementById($myPid+'_eyeLogin_window').style.width = window.innerWidth + "px";
+	xGetElementById($myPid+'_eyeLogin_window').style.height = window.innerHeight + "px";
+	eyeLogin_centerDialog($myPid);
+}, false);
