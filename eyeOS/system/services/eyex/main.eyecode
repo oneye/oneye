@@ -1698,10 +1698,6 @@ function service_eyex_resizedBrowser($params=''){
 	$_SESSION['SCREEN']['height'] = $params['height'];
 	$_SESSION['SCREEN']['eyeApps']['height'] = $params['appHeight'];
 	$_SESSION['SCREEN']['eyeApps']['width'] = $params['appWidth'];
-	$eyeLogin_checknum = proc('findChecknumByName', array('eyeLogin'));
-	if ($eyeLogin_checknum) {
-		eyex('rawjs', array('js' => 'sendMsg('.$eyeLogin_checknum.', "resizedBrowser");'));
-	}
  	return true;
 }
 

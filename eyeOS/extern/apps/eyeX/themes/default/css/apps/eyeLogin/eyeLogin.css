@@ -1,0 +1,53 @@
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| _ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+.eyeLoginWindow {
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	overflow: inherit;
+	background: none;
+}
+
+.eyeLoginWindow .eyeLabel {
+	color: #ffffff;
+}
+
+.eyeLoginWindow .eyeTextbox, .eyeLoginWindow .eyeSelect {
+	background-color: transparent;
+	background-image: url(index.php?theme=USERTHEME&extern=images/apps/eyeLogin/box.png);
+	background-repeat: no-repeat;
+	border: none;
+}
+.eyeLoginWindow .eyeTextbox {
+	padding: 5px;
+}
+.eyeLoginWindow .eyeSelect {
+	padding: 4px;
+}
+
+.eyeLoginWindow .eyeTextbox:focus, .eyeLoginWindow .eyeSelect:focus {
+	background-image: url(index.php?theme=USERTHEME&extern=images/apps/eyeLogin/box_x.png);
+}
+
+.eyeLoginWindow .eyeContainerContainer {
+	opacity: 0.5;
+	filter: alpha(opacity=50);
+}
+.eyeLoginWindow .eyeContainerContainer:hover {
+	opacity: 1;
+	filter: alpha(opacity=100);
+}
