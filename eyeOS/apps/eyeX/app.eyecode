@@ -45,7 +45,7 @@ function eyeX_run($params = '') {
 		<link rel="apple-touch-icon" sizes="72x72" href="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=images/apple-touch-icons/72x72.png" />
 		<link rel="apple-touch-icon" sizes="114x114" href="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=images/apple-touch-icons/114x114.png" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black" />
 		' . $viewport . '
 		<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />' . "\n";
 	if (!IE || IE > 7) { // We need a better workaround for this IE6 and IE7 problem!
