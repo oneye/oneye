@@ -295,6 +295,7 @@ if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) {
 	$title = 'Configure the office support on a Linux server';
 	$text = i18n('translate',array('Please follow the instructions at %s.',array('<span onclick="sendMsg(' . $checknum . ',\'system_office_howtolinux\',\'\');" style="cursor: pointer; font-style: italic;">Help Console</span>')));
 }
+
 // Configure the office support
 $myLabel = new Label(array(
 	'name' => 'eyeControl_system_office_label_title',
@@ -336,6 +337,22 @@ $myTextbox = new Textbox(array(
 	'width' => 360
 ));
 $myTextbox->show();
+
+$pythonOut = trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
+if (strpos($pythonOut, 'not found') > -1) {
+	$pythonOut = 'Python Not Found';
+}
+$myLabel = new Label(array(
+	'name' => 'eyeControl_system_office_label_python_test',
+	'father' => $officeTab,
+	'x' => 20,
+	'horiz' => 1,
+	'y' => $ContentY + 3,
+	'text' => $pythonOut
+));
+$myLabel->show(0);
+
+
 $ContentY += 40;
 $myLabel = new Label(array(
 	'name' => 'eyeControl_system_office_label_folder_default0',
@@ -346,6 +363,7 @@ $myLabel = new Label(array(
 ));
 $myLabel->show();
 $ContentY += 20;
+
 if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) {
 	$default = 'C:\\Program Files (x86)\\LibreOffice 3.6\\program\\python.exe';
 } else {
@@ -359,6 +377,7 @@ $myLabel = new Label(array(
 	'text' => $default
 ));
 $myLabel->show();
+
 $ContentY += 50;
 $myButton = new Button(array(
 	'name' => 'eyeControl_system_office_button_folder',
@@ -370,6 +389,23 @@ $myButton = new Button(array(
 ));
 $myButton->addFriend($myTextbox);
 $myButton->show();
+
+// Detect whether unoconv is installed
+$unoconv = vfs('real_fileExists', array(EYE_ROOT . '/extras/unoconv/unoconv'));
+if (!$unoconv) {
+	$ContentY += 50;
+	$myLabel = new Label(array(
+		'name' => 'eyeControl_system_office_label_unoconv_notinstalled',
+		'father' => $officeTab,
+		'x' => 40,
+		'y' => $ContentY + 3,
+		'text' => 'Unoconv is not installed on the system. You will need it for Office Support'
+	));
+	$myLabel->show();
+	$myLabel->setCss(array(
+		'font-weight' => 'bold'
+	));
+}
 
 // uninstallTab
 
