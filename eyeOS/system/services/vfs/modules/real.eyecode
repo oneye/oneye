@@ -639,7 +639,12 @@ function service_vfs_rename($params) {
 			return true;
 		} else {
 			// PHP has problems moving folders across partitions and shares (ie. from samba to local). So we ask the Host OS to do it instead.
-			$cmd = 'mv ' . escapeshellarg($orig) . ' ' . escapeshellarg($dest);
+			if (strtolower(substr(PHP_OS, 0, 3)) !== 'win') { // UTF-8
+				$cmd = 'mv ';
+			} else {
+				$cmd = 'move ';
+			}
+			$cmd .= escapeshellarg($orig) . ' ' . escapeshellarg($dest);
 			shell_exec($cmd);
 			if(vfs('real_fileExists',array($dest))) {
 				return true;
@@ -930,7 +935,12 @@ function service_vfs_rmdir($params) {
 		$name = uniqid(mt_rand(0, 99999));
 		if (!rename($dir,$trashDir.$name)) {
 			// PHP has problems moving folders across partitions and shares (ie. from samba to local). So we ask the Host OS to do it instead.
-			$cmd = 'mv ' . escapeshellarg($dir) . ' ' . escapeshellarg($trashDir.$name);
+			if (strtolower(substr(PHP_OS, 0, 3)) !== 'win') { // UTF-8
+				$cmd = 'mv ';
+			} else {
+				$cmd = 'move ';
+			}
+			$cmd .= escapeshellarg($orig) . ' ' . escapeshellarg($dest);
 			shell_exec($cmd);
 		}
 		vfs('real_create',array($trashDir.$name.'.'.EYEOS_TRASH_EXT));
@@ -1535,8 +1545,13 @@ function service_vfs_real_move($params) {
 		return true;
 	} else {
 		// PHP has problems moving folders across partitions and shares (ie. from local to samba). So we ask the Host OS to do it instead.
-		$cmd = 'mv ' . escapeshellarg($orig) . ' ' . escapeshellarg($dest);
-		$res = shell_exec($cmd);
+		if (strtolower(substr(PHP_OS, 0, 3)) !== 'win') { // UTF-8
+			$cmd = 'mv ';
+		} else {
+			$cmd = 'move ';
+		}
+		$cmd .= escapeshellarg($orig) . ' ' . escapeshellarg($dest);
+		shell_exec($cmd);
 		if(vfs('real_fileExists',array($dest))) {
 			return true;
 		}
