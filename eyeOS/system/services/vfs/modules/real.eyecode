@@ -635,7 +635,21 @@ function service_vfs_rename($params) {
 		return false;
 	}
 	if(is_dir($orig)) {
-		return @rename($orig,$dest);
+		if (rename($orig, $dest)) {
+			return true;
+		} else {
+			// PHP has problems moving folders across partitions and shares (ie. from samba to local). So we ask the Host OS to do it instead.
+			if (strtolower(substr(PHP_OS, 0, 3)) !== 'win') { // UTF-8
+				$cmd = 'mv ';
+			} else {
+				$cmd = 'move ';
+			}
+			$cmd .= escapeshellarg($orig) . ' ' . escapeshellarg($dest);
+			shell_exec($cmd);
+			if(vfs('real_fileExists',array($dest))) {
+				return true;
+			}
+		}
 	}else {
 		return vfs('move',array($orig,$dest));
 	}
@@ -919,7 +933,16 @@ function service_vfs_rmdir($params) {
 		$myUserDir = um('getCurrentUserDir');
 		$trashDir = $myUserDir.'/'.TRASH_USER_DIR.'/';
 		$name = uniqid(mt_rand(0, 99999));
-		rename($dir,$trashDir.$name);
+		if (!rename($dir,$trashDir.$name)) {
+			// PHP has problems moving folders across partitions and shares (ie. from samba to local). So we ask the Host OS to do it instead.
+			if (strtolower(substr(PHP_OS, 0, 3)) !== 'win') { // UTF-8
+				$cmd = 'mv ';
+			} else {
+				$cmd = 'move ';
+			}
+			$cmd .= escapeshellarg($orig) . ' ' . escapeshellarg($dest);
+			shell_exec($cmd);
+		}
 		vfs('real_create',array($trashDir.$name.'.'.EYEOS_TRASH_EXT));
 		$data = array(
 			'eyeTrash' => array(
@@ -1518,8 +1541,20 @@ function service_vfs_real_move($params) {
 		return false;
 	}
 
-	if(rename($orig,$dest)){
+	if (rename($orig, $dest)){
 		return true;
+	} else {
+		// PHP has problems moving folders across partitions and shares (ie. from local to samba). So we ask the Host OS to do it instead.
+		if (strtolower(substr(PHP_OS, 0, 3)) !== 'win') { // UTF-8
+			$cmd = 'mv ';
+		} else {
+			$cmd = 'move ';
+		}
+		$cmd .= escapeshellarg($orig) . ' ' . escapeshellarg($dest);
+		shell_exec($cmd);
+		if(vfs('real_fileExists',array($dest))) {
+			return true;
+		}
 	}
 }
 
