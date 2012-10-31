@@ -25,12 +25,8 @@ function lib_eyeConverter_convert($params) {
 	$unoconv = vfs('real_fileExists', array(EYE_ROOT . '/extras/unoconv/unoconv'));
 	$python = trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
 	$python = (strpos($python, 'not found') > -1) ? FALSE : TRUE;
-	if (!$unoconv) {
-		eyex('messageBox',array('content' => 'unoconv has not been found on this system. Please install it to use this feature.'));
-		return false;
-	}
-	if (!$python) {
-		eyex('messageBox',array('content' => 'Python is not installed or cannot be found.'));
+	if (!$unoconv || !$python) {
+		eyex('messageBox',array('content' => 'Office Support has not been configured correctly. Please contact your system admin.'));
 		return false;
 	}
 	
