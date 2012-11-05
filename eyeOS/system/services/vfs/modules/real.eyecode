@@ -2351,6 +2351,7 @@ function service_vfs_checkQuota($params) {
 	$home = um('getCurrentUserDir');
 	$dirsize = vfs('getDirSize',array($home));
 	if(($dirsize + $size) > $quota) {
+		errorCodes('setErrorCode',array(VFS_QUOTA_EXCEEDED));
 		return false;
 	} else {
 		return true;

@@ -35,8 +35,9 @@ function lib_errorCodes_loadCodes($params=null){
 	define('VFS_FILE_ALREADY_EXISTS',-102);
 	define('VFS_FILE_NOT_EXISTS',-103);
 	define('VFS_DIR_NOT_EXISTS',-104);
-	define('VFS_FILE_NOT_FOUND',105);
-	define('VFS_INVALID_CHARS',106);
+	define('VFS_FILE_NOT_FOUND',-105);
+	define('VFS_INVALID_CHARS',-106);
+	define('VFS_QUOTA_EXCEEDED',-107);
 
 	//Proc service errorCodes -200/-299
 	define('PROC_APP_NOT_ARE_RUNNING',-200);
