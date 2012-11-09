@@ -56,7 +56,7 @@ define('EYEOS_TRASH_EXT','eyeTrash');
 define('VFS_MODULE','virtual');
 
 //um module to use
-define('UM_MODULE','eyeos');
+define('UM_MODULE','oneye');
 
 //The real god of oneye users, master of masters
 define('REAL_ROOTUSER','root');
