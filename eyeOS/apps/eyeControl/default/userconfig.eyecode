@@ -1,0 +1,119 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+global $checknum;
+//global $currentUser;
+//global $myPid;
+
+if ($currentUser != ROOTUSER) {
+	eyex('messageBox',array('content' => 'You are not allowed to manage users!'));
+	eyeControl_lib_loadContent();
+	return;
+}
+
+
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_userconfig_label_medium',
+	'x' => 8,
+	'y' => 24,
+	'text' => 'Storage Medium'
+));
+$myLabel->show();
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+
+$mySelect = new Select(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_userconfig_select_medium',
+	'x' => 128,
+	'y' => 24,
+	'width' => 128
+));
+$mySelect->show();
+$opts = vfs('real_getDirContent', array(EYE_ROOT .'/'. SYSTEM_DIR .'/'. LIB_DIR .'/eyeConfig/modules'));
+foreach ($opts as $opt) {
+	$opt = basename($opt);
+	$opt = substr($opt, 0, strpos($opt, '.'));
+	if ($opt == CONFIG_MODULE) {
+		$mySelect->addOption(strtoupper($opt), $opt, 1);
+		$selval = $opt;
+	} else {
+		$mySelect->addOption(strtoupper($opt), $opt);
+	}
+}
+$mySelect->addEvent('onchange','sendMsg('.$checknum.',"userconfig_mediumSelect",eyeParam("arg0",this.value));');
+
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_userconfig_label_description',
+	'x' => 24,
+	'y' => 48,
+	'text' => '-'
+));
+$myLabel->show(0);
+
+$myLabel = new Label(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_userconfig_label_settings',
+	'x' => 8,
+	'y' => $GLOBALS[$eyeContainer]->height / 2 + 24,
+	'vert' => 1,
+	'text' => 'Storage Medium Parameters'
+));
+$myLabel->show(0);
+$myLabel->setCss(array(
+	'font-weight' => 'bold'
+));
+
+$myHidden = new Hidden(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_userconfig_hidden_xml'
+));
+$myHidden->show();
+
+$myTable = new Sortabletable(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_userconfig_table_params',
+	'x' => 0,
+	'y' => 16,
+	'vert' => 1,
+	'theader' => array('id', 'Name', 'Current Value', 'Default Value'),
+	'sortypes' => array('Hidden', 'String', 'String', 'String'),
+	'width' => $GLOBALS[$eyeContainer]->width - 16,
+	'height' => $GLOBALS[$eyeContainer]->height / 2
+));
+$myTable->show(0);
+
+$myButton = new Button(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_userconfig_button_params_edit',
+	'caption' => 'Edit',
+	'signal' => 'userconfig_paramEdit',
+	'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/16x16/edit.png',
+	'x' => 48,
+	'y' => $GLOBALS[$eyeContainer]->height / 2 + 24,
+	'horiz' => 1,
+	'vert' => 1
+));
+$myButton->addFriend($myTable);
+$myButton->addFriend($mySelect);
+$myButton->show(0);
+
+eyeX('runjs', array('js' => 'sendMsg('.$checknum.',"userconfig_mediumSelect",eyeParam("arg0",%s));', 'tokens' => array($selval)));
+
+?>
