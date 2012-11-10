@@ -24,40 +24,51 @@ function lib_eyeConfig_init () {
 	
 	// Detect and load specific library
 	if (CONFIG_MODULE !== 'xml') {
-		$module = 'modules/'. CONFIG_MODULE .'.eyecode';
-		error_log(CONFIG_MODULE, 0);
+		$module = EYE_ROOT .'/'. SYSTEM_DIR .'/'. LIB_DIR .'/eyeConfig/modules/'. CONFIG_MODULE .'.eyecode';
 		if (file_exists($module)) {
+			// Load constants
+			$xmlfile = EYE_ROOT .'/'. SYSTEM_DIR .'/conf/userconfig/'. CONFIG_MODULE .'.xml';
+			$xml = eyeXML('getXMLfile', array($xmlfile));
+			if (isset($xml['eyeConfig_module'][0]['constant'])) {
+				foreach($xml['eyeConfig_module'][0]['constant'] as $constant) {
+					define($constant['name'][0], $constant['value'][0]);
+				}
+			}
+			
+			// Load module
 			include_once $module;
 		}
 	}
 	
-	// Fill in gaps
-	if(!function_exists('lib_eyeConfig_getConfig')){
+	// User's Config for Apps
+	if (!function_exists('lib_eyeConfig_getConfig')) {
 		function lib_eyeConfig_getConfig($params) {
 			return lib_eyeConfig_XMLgetConfig($params);
 		}
 	}
-	if(!function_exists('lib_eyeConfig_setConfig')){
+	if (!function_exists('lib_eyeConfig_setConfig')) {
 		function lib_eyeConfig_setConfig($params) {
 			return lib_eyeConfig_XMLsetConfig($params);
 		}
 	}
-	if(!function_exists('lib_eyeConfig_setUserConfig')){
+	
+	// Userfile
+	if (!function_exists('lib_eyeConfig_setUserConfig')) {
 		function lib_eyeConfig_setUserConfig($params) {
 			return lib_eyeConfig_XMLsetUserConfig($params);
 		}
 	}
-	if(!function_exists('lib_eyeConfig_getUserConfig')){
+	if (!function_exists('lib_eyeConfig_getUserConfig')) {
 		function lib_eyeConfig_getUserConfig($params) {
 			return lib_eyeConfig_XMLgetUserConfig($params);
 		}
 	}
-	if(!function_exists('lib_eyeConfig_addUserConfig')){
+	if (!function_exists('lib_eyeConfig_addUserConfig')) {
 		function lib_eyeConfig_addUserConfig($params) {
 			return lib_eyeConfig_XMLaddUserConfig($params);
 		}
 	}
-	if(!function_exists('lib_eyeConfig_remUserConfig')){
+	if (!function_exists('lib_eyeConfig_remUserConfig')) {
 		function lib_eyeConfig_remUserConfig($params) {
 			return lib_eyeConfig_XMLremUserConfig($params);
 		}
