@@ -15,51 +15,6 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 */
 
 /**
- * Opens an XML config file of a specified application inside the user's
- * configurations directory, and returns it in the form of an array.
- *
- * @param $params array(appname,filename)
- * @param $appname Name of the application.
- * @param $filename Name of the file to open.
- * @return If the function succeeds, returns an array with the contents
- *	of the read file. Otherwise, returns false.
- * @date 2009/12/05
- */
-function lib_eyeConfig_XMLgetConfig ($params = '') {
-	if (!is_array($params) || !isset($params[0]) || !isset($params[1])) {
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
-		return false;
-	}
-
-	return eyeXML('getXMLfile', array(um('getCurrentUserDir') .'/'. CONF_USER_DIR .'/'. $params[0] .'/'. $params[1]));
-}
-
-/**
- * Updates the configuration file of an application with a specified
- * content.
- *
- * @param $params array(appname,filename,newConfig)
- * @param $appname Name of the application.
- * @param $filename Name of the configuration file.
- * @param $newConfig PHP array to save as the content of the file.
- * @return If the configuration file is written successfully, returns
- *	true. Otherwise returns false.
- * @date 2009/12/05
- */
-function lib_eyeConfig_XMLsetConfig ($params = '') {
-	if (!is_array($params) || !isset($params[0]) || !isset($params[1]) || !isset($params[2])) {
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
-		return false;
-	}
-
-	$path = um('getCurrentUserDir') . '/' . CONF_USER_DIR . '/' . $params[0] . '/';
-	if (!vfs('real_fileExists', array($path))) {
-		vfs('real_mkdir', array($path));
-	}
-	return eyeXML('setXMLfile', array($path . $params[1], $params[2]));
-}
-
-/**
  * Opens the XML config file of a specified user,
  * and returns the user's details in an array.
  *
@@ -67,11 +22,11 @@ function lib_eyeConfig_XMLsetConfig ($params = '') {
  * @param $username Name of the user.
  * @return If the function succeeds, returns an array with the contents
  *	of the read file. Otherwise, returns false.
- * @date 2012/11/08
+ * @date 2012/11/09
  */
 function lib_eyeConfig_XMLgetUserConfig ($params = '') {
 	if (!is_array($params) || !isset($params[0])) {
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
 	}
 	
@@ -88,11 +43,11 @@ function lib_eyeConfig_XMLgetUserConfig ($params = '') {
  * @param $newConfig PHP array to save as the content of the file.
  * @return If the configuration file is written successfully, returns
  *	true. Otherwise returns false.
- * @date 2012/11/08
+ * @date 2012/11/09
  */
 function lib_eyeConfig_XMLsetUserConfig($params = '') {
 	if (!is_array($params) || !isset($params[0]) || !isset($params[1])) {
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
 	}
 	
@@ -112,7 +67,7 @@ function lib_eyeConfig_XMLsetUserConfig($params = '') {
  */
 function lib_eyeConfig_XMLaddUserConfig($params = '') {
 	if (!is_array($params) || !isset($params[0]) || !isset($params[1])) {
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
 	}
 	
@@ -134,7 +89,7 @@ function lib_eyeConfig_XMLaddUserConfig($params = '') {
  */
 function lib_eyeConfig_XMLremUserConfig($params = '') {
 	if (!is_array($params) || !isset($params[0])) {
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
 	}
 	

@@ -40,18 +40,6 @@ function lib_eyeConfig_init () {
 		}
 	}
 	
-	// User's Config for Apps
-	if (!function_exists('lib_eyeConfig_getConfig')) {
-		function lib_eyeConfig_getConfig($params) {
-			return lib_eyeConfig_XMLgetConfig($params);
-		}
-	}
-	if (!function_exists('lib_eyeConfig_setConfig')) {
-		function lib_eyeConfig_setConfig($params) {
-			return lib_eyeConfig_XMLsetConfig($params);
-		}
-	}
-	
 	// Userfile
 	if (!function_exists('lib_eyeConfig_setUserConfig')) {
 		function lib_eyeConfig_setUserConfig($params) {
