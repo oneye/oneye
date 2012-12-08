@@ -27,7 +27,7 @@ function lib_eyeConfig_init () {
 		$module = EYE_ROOT .'/'. SYSTEM_DIR .'/'. LIB_DIR .'/eyeConfig/modules/'. CONFIG_MODULE .'.eyecode';
 		if (file_exists($module)) {
 			// Load constants
-			$xmlfile = EYE_ROOT .'/'. SYSTEM_DIR .'/conf/userconfig/'. CONFIG_MODULE .'.xml';
+			$xmlfile = EYE_ROOT .'/'. SYSTEM_DIR .'/' . SYSTEM_CONF_DIR . '/userconfig/'. CONFIG_MODULE .'.xml';
 			$xml = eyeXML('getXMLfile', array($xmlfile));
 			if (isset($xml['eyeConfig_module'][0]['constant'])) {
 				foreach($xml['eyeConfig_module'][0]['constant'] as $constant) {
@@ -63,6 +63,95 @@ function lib_eyeConfig_init () {
 	}
 }
 
-
-
+function lib_eyeConfig_swap ($params) {
+	if (!is_array($params) || !isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	
+	// Must be root
+	if ($GLOBALS['currentUser'] != ROOTUSER) {
+		errorCodes('setErrorCode', array(UM_USER_PERMISSIONS));
+		return false;
+	}
+	
+	// Required as the function mentioned is used to bounce off of to switch module functions and constants
+	if (!function_exists(eyeControl_on_userconfig_switchMethod_submit)) {
+		// Also ensures that this library function can only be used whilst eyeControl is running.
+		return false;
+	}
+	
+	// determine from what to what
+	$from = $params[0];
+	$to = $params[1];
+	
+	// Load the system conf file
+	$xmlfile = EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/system.xml';
+	$xml = eyeXML('getXMLfile', array($xmlfile));
+	
+	// Phase 1 : Conversion of Data to XML
+	if ($from == CONFIG_MODULE) {
+		if ($from !== "xml") {	// If Data is already in XML format, we skip the conversion
+		
+			// Get List of Users
+			$users = um('getAllUsers');
+			
+			// Iterate through List, transferring User Details
+			foreach ($users as $user) {
+				$userDetails = lib_eyeConfig_getUserConfig(array($user));
+				$ret = lib_eyeConfig_XMLaddUserConfig(array($user, $userDetails));
+				
+				if ($ret === false) {
+					// If something has gone wrong...
+					return false;
+				}
+			}
+		}
+		
+		// Set new method
+		$xml['CONFIG'][0]['CONFIG_MODULE'][0] = $to;
+		eyeXML('setXMLFile',array($xmlfile, $xml));
+		
+		// If we don't want to finish off in XML, restart server process to reload new module functions (bounces off eyeControl)
+		if ($to !== "xml") {
+			// $params[2] = the checknum of eyeControl
+			$ret = eyex('rawjs', array('js' => 'sendMsg("' .$params[2]. '", "userConfig_switchMethod_submit", eyeParam("from", "'. $from .'") + eyeParam("to", "'. $to .'"))'));
+		} else {
+			eyex('messageBox', array('content' => 'Switch complete. You are now using XML as your Storage Method.'));
+		}
+		return true;
+	}
+	
+	// Phase 2 : Conversion of Data from XML
+	if ($to !== "xml") {		// If we want it in XML format, we skip the conversion. ('tho in this case we shouldn't even be here)
+		
+		// Initialize new storage method
+		$ret = eyeConfig('initMethod');
+		if ($ret === true) {
+			
+			// Get List of Users
+			$users = um('getAllUsers');
+			
+			// Iterate through List, transferring User Details
+			foreach ($users as $user) {
+				$userDetails = lib_eyeConfig_XMLgetUserConfig(array($user));
+				$ret = lib_eyeConfig_addUserConfig(array($user, $userDetails));
+				
+				if ($ret === false) {
+					break;
+				}
+			}
+		}
+		
+		// If something goes wrong, we default to XML (so we have a workable system)
+		if ($ret === false) {
+			$xml['CONFIG'][0]['CONFIG_MODULE'][0] = "xml";
+			eyeXML('setXMLFile',array($xmlfile, $xml));
+			return false;
+		} else {
+			eyex('messageBox', array('content' => 'Switch complete. You are now using %s as your Storage Method.', 'tokens' => array(strtoupper($to))));
+		}
+	}
+	return true;
+}
 ?>

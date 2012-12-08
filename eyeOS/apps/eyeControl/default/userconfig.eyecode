@@ -27,10 +27,10 @@ if ($currentUser != ROOTUSER) {
 
 $myLabel = new Label(array(
 	'father' => $eyeContainer,
-	'name' => 'eyeControl_userconfig_label_medium',
+	'name' => 'eyeControl_userconfig_label_method',
 	'x' => 8,
 	'y' => 24,
-	'text' => 'Storage Medium'
+	'text' => 'Storage Method'
 ));
 $myLabel->show();
 $myLabel->setCss(array(
@@ -39,7 +39,7 @@ $myLabel->setCss(array(
 
 $mySelect = new Select(array(
 	'father' => $eyeContainer,
-	'name' => 'eyeControl_userconfig_select_medium',
+	'name' => 'eyeControl_userconfig_select_method',
 	'x' => 128,
 	'y' => 24,
 	'width' => 128
@@ -56,7 +56,20 @@ foreach ($opts as $opt) {
 		$mySelect->addOption(strtoupper($opt), $opt);
 	}
 }
-$mySelect->addEvent('onchange','sendMsg('.$checknum.',"userconfig_mediumSelect",eyeParam("arg0",this.value));');
+$mySelect->addEvent('onchange','sendMsg('.$checknum.',"userconfig_methodSelect",eyeParam("arg0",this.value));');
+
+$myButton = new Button(array(
+	'father' => $eyeContainer,
+	'name' => 'eyeControl_userconfig_button_switch',
+	'caption' => 'Change Method',
+	'signal' => 'userconfig_switchMethod',
+	'x' => 24,
+	'y' => 24,
+	'horiz' => 1,
+	'enabled' => 0
+));
+$myButton->addFriend($mySelect);
+$myButton->show(0);
 
 $myLabel = new Label(array(
 	'father' => $eyeContainer,
@@ -73,7 +86,7 @@ $myLabel = new Label(array(
 	'x' => 8,
 	'y' => $GLOBALS[$eyeContainer]->height / 2 + 24,
 	'vert' => 1,
-	'text' => 'Storage Medium Parameters'
+	'text' => 'Storage Method Parameters'
 ));
 $myLabel->show(0);
 $myLabel->setCss(array(
@@ -114,6 +127,6 @@ $myButton->addFriend($myTable);
 $myButton->addFriend($mySelect);
 $myButton->show(0);
 
-eyeX('runjs', array('js' => 'sendMsg('.$checknum.',"userconfig_mediumSelect",eyeParam("arg0",%s));', 'tokens' => array($selval)));
+eyeX('runjs', array('js' => 'sendMsg('.$checknum.',"userconfig_methodSelect",eyeParam("arg0",%s));', 'tokens' => array($selval)));
 
 ?>

@@ -14,12 +14,17 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
              since 2010 Lars Knickrehm (mail@lars-sh.de)
 */
 
-function eyeControl_on_userconfig_mediumSelect ($params = '') {
+function eyeControl_on_userconfig_methodSelect ($params = '') {
 	$switch = $params[arg0][0];
-	$xmlfile = EYE_ROOT .'/'. SYSTEM_DIR .'/conf/userconfig/'. $switch .'.xml';
+	$xmlfile = EYE_ROOT .'/'. SYSTEM_DIR .'/' . SYSTEM_CONF_DIR . '/userconfig/'. $switch .'.xml';
 	$xml = eyeXML('getXMLfile', array($xmlfile));
 	$GLOBALS['eyeControl_userconfig_hidden_xml']->setText($xmlfile);
 	
+	if ($switch == CONFIG_MODULE) {
+		$GLOBALS['eyeControl_userconfig_button_switch']->disable();
+	} else if ($GLOBALS['eyeControl_userconfig_button_switch']->enabled === 0) {
+		$GLOBALS['eyeControl_userconfig_button_switch']->enable();
+	} 
 	$GLOBALS['eyeControl_userconfig_label_description']->setText($xml['eyeConfig_module'][0]['description'][0]);
 	
 	$GLOBALS['eyeControl_userconfig_table_params']->delAllRows();
@@ -28,7 +33,7 @@ function eyeControl_on_userconfig_mediumSelect ($params = '') {
 			$GLOBALS['eyeControl_userconfig_table_params']->addRow(array($setting['name'][0], $setting['ui_name'][0], $setting['value'][0], $setting['default'][0]));
 		}
 	} else {
-		// would disable the button, but image button doesn't support that (at the moment)
+		// I would disable the button, but image button doesn't support that (at the moment)
 	}
 }
 
@@ -45,7 +50,7 @@ function eyeControl_on_userconfig_paramEdit ($params = '') {
 	foreach($xml['eyeConfig_module'][0]['constant'] as $setting) {
 		if ($setting['name'][0] == $sel) {
 			eyex('messageBox',array(
-				'buttons' => array(array('userconfig_paramEdit_save','Save'), array('userconfig_paramEdit_cancel','Cancel')),
+				'buttons' => array(array('userconfig_paramEdit_save','Save'), array('userconfig_dialog_cancel','Cancel')),
 				'content' => '%s',
 				'father' => 'eyeControl_container_big',
 				'img' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/rename.png',
@@ -55,7 +60,7 @@ function eyeControl_on_userconfig_paramEdit ($params = '') {
 				'title' => 'Edit Value',
 				'tokens' => array($setting['ui_name'][0]),
 				'type' => 3,
-				'win_name' => 'eyeControl_userconfig_edit_dialog',
+				'win_name' => 'eyeControl_userconfig_dialog',
 				'win_removepid' => 0,
 				'win_style' => TITLE + CLOSE
 			));
@@ -72,21 +77,73 @@ function eyeControl_on_userconfig_paramEdit_save ($params = '') {
 	
 	for ($s = 0; $s<count($xml['eyeConfig_module'][0]['constant']); $s++) {
 		if ($xml['eyeConfig_module'][0]['constant'][$s]['name'][0] == $sel) {
+			if (isset($xml['eyeConfig_module'][0]['constant'][$s]['password'])) {
+				$val = base64_encode(bin2hex($val));
+			}
 			$xml['eyeConfig_module'][0]['constant'][$s]['value'][0] = $val;
 			break;
 		}
 	}
 	
-	$GLOBALS['eyeControl_userconfig_edit_dialog']->close();
+	$GLOBALS['eyeControl_userconfig_dialog']->close();
 	eyeXML('setXMLfile', array($xmlfile, $xml));
 	
-	$val = $GLOBALS['eyeControl_userconfig_select_medium']->selected;
+	$val = $GLOBALS['eyeControl_userconfig_select_method']->selected;
 	eyeX('messageBox', array('content' => "New Parameter Value Saved"));
-	eyeControl_on_userconfig_mediumSelect(array('arg0' => array(0 => $val)));
+	eyeControl_on_userconfig_methodSelect(array('arg0' => array(0 => $val)));
 }
 
-function eyeControl_on_userConfig_paramEdit_cancel ($params = '') {
-	$GLOBALS['eyeControl_userconfig_edit_dialog']->close();
+function eyeControl_on_userconfig_dialog_cancel ($params = '') {
+	$GLOBALS['eyeControl_userconfig_dialog']->close();
+}
+
+function eyeControl_on_userconfig_switchMethod_submit ($params = '') {
+	if (!is_array($params) || !isset($params["from"]) || !isset($params["to"])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	
+	$args = array($params['from'][0], $params['to'][0], $GLOBALS['checknum']);
+	$ret = eyeConfig('swap', $args);
+	
+	if ($GLOBALS['eyeControl_userconfig_dialog']) {
+		$GLOBALS['eyeControl_userconfig_dialog']->close();
+		$GLOBALS['eyeControl_userconfig_button_switch']->disable();
+	}
+}
+
+function eyeControl_on_userconfig_switchMethod ($params = '') {
+	
+//	error_log(print_r($params, true), 0);
+	
+	$sel = $GLOBALS['eyeControl_userconfig_select_method']->selected;
+	if ($sel == CONFIG_MODULE) {
+		eyex('messageBox',array('content' => 'This is the current method. You cannot change to it.'));
+		return true;
+	}
+	
+	// TO-DO:
+	// - Check there are no (other) users attempting to access oneye whilst we do this, and bring up a messagebox if there are.
+	// - - Is it even currently possible to get a list of users logged in?
+	// - - We could get oneye to maintain a central xml file that's updated everytime someone logs in or out. Has its flaws, though.
+	
+	eyex('messageBox',array(
+		'buttons' => array(array('userconfig_switchMethod_submit','Yes'), array('userconfig_dialog_cancel','Cancel')),
+		'content' => 'You are about to switch from %s to %s. Are you sure you want to do this?',
+		'tokens' => array(strtoupper(CONFIG_MODULE), strtoupper($sel)),
+		'father' => 'eyeControl_container_big',
+		'img' => '?',
+		'hiddens' => array(array("from", CONFIG_MODULE), array("to", $sel)),
+		'title' => 'Confirm Change',
+		'type' => 3,
+		'win_name' => 'eyeControl_userconfig_dialog',
+		'win_removepid' => 0,
+		'win_style' => TITLE,
+	));
+	
+//	eyeControl_on_userconfig_switchMethod_submit(array(CONFIG_MODULE, $sel));
+	
+/*		*/
 }
 
 ?>
