@@ -103,6 +103,7 @@ function lib_eyeConfig_swap ($params) {
 				
 				if ($ret === false) {
 					// If something has gone wrong...
+					eyex('messageBox', array('content' => 'Something went wrong! You have been kept in '. $from .'.'));
 					return false;
 				}
 			}
@@ -124,9 +125,8 @@ function lib_eyeConfig_swap ($params) {
 	
 	// Phase 2 : Conversion of Data from XML
 	if ($to !== "xml") {		// If we want it in XML format, we skip the conversion. ('tho in this case we shouldn't even be here)
-		
 		// Initialize new storage method
-		$ret = eyeConfig('initMethod');
+		$ret = eyeConfig('moduleFirstStart');
 		if ($ret === true) {
 			
 			// Get List of Users
@@ -147,6 +147,7 @@ function lib_eyeConfig_swap ($params) {
 		if ($ret === false) {
 			$xml['CONFIG'][0]['CONFIG_MODULE'][0] = "xml";
 			eyeXML('setXMLFile',array($xmlfile, $xml));
+			eyex('messageBox', array('content' => 'Something went wrong! Defaulting to XML.'));
 			return false;
 		} else {
 			eyex('messageBox', array('content' => 'Switch complete. You are now using %s as your Storage Method.', 'tokens' => array(strtoupper($to))));
