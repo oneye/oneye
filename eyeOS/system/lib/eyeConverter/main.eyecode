@@ -77,8 +77,7 @@ function lib_eyeConverter_convert($params) {
 		$format = escapeshellarg($format);
 	}
 	
-//	$args = ' --format=' . $format . ' --output=' . escapeshellarg($dest) . ' --home=' . escapeshellarg(realpath(um('getCurrentUserDir') . TMP_USER_DIR)) . $args;
-	$args = ' --format=' . $format . ' --output=' . escapeshellarg($dest) . $args;
+	$args = ' --format=' . $format . ' --output=' . escapeshellarg($dest) . ' --home=' . escapeshellarg(realpath(um('getCurrentUserDir') . TMP_USER_DIR)) . $args;
 	$cmd = escapeshellarg(OFFICE_PYTHON_PATH) . ' ' . escapeshellarg(realpath(EYE_ROOT . '/extras/unoconv/unoconv')) . $args . ' ' . escapeshellarg($orig);
 	shell_exec($cmd);
 	return file_exists($dest);

@@ -9,4 +9,4 @@
 	url = https://github.com/yui/yuicompressor.git
 [submodule "eyeOS/extras/unoconv"]
 	path = eyeOS/extras/unoconv
-	url = https://github.com/dagwieers/unoconv
+	url = https://github.com/s0600204/unoconv
