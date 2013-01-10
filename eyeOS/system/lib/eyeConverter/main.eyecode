@@ -20,7 +20,16 @@ function lib_eyeConverter_convert($params) {
 		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
 		return false;
 	}
-
+	
+	// Detect if both python and unoconv are installed and valid
+	$unoconv = vfs('real_fileExists', array(EYE_ROOT . '/extras/unoconv/unoconv'));
+	$python = trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
+	$python = (strpos($python, 'not found') > -1) ? FALSE : TRUE;
+	if (!$unoconv || !$python) {
+		eyex('messageBox',array('content' => 'Office Support has not been configured correctly. Please contact your system admin.'));
+		return false;
+	}
+	
 	$orig = $params[0];
 	$dest = $params[1];
 	$format = $params[2];
@@ -67,9 +76,10 @@ function lib_eyeConverter_convert($params) {
 	} else {
 		$format = escapeshellarg($format);
 	}
-
-	$args = ' --format=' . $format . ' --output=' . escapeshellarg($dest) . $args;
-	shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' ' . escapeshellarg(realpath(EYE_ROOT . '/extras/unoconv/unoconv')) . $args . ' ' . escapeshellarg($orig));
+	
+	$args = ' --format=' . $format . ' --output=' . escapeshellarg($dest) . ' --home=' . escapeshellarg(realpath(um('getCurrentUserDir') . TMP_USER_DIR)) . $args;
+	$cmd = escapeshellarg(OFFICE_PYTHON_PATH) . ' ' . escapeshellarg(realpath(EYE_ROOT . '/extras/unoconv/unoconv')) . $args . ' ' . escapeshellarg($orig);
+	shell_exec($cmd);
 	return file_exists($dest);
 }
 

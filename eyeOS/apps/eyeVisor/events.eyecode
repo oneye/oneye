@@ -37,8 +37,8 @@ function eyeVisor_on_Resize($params=null) {
 	$height = $params['arg'][1];
 	$width = intval($width);
 	$height = intval($height);
-	$width = $width - 35;
-	$height = $height - 110;
+	$width = $width - 10;
+	$height = $height - 88;
 	$GLOBALS['eyeVisorFrame']->setWidth($width);
 	$GLOBALS['eyeVisorFrame']->setHeight($height);
 }
@@ -75,20 +75,22 @@ function eyeVisor_on_getFile($params=null) {
 		$content = file_get_contents($nfile);
 	}
 	fclose($tfp);
-
+	
+	$content = "<p>For some reason the conversion failed. Please try again later.</p>";
 	if($real == 1) {
-		eyeConverter('convert',array($nfile,$myHTML,$to,1));
-		$fp = vfs('real_open',array($myHTML,'r'));
-		$content = fread($fp,vfs('real_filesize',array($myHTML)));
-		fclose($fp);
-		$content = str_replace('<IMG SRC="','<IMG SRC="index.php?checknum='.$tCheckNum.'&msg=viewTempImg&params=',$content);
+		$convOut = eyeConverter('convert',array($nfile, $myHTML, $to, 1));
+		if ($convOut) {
+			$fp = vfs('real_open',array($myHTML,'r'));
+			$content = fread($fp,vfs('real_filesize',array($myHTML)));
+			fclose($fp);
+			$content = str_replace('<IMG SRC="','<IMG SRC="index.php?checknum='.$tCheckNum.'&msg=viewTempImg&params=',$content);
+		}
 	} else {
 		$pattern = '/<img[^\/]*\/>/i';
 		$replacement = '';
 		$content = /* utf8 */ preg_replace($pattern, $replacement, $content);
 	}
-
-
+	
 	echo $content;
 	exit;
 }

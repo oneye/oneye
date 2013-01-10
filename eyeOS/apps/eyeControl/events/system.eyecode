@@ -69,6 +69,13 @@ function eyeControl_on_system_office($params = '') {
 	$xml['CONFIG'][0]['OFFICE_PYTHON_PATH'][0] = $GLOBALS['eyeControl_system_office_textbox_folder']->text;
 	eyeXML('setXMLFile', array($file, $xml));
 	eyex('messageBox',array('content' => 'Changes successfully saved.'));
+	
+	// Scan for python
+	$pythonOut = trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
+	if (strpos($pythonOut, 'not found') > -1) {
+		$pythonOut = 'Python Not Found';
+	}
+	$GLOBALS['eyeControl_system_office_label_python_test']->setText($pythonOut);
 }
 
 function eyeControl_on_system_office_howtowindows($params = '') {

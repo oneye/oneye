@@ -17,20 +17,60 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 function eyeVisor_run($params=null) {
 	global $checknum;
 	$file = $params[0];
-	$myHidden = new Hidden(array('name'=>'vPath','father'=>'eyeApps','text'=>$file));
-	eyeWidgets('serialize',array($myHidden));
+	
+	
 
-	$myWindow = new Window(array('name'=>'eyeVisorWND','father'=>'eyeApps',
-	'cent'=>1,'width'=>600,'height'=>600,'title'=>basename($file).' - eyeVisor','sendResizeMsg'=>1,'sigResize'=>'Resize','removeWin'=>0,'savePosition' => 1));
+	$myWindow = new Window(array(
+		'name' => 'eyeVisorWND',
+		'father' => 'eyeApps',
+		'cent' => 1,
+		'width' => 600,
+		'height' => 600,
+		'title' => basename($file).' - eyeVisor',
+		'sendResizeMsg' => 1,
+		'sigResize' => 'Resize',
+		'removeWin' => 0,
+		'savePosition' => 1
+	));
 	$myWindow->show();
-	$myToolbar = new Toolbar(array('name'=>'myBar','father'=>'eyeVisorWND_Content'));
+	
+	$myToolbar = new Toolbar(array(
+		'name' => 'myBar',
+		'father' => $myWindow->name .'_Content'
+	));
 	$myToolbar->show();
 	$myToolbar->addItem('Edit','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/edit.png','Edit');
-	$myFrame = new Iframe(array('name'=>'eyeVisorFrame','father'=>'eyeVisorWND_Content','x'=>15,
-		'y'=>80,'height'=>$myWindow->height-110,'width'=>$myWindow->width-35,
-		'url'=>"index.php?checknum=".$checknum."&msg=getFile"));
+	
+	$myHidden = new Hidden(array(
+		'name' => 'vPath',
+		'father' => 'eyeApps',
+		'text' => $file
+	));
+	$myHidden->show();
+	
+	$myLabel = new Label(array(
+		'father' => $myWindow->name .'_Content',
+		'name' => 'eyeVisor_loadingMessage',
+		'x' => 0,
+		'y' => 80,
+		'cent' => 2,
+		'text' => 'Please wait, rendering...'
+	));
+	$myLabel->show(0);
+	
+	$myFrame = new Iframe(array(
+		'name' => 'eyeVisorFrame',
+		'father' => $myWindow->name .'_Content',
+		'x' => 4,
+		'y' => 60,
+		'height' => $myWindow->height - 88,
+		'width' => $myWindow->width - 10,
+		'url' => "index.php?checknum=".$checknum."&msg=getFile"
+	));
 	$myFrame->show();
 	$myFrame->focus();
+	$myFrame->addEvent('onload', 'document.getElementById("' . $GLOBALS['myPid'] . '_eyeVisor_loadingMessage_Container").style.display="none"');
+	
 }
 
 function eyeVisor_end($params=null) {
