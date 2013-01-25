@@ -42,6 +42,8 @@ function eyeDownload_on_iframe($params = '') {
 
 function eyeDownload_on_download($params = '') {
 	global $myPid;
+	
+	ob_end_clean();
 	$path = $_SESSION['eyeDownload'][$myPid];
 	$file = basename($path);
 	$path = eyeFiles('cleanPath', array(substr(trim($path, '/\\'), 0, -strlen($file)))); // utf8
