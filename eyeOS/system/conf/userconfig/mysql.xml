@@ -1,0 +1,28 @@
+<eyeConfig_module>
+	<description>oneye's mySQL implementation. Designed to be fully compatible with oneye. Before using it, please ensure you have created a database within your mySQL installation, followed by a user (also within mySQL) granted with suitable privileges to maintain that database.</description>
+	<constant>
+		<name>MYSQL_USERNAME</name>
+		<value>www-data</value>
+		<default>www-data</default>
+		<ui_name>Database Username</ui_name>
+	</constant>
+	<constant>
+		<name>MYSQL_PASSWORD</name>
+		<value />
+		<default />
+		<ui_name>Database Password</ui_name>
+		<password />
+	</constant>
+	<constant>
+		<name>MYSQL_DBNAME</name>
+		<value>oneyeDB</value>
+		<default>oneyeDB</default>
+		<ui_name>Database Name</ui_name>
+	</constant>
+	<constant>
+		<name>MYSQL_SERVER</name>
+		<value>localhost</value>
+		<default>127.0.0.1</default>
+		<ui_name>mySQL Server Address</ui_name>
+	</constant>
+</eyeConfig_module>
