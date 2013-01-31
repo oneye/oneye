@@ -70,7 +70,7 @@ function lib_eyeConfig_setUserConfig($params) {
 			}
 		}
 	}
-	error_log($q[0], 0);
+	
 	// Run Queries and Exit
 	foreach ($q as $query) {
 		$result = $db->query($query);
@@ -201,7 +201,8 @@ function lib_eyeConfig_moduleFirstStart ($params = '') {
 	
 	// Compose Queries
 	$userTable = "CREATE TABLE IF NOT EXISTS tblUser (
-			username VARCHAR(32) DEFAULT '' PRIMARY KEY,
+			userID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+			username VARCHAR(32) DEFAULT '' UNIQUE,
 			password CHAR(32) NOT NULL DEFAULT '',
 			email VARCHAR(64) DEFAULT '',
 			quota INTEGER UNSIGNED,
