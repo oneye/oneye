@@ -1,0 +1,281 @@
+<?php
+
+function lib_eyeConfig_setUserConfig($params) {
+	if (!is_array($params) || !isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	
+	// Connect to the Database
+	$db = _mySQL_connect();
+	if ($db == false) {
+		return false;
+	}
+	
+	$username = $db->escape_string($params[0]);
+	if (!$username) {
+		return false;
+	}
+		
+	$userArray = $params[1]['eyeUser'][0];
+	$cols = '';
+	$vals = '';
+	$groups = '';
+	$maintain = array('groups' => '', 'users' => '');
+	foreach ($userArray as $key => $value) {
+		if ($key == "group") {
+			$groups = $value;
+		} else if ($key == "maintain") {
+			$maintain['groups'] = $value;
+		} else if ($key == "mngUser") {
+			$maintain['users'] = $value;
+		} else {
+			$cols .= $db->escape_string($key) . ', ';
+			
+			$val = $db->escape_string($value[0]);
+			switch ($key) {
+				case 'quota':
+					if ($val === '') {
+						$vals .= 'NULL, ';
+						break;
+					}
+				default:
+					$vals .= (is_numeric($val)) ? $val . ', ' : '\'' . $val . '\', ';
+			}
+		}
+	}
+	$cols = substr($cols, 0, -2);
+	$vals = substr($vals, 0, -2);
+	
+	// Compose Queries
+	$q = array();
+	$q[] = 'REPLACE INTO tblUser ('. $cols .') VALUES ('. $vals .')';
+	$q[] = 'DELETE FROM tblGroups WHERE username = \''. $username .'\';';
+	if (is_array($groups)) {
+		foreach ($groups as $group) {
+			$q[] = 'INSERT INTO tblGroups (username, groupname) VALUES (\''. $username .'\', \''. $group .'\');';
+		}
+	}
+	if (is_array($maintain['groups']) || is_array($maintain['users'])) {
+		$q[] = 'DELETE FROM tblMaintainedGroups WHERE maintainer = \''. $username .'\';';
+		$q[] = 'DELETE FROM tblMaintainedUsers WHERE maintainer = \''. $username .'\';';
+		if (is_array($maintain['groups'])) {
+			foreach ($maintain['groups'] as $group) {
+				$q[] = 'INSERT INTO tblMaintainedGroups (maintainer, groupname) VALUES (\''. $username .'\', \''. $group .'\');';
+			}
+		}
+		if (is_array($maintain['users'])) {
+			foreach ($maintain['users'] as $user) {
+				$q[] = 'INSERT INTO tblMaintainedUsers (maintainer, username) VALUES (\''. $username .'\', \''. $user .'\');';
+			}
+		}
+	}
+	
+	// Run Queries and Exit
+	foreach ($q as $query) {
+		$result = $db->query($query);
+		if ($result === false) {
+			break;
+		}
+	}
+	$db->close();
+	return $result;
+}
+
+function lib_eyeConfig_getUserConfig($params) {
+	if (!is_array($params) || !isset($params[0])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	
+	// Connect to the Database
+	$db = _mySQL_connect();
+	if ($db == false) {
+		return false;
+	}
+	
+	$username = $db->escape_string($params[0]);
+	if (!$username) {
+		return false;
+	}
+	
+	// Query the Database
+	$userResult = $db->query('SELECT * FROM tblUser WHERE username = "' . $username . '"');
+	$groupResult = $db->query('SELECT * FROM tblGroups WHERE username = "' . $username . '"');
+	
+	// Validate results
+	if ($userResult === false || $userResult->num_rows === 0) {
+		return false;
+	}
+	
+	// Collate values into an Array oneye's UM can understand
+	$userDetails = array();
+	foreach ($userResult->fetch_assoc() as $key => $value) {
+		if ($value != '') {
+			$userDetails[$key] = array($value);
+		}
+	}
+	
+	// Add Groups to the Array
+	if ($groupResult->num_rows > 0) {
+		$userDetails['group'] = array();
+		while ($group = $groupResult->fetch_assoc()) {
+			$userDetails['group'][] = $group['groupname'];
+		}
+	}
+	
+	// Detect and Add Maintained Groups and Users to the Array if Applicable
+	if (is_array($userDetails['maintainer']) && $userDetails['maintainer'][0] == 1) {
+		$maintGroupResult = $db->query('SELECT * FROM tblMaintainedGroups WHERE maintainer = "' . $username . '"');
+		$maintUserResult = $db->query('SELECT * FROM tblMaintainedUsers WHERE maintainer = "' . $username . '"');
+		
+		if ($maintGroupResult->num_rows > 0) {
+			$userDetails['maintain'] = array();
+			while ($group = $maintGroupResult->fetch_assoc()) {
+				$userDetails['maintain'][] = $group['groupname'];
+			}
+		}
+		if ($maintUserResult->num_rows > 0) {
+			$userDetails['mngUser'] = array();
+			while ($user = $maintUserResult->fetch_assoc()) {
+				$userDetails['mngUser'][] = $user['username'];
+			}
+		}
+	}
+	
+	// Return the Array
+	return array('eyeUser' => array($userDetails));
+}
+
+function lib_eyeConfig_addUserConfig($params) {
+	if (!is_array($params) || !isset($params[0]) || !isset($params[1])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	
+	// Redirect to Set User code, and return that
+	return lib_eyeConfig_setUserConfig($params);
+}
+
+function lib_eyeConfig_remUserConfig($params) {
+	if (!is_array($params) || !isset($params[0])) {
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
+		return false;
+	}
+	
+	// Connect to the Database
+	$db = _mySQL_connect();
+	if ($db == false) {
+		return false;
+	}
+	
+	$username = $db->escape_string($params[0]);
+	if (!$username) {
+		return false;
+	}
+	
+	// Compose Queries
+	$q = array();
+	$q[] = 'DELETE FROM tblUser WHERE username = \''. $username .'\';';
+	$q[] = 'DELETE FROM tblGroups WHERE username = \''. $username .'\';';
+	$q[] = 'DELETE FROM tblMaintainedGroups WHERE maintainer = \''. $username .'\';';
+	$q[] = 'DELETE FROM tblMaintainedUsers WHERE maintainer = \''. $username .'\';';
+	
+	// Run Queries and Exit
+	foreach ($q as $query) {
+		$result = $db->query($query);
+		if ($result === false) {
+			break;
+		}
+	}
+	$db->close();
+	return $result;
+}
+
+function lib_eyeConfig_moduleFirstStart ($params = '') {
+	// Connect to Server/Database
+	$db = _mySQL_connect();
+	if ($db === false) {
+		return false;
+	}
+	
+	// Compose Queries
+	$userTable = "CREATE TABLE IF NOT EXISTS tblUser (
+			userID INTEGER UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+			username VARCHAR(32) DEFAULT '' UNIQUE,
+			password CHAR(32) NOT NULL DEFAULT '',
+			email VARCHAR(64) DEFAULT '',
+			quota INTEGER UNSIGNED,
+			fullname VARCHAR(64) DEFAULT '',
+			createDate INTEGER UNSIGNED DEFAULT 0,
+			lastLogin INTEGER UNSIGNED DEFAULT 0,
+			expirationDate INTEGER UNSIGNED DEFAULT 0,
+			disabled CHAR(1) DEFAULT 0,
+			admin CHAR(1) DEFAULT 0,
+			maintainer CHAR(1) DEFAULT 0
+		)";
+	$groupsTable = "CREATE TABLE IF NOT EXISTS tblGroups (
+			username VARCHAR(32) DEFAULT '',
+			groupname VARCHAR(32) DEFAULT '',
+			PRIMARY KEY (username, groupname)
+		)";
+	$userMaintainTable = "CREATE TABLE IF NOT EXISTS tblMaintainedGroups (
+			maintainer VARCHAR(32) DEFAULT '',
+			groupname VARCHAR(32) DEFAULT '',
+			PRIMARY KEY (maintainer, groupname)
+		)";
+	$groupMaintainTable = "CREATE TABLE IF NOT EXISTS tblMaintainedUsers (
+			maintainer VARCHAR(32) DEFAULT '',
+			username VARCHAR(32) DEFAULT '',
+			PRIMARY KEY (maintainer, username)
+		)";
+	
+	// Run Queries
+	$q = array();
+	$q[] = $db->query($userTable);
+	$q[] = $db->query($groupsTable);
+	$q[] = $db->query($userMaintainTable);
+	$q[] = $db->query($groupMaintainTable);
+	
+	// Close Connection to Database
+	$db->close();
+	
+	// Check results for problems
+	foreach ($q as $result) {
+		if ($result === false) {
+			return false;
+		}
+	}
+	
+	// Otherwise, return true
+	return true;
+}
+
+
+function _mySQL_connect () {
+	// Decode Database Password
+	$password = base64_decode(MYSQL_PASSWORD);
+	if (function_exists('hex2bin')) {
+		$password = hex2bin($password);
+	} else {
+		$pw = '';
+		for ($i = 0; $i < strlen($password); $i += 2) {
+			$pw .= chr(hexdec(substr($password, $i, 2)));
+		}
+		$password = $pw;
+	}
+	
+	// Connect to Database
+	$db = new mysqli(MYSQL_SERVER, MYSQL_USERNAME, $password, MYSQL_DBNAME);
+	
+	// Return Result
+	if ($db->connect_errno) {
+		error_log("mySQLi failed to connect : (". $db->connect_errno .") ". $db->connect_error, 0);
+		return false;
+	} else {
+		return $db;
+	}
+}
+
+
+?>

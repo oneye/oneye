@@ -227,5 +227,13 @@
 			<permissions>all</permissions>
 			<title>yes</title>
 		</content>
+		<content>
+			<description>Change the storage medium used to store User Details</description>
+			<display>User Details Storage</display>
+			<img>index.php?theme=USERTHEME&amp;extern=icons/48x48/manageusers.png</img>
+			<name>userconfig</name>
+			<permissions>root</permissions>
+			<title>yes</title>
+		</content>
 	</category>
 </eyeControl>
