@@ -129,11 +129,16 @@ function eyeDesk_on_Icon_Moved($params = '') {
 function eyeDesk_on_Icon_Dropped($params = '') {
 	if ( /* utf8 */ strtolower($params['arg0'][0]) === 'app') {
 		$app = $params['arg1'][0];
-		$file = $app;
+		
+		// find user-friendly name of app
+		$appxml = getAppInfo($app);
+		$appName = $appxml['package'][0]['name'][0];
+		
+		$file = $appName;
 		$i = 0;
 		while (vfs('real_fileExists',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file . '.' . EYEOS_LINK_EXT))) {
 			$i++;
-			$file = $app . '_' . $i;
+			$file = $appName . '_' . $i;
 		}
 		$xml['eyeLink'][0]['content'][0] = $app . '.app';
 		if (vfs('real_fileExists',array(eyex('getThemeImage',array('icons/48x48/' . $app . '.png',2))))) {
@@ -151,6 +156,9 @@ function eyeDesk_on_Icon_Dropped($params = '') {
 function eyeDesk_on_OpenPath($params = '') {
 	global $checknum;
 	global $myPid;
+	
+	// load list of translated app names contained within the directory of the eyeApps app
+	i18n('loadLang', array('eyeApps'));
 
 	$confFiles = eyeXML('getXMLconfig',array('eyeFiles','conf.xml'));
 	if (!isset($confFiles['eyeFiles'][0]['clickMethod'][0])) {
@@ -244,6 +252,12 @@ function eyeDesk_on_OpenPath($params = '') {
 			}
 		} elseif ($file[1] == 'link') {
 			$file[2] = i18n('translate',array(basename($file[2],'.' . EYEOS_LINK_EXT)));
+			
+			if (strripos($file[2], '_') !== FALSE) {	// For when a link's name has a '_1' or similar after it
+				$transName = i18n('translate', array(substr($file[2], 0, strripos($file[2], '_'))));
+				$file[2] = $transName . substr($file[2], stripos($file[2], '_'));
+			}
+			
 			$xml = eyeXML('getXMLfile',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file[0]));
 			if ($xml['eyeLink'][0]['content'][0] === 'eyeTrash.app' || strtolower(substr($xml['eyeLink'][0]['content'][0], 0, 8)) === 'trash://') { // utf8
 				$menu = getConfig('eyeDesk','menu_trash.xml');
