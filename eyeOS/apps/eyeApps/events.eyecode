@@ -171,6 +171,7 @@ function eyeApps_lib_ShowApps($category) {
 	$y = 20;
 	foreach ($apps as $app) {
 		if ($app[0] != 'eyeApps') {
+			$app[2] = i18n('translate', array($app[2]));
 			$myIcon = new Icon(array(
 				'content' => array($app[0]),
 				'draggable' => 0,
@@ -179,7 +180,7 @@ function eyeApps_lib_ShowApps($category) {
 				'name' => 'eyeApps_Icon_' . $i,
 				'onclick' => $conf['eyeFiles'][0]['clickMethod'][0],
 				'overClass' => 'eyeFiles_icons',
-				'text' => i18n('translate', array($app[2])),
+				'text' => $app[2],
 				'useClass' => 1,
 				'x' => $x,
 				'y' => $y
@@ -193,11 +194,11 @@ function eyeApps_lib_ShowApps($category) {
 			}
 			$i++;
 			$myWidgetDrag = new widgetDrag(array(
-				'content' => array('app',$app[0]),
+				'content' => array('app',$app[0],$app[2]),
 				'dragAlpha' => 75,
 				'dragCss' => array(array('border'),array('1px #000000 dotted')),
 				'father' => $myIcon->name . '_Container',
-				'name' => $myIcon->name . '_WidgetDrag'
+				'name' => $myIcon->name . '_WidgetDrag',
 			));
 			$myWidgetDrag->show();
 		}
