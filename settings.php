@@ -22,7 +22,7 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 
 //Paths
 define('EYE_ROOT','.');
-define('REAL_EYE_ROOT','eyeOS');
+define('REAL_EYE_ROOT','system');
 define('SYSTEM_DIR','system');
 define('KERNEL_DIR','kernel');
 define('SERVICE_DIR','services');
