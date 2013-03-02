@@ -129,11 +129,12 @@ function eyeDesk_on_Icon_Moved($params = '') {
 function eyeDesk_on_Icon_Dropped($params = '') {
 	if ( /* utf8 */ strtolower($params['arg0'][0]) === 'app') {
 		$app = $params['arg1'][0];
-		$file = $app;
+		$appName = $params['arg2'][0];
+		$file = $appName;
 		$i = 0;
 		while (vfs('real_fileExists',array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/Desktop/' . $file . '.' . EYEOS_LINK_EXT))) {
 			$i++;
-			$file = $app . '_' . $i;
+			$file = $appName . '_' . $i;
 		}
 		$xml['eyeLink'][0]['content'][0] = $app . '.app';
 		if (vfs('real_fileExists',array(eyex('getThemeImage',array('icons/48x48/' . $app . '.png',2))))) {
@@ -151,7 +152,7 @@ function eyeDesk_on_Icon_Dropped($params = '') {
 function eyeDesk_on_OpenPath($params = '') {
 	global $checknum;
 	global $myPid;
-
+	
 	$confFiles = eyeXML('getXMLconfig',array('eyeFiles','conf.xml'));
 	if (!isset($confFiles['eyeFiles'][0]['clickMethod'][0])) {
 		$confFiles['eyeFiles'][0]['clickMethod'][0] = 1;
