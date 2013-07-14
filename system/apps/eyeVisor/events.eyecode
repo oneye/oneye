@@ -49,11 +49,7 @@ function eyeVisor_on_getFile($params=null) {
 	$tCheckNum = proc('findChecknumByName',array('eyeX'));
 	global $myPid;
 	$ext = /* utf8 */ strtolower($info['extension']);
-	if ($ext == 'xls' || $ext == 'ods') {
-		$to = 'HTML (StarCalc)';
-	} else {
-		$to = 'HTML (StarWriter)';
-	}
+	$to = 'html';
 	$real = vfs('getRealName',array($file));
 	if(!vfs('checkPermissions',array($real))) {
 		eyeX('messageBox',array('content'=>'You do not have sufficient permissions!'));

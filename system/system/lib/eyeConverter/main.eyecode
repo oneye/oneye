@@ -65,7 +65,7 @@ function lib_eyeConverter_convert($params) {
 
 	if ($format === 'MS Word 97') {
 		$format = 'doc';
-	} else if ($format === 'HTML (StarWriter)') {
+	} else if ($format === 'HTML (StarWriter)' || $format === 'HTML (StarCalc)') {
 		$format = 'html';
 	} else if ($format === 'calc8') {
 		$format = 'ods';
