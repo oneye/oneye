@@ -99,7 +99,7 @@ function eyeDocs_openFile($file) {
 		}
 
 		copy($real,$nfile);
-		$to = 'HTML (StarWriter)';
+		$to = 'html';
 		eyeConverter('convert',array($nfile,$myHTML,$to,1));
 		$fp = vfs('real_open',array($myHTML,'r'));
 		if(!$fp) {
