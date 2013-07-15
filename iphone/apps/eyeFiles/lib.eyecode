@@ -88,11 +88,7 @@ function eyeFiles_openLocation($file) {
 			$nfile = um('getCurrentUserDir').'tmp/iFiles'.$theid.'.'.$info;
 			$myHTML = um('getCurrentUserDir').'tmp/iFiles'.$theid.'_new.tmp';
 			copy($real,$nfile);
-			if ($info == 'xls' || $info == 'ods') {
-				$to = 'HTML (StarCalc)';
-			} else {
-				$to = 'HTML (StarWriter)';
-			}
+			$to = 'html';
 			eyeConverter('convert',array($nfile,$myHTML,$to,1));
 			$fp = vfs('real_open',array($myHTML,'r'));
 			$content = fread($fp,vfs('real_filesize',array($myHTML)));
