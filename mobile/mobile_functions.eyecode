@@ -71,7 +71,7 @@ if(isset($_REQUEST['dirname'])) {
 			$myHTML = um('getCurrentUserDir').'tmp/mobile_new.tmp';
 
 			copy($real,$nfile);
-			$to = 'HTML (StarWriter)';
+			$to = 'html';
 			$tfp = vfs('real_open',array($nfile,'r'));
 			$bytes = fread($tfp,5);
 			$real = 1;
@@ -89,12 +89,7 @@ if(isset($_REQUEST['dirname'])) {
 				$content = file_get_contents($nfile);
 			}
 			fclose($tfp);
-
-			if ($extension == 'xls' || $extension == 'ods') {
-				$to = 'HTML (StarCalc)';
-			} else {
-				$to = 'HTML (StarWriter)';
-			}
+			
 			if($real == 1) {
 				eyeConverter('convert',array($nfile,$myHTML,$to,1));
 				$fp = vfs('real_open',array($myHTML,'r'));
