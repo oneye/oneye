@@ -157,6 +157,7 @@ function eyeAddressBook_drawListBox($contacts=null) {
 	if (!is_array($contacts)) {
 		$contacts = array();
 	}
+	uksort($contacts, 'eyeAddressBook_sortContacts');
     foreach ($contacts as $key=>$contact) {
 		$key = /* utf8 */ substr($key, 3);
         $chkContact = new Checkbox(array(
@@ -182,6 +183,10 @@ function eyeAddressBook_drawListBox($contacts=null) {
         $y+=25;
         ++$count;
     }
+}
+
+function eyeAddressBook_sortContacts($a, $b) {
+	return utf8_strcasecmp($a[0]['home'][0]['surname'][0] . ', ' . $a[0]['home'][0]['name'][0], $b[0]['home'][0]['surname'][0] . ', ' . $b[0]['home'][0]['name'][0]);
 }
 
 function eyeAddressBook_showSelectGroup() {
