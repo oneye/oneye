@@ -901,6 +901,7 @@ function eyeAddressBook_on_import() {
         $checknum,
         '',
         array(
+            'vCard files' => '*.vcard',
             'All files' => '*'
         )
     );
@@ -943,6 +944,7 @@ function eyeAddressBook_on_exportWindow($params=null) {
         $checknum,
         '',
         array(
+            'vCard files' => '*.vcard',
             'All files' => '*'
         )
     );
