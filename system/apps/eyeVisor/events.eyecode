@@ -53,15 +53,16 @@ function eyeVisor_on_getFile($params = null) {
 		return false;
 	}
 	
-	$handler = vfs('real_open', array($file, 'r'));
+	$real = vfs('getRealName', array($file));
+	$handler = vfs('real_open', array($real, 'r'));
 	$bytes = fread($handler, 5);
 	fclose($handler);
 	
 	if ($bytes == '<html') {
-		$content = /* utf8 */ preg_replace('/<img[^\/]*\/>/i', '', file_get_contents($file));
+		$content = /* utf8 */ preg_replace('/<img[^\/]*\/>/i', '', file_get_contents($real));
 	} else {
-		$temp = um('getCurrentUserDir') . '/' . TMP_DIR . '/' . $myPid . /* utf8 */ strrchr($file, '.');
-		vfs('real_copy', array(vfs('getRealName', array($file)), $temp));
+		$temp = um('getCurrentUserDir') . TMP_USER_DIR . '/' . $myPid . /* utf8 */ strrchr($file, '.');
+		vfs('real_copy', array($real, $temp));
 		
 		if (eyeConverter('convert', array($temp, $temp . '.html', 'html', 1))) {
 			$content = vfs('real_getFileContent', array($temp . '.html'));
