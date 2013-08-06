@@ -43,52 +43,37 @@ function eyeVisor_on_Resize($params=null) {
 	$GLOBALS['eyeVisorFrame']->setHeight($height);
 }
 
-function eyeVisor_on_getFile($params=null) {
-	$file = $GLOBALS['vPath']->text;
-	$info = pathinfo($file);
-	$tCheckNum = proc('findChecknumByName',array('eyeX'));
+function eyeVisor_on_getFile($params = null) {
 	global $myPid;
-	$ext = /* utf8 */ strtolower($info['extension']);
-	$to = 'html';
-	$real = vfs('getRealName',array($file));
-	if(!vfs('checkPermissions',array($real))) {
-		eyeX('messageBox',array('content'=>'You do not have sufficient permissions!'));
+	
+	$file = $GLOBALS['vPath']->text;
+	
+	if (!vfs('checkPermissions', array($file))) {
+		eyex('messageBox', array('content' => 'You do not have sufficient permissions!'));
 		return false;
 	}
-	$nfile = um('getCurrentUserDir').'tmp/'.$myPid.'.'.$info['extension'];
-	$myHTML = um('getCurrentUserDir').'tmp/'.$myPid.'_new.tmp';
-	copy($real,$nfile);
-	$tfp = vfs('real_open',array($nfile,'r'));
-	$bytes = fread($tfp,5);
-	$real = 1;
-	if($bytes == '<html') {
-		$real = 0;
-		$content = file_get_contents($nfile);
-	}
-	$bytes = fread($tfp,25);
-	if ( /* utf8 */ strpos($bytes, '<!--') !== false) {
-		$real = 0;
-		$content = file_get_contents($nfile);
-	}
-	fclose($tfp);
 	
-	$content = "<p>For some reason the conversion failed. Please try again later.</p>";
-	if($real == 1) {
-		$convOut = eyeConverter('convert',array($nfile, $myHTML, $to, 1));
-		if ($convOut) {
-			$fp = vfs('real_open',array($myHTML,'r'));
-			$content = fread($fp,vfs('real_filesize',array($myHTML)));
-			fclose($fp);
-			$content = str_replace('<IMG SRC="','<IMG SRC="index.php?checknum='.$tCheckNum.'&msg=viewTempImg&params=',$content);
-		}
+	$handler = vfs('real_open', array($file, 'r'));
+	$bytes = fread($handler, 5);
+	fclose($handler);
+	
+	if ($bytes == '<html') {
+		$content = /* utf8 */ preg_replace('/<img[^\/]*\/>/i', '', file_get_contents($file));
 	} else {
-		$pattern = '/<img[^\/]*\/>/i';
-		$replacement = '';
-		$content = /* utf8 */ preg_replace($pattern, $replacement, $content);
+		$temp = um('getCurrentUserDir') . '/' . TMP_DIR . '/' . $myPid . /* utf8 */ strrchr($file, '.');
+		vfs('real_copy', array(vfs('getRealName', array($file)), $temp));
+		
+		if (eyeConverter('convert', array($temp, $temp . '.html', 'html', 1))) {
+			$content = vfs('real_getFileContent', array($temp . '.html'));
+			
+			$checknum = proc('findChecknumByName', array('eyeX'));
+			$content = str_replace('<IMG SRC="', '<IMG SRC="index.php?checknum=' . strval($checknum) . '&amp;msg=viewTempImg&amp;params=', $content);
+		} else {
+			$content = '<p>For some reason the conversion failed. Please try again later.</p>';
+		}
 	}
 	
-	echo $content;
-	exit;
+	extern('getContent', array($content, 'html'));
 }
 
 function eyeVisor_on_Close($params=null){
