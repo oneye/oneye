@@ -22,8 +22,7 @@ function lib_eyeConverter_convert($params) {
 	}
 	
 	// Detect if both python and unoconv are installed and valid
-	$unoconv = EYE_ROOT . '/extras/unoconv/unoconv';
-	$unoconv = (is_readable($unoconv) && is_executable($unoconv));
+	$unoconv = is_readable(EYE_ROOT . '/extras/unoconv/unoconv');
 	$python = trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
 	$python = (strpos($python, 'not found') > -1) ? FALSE : TRUE;
 	if (!$unoconv || !$python) {

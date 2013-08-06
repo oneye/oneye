@@ -391,8 +391,7 @@ $myButton->addFriend($myTextbox);
 $myButton->show();
 
 // Detect whether unoconv is installed
-$unoconv = EYE_ROOT . '/extras/unoconv/unoconv';
-$unoconv = (is_readable($unoconv) && is_executable($unoconv));
+$unoconv = is_readable(EYE_ROOT . '/extras/unoconv/unoconv');
 if (!$unoconv) {
 	$ContentY += 50;
 	$myLabel = new Label(array(
