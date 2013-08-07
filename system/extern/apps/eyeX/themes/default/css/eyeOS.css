@@ -190,6 +190,52 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 .calendar_weekDay, .calendar_weekDayClicked, .calendar_weekDayToday{
 	/*text-shadow: 0px 0px 0px;*/
 }
+/*	.calendar_weekDay,	.calendar_weekMonth, */
+.calendar_weekDayToday, .calendar_weekDayClicked {
+	border-radius: 3px;
+}
+.calendar_weekMonthToday, .calendar_weekMonthClicked, .calendar_weekDaysNames {
+	border-radius: 4px;
+}
+
+.calendar_weekDay, .calendar_weekMonth, .calendar_weekEnd {
+	border: solid 1px transparent;
+}
+.calendar_weekEnd {
+	color: #2E7ABB;
+	border: solid 1px transparent;
+}
+.calendar_pre, .calendar_rest {
+	color: #bbbbbb;
+	border: solid 1px transparent;
+}
+.calendar_weekDayToday {
+	border: solid 1px #5C5C5C;
+	color: #FFF;
+	background-color: #737373;
+}
+.calendar_weekMonthToday {
+	border-color: #E1E1E1;
+	background-color: #E1E1E1;
+}
+.calendar_weekDayClicked {
+	border: solid 1px #558FC7;
+}
+.calendar_weekMonthClicked {
+	border: solid 1px #C7DFF6;
+	background-color: #C7DFF6;
+}
+.calendar_rowsAndDate {
+	color: #145689;
+}
+.calendar_weekDaysNames {
+	background-color: #4886CE;
+}
+.calendar_dayName {
+	color: #FFF;
+	text-align: center;
+}
+
 
 .eyeListbox_box {
 	overflow-x: hidden;
@@ -1255,8 +1301,8 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 
 .eyeTextarea:hover, .eyeTextarea:focus, .eyeTextbox:hover, .eyeTextbox:focus, select:hover, select:focus, input:hover, input:focus {
 	border-color: #000000;
-	border-style: solid;
-	border-width: 1px;
+	border-style: groove solid solid;
+	border-width: 2px 1px 1px;
 }
 
 .eyeTextareaContainer {}
@@ -1272,10 +1318,6 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 
 .eyeCheckbox, .eyeCheckbox:hover, .eyeCheckbox:focus, .eyeRadio, .eyeRadio:hover, .eyeRadio:focus {
 	border-style: none;
-}
-
-select, input {
-	padding-left: 0px;
 }
 
 .eyeWidgets {
@@ -1357,7 +1399,7 @@ select, input {
 	background-color: #ffffff;
 	border-color: #80b5ff; border-style: solid; border-width: 0px 1px 1px;
 	bottom: 0; left: 0; right: 0; top: 23px;
-	overflow: hidden;
+	overflow: inherit;
 	position: relative;
 }
 
