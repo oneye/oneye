@@ -457,12 +457,7 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		selectDate.setYear(globalYear);
 		selectDate.setDate(dayClicked);
 		if (selectFunc) {
-			if (selectFunc.constructor == Function) {
-				// passes (event, date)
-				selectFunc(e, selectDate.getTime());
-			} else {
-				sendMsg(checknum, selectFunc, eyeParam('date', selectDate.getTime()));
-			}
+			sendMsg(checknum, selectFunc, eyeParam('date', selectDate.getTime()));
 		}
 	}
 	function getMonthDays(myMonth, myYear) {
@@ -603,7 +598,7 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		newDate.setMonth(globalMonth);
 		newDate.setYear(globalYear);
 		newDate.setDate(myDay);
-		if ((selectFunc) && (selectFunc.constructor == String)) {
+		if (selectFunc) {
 			sendMsg(checknum, selectFunc, eyeParam('date', newDate.getTime()));
 		}
 	}
@@ -628,7 +623,7 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		newDate.setMonth(globalMonth);
 		newDate.setYear(globalYear);
 		newDate.setDate(myDay);
-		if ((selectFunc) && (selectFunc.constructor == String)) {
+		if (selectFunc) {
 			sendMsg(checknum, selectFunc, eyeParam('date', newDate.getTime()));
 		}
 	}
