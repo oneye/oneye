@@ -435,23 +435,17 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		if (drawOnClick) {
 			if (lastSelect !== false) {
 				if (!lastSelect.current) {
-					lastSelect.style.border = '';
+					lastSelect.className = lastSelect.className.slice(0, lastSelect.className.indexOf(' '));
 				}
 				if (lastSelect.parentNode && !lastSelect.parentNode.current) {
-					lastSelect.parentNode.style.backgroundColor = '';
-					lastSelect.parentNode.style.border = '';
+					lastSelect.parentNode.className = 'calendar_weekMonth';
 				}
 			}
 			if (!target.current) {
-				target.style.borderStyle = 'solid';
-				target.style.borderColor = params.clickedBorder;
-				target.style.borderWidth = '1px';
+				target.className += ' calendar_weekDayClicked';
 			}
 			if (!target.parentNode.current) {
-				target.parentNode.style.borderStyle = 'solid';
-				target.parentNode.style.borderColor = params.clickedWeek;
-				target.parentNode.style.borderWidth = '1px';
-				target.parentNode.style.backgroundColor = params.clickedWeek;
+				target.parentNode.className = 'calendar_weekMonthClicked';
 			}
 		}
 		lastSelect = target;
@@ -470,7 +464,7 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		return new Date(myYear, myMonth + 1, 0).getDate();
 	}
 	function getCalendarBody() {
-		var calendarBody, count, date, dayColors, dayIds, dayNums, dayOfWeek, discount, i, left, monthLenght, preMonthLenght, rest, text, top, vdate, weekDay, weekMonth, x2, y2;
+		var calendarBody, count, date, dayClass, dayIds, dayNums, dayOfWeek, discount, i, left, monthLenght, preMonthLenght, rest, text, top, vdate, weekDay, weekMonth, x2, y2;
 		date = new Date();
 		date.setMonth(globalMonth);
 		date.setYear(globalYear);
@@ -486,7 +480,7 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 //Creating the array with day numbers.
 		//First fill the first days of first week.
 		dayNums = [];//I will use push , metoth
-		dayColors = [];
+		dayClass = [];
 		dayIds = [];
 
 		discount = 1;
@@ -500,7 +494,7 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		for (i = dayOfWeek - discount; i >= 0; i -= 1) {
 			dayNums.push(preMonthLenght - i);
 			dayIds.push(name + '_' + (preMonthLenght - i) + '_pre');
-			dayColors.push(params.preMonthDays);//Hardcoded at the moment
+			dayClass.push('calendar_pre');
 		}
 		//Fill all month day
 		for (i = 1; i <= monthLenght; i += 1) {
@@ -508,9 +502,9 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 			dayIds.push(name + '_' + i + '_current');
 			date.setDate(i);
 			if (date.getDay() === 0 || date.getDay() === 6) {
-				dayColors.push(params.weekEnd);
+				dayClass.push('calendar_weekEnd');
 			} else {
-				dayColors.push(params.workDays);//Hardcoded at the moment
+				dayClass.push('calendar_weekDay');
 			}
 		}
 		//Fill rest days
@@ -518,7 +512,7 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		for (i = 1; i <= rest; i += 1) {
 			dayNums.push(i);
 			dayIds.push(name + '_' + i + '_rest');
-			dayColors.push(params.nextMonthDays);//Hardcoded at the moment
+			dayClass.push('calendar_rest');
 		}
 
 		//Now, fill the body with days!
@@ -538,22 +532,17 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 			vdate = new Date();
 			for (y2 = 0; y2 < 7; y2 += 1) {
 				weekDay = document.createElement('div');
-				weekDay.className = 'calendar_weekDay';
 				weekDay.style.left = left + '%';
-				weekDay.style.color = dayColors[count];
+				weekDay.className = dayClass[count];
 				weekDay.setAttribute('id', dayIds[count]);
-				// the dayColors fix is only for some time, in the next version this days will send a correct data
-				if (dayColors[count] !== params.preMonthDays && dayColors[count] !== params.nextMonthDays) {
+				// the dayClass fix is only for some time, in the next version this days will send a correct data
+				if (dayClass[count] !== "calendar_pre" && dayClass[count] !== "calendar_rest") {
 					weekDay.style.cursor = 'pointer';
 					if (dayNums[count] === vdate.getDate() && globalMonth === vdate.getMonth() && globalYear === vdate.getFullYear()) {
 						weekDay.className = 'calendar_weekDayToday';
-						weekDay.style.borderColor = params.todayBorder;
-						weekDay.style.color = params.todayFontColor;
-						weekDay.style.backgroundColor = params.todayBackground;
+						weekDay.style.color = "";
 
 						weekMonth.className = 'calendar_weekMonthToday';
-						weekMonth.style.backgroundColor = params.toWeekBackground;
-						weekMonth.style.borderColor = params.toWeekBackground;
 
 						weekMonth.current = true;
 						weekDay.current = true;
@@ -562,21 +551,18 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 					if (drawServerDate) {
 						if (dayNums[count] === drawServerDate.getDate() && globalMonth === drawServerDate.getMonth() && globalYear === drawServerDate.getFullYear()) {
 							weekDay.className = 'calendar_weekDayClicked';
-							weekDay.style.borderColor = params.clickedBorder;
 							weekMonth.className = 'calendar_weekMonthClicked';
-							weekMonth.style.backgroundColor = params.clickedWeek;
-							weekMonth.style.borderColor = params.clickedWeek;
 							lastSelect = weekDay;
 						}
 					}
 				} else {
 					weekDay.style.cursor = 'default';
 				}
-				weekDay.day = dayNums[count];//Calcule the day of the month
+				weekDay.day = dayNums[count];	//Calculate the day of the month
 
 				text = document.createTextNode(dayNums[count]);
-				// the dayColors fix is only for some time, in the next version this days will send a correct data
-				if (dayColors[count] !== params.preMonthDays && dayColors[count] !== params.nextMonthDays) {
+				// the dayClass fix is only for some time, in the next version this days will send a correct data
+				if (dayClass[count] !== "calendar_pre" && dayClass[count] !== "calendar_rest") {
 					xAddEventListener(weekDay, 'click', selectFunctionParser);
 				}
 				weekDay.appendChild(text);
@@ -645,7 +631,6 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		var dateMiddle, rowsAndDate, rowLeft, rowRight, text;
 		rowsAndDate = document.createElement('div');
 		rowsAndDate.setAttribute('id', name + 'rowsAndDate');
-		rowsAndDate.style.color = params.rowsAndDate;
 		rowsAndDate.className = 'calendar_rowsAndDate';
 		rowLeft = document.createElement('div');
 		rowLeft.setAttribute('id', name + 'rowLeft');
@@ -678,14 +663,11 @@ function Calendar_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 		weekDaysNames = document.createElement('div');
 		weekDaysNames.setAttribute('id', name + 'weekDaysNames');
 		weekDaysNames.className = 'calendar_weekDaysNames';
-		weekDaysNames.style.backgroundColor = params.backgroundNames;
 		dayNameContent = document.createElement('div');
-		dayNameContent.style.textAlign = 'center';
 		left = 11;
 		for (i = 0; i < 7; i += 1) {
 			dayName = document.createElement('div');
 			dayName.style.left = left + '%';
-			dayName.style.color = params.dayName;
 			dayName.className = 'calendar_dayName';
 			text = document.createTextNode(weekDays[i]);
 			dayName.appendChild(text);
