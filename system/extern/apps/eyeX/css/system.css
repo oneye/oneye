@@ -172,7 +172,7 @@ textarea {
 	width: 100%;
 }
 
-.calendar_weekDay, .calendar_weekDayClicked, .calendar_weekDayToday {
+.calendar_weekDay, .calendar_weekDayClicked, .calendar_weekDayToday, .calendar_weekEnd, .calendar_pre, .calendar_rest {
 	font-family: Verdana,Arial,sans-serif,FreeSans;
 	font-size: 10px;
 	height: 90%;
