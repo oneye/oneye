@@ -17,6 +17,9 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 function eyeRename_run($params = '') {
 	include_once(EYE_ROOT . '/' . APP_DIR . '/eyeRename/events' . EYE_CODE_EXTENSION);
 	$file = basename($params[0]);
+	if (!is_string($params[1])) {
+		$params[1] = '';
+	}
 	if (!$params[2]) {
 		$params[2] = $params[0];
 	}

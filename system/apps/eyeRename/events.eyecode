@@ -22,10 +22,16 @@ function eyeRename_libs_Dialog($from,$file,$to,$callback) {
 	$from2 = eyeFiles('cleanPath',array($from));
 	$to2 = eyeFiles('cleanPath',array($to));
 	$rename = $file;
+	
+	if ($from2[1] === 'home' && strtolower(trim($from2[2], '/')) === 'desktop' && strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($from2[0] . '/' . $file)) === true) { // utf8
+		$rename = substr($file, 0, -1 - strlen(EYEOS_LINK_EXT));
+	}
+	
 	if ($from2[1] . '://' . $from2[2] == $to2[1] . '://' . $to2[2]) {
 		$buttons = array(array('Rename','Rename'),array('Close','Cancel'));
 		$content = 'Please type the new name here:';
 		$title = 'Rename %s';
+		$tokens = null;
 	} else {
 		$buttons = array(array('Rename','Rename'),array('Replace','Replace'),array('Close','Cancel'));
 		$content = '"%s" already exists. Please enter a new name or replace the existing one.';
@@ -130,11 +136,14 @@ function eyeRename_libs_Do($from,$file,$to,$file2,$callback,$replace = 0) {
 				if (strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($from[0] . '/' . $file)) === true) { // utf8
 					$xmlLink = eyeXML('getXMLfile',array($from[0] . '/' . $file));
 					$name = $xmlLink['eyeLink'][0]['content'][0];
+					$file2 .= '.' . EYEOS_LINK_EXT;
+					
+					if (!vfs('real_move',array($from[0] . '/' . $file,$to[0] . '/' . $file2))) {
+						return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
+					}
+				} else if (!vfs('move',array($from[0] . '/' . $file,$to[0] . '/' . $file2))) {
+					return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
 				}
-			}
-			if (!vfs('move',array($from[0] . '/' . $file,$to[0] . '/' . $file2))) {
-				return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
-			} elseif ($from[1] === 'home' && strtolower(trim($from[2], '/')) === 'desktop') { // utf8
 				$xml = eyeXML('getXMLconfig',array('eyeDesk','icons.xml'));
 				if (is_array($xml['icon'])) {
 					foreach ($xml['icon'] as $key => $value) {
@@ -148,6 +157,8 @@ function eyeRename_libs_Do($from,$file,$to,$file2,$callback,$replace = 0) {
 					}
 					eyeXML('setXMLconfig',array('eyeDesk','icons.xml',$xml));
 				}
+			} else if (!vfs('move',array($from[0] . '/' . $file,$to[0] . '/' . $file2))) {
+				return eyeRename_libs_Dialog($from[1] . '://' . $from[2],$file,$to[1] . '://' . $to[2],$callback);
 			}
 			if ($to[1] == 'real') {
 				vfs('virtualToReal',array($to[0] . '/' . $file2));
