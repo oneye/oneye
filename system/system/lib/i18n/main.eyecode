@@ -41,8 +41,10 @@ function lib_i18n_init() {
 		if (!$_SESSION['lang']) {
 			$temp_user_langs = /* utf8 */ explode(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']);
 			foreach ($temp_user_langs as $user_lang) {
-				$user_lang = substr($user_lang, 0, -strpos($user_lang, ';')); // utf8
-				$user_langs[] = substr($user_lang, 0, -strpos($user_lang, '-')); // utf8
+				if ( /* utf8 */ strpos($user_lang, ';')) {
+					$user_lang = substr($user_lang, 0, strpos($user_lang, ';')); // utf8
+				}
+				$user_langs[] = $user_lang;
 			}
 			foreach ($user_langs as $user_lang) {
 				if (!$_SESSION['lang'] && in_array($user_lang,$langs)) {
