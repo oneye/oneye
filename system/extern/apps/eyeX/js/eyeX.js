@@ -227,10 +227,10 @@ function setWallpaper(newWllp, repeat, center, color) {
 		wllp.style.backgroundRepeat = "no-repeat";
 	}
 
-	if (!center) {
-		wllp.style.backgroundPosition = "left top";
-	} else {
+	if (parseInt(center, 10)) {
 		wllp.style.backgroundPosition = "center";
+	} else {
+		wllp.style.backgroundPosition = "left top";
 	}
 
 	if (color) {
@@ -472,13 +472,15 @@ function dhtmlRemoveCSS(remid) {
 }
 
 function getNodeValue(node) {
-	if (!node) {
-		return '';
+	if (node) {
+		if (typeof node.textContent !== 'undefined') {
+			return node.textContent;
+		}
+		if (node.firstChild) {
+			return node.firstChild.nodeValue;
+		}
 	}
-	if (typeof node.textContent !== 'undefined') {
-		return node.textContent;
-	}
-	return node.firstChild.nodeValue;
+	return '';
 }
 
 function updateCss(widgetid, prop, val) {
