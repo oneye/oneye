@@ -26,6 +26,6 @@ function eyeControl_on_lang_change($params = '') {
 }
 
 function eyeControl_on_lang_eyeosorg($params = '') {
-	proc('launch',array('eyeNav','https://eyeos.svn.sourceforge.net/svnroot/eyeos/playground/lk/translations/'));
+	proc('launch',array('eyeNav','http://oneye-project.org/downloads/'));
 }
 ?>
