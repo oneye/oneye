@@ -78,7 +78,7 @@ function eyeInfo_run($params = '') {
 	$myImagebox->show();
 
 	$oneye = array('Lars Knickrehm', 'Luca Ferrario', 'Daniel Sousa', 'Matthew Powell');
-	$y = ($myTab->height - (count($oneye)*4)) / count($oneye);
+	$y = ($myTab->height - 25) / (count($oneye) + 1);
 
 	$myLabel = new Label(array(
 		'father' => $oneyeTab,
@@ -97,7 +97,7 @@ function eyeInfo_run($params = '') {
 			'name' => 'eyeInfo_Label_Development_' . $i,
 			'text' => $value,
 			'x' => 20,
-			'y' => $i * $y + 25
+			'y' => ($i + 0.5) * $y + 25
 		));
 		$myLabel->show();
 		$i++;
@@ -105,7 +105,7 @@ function eyeInfo_run($params = '') {
 
 	$eyeos = array('Alejandro Fiestas','Anaël Ollier','Daniel Gil','Jordi Ferrer','José Carlos Norte','Lars Knickrehm','Marc Cercós','Matthew Powell','Pau Garcia-Milà','Pau Peris','Pol Watine','Adrián Norte','Julia Garcia');
 	shuffle($eyeos);
-	$y = ($myTab->height - (count($eyeos)*4)) / count($eyeos);
+	$y = ($myTab->height - 25) / (count($eyeos) + 2);
 
 	$myLabel = new Label(array(
 		'father' => $eyeosTab,
@@ -124,7 +124,7 @@ function eyeInfo_run($params = '') {
 			'name' => 'eyeInfo_Label_Team_' . $i,
 			'text' => $value,
 			'x' => 20,
-			'y' => $i * $y + 25
+			'y' => ($i + 0.5) * $y + 25
 		));
 		$myLabel->show();
 		$i++;
@@ -132,7 +132,7 @@ function eyeInfo_run($params = '') {
 
 	$supporters = array('Alexandre Mejat','David Comuñas','Edouard Daubin','François Bocquet');
 	shuffle($supporters);
-	$y = ($myTab->height - (count($supporters)*4)) / count($supporters);
+	$y = ($myTab->height - 25) / (count($supporters) + 1);
 
 	$myLabel = new Label(array(
 		'father' => $supportersTab,
@@ -151,7 +151,7 @@ function eyeInfo_run($params = '') {
 			'name' => 'eyeInfo_Label_Supporters_' . $i,
 			'text' => $value,
 			'x' => 20,
-			'y' => $i * $y + 25
+			'y' => ($i + 0.5) * $y + 25
 		));
 		$myLabel->show();
 		$i++;
@@ -159,7 +159,7 @@ function eyeInfo_run($params = '') {
 
 	$projects = array('CodePress','Oxygen Icons','PHP UTF8','TinyMCE (Moxiecode)','X Library (Cross-Browser.com)');
 	shuffle($projects);
-	$y = ($myTab->height - (count($projects)*4)) / count($projects);
+	$y = ($myTab->height - 25) / (count($projects) + 1);
 
 	$myLabel = new Label(array(
 		'father' => $projectsTab,
@@ -178,7 +178,7 @@ function eyeInfo_run($params = '') {
 			'name' => 'eyeInfo_Label_Projects_' . $i,
 			'text' => $value,
 			'x' => 20,
-			'y' => $i * $y + 25
+			'y' => ($i + 0.5) * $y + 25
 		));
 		$myLabel->show();
 		$i++;
