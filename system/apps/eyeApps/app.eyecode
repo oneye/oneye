@@ -88,7 +88,7 @@ function eyeApps_run($params = '') {
 			'name' => $category . '_Imagebox',
 			'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/' . eyeApps_lib_GetCategoryIcon($category) . '.png',
 			'x' => 5,
-			'y' => 3,
+			'y' => 5,
 		));
 		$myImagebox->show();
 		
@@ -97,7 +97,7 @@ function eyeApps_run($params = '') {
 			'name' => $category . '_Label',
 			'text' => $category,
 			'x' => 33,
-			'y' => 6
+			'y' => 10
 		));
 		$myLabel->show();
 		
