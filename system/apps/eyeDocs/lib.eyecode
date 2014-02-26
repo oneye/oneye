@@ -24,6 +24,8 @@ function eyeDocs_saveFile($content) {
 
 	if($extension == 'doc' || $extension == 'odt') {
 		$tempFile = um('getCurrentUserDir').'/tmp/'.$myPid.'_new.html';
+		$tempFolder = um('getCurrentUserDir').'/tmp/'.$myPid;
+		
 		$pos = /* utf8 */ strpos($content, '--&gt;</p>');
 		if(!$pos) {
 			$pos = -10;
@@ -42,8 +44,14 @@ function eyeDocs_saveFile($content) {
 		if(!vfs('fileExists',array($file))) {
 			vfs('create',array($file,'eyeDocs'));
 		}
-
-		eyeConverter('convert',array($tempFile,vfs('getRealName',array($file)),$format,1));
+		
+		eyeConverter('convert',array($tempFile,$tempFolder,$format,1));
+		
+		$src = $tempFolder."/".basename($tempFile,".html").".".$extension;
+		$dest = vfs('getRealName',array($file));
+		vfs('real_delete', array($dest));
+		vfs('real_copy', array($src, $dest));
+		
 	} else {
 		$pos = /* utf8 */ strpos($content,'--&gt;</p>');
 		if(!$pos) {
@@ -90,7 +98,8 @@ function eyeDocs_openFile($file) {
 	if($extension == 'doc' || $extension == 'odt') {
 		$tCheckNum = proc('findChecknumByName',array('eyeX'));
 		$nfile = um('getCurrentUserDir').'tmp/'.$myPid.'.'.$info['extension'];
-		$myHTML = um('getCurrentUserDir').'tmp/'.$myPid.'_new.html';
+		$myfolder = um('getCurrentUserDir').'tmp/'.$myPid.'_new';
+		$myHTML = $myfolder . '/'.$myPid.'.html';
 		$real = vfs('getRealName',array($file));
 
 		if(!vfs('checkPermissions',array($file))) {
@@ -100,7 +109,7 @@ function eyeDocs_openFile($file) {
 
 		copy($real,$nfile);
 		$to = 'html';
-		eyeConverter('convert',array($nfile,$myHTML,$to,1));
+		eyeConverter('convert',array($nfile,$myfolder,$to,1));
 		$fp = vfs('real_open',array($myHTML,'r'));
 		if(!$fp) {
 			eyeX('messageBox',array('content'=>'Sorry, you need to enable OpenOffice Support to view this document.'));
