@@ -22,28 +22,28 @@ $excludeC = array(
 );
 $excludeF = array(
 	'docs',
-	'eyeOS/apps/eyeFeeds/simplepie.eyecode',
-	'eyeOS/apps/eyeMail/class.phpmailer.php',
-	'eyeOS/apps/eyeMail/class.smtp.php',
-	'eyeOS/apps/eyeNav/plugins/eyeNavProxy',
-	'eyeOS/apps/eyeSoft/libCompress.eyecode',
-	'eyeOS/system/lib/eyePear',
-	'eyeOS/system/lib/eyeSmtp/plain_sasl_client.eyecode',
-	'eyeOS/system/lib/eyeSmtp/sasl.eyecode',
-	'eyeOS/system/lib/eyeSmtp/smtp.eyecode',
-	'eyeOS/system/lib/eyeString/types',
-	'eyeOS/xml-rpc/xmlrpc.inc',
-	'eyeOS/xml-rpc/xmlrpc_wrappers.inc',
-	'eyeOS/xml-rpc/xmlrpcs.inc'
+	'system/apps/eyeFeeds/simplepie.eyecode',
+	'system/apps/eyeMail/class.phpmailer.php',
+	'system/apps/eyeMail/class.smtp.php',
+	'system/apps/eyeNav/plugins/eyeNavProxy',
+	'system/apps/eyeSoft/libCompress.eyecode',
+	'system/system/lib/eyePear',
+	'system/system/lib/eyeSmtp/plain_sasl_client.eyecode',
+	'system/system/lib/eyeSmtp/sasl.eyecode',
+	'system/system/lib/eyeSmtp/smtp.eyecode',
+	'system/system/lib/eyeString/types',
+	'system/xml-rpc/xmlrpc.inc',
+	'system/xml-rpc/xmlrpc_wrappers.inc',
+	'system/xml-rpc/xmlrpcs.inc'
 );
 $excludeU = array();
 $excludeW = array(
 	'docs/libraries',
-	'eyeOS/extern/libs/eyeWidgets/tiny_mce',
-	'eyeOS/system/lib/eyePear'
+	'system/extern/libs/eyeWidgets/tiny_mce',
+	'system/system/lib/eyePear'
 );
 
-$path = 'eyeOS/system/lib/eyeString/types';
+$path = 'system/system/lib/eyeString/types';
 $functions = array_merge(scandir($path . '/compat'), scandir($path . '/native'));
 foreach ($functions as $key => $value) {
 	if (substr($value, -8) === '.eyecode') {
@@ -105,11 +105,13 @@ function getContent($folder, $functions, $excludeC = array(), $excludeF = array(
 							$content = substr($content, 3);
 							$length = false;
 						}
-						$content = str_replace(array("\r\n", "\r"), "\n", trim($content), $count);
-						if (strlen($content) !== $length || $count > 0) {
+						$content = trim($content);
+						if (strlen($content) !== $length) {
 							file_put_contents($folder . $file, $content);
 						}
 					}
+					
+					$content = str_replace(array("\r\n", "\r"), "\n", trim($content));
 					
 					// Functions
 					if ((substr($file, -4) === '.php' || substr($file, -4) === '.inc' || substr($file, -8) === '.eyecode') && $excludeF !== '*' && in_array($folder . $file, $excludeF) === false) {
@@ -154,11 +156,11 @@ function getContent($folder, $functions, $excludeC = array(), $excludeF = array(
 							$lines = str_pad('', substr_count($content, "\n", $begin, $end - $begin), "\n");
 							$content = substr($content, 0, $begin) . '|' . $lines . substr($content, $end);
 						}
-						foreach (explode("\n", $content) as $key => $value) {
+						/*foreach (explode("\n", $content) as $key => $value) {
 							if (strpos($value, '  ') !== false) {
-								// TODO: echo str_pad($folder . $file, 80) . ' line ' . str_pad(strval($key + 1), 4, ' ', STR_PAD_LEFT) . ' doubled whitespaces' . "\n";
+								echo str_pad($folder . $file, 80) . ' line ' . str_pad(strval($key + 1), 4, ' ', STR_PAD_LEFT) . ' doubled whitespaces' . "\n";
 							}
-						}
+						}*/
 					}
 				}
 			}

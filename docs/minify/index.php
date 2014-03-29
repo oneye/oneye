@@ -21,16 +21,16 @@ $excludeJ = array(
 	'docs',
 	'iphone\\apps\\eyeCalendar\\calendar.js',
 	'iphone\\eyeOs_files\\iui.js',
-	'eyeOS\\extern\\apps\\eyeChess',
-	'eyeOS\\extern\\apps\\eyePdf',
-	'eyeOS\\extern\\apps\\eyeSheets',
-	'eyeOS\\extern\\apps\\eyeShow',
-	'eyeOS\\extern\\apps\\eyeVideo',
-	'eyeOS\\extern\\libs\\eyeSound',
-	'eyeOS\\extern\\libs\\eyeWidgets\\codepress',
-	'eyeOS\\extern\\libs\\eyeWidgets\\jscolor',
-	'eyeOS\\extern\\libs\\eyeWidgets\\tiny_mce',
-	'eyeOS\\extern\\libs\\x.js'
+	'system\\extern\\apps\\eyeChess',
+	'system\\extern\\apps\\eyePdf',
+	'system\\extern\\apps\\eyeSheets',
+	'system\\extern\\apps\\eyeShow',
+	'system\\extern\\apps\\eyeVideo',
+	'system\\extern\\libs\\eyeSound',
+	'system\\extern\\libs\\eyeWidgets\\codepress',
+	'system\\extern\\libs\\eyeWidgets\\jscolor',
+	'system\\extern\\libs\\eyeWidgets\\tiny_mce',
+	'system\\extern\\libs\\x.js'
 );
 $excludeM = array(
 	'docs',
@@ -111,7 +111,7 @@ function getContent($folder, $excludeJ = array(), $excludeM = array(), $excludeO
 				}
 			} else if (substr($file, -4) === '.php' || substr($file, -8) === '.eyecode') {
 				if ($excludeP !== '*' && in_array($folder . $file, $excludeP) === false) {
-					$content['p'] .= 'php -l "' . $folder . $file . '"' . "\n";
+					$content['p'] .= '%php% -l "' . $folder . $file . '"' . "\n";
 				}
 			} else if (substr($file, -4) === '.css' && substr($file, -8) !== '.min.css') {
 				if ($excludeC !== '*' && in_array($folder . $file, $excludeC) === false) {

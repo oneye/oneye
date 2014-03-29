@@ -38,5 +38,6 @@ goto start
 goto start
 
 :p
+set php=C:\php\php.exe
 %3
 goto start
