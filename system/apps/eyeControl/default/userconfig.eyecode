@@ -48,12 +48,12 @@ $mySelect->show();
 $opts = vfs('real_getDirContent', array(EYE_ROOT .'/'. SYSTEM_DIR .'/'. LIB_DIR .'/eyeConfig/modules'));
 foreach ($opts as $opt) {
 	$opt = basename($opt);
-	$opt = substr($opt, 0, strpos($opt, '.'));
+	$opt = substr($opt, 0, strpos($opt, '.')); // utf8
 	if ($opt == CONFIG_MODULE) {
-		$mySelect->addOption(strtoupper($opt), $opt, 1);
+		$mySelect->addOption(utf8_strtoupper($opt), $opt, 1);
 		$selval = $opt;
 	} else {
-		$mySelect->addOption(strtoupper($opt), $opt);
+		$mySelect->addOption(utf8_strtoupper($opt), $opt);
 	}
 }
 $mySelect->addEvent('onchange','sendMsg('.$checknum.',"userconfig_methodSelect",eyeParam("arg0",this.value));');

@@ -162,7 +162,7 @@ var DockMenu = {
 
 	OnClick: function (e, isfriend) {
 		e = new xEvent(e);
-		if (typeof isfriend === 'undefined') {
+		if (isfriend === undefined) {
 			if (e.target.parentNode.className !== 'eyeContextMenuEntry' && e.target.className !== 'eyeContextMenuEntry' && e.target.className !== 'eyeContextMenu') {
 				return true;
 			}
@@ -339,7 +339,7 @@ var Taskbars = {
 
 	SetWidth: function (type) {
 		var bottom, cB, cT, csB, csT, e, fB, fT, key, top, width, widthEntries;
-		if (Taskbars.Bottom && (type === 'bottom' || typeof type === 'undefined')) {
+		if (Taskbars.Bottom && (type === 'bottom' || type === undefined)) {
 			bottom = 0;
 			fB = document.getElementById(Taskbars.PID + '_eyeDock_bottom');
 			csB = fB.childNodes;
@@ -349,7 +349,7 @@ var Taskbars = {
 				}
 			}
 		}
-		if (Taskbars.Top && (type === 'top' || typeof type === 'undefined')) {
+		if (Taskbars.Top && (type === 'top' || type === undefined)) {
 			top = 0;
 			fT = document.getElementById(Taskbars.PID + '_eyeDock_top');
 			csT = fT.childNodes;

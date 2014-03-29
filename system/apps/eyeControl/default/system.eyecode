@@ -338,8 +338,8 @@ $myTextbox = new Textbox(array(
 ));
 $myTextbox->show();
 
-$pythonOut = trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
-if (strpos($pythonOut, 'not found') > -1) {
+$pythonOut = /* utf8 */ trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
+if ( /* utf8 */ strpos($pythonOut, 'not found') > -1) {
 	$pythonOut = 'Python Not Found';
 }
 $myLabel = new Label(array(

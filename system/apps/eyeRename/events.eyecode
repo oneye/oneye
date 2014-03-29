@@ -24,7 +24,7 @@ function eyeRename_libs_Dialog($from,$file,$to,$callback) {
 	$rename = $file;
 	
 	if ($from2[1] === 'home' && strtolower(trim($from2[2], '/')) === 'desktop' && strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($from2[0] . '/' . $file)) === true) { // utf8
-		$rename = substr($file, 0, -1 - strlen(EYEOS_LINK_EXT));
+		$rename = substr($file, 0, -1 - strlen(EYEOS_LINK_EXT)); // utf8
 	}
 	
 	if ($from2[1] . '://' . $from2[2] == $to2[1] . '://' . $to2[2]) {

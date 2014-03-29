@@ -71,8 +71,8 @@ function eyeControl_on_system_office($params = '') {
 	eyex('messageBox',array('content' => 'Changes successfully saved.'));
 	
 	// Scan for python
-	$pythonOut = trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
-	if (strpos($pythonOut, 'not found') > -1) {
+	$pythonOut = /* utf8 */ trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1'));
+	if ( /* utf8 */ strpos($pythonOut, 'not found') > -1) {
 		$pythonOut = 'Python Not Found';
 	}
 	$GLOBALS['eyeControl_system_office_label_python_test']->setText($pythonOut);

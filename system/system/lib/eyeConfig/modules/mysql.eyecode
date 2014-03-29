@@ -44,8 +44,8 @@ function lib_eyeConfig_setUserConfig($params) {
 			}
 		}
 	}
-	$cols = substr($cols, 0, -2);
-	$vals = substr($vals, 0, -2);
+	$cols = /* utf8 */ substr($cols, 0, -2);
+	$vals = /* utf8 */ substr($vals, 0, -2);
 	
 	// Compose Queries
 	$q = array();
@@ -259,8 +259,8 @@ function _mySQL_connect () {
 		$password = hex2bin($password);
 	} else {
 		$pw = '';
-		for ($i = 0; $i < strlen($password); $i += 2) {
-			$pw .= chr(hexdec(substr($password, $i, 2)));
+		for ($i = 0; $i < /* utf8 */ strlen($password); $i += 2) {
+			$pw .= chr(hexdec(substr($password, $i, 2))); // utf8
 		}
 		$password = $pw;
 	}

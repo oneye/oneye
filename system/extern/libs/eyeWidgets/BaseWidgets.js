@@ -1665,7 +1665,7 @@ function SortableTable(oTable, oSortTypes, signal, master, rName, checknum, enti
 	this.onunload2 = function () {
 		oThis.destroy();
 	};
-	if (win && typeof win.attachEvent !== "undefined") {
+	if (win && win.attachEvent !== undefined) {
 		win.attachEvent("onunload", this.onunload2);
 	}
 }
@@ -1766,10 +1766,10 @@ SortableTable.prototype.delEntry = function (entry) {
 SortableTable.prototype.setTBody = function (oTBody) {
 	this.tBody = oTBody;
 	var c = oTBody;
-	if (typeof c.addEventListener !== "undefined") {
+	if (c.addEventListener !== undefined) {
 		c.addEventListener("click", this.bodyOnclick2, false);
 		c.addEventListener("dblclick", this.bodyOndblclick2, false);
-	} else if (typeof c.attachEvent !== "undefined") {
+	} else if (c.attachEvent !== undefined) {
 		c.attachEvent("onclick", this.bodyOnclick2);
 		c.attachEvent("ondblclick", this.bodyOndblclick2);
 	} else {
@@ -1807,9 +1807,9 @@ SortableTable.prototype.initHeader = function (oSortTypes) {
 			if (this.sortTypes[i] !== null) {
 				c.sortType = this.sortTypes[i];
 			}
-			if (typeof c.addEventListener !== 'undefined') {
+			if (c.addEventListener !== undefined) {
 				c.addEventListener("click", this.headerOnclick2, false);
-			} else if (typeof c.attachEvent !== 'undefined') {
+			} else if (c.attachEvent !== undefined) {
 				c.attachEvent("onclick", this.headerOnclick2);
 			} else {
 				c.onclick = this.headerOnclick2;
@@ -1836,9 +1836,9 @@ SortableTable.prototype.uninitHeader = function () {
 		c = cells[i];
 		if (c.sortType !== null && c.sortType !== "None" && c.sortType !== "Html") {
 			c.removeChild(c.lastChild);
-			if (typeof c.removeEventListener !== 'undefined') {
+			if (c.removeEventListener !== undefined) {
 				c.removeEventListener("click", this.headerOnclick2, false);
-			} else if (typeof c.detachEvent !== 'undefined') {
+			} else if (c.detachEvent !== undefined) {
 				c.detachEvent("onclick", this.headerOnclick2);
 			}
 			c.sortType = null;
@@ -2038,7 +2038,7 @@ SortableTable.prototype.getRowValue = function (oRow, sType, nColumn) {
 	}
 
 	c = oRow.cells[nColumn];
-	if (typeof c.innerText !== 'undefined') {
+	if (c.innerText !== undefined) {
 		s = c.innerText;
 	} else {
 		s = SortableTable.getInnerText(c);
@@ -2078,7 +2078,7 @@ SortableTable.prototype.getSortFunction = function (sType, nColumn) {
 SortableTable.prototype.destroy = function () {
 	this.uninitHeader();
 	var win = this.document.parentWindow;
-	if (win && typeof win.detachEvent !== "undefined") { // only IE needs this
+	if (win && win.detachEvent !== undefined) { // only IE needs this
 		win.detachEvent("onunload", this.onunload2);
 	}
 	this.onunload2 = null;
@@ -2560,7 +2560,7 @@ var Windows = {
 		if (!closingType) {
 			closingType = Windows.List[id].closingType;
 		}
-		if (!noCloseMessage && typeof Windows.List[id].closeMessage !== 'undefined') {
+		if (!noCloseMessage && Windows.List[id].closeMessage !== undefined) {
 			sendMsg(Windows.List[id].checknum, Windows.List[id].closeMessage, evilEval(Windows.List[id].closeEvalParam));
 		}
 		closingType = parseInt(closingType, 10);
@@ -2580,7 +2580,7 @@ var Windows = {
 		var e = document.getElementById(id + '_WindowCloseButton');
 		if (e) {
 			show = parseInt(show, 10);
-			if ((show === 2 && e.style.display !== 'none') || (typeof show !== 'undefined' && !show)) {
+			if ((show === 2 && e.style.display !== 'none') || (show !== undefined && !show)) {
 				e.style.display = 'none';
 			} else {
 				e.style.display = 'block';
@@ -2589,6 +2589,8 @@ var Windows = {
 	},
 
 	Create: function (id, checknum, params) {
+		var e, height, width;
+
 		Windows.List[id] = {};
 		Windows.List[id].checknum = checknum;
 		Windows.List[id].closeEvalParam = params.sync;
@@ -2621,7 +2623,7 @@ var Windows = {
 		if (params.resizeElement) {
 			xEnableDrag(params.resizeElement, function () { Windows.ResizeBefore(id, 1, 1); }, function (e, x, y) { Windows.ResizeEvent(id, 1, x, 1, y); }, function () { Windows.ResizeAfter(id, 1, 1); });
 			// South West
-			var e = document.getElementById(id + '_WindowBottom_left');
+			e = document.getElementById(id + '_WindowBottom_left');
 			e.style.cursor = 'sw-resize';
 			xEnableDrag(e, function () { Windows.ResizeBefore(id, 2, 1); }, function (e, x, y) { Windows.ResizeEvent(id, 2, x, 1, y); }, function () { Windows.ResizeAfter(id, 2, 1); });
 			// South
@@ -2707,7 +2709,7 @@ var Windows = {
 			Windows.SetX(id, 0, 1);
 			Windows.SetY(id, 0, 1);
 			Windows.List[id].maximized = 2;
-			if (typeof Windows.List[id].resizeMessage !== 'undefined') {
+			if (Windows.List[id].resizeMessage !== undefined) {
 				sendMsg(Windows.List[id].checknum, Windows.List[id].resizeMessage, eyeParam('arg', width) + eyeParam('arg', height));
 			}
 		}
@@ -2828,7 +2830,7 @@ var Windows = {
 				Windows.SetY(id, 0, 1);
 				Windows.List[id].maximized = 1;
 			}
-			if (typeof Windows.List[id].resizeMessage !== 'undefined') {
+			if (Windows.List[id].resizeMessage !== undefined) {
 				sendMsg(Windows.List[id].checknum, Windows.List[id].resizeMessage, eyeParam('arg', width) + eyeParam('arg', height));
 			}
 		}
@@ -2861,7 +2863,7 @@ var Windows = {
 				Windows.SetY(id, 0, 1);
 				Windows.List[id].maximized = 2;
 			}
-			if (typeof Windows.List[id].resizeMessage !== 'undefined') {
+			if (Windows.List[id].resizeMessage !== undefined) {
 				sendMsg(Windows.List[id].checknum, Windows.List[id].resizeMessage, eyeParam('arg', width) + eyeParam('arg', height));
 			}
 			sendMsg(Windows.List[id].xChecknum, 'saveWinMax', eyeParam('maximized', Windows.List[id].maximized) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
@@ -2872,7 +2874,7 @@ var Windows = {
 		var e = document.getElementById(id + '_WindowMaxButton');
 		if (e) {
 			show = parseInt(show, 10);
-			if ((show === 2 && e.style.display !== 'none') || (typeof show !== 'undefined' && !show)) {
+			if ((show === 2 && e.style.display !== 'none') || (show !== undefined && !show)) {
 				e.style.display = 'none';
 			} else {
 				e.style.display = 'block';
@@ -2905,7 +2907,7 @@ var Windows = {
 				Windows.SetX(id, 0, 1);
 				Windows.List[id].maximized = 1;
 			}
-			if (typeof Windows.List[id].resizeMessage !== 'undefined') {
+			if (Windows.List[id].resizeMessage !== undefined) {
 				sendMsg(Windows.List[id].checknum, Windows.List[id].resizeMessage, eyeParam('arg', width) + eyeParam('arg', height));
 			}
 		}
@@ -2925,7 +2927,7 @@ var Windows = {
 		var e = document.getElementById(id + '_WindowMinimizeButton');
 		if (e) {
 			show = parseInt(show, 10);
-			if ((show === 2 && e.style.display !== 'none') || (typeof show !== 'undefined' && !show)) {
+			if ((show === 2 && e.style.display !== 'none') || (show !== undefined && !show)) {
 				e.style.display = 'none';
 			} else {
 				e.style.display = 'block';
@@ -2959,7 +2961,7 @@ var Windows = {
 	MoveAfter: function (id) {
 		if (!Windows.List[id].noDrag) {
 			Windows.DragAfter(id);
-			if (!Windows.List[id].maximized && typeof Windows.List[id].saveposMessage !== 'undefined') {
+			if (!Windows.List[id].maximized && Windows.List[id].saveposMessage !== undefined) {
 				if (Windows.List[id].saveposChecknum === Windows.List[id].checknum) {
 					sendMsg(Windows.List[id].checknum, Windows.List[id].saveposMessage, eyeParam('x', xLeft(id)) + eyeParam('y', xTop(id)) + eyeParam('winName', id));
 				} else {
@@ -3004,17 +3006,17 @@ var Windows = {
 			Windows.DragAfter(id);
 			if (!Windows.List[id].maximized) {
 				Windows.List[id].resizing = 0;
-				if (typeof Windows.List[id].resizeMessage !== 'undefined') {
+				if (Windows.List[id].resizeMessage !== undefined) {
 					sendMsg(Windows.List[id].checknum, Windows.List[id].resizeMessage, eyeParam('arg', xWidth(id)) + eyeParam('arg', xHeight(id)));
 				}
-				if ((xtype === 2 || ytype === 2) && typeof Windows.List[id].saveposMessage !== 'undefined') {
+				if ((xtype === 2 || ytype === 2) && Windows.List[id].saveposMessage !== undefined) {
 					if (Windows.List[id].saveposChecknum === Windows.List[id].checknum) {
 						sendMsg(Windows.List[id].checknum, Windows.List[id].saveposMessage, eyeParam('x', xLeft(id)) + eyeParam('y', xTop(id)) + eyeParam('winName', id));
 					} else {
 						sendMsg(Windows.List[id].saveposChecknum, 'saveWinPosition', eyeParam('left', xLeft(id)) + eyeParam('top', xTop(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
 					}
 				}
-				if (typeof Windows.List[id].savesizeMessage !== 'undefined') {
+				if (Windows.List[id].savesizeMessage !== undefined) {
 					sendMsg(Windows.List[id].xChecknum, 'saveWinSize', eyeParam('width', xWidth(id)) + eyeParam('height', xHeight(id)) + eyeParam('winName', id) + eyeParam('appChecknum', Windows.List[id].checknum));
 				}
 			}
@@ -3043,7 +3045,7 @@ var Windows = {
 		var e = document.getElementById(id + '_WindowResizeButton');
 		if (e) {
 			show = parseInt(show, 10);
-			if ((show === 2 && e.style.display !== 'none') || (typeof show !== 'undefined' && !show)) {
+			if ((show === 2 && e.style.display !== 'none') || (show !== undefined && !show)) {
 				e.style.display = 'none';
 			} else {
 				e.style.display = 'block';
@@ -3148,7 +3150,7 @@ var Windows = {
 	SetX: function (id, x, force) {
 		var e, father, widthE, widthEparent;
 		e = document.getElementById(id);
-		if (typeof force === 'undefined' || !force) {
+		if (force === undefined || !force) {
 			father = e.parentNode.id;
 			widthE = xWidth(e);
 			widthEparent = xWidth(e.parentNode);
@@ -3174,7 +3176,7 @@ var Windows = {
 	SetY: function (id, y, force) {
 		var e, father, heightE, heightEparent;
 		e = document.getElementById(id);
-		if (typeof force === 'undefined' || !force) {
+		if (force === undefined || !force) {
 			if (y < 0) {
 				y = 0;
 			} else {
@@ -3567,9 +3569,9 @@ function Tree(father, signal, checknum, name, height, width, x, y, clickTree, sy
 Tree.prototype.setLBody = function (oLBody) {
 	this.lBody = oLBody;
 	var c = oLBody;
-	if (typeof c.addEventListener !== 'undefined') {
+	if (c.addEventListener !== undefined) {
 		c.addEventListener("click", this.listOnClick2, false);
-	} else if (typeof c.attachEvent !== 'undefined') {
+	} else if (c.attachEvent !== undefined) {
 		c.attachEvent("onclick", this.listOnClick2);
 	} else {
 		c.onclick = this.listOnClick2;

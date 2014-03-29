@@ -24,7 +24,7 @@ function eyeControl_on_userconfig_methodSelect ($params = '') {
 		$GLOBALS['eyeControl_userconfig_button_switch']->disable();
 	} else if ($GLOBALS['eyeControl_userconfig_button_switch']->enabled === 0) {
 		$GLOBALS['eyeControl_userconfig_button_switch']->enable();
-	} 
+	}
 	$GLOBALS['eyeControl_userconfig_label_description']->setText($xml['eyeConfig_module'][0]['description'][0]);
 	
 	$GLOBALS['eyeControl_userconfig_table_params']->delAllRows();
@@ -130,7 +130,7 @@ function eyeControl_on_userconfig_switchMethod ($params = '') {
 	eyex('messageBox',array(
 		'buttons' => array(array('userconfig_switchMethod_submit','Yes'), array('userconfig_dialog_cancel','Cancel')),
 		'content' => 'You are about to switch from %s to %s. Are you sure you want to do this?',
-		'tokens' => array(strtoupper(CONFIG_MODULE), strtoupper($sel)),
+		'tokens' => array(utf8_strtoupper(CONFIG_MODULE), utf8_strtoupper($sel)),
 		'father' => 'eyeControl_container_big',
 		'img' => '?',
 		'hiddens' => array(array("from", CONFIG_MODULE), array("to", $sel)),

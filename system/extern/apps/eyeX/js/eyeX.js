@@ -41,7 +41,7 @@ if (navigator.appVersion.indexOf("MSIE") !== -1) {
 }
 
 // TRUE if the client is a touch device, FALSE if the client is a mouse-only (!) device
-var touchscreen = (typeof window.ontouchstart !== 'undefined');
+var touchscreen = (window.ontouchstart !== undefined);
 
 var android = 0;
 var ios = 0;
@@ -97,7 +97,7 @@ if (navigator.appVersion.indexOf("Mac") !== -1) {
 			mouseX = e.pageX;
 			mouseY = e.pageY;
 		}
-		if (typeof oCursor !== 'undefined' && loadingRequests > 0) {
+		if (oCursor !== undefined && loadingRequests > 0) {
 			oCursor.style.left = mouseX + 10 + 'px';
 			oCursor.style.top = mouseY - 14 + 'px';
 		}
@@ -341,10 +341,10 @@ var EventHandler = {
 			EventHandler.List[handler][element].friends = [];
 		}
 		EventHandler.List[handler][element].code = code;
-		if (typeof option !== 'undefined') {
+		if (option !== undefined) {
 			EventHandler.List[handler][element].option = option;
 		}
-		if (typeof func !== 'undefined') {
+		if (func !== undefined) {
 			EventHandler.List[handler][element]['function'] = func;
 		}
 	},
@@ -473,7 +473,7 @@ function dhtmlRemoveCSS(remid) {
 
 function getNodeValue(node) {
 	if (node) {
-		if (typeof node.textContent !== 'undefined') {
+		if (node.textContent !== undefined) {
 			return node.textContent;
 		}
 		if (node.firstChild) {

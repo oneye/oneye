@@ -199,7 +199,7 @@ var eyeCalc_$myPid = {
 			}
 			if (exponent !== '+' && exponent !== '-') {
 				output = output.split('.');
-				if (typeof output[1] === 'undefined') {
+				if (output[1] === undefined) {
 					output[1] = '';
 				}
 				dot = 1;
@@ -318,10 +318,10 @@ var eyeCalc_$myPid = {
 			}
 			one = one.substr(1).split('.');
 			two = two.substr(1).split('.');
-			if (typeof one[1] === 'undefined') {
+			if (one[1] === undefined) {
 				one[1] = '';
 			}
-			if (typeof two[1] === 'undefined') {
+			if (two[1] === undefined) {
 				two[1] = '';
 			}
 			while (one[0].length - two[0].length < 0) {
@@ -459,7 +459,7 @@ var eyeCalc_$myPid = {
 		}
 		if (e.value.substr(e.value.length - 1) === '.') {
 			e.value = e.value.substr(0, e.value.length - 1);
-		} else if (typeof e.value.split('.')[1] === 'undefined') {
+		} else if (e.value.split('.')[1] === undefined) {
 			e.value += '.';
 		}
 	},

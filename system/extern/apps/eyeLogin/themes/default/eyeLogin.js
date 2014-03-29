@@ -1,4 +1,4 @@
-/*global Base64, eyeParam, IEversion, md5, sendMsg, updateOpacity, updateOpacityOnce, USERTHEME, xEvent, xGetElementById, xLeft */
+/*global $myPid, Base64, eyeParam, IEversion, md5, sendMsg, updateOpacity, updateOpacityOnce, USERTHEME, xAddEventListener, xEvent, xGetComputedStyle, xGetElementById, xLeft */
 /*jslint browser: true, devel: true, newcap: true, sloppy: true, windows: true */
 /*
   ___  _ __   ___ _   _  ___
@@ -73,12 +73,30 @@ function eyeLogin_2_Clean(pid) {
 	xGetElementById(pid + '_eyeLogin_Textbox_2_User').style.display = 'none';
 }
 
+function eyeLogin_centerDialog(pid) {
+	var dialog, diaWidth, diaHeight, dia2, x, y;
+	dialog = xGetElementById(pid + '_eyeLogin_1_Container');
+	diaWidth = dialog.style.width.slice(0, -2);
+	diaHeight = parseInt(dialog.style.height.slice(0, -2), 10);
+
+	dia2 = xGetElementById(pid + '_eyeLogin_2_Container');
+	if (dia2 !== null && dia2.style.display === "block") {
+		diaHeight += parseInt(xGetComputedStyle(dia2).height.slice(0, -2), 10);
+	}
+
+	x = (window.innerWidth - diaWidth) / 2;
+	y = (window.innerHeight - diaHeight) / 2;
+
+	dialog.style.left = x + "px";
+	dialog.style.top = y + "px";
+}
+
 function eyeLogin_2_Launch(pid, checknum) {
 	if (xGetElementById(pid + '_eyeLogin_2_Container').style.display === 'block') {
 		if (IEversion) {
 			xGetElementById(pid + '_eyeLogin_2_Container').style.display = 'none';
 		} else {
-			updateOpacity(pid + '_eyeLogin_2_Container', 100, 0, 500, 'xGetElementById("' + pid + '_eyeLogin_2_Container").style.display = "none"; eyeLogin_centerDialog('+pid+');');
+			updateOpacity(pid + '_eyeLogin_2_Container', 100, 0, 500, 'xGetElementById("' + pid + '_eyeLogin_2_Container").style.display = "none"; eyeLogin_centerDialog(' + pid + ');');
 		}
 		xGetElementById(pid + '_eyeLogin_Textbox_1_User').focus();
 	} else {
@@ -122,9 +140,9 @@ function eyeLogin_2_Launch(pid, checknum) {
 
 function eyeLogin_Start(pid, checknum) {
 	var obj_lbl_enter, obj_lbl_enter_cnt, obj_img_cnt, obj_sel_lang, obj_txt_pwd, obj_txt_user;
-	
-	xGetElementById($myPid+'_eyeLogin_window_Content').setAttribute("class", "eyeLoginWindow");
-	
+
+	xGetElementById($myPid + '_eyeLogin_window_Content').setAttribute("class", "eyeLoginWindow");
+
 	obj_lbl_enter = xGetElementById(pid + '_eyeLogin_Label_1_Enter');
 	obj_lbl_enter.onclick = function () { eyeLogin_SendLogin(checknum, pid); };
 	obj_lbl_enter.style.zIndex = '10000';
@@ -184,27 +202,9 @@ function eyeLogin_Move_R(widget, pid) {
 	}
 }
 
-function eyeLogin_centerDialog (pid) {
-	var dialog, diaWidth, diaHeight, dia2, x, y;
-	dialog = xGetElementById(pid + '_eyeLogin_1_Container');
-	diaWidth = dialog.style.width.slice(0, -2);
-	diaHeight = parseInt(dialog.style.height.slice(0, -2), 10);
-	
-	dia2 = xGetElementById(pid + '_eyeLogin_2_Container');
-	if (dia2 !== null && dia2.style.display === "block") {
-		diaHeight += parseInt(getComputedStyle(dia2).height.slice(0, -2), 10);
-	}
-
-	x = (window.innerWidth - diaWidth) / 2;
-	y = (window.innerHeight - diaHeight) / 2;
-	
-	dialog.style.left = x + "px";
-	dialog.style.top = y + "px";
-}
-
 eyeLogin_Start('$myPid', '$checknum');
 xAddEventListener(window, "resize", function () {
-	xGetElementById($myPid+'_eyeLogin_window').style.width = window.innerWidth + "px";
-	xGetElementById($myPid+'_eyeLogin_window').style.height = window.innerHeight + "px";
+	xGetElementById($myPid + '_eyeLogin_window').style.width = window.innerWidth + "px";
+	xGetElementById($myPid + '_eyeLogin_window').style.height = window.innerHeight + "px";
 	eyeLogin_centerDialog($myPid);
 }, false);

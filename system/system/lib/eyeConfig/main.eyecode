@@ -150,7 +150,7 @@ function lib_eyeConfig_swap ($params) {
 			eyex('messageBox', array('content' => 'Something went wrong! Defaulting to XML.'));
 			return false;
 		} else {
-			eyex('messageBox', array('content' => 'Switch complete. You are now using %s as your Storage Method.', 'tokens' => array(strtoupper($to))));
+			eyex('messageBox', array('content' => 'Switch complete. You are now using %s as your Storage Method.', 'tokens' => array(utf8_strtoupper($to))));
 		}
 	}
 	return true;

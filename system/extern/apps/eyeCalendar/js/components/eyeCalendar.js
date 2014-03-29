@@ -340,7 +340,7 @@ function weekPlanner_base(weekPlanner, dayFrom, dayEven) {
 			//If the part has neved had a note
 //			if (this.notesLevel.length > 0) {
 			for (x = 0; x <= this.notesLevel.length; x += 1) {
-				if (typeof this.notesLevel[x] === "undefined") {
+				if (this.notesLevel[x] === undefined) {
 					this.notesLevel[x] = note;
 					return x;
 //				} else {

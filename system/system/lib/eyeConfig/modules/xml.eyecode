@@ -57,7 +57,7 @@ function lib_eyeConfig_XMLsetUserConfig($params = '') {
 
 /**
  * Creates a user's config file
- * 
+ *
  * @param $params array(username, data)
  * @param $username Name of the user
  * @param $data The user config data in an array
@@ -80,7 +80,7 @@ function lib_eyeConfig_XMLaddUserConfig($params = '') {
 
 /**
  * Deletes a user's config file
- * 
+ *
  * @param $params array(username)
  * @param $username Name of the user
  * @return If the user is successfully deleted, returns true.

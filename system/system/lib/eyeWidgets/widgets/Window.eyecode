@@ -241,7 +241,7 @@ class Window {
 		}
 		
 		
-		$position = $this->getSavedPositions();		
+		$position = $this->getSavedPositions();
 		if (is_array($position) === true) {
 			
 			if ($this->max === 1 && is_array($position['maximized'])) {

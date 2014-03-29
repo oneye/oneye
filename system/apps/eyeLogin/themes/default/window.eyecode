@@ -21,7 +21,7 @@ global $myPid;
 eyex('loadCss',array(
 		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=css/apps/eyeLogin/eyeLogin.css&type=css',
 		'id' => 'eyeLogin.css'
-	)); 
+	));
 
 $myCss_Title = array();
 $myCss_Title['cursor'] = 'pointer';

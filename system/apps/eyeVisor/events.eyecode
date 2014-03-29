@@ -65,7 +65,7 @@ function eyeVisor_on_getFile($params = null) {
 		vfs('real_copy', array($real, $temp));
 		
 		if (eyeConverter('convert', array($temp, $temp . '.html', 'html', 1))) {
-			$content = vfs('real_getFileContent', array($temp . '.html/' . basename(substr($temp, 0, strpos($temp, ".",1))) . ".html"));
+			$content = vfs('real_getFileContent', array($temp . '.html/' . basename(substr($temp, 0, strpos($temp, ".",1))) . ".html")); // utf8
 			
 			$checknum = proc('findChecknumByName', array('eyeX'));
 			$content = str_replace('<IMG SRC="', '<IMG SRC="index.php?checknum=' . strval($checknum) . '&amp;msg=viewTempImg&amp;params=', $content);
