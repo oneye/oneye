@@ -81,7 +81,7 @@ function eyeLogin_centerDialog(pid) {
 
 	dia2 = xGetElementById(pid + '_eyeLogin_2_Container');
 	if (dia2 !== null && dia2.style.display === "block") {
-		diaHeight += parseInt(xGetComputedStyle(dia2).height.slice(0, -2), 10);
+		diaHeight += parseInt(xGetComputedStyle(dia2, 'height', true), 10);
 	}
 
 	x = (window.innerWidth - diaWidth) / 2;
