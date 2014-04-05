@@ -192,6 +192,9 @@ function loadServiceConfig() {
 					if(isset($myArray['CONFIG']) && is_array($myArray['CONFIG'])) {
 						if(is_array($myArray['CONFIG'][0])) {
 							foreach($myArray['CONFIG'][0] as $key => $value) {
+								if ( /* utf8 */ trim($value[0], '0..9') === '') {
+									$value[0] = intval($value[0]);
+								}
 								define($key,$value[0]);
 							}
 						}
