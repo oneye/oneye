@@ -274,7 +274,7 @@ var Taskbars = {
 	MoveLeft: function (key) {
 		var left, width;
 		if (Taskbars.List[key]) {
-			left = xLeft(key + '_entries') + 100;
+			left = xLeft(key + '_entries') + 163;
 			width = xWidth(key) - xWidth(key + '_entries');
 			if (left > 0) {
 				left = 0;
@@ -288,7 +288,7 @@ var Taskbars = {
 	MoveRight: function (key) {
 		var left, width;
 		if (Taskbars.List[key]) {
-			left = xLeft(key + '_entries') - 100;
+			left = xLeft(key + '_entries') - 163;
 			width = xWidth(key) - xWidth(key + '_entries');
 			if (left < width) {
 				left = width;
@@ -411,4 +411,4 @@ var Taskbars = {
 	}
 };
 
-xAddEventListener(window, 'resize', Taskbars.SetWidth, false);
+xAddEventListener(window, 'resize', function () { Taskbars.SetWidth(); }, false);
