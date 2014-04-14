@@ -1412,6 +1412,24 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 	position: absolute;
 }
 
+.eyeWindowFullScreen {
+	background-color: #ffffff;
+	border-radius: 0;
+}
+
+.eyeWindowFullScreen > .activeWindow, .eyeWindowFullScreen > .inactiveWindow {
+	cursor: default;
+}
+
+/* .eyeWindowFullScreen > .activeWindow, */ .eyeWindowFullScreen > .activeWindow > .activeWindow_border_left, .eyeWindowFullScreen > .activeWindow > .activeWindow_border_right, .eyeWindowFullScreen > .activeWindow > .eyeWindowTitle_center, .eyeWindowFullScreen > .eyeWindowBottom, .eyeWindowFullScreen > .eyeWindowBottom_center, .eyeWindowFullScreen > .eyeWindowBottom_left, .eyeWindowFullScreen > .eyeWindowBottom_right, .eyeWindowFullScreen > .eyeWindowLeft, .eyeWindowFullScreen > .eyeWindowRight, /* .eyeWindowFullScreen > .inactiveWindow, */ .eyeWindowFullScreen > .inactiveWindow > .inactiveWindow_border_left, .eyeWindowFullScreen > .inactiveWindow > .inactiveWindow_border_right {
+	display: none !important;
+}
+
+.eyeWindowFullScreen > .eyeWindowContent {
+	border: 0;
+	/* top: 0; */
+}
+
 .eyeWindowLeft, .eyeWindowRight {
 	height: 100%;
 	width: 4px;

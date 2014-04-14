@@ -487,7 +487,7 @@ class Window {
 			eyeApps.style.width = "' . $_SESSION['SCREEN']['eyeApps']['width'] . 'px";
 			eyeApps.style.left = "' . $_SESSION['SCREEN']['eyeApps']['x'] . 'px";
 			eyeApps.style.top = "' . $_SESSION['SCREEN']['eyeApps']['y'] . 'px";
-			document.getElementById("' . $myPid . '_' . $this->name . '").style.backgroundColor = null;'));
+			document.getElementById("' . $myPid . '_' . $this->name . '").className = "eyeWindowMain";'));
 			$this->setHeight($this->oldHeight);
 			$this->setWidth($this->oldWidth);
 			$this->setX($this->oldX);
@@ -530,7 +530,7 @@ class Window {
 			eyeApps.style.width = "' . $_SESSION['SCREEN']['eyeApps']['width'] . 'px";
 			eyeApps.style.left = "0";
 			eyeApps.style.top = "0";
-			document.getElementById("' . $myPid . '_' . $this->name . '").style.backgroundColor = "#ffffff";'));
+			document.getElementById("' . $myPid . '_' . $this->name . '").className = "eyeWindowMain eyeWindowFullScreen";'));
 			$this->setHeight($_SESSION['SCREEN']['eyeApps']['height']);
 			$this->setWidth($_SESSION['SCREEN']['eyeApps']['width']);
 			$this->setX(0);
