@@ -66,7 +66,7 @@ $GLOBALS['_frozen_flags']      = array
                         'strip_title'     => 1,
                         'session_cookies' => 1,
                         'allow_304'       => 1
-                    );                    
+                    );
 $GLOBALS['_labels']            = array
                     (
                         'include_form'    => array('Include Form', 'Include mini URL-form on every page'),
@@ -135,20 +135,19 @@ $GLOBALS['_get_all_headers']   = array();
 // FUNCTION DECLARATIONS
 //
 
-//needed by cgi server whitout proxy doesnt work just blank screen 
-if (!function_exists("getallheaders")) {
-  function getallheaders() {
-    $result = array();
-   foreach($_SERVER as $key => $value) {
-     if (substr($key, 0, 5) == "HTTP_") {
-       $key = str_replace(" ", "-", ucwords(strtolower(str_replace("_", " ", substr($key, 5)))));
-        $result[$key] = $value;
-      } else {
-        $result[$key] = $value;
-      }
+if (!function_exists('getallheaders')) {
+    function getallheaders() {
+        $result = array();
+        
+        foreach($_SERVER as $key => $value) {
+            if (substr($key, 0, 5) === 'HTTP_') {
+                $key = str_replace(' ', '-', ucwords(strtolower(str_replace('_', ' ', substr($key, 5)))));
+            }
+            $result[$key] = $value;
+        }
+        
+        return $result;
     }
-   return $result;
-  }
 }
  
 function show_report($data)
@@ -697,16 +696,17 @@ do
     }
     else
     {
-    	
-   //proxy cache doesnt work need corrected
- if($GLOBALS['_flags']['allow_304']){
+        if ($GLOBALS['_flags']['allow_304']) {
             $GLOBALS['_get_all_headers'] = getallheaders();
-             if(isset($GLOBALS['_get_all_headers']['If-Modified-Since']))
-                $GLOBALS['_request_headers'] .= "If-Modified-Since: ".$GLOBALS['_get_all_headers']['If-Modified-Since']."\r\n";
-            if(isset($GLOBALS['_get_all_headers']['If-None-Match']))
-               $GLOBALS['_request_headers'] .= "If-None-Match: ".$GLOBALS['_get_all_headers']['If-None-Match']."\r\n";
+            
+            if (isset($GLOBALS['_get_all_headers']['If-Modified-Since'])) {
+                $GLOBALS['_request_headers'] .= 'If-Modified-Since: ' . str_replace(array("\r", "\n"), ' ', $GLOBALS['_get_all_headers']['If-Modified-Since']) . "\r\n";
+            }
+            if (isset($GLOBALS['_get_all_headers']['If-None-Match'])) {
+                $GLOBALS['_request_headers'] .= 'If-None-Match: ' . str_replace(array("\r", "\n"), ' ', $GLOBALS['_get_all_headers']['If-None-Match']) . "\r\n";
+            }
+        }
         $GLOBALS['_request_headers'] .= "\r\n";
-      }      
     }
 
     fwrite($GLOBALS['_socket'], $GLOBALS['_request_headers']);
