@@ -50,7 +50,8 @@ $GLOBALS['_flags']             = array
                         'base64_encode'   => 1,
                         'strip_meta'      => 1,
                         'strip_title'     => 0,
-                        'session_cookies' => 1
+                        'session_cookies' => 0,
+                        'allow_304'       => 1
                     );
 $GLOBALS['_frozen_flags']      = array
                     ( // oneye
@@ -63,8 +64,9 @@ $GLOBALS['_frozen_flags']      = array
                         'base64_encode'   => 1,
                         'strip_meta'      => 1,
                         'strip_title'     => 1,
-                        'session_cookies' => 1
-                    );
+                        'session_cookies' => 1,
+                        'allow_304'       => 1
+                    );                    
 $GLOBALS['_labels']            = array
                     (
                         'include_form'    => array('Include Form', 'Include mini URL-form on every page'),
@@ -76,7 +78,8 @@ $GLOBALS['_labels']            = array
                         'base64_encode'   => array('Base64', 'Use base64 encodng on the address'),
                         'strip_meta'      => array('Strip Meta', 'Strip meta information tags from pages'),
                         'strip_title'     => array('Strip Title', 'Strip page title'),
-                        'session_cookies' => array('Session Cookies', 'Store cookies for this session only')
+                        'session_cookies' => array('Session Cookies', 'Store cookies for this session only'),
+                        'allow_304'       => array('Allow 304 Cache', 'Pass on last modified info for local caching of images etc.')
                     );
                     
 $GLOBALS['_hosts']             = array
@@ -127,10 +130,27 @@ $GLOBALS['_basic_auth_realm']  = '';
 $GLOBALS['_auth_creds']        = array();
 $GLOBALS['_response_body']     = '';
 
+$GLOBALS['_get_all_headers']   = array();
 //
 // FUNCTION DECLARATIONS
 //
 
+//needed by cgi server whitout proxy doesnt work just blank screen 
+if (!function_exists("getallheaders")) {
+  function getallheaders() {
+    $result = array();
+   foreach($_SERVER as $key => $value) {
+     if (substr($key, 0, 5) == "HTTP_") {
+       $key = str_replace(" ", "-", ucwords(strtolower(str_replace("_", " ", substr($key, 5)))));
+        $result[$key] = $value;
+      } else {
+        $result[$key] = $value;
+      }
+    }
+   return $result;
+  }
+}
+ 
 function show_report($data)
 {
     include $data['which'] . '.inc.php';
@@ -677,7 +697,16 @@ do
     }
     else
     {
+    	
+   //proxy cache doesnt work need corrected
+ if($GLOBALS['_flags']['allow_304']){
+            $GLOBALS['_get_all_headers'] = getallheaders();
+             if(isset($GLOBALS['_get_all_headers']['If-Modified-Since']))
+                $GLOBALS['_request_headers'] .= "If-Modified-Since: ".$GLOBALS['_get_all_headers']['If-Modified-Since']."\r\n";
+            if(isset($GLOBALS['_get_all_headers']['If-None-Match']))
+               $GLOBALS['_request_headers'] .= "If-None-Match: ".$GLOBALS['_get_all_headers']['If-None-Match']."\r\n";
         $GLOBALS['_request_headers'] .= "\r\n";
+      }      
     }
 
     fwrite($GLOBALS['_socket'], $GLOBALS['_request_headers']);
