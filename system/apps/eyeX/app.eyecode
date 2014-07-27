@@ -112,9 +112,46 @@ function eyeX_run($params = '') {
 	}
 	echo "\t\t" . '<script type="text/javascript">
 			var USERTHEME = "' . $_SESSION['usertheme'] . '";
-			function resizedBrowser() {
-				sendMsg(' . $checknum . ',"resizedBrowser",eyeParam("width",xClientWidth()) + eyeParam("height",xClientHeight()));
-			}
+			var resizedBrowser = (function () {
+				var active, next, resizedBrowser, timeout;
+				
+				// Private variables
+				active = null;
+				next = null;
+				timeout = null;
+				
+				// Public functions
+				resizedBrowser = {
+					done: function (name) {
+						if (active === name) {
+							active = next;
+							next = null;
+							clearTimeout(timeout);
+							
+							if (active !== null) {
+								sendMsg(' . $checknum . ', "resizedBrowser", active);
+							}
+						}
+					},
+					
+					resize: function () {
+						next = eyeParam("width", xClientWidth()) + eyeParam("height", xClientHeight());
+						
+						if (active === null) {
+							resizedBrowser.done(active);
+						} else if (next === active) {
+							next = null;
+							clearTimeout(timeout);
+						} else {
+							timeout = setTimeout(function () {
+								resizedBrowser.done(active);
+							}, 500);
+						}
+					}
+				};
+				
+				return resizedBrowser;
+			}());
 			var tinyMCEPreInit = {suffix : "", base : "index.php?extern=libs/eyeWidgets/tiny_mce"};
 		</script>
 		<script src="index.php?extern=libs/eyeWidgets/codepress/codepress.js" type="text/javascript"></script>
@@ -131,7 +168,7 @@ function eyeX_run($params = '') {
 		<script src="index.php?extern=apps/eyeDock/eyeDock.js" type="text/javascript"></script>
 		<link rel="icon" href="index.php?theme=' . $_SESSION['usertheme'] . '&amp;extern=images/favicon/favicon.ico" type="image/x-icon" />
 	</head>
-	<body onload=\'jscolor.dir = "index.php?extern=libs/eyeWidgets/jscolor/"; oCursor = xGetElementById("eyecursor"); oApps = xGetElementById("eyeScreen"); if (cookieEnabled()) { xGetElementById("eyex-info").innerHTML = "' . utf8_htmlspecialchars(i18n('translate', array('Please wait...')), ENT_QUOTES) . '"; setInterval("sendMsg(\\"\\",\\"ping\\",\\"\\");", 1000 * ' . PING_INTERVAL . '); sendMsg(' . $checknum . ',"baseapp",eyeParam("flash",FlashDetect.installed) + eyeParam("flashmajor",FlashDetect.major) + eyeParam("height",xClientHeight()) + eyeParam("width",xClientWidth()) + eyeParam("touch", touchscreen ? 1 : 0) + eyeParam("oggVorbisSupported", OggVorbisAudioSupported ? 1 : 0)); xAddEventListener(window,"resize",resizedBrowser,false); } else { document.getElementById("eyex-info").innerHTML = "' . utf8_htmlspecialchars(i18n('translate', array($textCookies,array('<span style=\\"font-weight: bold;\\">www.oneye-project.org</span>'))), ENT_QUOTES) . '"; }\'>
+	<body onload=\'jscolor.dir = "index.php?extern=libs/eyeWidgets/jscolor/"; oCursor = xGetElementById("eyecursor"); oApps = xGetElementById("eyeScreen"); if (cookieEnabled()) { xGetElementById("eyex-info").innerHTML = "' . utf8_htmlspecialchars(i18n('translate', array('Please wait...')), ENT_QUOTES) . '"; setInterval("sendMsg(\\"\\",\\"ping\\",\\"\\");", 1000 * ' . PING_INTERVAL . '); sendMsg(' . $checknum . ',"baseapp",eyeParam("flash",FlashDetect.installed) + eyeParam("flashmajor",FlashDetect.major) + eyeParam("height",xClientHeight()) + eyeParam("width",xClientWidth()) + eyeParam("touch", touchscreen ? 1 : 0) + eyeParam("oggVorbisSupported", OggVorbisAudioSupported ? 1 : 0)); xAddEventListener(window,"resize",resizedBrowser.resize,false); } else { document.getElementById("eyex-info").innerHTML = "' . utf8_htmlspecialchars(i18n('translate', array($textCookies,array('<span style=\\"font-weight: bold;\\">www.oneye-project.org</span>'))), ENT_QUOTES) . '"; }\'>
 		<div id="background">
 			<div id="eyeScreen">
 				<div class="eyecursor" id="eyecursor"></div>
