@@ -53,3 +53,16 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 .eyeWindowTitle_text {
 	background: transparent url('index.php?theme=USERTHEME&extern=images/windows/title_bg.png') no-repeat right;
 }
+
+.eyeContextMenu, .eyeDock_bottom_left_datetime_calendar, .eyeDock_bottom_left_menu_entries, .eyeDock_bottom_right_datetime_calendar, .eyeDock_bottom_right_menu_entries, .eyeDock_top_left_datetime_calendar, .eyeDock_top_left_menu_entries, .eyeDock_top_right_datetime_calendar, .eyeDock_top_right_menu_entries, .eyeWindowContent {
+	animation: eyeAnimation 0.5s;
+}
+
+@keyframes eyeAnimation {  
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
