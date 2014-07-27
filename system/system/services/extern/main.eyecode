@@ -149,38 +149,11 @@ function service_extern_getFile($params) {
 				}
 			}
 			
-			// TYPE
-			if ($extension === 'css') {
-				$type = 'css';
-			} else if ($extension === 'gif') {
-				$type = 'gif';
-			} else if($extension === 'htm' || $extension === 'html' || $extension === 'xhtml') {
-				$type = 'html';
-			} else if ($extension === 'cur' || $extension === 'ico') {
-				$type = 'ico';
-			} else if ($extension === 'jpg') {
-				$type = 'jpg';
-			} else if ($extension === 'js') {
-				$type = 'js';
-			} else if ($extension === 'mp3') {
-				$type = 'mp3';
-			} else if ($extension === 'ogg') {
-				$type = 'ogg';
-			} else if ($extension === 'png') {
-				$type = 'png';
-			} else if($extension === 'swf'){
-				$type = 'swf';
-			} else if ($extension === 'xml' || $extension === 'xsl') {
-				$type = 'xml';
-			} else {
-				$type = 'txt';
-			}
-			
 			// USERTHEME
 			$content = file_get_contents($dirname);
 			$content = str_replace('theme=USERTHEME', 'theme=' . $_SESSION['usertheme'], $content);
 		}
-		extern('getContent', array($content, $type, $download));
+		extern('getContent', array($content, $extension, $download));
 	}
 	return true;
 }
