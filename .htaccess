@@ -20,7 +20,7 @@
 	php_value zend.ze1_compatibility_mode 0
 
 	#
-	# CLIENT-DOWNLOAD
+	# CLIENT-UPLOAD
 	#
 	php_value file_uploads        1
 	# php_value max_execution_time  30
