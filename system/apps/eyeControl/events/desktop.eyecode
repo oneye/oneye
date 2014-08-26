@@ -160,8 +160,8 @@ function eyeControl_on_getWallpaper($params = '') {
 	$url = $config['eyeDesk'][0]['wallpaper'][0];
 	if ($url != '') {
 		$length = vfs('filesize',array($url));
-		header('Content-Type: image/jpg');
-		header('Content-Length: ' . $length);
+		header('Content-Type: image/jpeg');
+		header('Content-Length: ' . strval($length));
 		header('Accept-Ranges: bytes');
 		vfs('readFile',array($url));
 	}
