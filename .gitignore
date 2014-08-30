@@ -1,3 +1,6 @@
+*.min.css
+*.min.js
+
 system/tmp
 system/users/rt4/root/conf/eyeCalendar/conf.xml
 system/users/rt4/root/conf/eyeCalendar/calendars/calendarsInfo.xml
