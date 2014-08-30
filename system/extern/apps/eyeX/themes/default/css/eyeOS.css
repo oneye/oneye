@@ -1613,6 +1613,10 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 	background-color: #666666;
 }
 
+.sort-table tr {
+	height: 0;
+}
+
 .sort-table-container {
 	border: 1px Solid #dddddd;
 	overflow-x: hidden;
