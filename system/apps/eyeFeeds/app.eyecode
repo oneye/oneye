@@ -260,13 +260,6 @@ function eyeFeeds_run($params=null) {
 	));
 	eyeWidgets('serialize',array($selectedFeedId));
 
-
-	//check the user's configuration directory and create it if needed
-	$confDir = um('getCurrentUserDir').CONF_USER_DIR.'/eyeFeeds';
-	if(!vfs('real_fileExists',array($confDir))) {
-		vfs('real_mkdir',array($confDir));
-	}
-
 	//Listener service call to resize the app in fullScreen mode when browser is resized
 	addListenerServiceCall('fullResized','eyex','resizedbrowser');
 	eyeX('rawjs',array('js' => 'sendMsg('.$checknum.',"initComplete","");'));

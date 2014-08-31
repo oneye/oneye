@@ -373,19 +373,17 @@ function eyeFeeds_deleteFeedFolder($feeds, $feedId) {
 }
 
 function eyeFeeds_saveFeedsToFile($feeds, $redrawFeedsTree=true, $sortFeeds=true) {
-	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
-	$conf = eyeXML('getXMLfile', array($path));
-
+	$conf = eyeXML('getXMLconfig', array('eyeFeeds', 'conf.xml'));
 	if ($sortFeeds)
 		$feeds['feed'] = eyeFeeds_sortFeeds($feeds['feed']);
 
 	$conf['eyeFeeds'][0]['base'][0] = $feeds;
-	if (!eyeXML('setXMLfile',array($path, $conf))) {
+	if (!eyeXML('setXMLconfig', array('eyeFeeds', 'conf.xml', $conf))) {
 		return false;
 	}
 
 	//redraw tree with saved configuration
-	$conf2 = eyeXML('getXMLfile', array($path));
+	$conf2 = eyeXML('getXMLconfig', array('eyeFeeds', 'conf.xml'));
 	if ($redrawFeedsTree) {
 		$tree = eyeFeeds_drawFeedsTree($conf2['eyeFeeds'][0]['base'][0]);
 		$tree->expandTree();
@@ -422,8 +420,7 @@ function eyeFeeds_sortFeeds_compare($a,$b) {
  * @return array The saved feeds
  */
 function eyeFeeds_getSavedFeeds() {
-	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
-	$conf = eyeXML('getXMLfile', array($path));
+	$conf = eyeXML('getXMLconfig', array('eyeFeeds', 'conf.xml'));
 
 	if (!is_array($conf))
 		$conf = array('eyeFeeds' => array());
@@ -461,8 +458,7 @@ function eyeFeeds_getEyeNavLinkFromUrl($url, $linkText=null) {
 //		READING HISTORY FUNCTIONS
 /*********************************************************************************************/
 function eyeFeeds_loadReadingHistory() {
-	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
-	$conf = eyeXML('getXMLfile', array($path));
+	$conf = eyeXML('getXMLconfig', array('eyeFeeds', 'conf.xml'));
 
 	if (!is_array($conf))
 		$conf = array('eyeFeeds' => array());
@@ -493,11 +489,10 @@ function eyeFeeds_loadReadingHistory() {
 }
 
 function eyeFeeds_saveReadingHistory($newReadingHistory) {
-	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
-	$conf = eyeXML('getXMLfile', array($path));
+	$conf = eyeXML('getXMLconfig', array('eyeFeeds', 'conf.xml'));
 
 	$conf['eyeFeeds'][0]['readingHistory'][0]['title'] = $newReadingHistory;
-	return eyeXML('setXMLfile',array($path, $conf));
+	return eyeXML('setXMLconfig', array('eyeFeeds', 'conf.xml', $conf));
 }
 
 function eyeFeeds_isTitleRead($url) {
@@ -532,8 +527,7 @@ function eyeFeeds_setTitleAsRead($url) {
 //		SETTINGS FUNCTIONS
 /*********************************************************************************************/
 function eyeFeeds_loadSettings() {
-	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
-	$conf = eyeXML('getXMLfile', array($path));
+	$conf = eyeXML('getXMLconfig', array('eyeFeeds', 'conf.xml'));
 
 	if (!is_array($conf))
 		$conf = array('eyeFeeds' => array());
@@ -551,11 +545,10 @@ function eyeFeeds_loadSettings() {
 }
 
 function eyeFeeds_saveSettings($newSettings) {
-	$path = um('getCurrentUserDir').'/'.CONF_USER_DIR.'/eyeFeeds/conf.xml';
-	$conf = eyeXML('getXMLfile', array($path));
+	$conf = eyeXML('getXMLconfig', array('eyeFeeds', 'conf.xml'));
 
 	$conf['eyeFeeds'][0]['settings'][0] = $newSettings;
-	return eyeXML('setXMLfile',array($path, $conf));
+	eyeXML('setXMLconfig', array('eyeFeeds', 'conf.xml', $conf));
 }
 
 /*********************************************************************************************/
