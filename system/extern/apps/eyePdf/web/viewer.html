@@ -1,26 +1,4 @@
-<?php
-/*
-  ___  _ __   ___ _   _  ___
- / _ \| '_ \ / _ \ | | |/ _ \
-| (_) | | | |  __/ |_| |  __/
- \___/|_| |_|\___|\__, |\___|
-                  |___/
-
-oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
- -> provided with this release in license.txt
- -> or via web at www.gnu.org/licenses/agpl-3.0.txt
-
-Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
-             since 2010 Lars Knickrehm (mail@lars-sh.de)
-*/
-
-function get_dynamic_content($params = array()) {
-	header('Content-type: text/html; charset=utf-8');
-	
-	$web_prefix = 'index.php?extern=apps/eyePdf/web/';
-	// TODO: Select correct JS locale?!
-	
-	return '<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <!--
 Copyright 2012 Mozilla Foundation
 
@@ -47,23 +25,21 @@ http://sourceforge.net/adobe/cmap/wiki/License/
     <title>PDF.js viewer</title>
 
 
-    <link rel="stylesheet" href="'. $web_prefix . 'viewer.css"/>
+    <link rel="stylesheet" href="viewer.css"/>
 
-    <script src="'. $web_prefix . 'compatibility.js"></script>
+    <script src="compatibility.js"></script>
 
 
 
 <!-- This snippet is used in production (included from viewer.html) -->
-<link rel="resource" type="application/l10n" href="'. $web_prefix . 'locale/locale.properties"/>
-<script src="'. $web_prefix . 'l10n.js"></script>
-<script src="'. $web_prefix . '../build/pdf.js"></script>
+<link rel="resource" type="application/l10n" href="locale/locale.properties"/>
+<script src="l10n.js"></script>
+<script src="../build/pdf.js"></script>
 
 
-<script>PDFJS.locale = \'' . utf8_htmlspecialchars(i18n('getLang')) . '\';</script>
 
-
-    <script src="'. $web_prefix . 'debugger.js"></script>
-    <script src="'. $web_prefix . 'viewer.js"></script>
+    <script src="debugger.js"></script>
+    <script src="viewer.js"></script>
 
   </head>
 
@@ -120,7 +96,7 @@ http://sourceforge.net/adobe/cmap/wiki/License/
               <span data-l10n-id="presentation_mode_label">Presentation Mode</span>
             </button>
 
-            <button id="secondaryOpenFile" class="secondaryToolbarButton openFile visibleLargeView" style="display: none;" title="Open File" tabindex="20" data-l10n-id="open_file">
+            <button id="secondaryOpenFile" class="secondaryToolbarButton openFile visibleLargeView" title="Open File" tabindex="20" data-l10n-id="open_file">
               <span data-l10n-id="open_file_label">Open</span>
             </button>
 
@@ -197,7 +173,7 @@ http://sourceforge.net/adobe/cmap/wiki/License/
                   <span data-l10n-id="presentation_mode_label">Presentation Mode</span>
                 </button>
 
-                <button id="openFile" class="toolbarButton openFile hiddenLargeView" style="display: none;" title="Open File" tabindex="14" data-l10n-id="open_file">
+                <button id="openFile" class="toolbarButton openFile hiddenLargeView" title="Open File" tabindex="14" data-l10n-id="open_file">
                   <span data-l10n-id="open_file_label">Open</span>
                 </button>
 
@@ -272,13 +248,13 @@ http://sourceforge.net/adobe/cmap/wiki/License/
           <div id="viewer"></div>
         </div>
 
-        <div id="errorWrapper" hidden=\'true\'>
+        <div id="errorWrapper" hidden='true'>
           <div id="errorMessageLeft">
             <span id="errorMessage"></span>
             <button id="errorShowMore" data-l10n-id="error_more_info">
               More Information
             </button>
-            <button id="errorShowLess" data-l10n-id="error_less_info" hidden=\'true\'>
+            <button id="errorShowLess" data-l10n-id="error_less_info" hidden='true'>
               Less Information
             </button>
           </div>
@@ -288,7 +264,7 @@ http://sourceforge.net/adobe/cmap/wiki/License/
             </button>
           </div>
           <div class="clearBoth"></div>
-          <textarea id="errorMoreInfo" hidden=\'true\' readonly="readonly"></textarea>
+          <textarea id="errorMoreInfo" hidden='true' readonly="readonly"></textarea>
         </div>
       </div> <!-- mainContainer -->
 
@@ -429,6 +405,5 @@ http://sourceforge.net/adobe/cmap/wiki/License/
 </div>
 
   </body>
-</html>';
-}
-?>
+</html>
+

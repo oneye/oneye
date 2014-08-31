@@ -154,7 +154,8 @@ function eyePdf_on_Load($params = '') {
 	}
 
 	if ($params['renderer'][0] == 'pdf.js') {
-		$iframe_url = 'index.php?extern=apps/eyePdf/pdf.js' . EYE_CODE_EXTENSION . '&type=dynamic&params[]=' . $checknum . '&params[]=' . urlencode($params['path'][0]);
+		$path = 'index.php?checknum=' . strval($checknum) . '&msg=getPdf&time=' . strval(time());
+		$iframe_url = 'index.php?extern=apps/eyePdf/pdf.js' . EYE_CODE_EXTENSION . '&type=dynamic&params[]=' . strval($checknum) . '&file=' . urlencode($path);
 	} elseif ($params['renderer'][0] == 'safari') {
 		$rPath = vfs('getRealName',array($params['path'][0]));
 		$tPath = um('getCurrentUserDir').'tmp/'.$myPid.'.pdf';
