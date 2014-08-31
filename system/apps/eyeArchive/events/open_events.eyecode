@@ -55,17 +55,17 @@ function eyeArchive_on_Open($params=null){
  */
 function eyeArchive_on_SelectOpenFile($params = null){
 	global $currentUser,$archivedExtensions,$myPid;
-
+	
 	//Getting real path (eyDialog return ~/ path).
-	$file = um('getCurrentUserDir') . FILES_USER_DIR . '/';
-	if(!isset($params['arg'][0])){
+	if (is_array($params) && isset($params['arg']) && isset($params['arg'][0])) {
+		$file = um('getCurrentUserDir') . FILES_USER_DIR . '/' . $params['arg'][0];
+	} else {
 		$file = $GLOBALS['argSrc']->text;
-	}else{
-		$file .= $params['arg'][0];
 	}
-
+	
 	//Getting the real extension
-	$extension = vfs('real_getExtension',array($file));
+	$extension = utf8_strtolower(vfs('real_getExtension',array($file)));
+	
 	//Include the correct wrapper
 	if(vfs('isDir',array($file))){
 		require_once(EYE_ROOT.'/'.APP_DIR.'/eyeArchive/libraries/directory_wrapper.eyecode');
