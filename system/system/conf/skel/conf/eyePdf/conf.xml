@@ -1,4 +1,4 @@
 <eyePdf>
-	<renderer>plugin</renderer>
+	<renderer>pdf.js</renderer>
 	<start_maximized>1</start_maximized>
 </eyePdf>

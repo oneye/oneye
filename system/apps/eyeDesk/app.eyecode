@@ -120,6 +120,15 @@ function eyeDesk_run($params = '') {
 			eyeXML('setXMLconfig', array('eyeDock', 'conf.xml', $dockXml));
 		}
 		
+		// oneye 0.9.6 Preview
+		if (check_versions($xml['eyeDesk'][0]['confVersion'][0], '1.11.6.0') === 2) {
+			$data = eyeXML('getXMLconfig', array('eyePdf', 'conf.xml'));
+			if ($data['eyePdf'][0]['renderer'][0] === 'plugin') {
+				$data['eyePdf'][0]['renderer'][0] = 'pdf.js';
+				eyeXML('setXMLconfig', array('eyePdf', 'conf.xml', $xml));
+			}
+		}
+		
 		$xml['eyeDesk'][0]['confVersion'][0] = EYEOS_VERSION;
 		eyeXML('setXMLconfig',array('eyeDesk', 'conf.xml', $xml));
 	}
