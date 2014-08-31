@@ -2045,8 +2045,8 @@ function service_vfs_cleanTemp() {
 function _getExtension($path){
 	$preExtensions = array('tar'=>array('gz','bz2'));
 	$info = pathinfo($path);
-	$extension = substr($path, strpos($path, '.') + 1); // utf8
-	$extension0 = substr($info['filename'], strpos($info['filename'], '.') + 1); // utf8
+	$extension = substr($path, strrpos($path, '.') + 1); // utf8
+	$extension0 = substr($info['filename'], strrpos($info['filename'], '.') + 1); // utf8
 	//if new extension found
 	if($extension0){
 		//if extension is an exception
