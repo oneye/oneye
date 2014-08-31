@@ -19,7 +19,13 @@ function eyeCalendar_run($params = '') {
 	global $myPid;
 	global $procInfo;
 	global $myPid;
-
+	
+	$path = um('getCurrentUserDir') . '/' . CONF_USER_DIR . '/eyeCalendar';
+	if (!is_dir($path)) {
+		mkdir($path);
+		recursiveCopy(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/skel/' . CONF_USER_DIR . '/eyeCalendar', $path);
+	}
+	
 	foreach (proc('getProcessTable') as $process) {
 		if ($process['appName'] == 'eyeCalendar' && $process['pid'] != $myPid) {
 			eyex('messageBox', array('content' => 'eyeCalendar is already running!'));
