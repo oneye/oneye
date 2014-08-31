@@ -73,8 +73,22 @@ function lib_eyeXML_getXMLconfig($params) {
 		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
 		return false;
 	}
-
-	return lib_eyeXML_getXMLfile(array(um('getCurrentUserDir') . '/' . CONF_USER_DIR . '/' . $params[0] . '/' . $params[1]));
+	
+	$path = um('getCurrentUserDir') . '/' . CONF_USER_DIR . '/' . $params[0];
+	if (!is_dir($path)) {
+		mkdir($path, null, true);
+	}
+	
+	$path .= '/' . $params[1];
+	if (!is_file($path)) {
+		$skel = EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/skel/' . CONF_USER_DIR . '/' . $params[0] . '/' . $params[1];
+		
+		if (is_file($skel)) {
+			copy($skel, $path);
+		}
+	}
+	
+	return lib_eyeXML_getXMLfile(array($path));
 }
 
 /**
