@@ -14,8 +14,8 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
              since 2010 Lars Knickrehm (mail@lars-sh.de)
 */
 
-define('MAX_FILE_EXTENSION', 8);
-define('MAX_FILE_NAME_LEN', 40);
+define('MAX_FILE_EXTENSION', false);
+define('MAX_FILE_NAME_LEN', false);
 
 function service_extern_init($params = null) {
 	global $externRequest;
@@ -103,10 +103,10 @@ function service_extern_getFile($params) {
 	$basename = $info['basename'];
 	$dirname = $info['dirname'] .  '/' . $basename;
 	$extension = $info['extension'];
-	if (utf8_strlen($basename) > MAX_FILE_NAME_LEN === true) {
+	if (MAX_FILE_NAME_LEN !== false && utf8_strlen($basename) > MAX_FILE_NAME_LEN === true) {
 		return false;
 	}
-	if (utf8_strlen($extension) > MAX_FILE_EXTENSION === true) {
+	if (MAX_FILE_EXTENSION !== false && utf8_strlen($extension) > MAX_FILE_EXTENSION === true) {
 		return false;
 	}
 	if ( /* utf8 */ strpos(realpath($dirname), realpath(EYE_ROOT . '/' . EXTERN_DIR . '/')) !== 0) {
