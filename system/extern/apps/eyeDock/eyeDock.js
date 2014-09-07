@@ -238,17 +238,21 @@ var Taskbars = {
 		}
 	},
 
-	AddEntry: function (id, title, onclick) {
+	AddEntry: function (id, title, onclick, image) {
 		var key, place, type;
 		Taskbars.Entries[id] = [];
 		Taskbars.Entries[id].title = title;
 		Taskbars.Entries[id].onclick = onclick;
+		Taskbars.Entries[id].image = image;
+		
+		image = typeof image === 'string' ? '<img alt="" src="' + encodeURI(image) + '" />' : '';
+		
 		for (key in Taskbars.List) {
 			if (Taskbars.List.hasOwnProperty(key)) {
 				if (Taskbars.List[key]) {
 					type = Taskbars.List[key].type;
 					place = Taskbars.List[key].place;
-					document.getElementById(key + '_entries').innerHTML += '<div class="eyeDock_' + type + '_' + place + '_taskbar_entry_focus" id="' + key + '_' + id + '_entry"><div class="eyeDock_' + type + '_' + place + '_taskbar_entry_div" id="' + key + '_' + id + '_entry_div" onclick="' + onclick + '">' + tinyMCE.entityDecode(title) + '</div></div>';
+					document.getElementById(key + '_entries').innerHTML += '<div class="eyeDock_' + type + '_' + place + '_taskbar_entry_focus" id="' + key + '_' + id + '_entry">' + image + '<div class="eyeDock_' + type + '_' + place + '_taskbar_entry_div" id="' + key + '_' + id + '_entry_div" onclick="' + onclick + '">' + tinyMCE.entityDecode(title) + '</div></div>';
 				}
 			}
 		}

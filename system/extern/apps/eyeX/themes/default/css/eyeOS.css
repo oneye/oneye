@@ -31,6 +31,18 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 	top: 0;
 }
 
+.activeWindow > img, .eyeWindowTitle > img, .inactiveWindow > img {
+	height: 16px;
+	left: 4px;
+	position: absolute;
+	top: 4px;
+	width: 16px;
+}
+
+.activeWindow > img + .eyeWindowTitle_text, .eyeWindowTitle > img + .eyeWindowTitle_text, .inactiveWindow > img + .eyeWindowTitle_text {
+	padding-left: 24px;
+}
+
 .activeWindow_center, .inactiveWindow_center, .eyeWindowTitle_center {
 	height: 4px;
 	top: 0;
@@ -854,6 +866,12 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 	background: transparent url('index.php?theme=USERTHEME&extern=images/minimized/minbar_on_x.png') no-repeat scroll center top;
 }
 
+.eyeDock_bottom_left_taskbar_entry > img, .eyeDock_bottom_left_taskbar_entry_focus > img {
+	margin-left: 10px;
+	height: 16px;
+	width: 16px;
+}
+
 .eyeDock_bottom_left_taskbar_entry_div {
 	cursor: pointer;
 	display: inline-block;
@@ -861,6 +879,7 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 	overflow: hidden;
 	padding: 7px 0 0 0;
 	text-indent: 5px;
+	vertical-align: middle;
 	width: 156px;
 }
 

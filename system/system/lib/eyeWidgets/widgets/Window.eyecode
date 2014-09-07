@@ -75,6 +75,7 @@ class Window {
 	var $fullScreen = 0;
 	var $height;
 	var $horiz;
+	var $image = null;
 	var $listed = 0;
 	var $max = 0;
 	var $maxHeight;
@@ -130,6 +131,7 @@ class Window {
 		isset($params['dragBgColor']) ? $this->dragBgColor = $params['dragBgColor'] : $this->dragBgColor = 0;
 		isset($params['height']) ? $this->height = $params['height'] : $this->height = 200;
 		isset($params['horiz']) ? $this->horiz = $params['horiz'] : $this->horiz = 0;
+		isset($params['image']) ? $this->image = $params['image'] : $this->image = null;
 		isset($params['maxHeight']) ? $this->maxHeight = $params['maxHeight'] : $this->maxHeight = 0;
 		isset($params['maxWidth']) ? $this->maxWidth = $params['maxWidth'] : $this->maxWidth = 0;
 		isset($params['minHeight']) ? $this->minHeight = $params['minHeight'] : $this->minHeight = 70;
@@ -151,7 +153,12 @@ class Window {
 		isset($params['width']) ? $this->width = $params['width'] : $this->width = 200;
 		isset($params['x']) ? $this->x = $params['x'] : $this->x = 20;
 		isset($params['y']) ? $this->y = $params['y'] : $this->y = 20;
-
+		
+		if ($this->image === null) {
+			$appInfo = getAppInfo(proc('findNameByPid', array($myPid)));
+			$this->image = $appInfo['package'][0]['icon'][0]; // TODO: isset, ...?!
+		}
+		
 		if (isset($params['forceSavePosition']) === true && $params['forceSavePosition']) {
 			$this->savePosition = ABSOLUTE;
 		} elseif (isset($params['forcePosition']) === true && $params['forcePosition']) {
@@ -675,6 +682,7 @@ class Window {
 			'dragBgAlpha' => $this->dragBgAlpha,
 			'dragBgColor' => $this->dragBgColor,
 			'height' => $this->height,
+			'image' => $this->image,
 			'listed' => $this->listed,
 			'max' => $this->max,
 			'maxHeight' => $this->maxHeight,

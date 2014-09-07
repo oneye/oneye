@@ -2723,7 +2723,7 @@ var Windows = {
 			params.minElement.onclick = function () {
 				Windows.Minimize(id);
 			};
-			Taskbars.AddEntry(id, params.title, "Windows.OnClickTaskbar('" + id + "');");
+			Taskbars.AddEntry(id, params.title, "Windows.OnClickTaskbar('" + id + "');", params.image);
 		}
 		document.getElementById(id).onmousedown = function () {
 			Windows.Focus(id);
@@ -3318,6 +3318,13 @@ function Window_show(params, id, father, x, y, horiz, vert, checknum, cent) {
 		createWidget(id + '_WindowTitle_border_left', id + '_WindowTitle', textNode, 0, 0, -1, -1, -1, -1, params.wTitleLeft, 0);
 		createWidget(id + '_WindowTitle_border_right', id + '_WindowTitle', textNode, 0, 0, -1, -1, -1, -1, params.wTitleRight, 0);
 		createWidget(id + '_WindowTitle_center', id + '_WindowTitle', textNode, 0, 0, -1, -1, -1, -1, params.wTitleCenter, 0);
+		
+		if (typeof params.image === 'string') {
+			image = document.createElement('img');
+			image.src = params.image;
+			document.getElementById(id + '_WindowTitle').appendChild(image);
+		}
+		
 		createWidget(id + '_WindowTitle_text', id + '_WindowTitle', document.createTextNode(tinyMCE.entityDecode(title)), 0, 0, -1, -1, -1, -1, params.wTitleText, 0);
 
 		if (params.min) {
