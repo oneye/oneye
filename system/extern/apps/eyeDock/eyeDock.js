@@ -252,7 +252,7 @@ var Taskbars = {
 				if (Taskbars.List[key]) {
 					type = Taskbars.List[key].type;
 					place = Taskbars.List[key].place;
-					document.getElementById(key + '_entries').innerHTML += '<div class="eyeDock_' + type + '_' + place + '_taskbar_entry_focus" id="' + key + '_' + id + '_entry">' + image + '<div class="eyeDock_' + type + '_' + place + '_taskbar_entry_div" id="' + key + '_' + id + '_entry_div" onclick="' + onclick + '">' + tinyMCE.entityDecode(title) + '</div></div>';
+					document.getElementById(key + '_entries').innerHTML += '<div class="eyeDock_' + type + '_' + place + '_taskbar_entry_focus" id="' + key + '_' + id + '_entry" onclick="' + onclick + '">' + image + '<div class="eyeDock_' + type + '_' + place + '_taskbar_entry_div" id="' + key + '_' + id + '_entry_div">' + tinyMCE.entityDecode(title) + '</div></div>';
 				}
 			}
 		}
