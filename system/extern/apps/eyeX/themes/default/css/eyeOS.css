@@ -879,8 +879,9 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 	overflow: hidden;
 	padding: 7px 0 0 0;
 	text-indent: 5px;
+	text-overflow: ellipsis;
 	vertical-align: middle;
-	width: 156px;
+	width: 126px;
 }
 
 .eyeDock_bottom_left_taskbar_left, .eyeDock_bottom_left_taskbar_right {
