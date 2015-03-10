@@ -2608,6 +2608,7 @@ var Windows = {
 		Windows.List[id].noResize = params.noresize;
 		Windows.List[id].noZIndex = params.noZindex;
 		Windows.List[id].resizing = 0;
+		Windows.List[id].top = null;
 		Windows.List[id].user = params.user;
 		Windows.List[id].xChecknum = params.xChecknum;
 		if (params.closeElement) {
@@ -2789,16 +2790,9 @@ var Windows = {
 		var e, i, selects;
 		e = document.getElementById(id);
 		if (e) {
+			Windows.List[id].top = e.style.top;
+			e.style.top = '200%';
 			e.style.visibility = 'hidden';
-			if (IEversion && IEversion < 7) {
-				selects = e.getElementsByTagName('select');
-				for (i = 0; i < selects.length; i += 1) {
-					if (selects[i].style.visibility !== 'hidden') {
-						selects[i].name = 'visible';
-						selects[i].style.visibility = 'hidden';
-					}
-				}
-			}
 			if (typeof Windows.List[id].JS === 'object' && typeof Windows.List[id].JS.Hide === 'function') {
 				Windows.List[id].JS.Hide(id);
 			}
@@ -3246,15 +3240,8 @@ var Windows = {
 		var e, i, selects;
 		e = document.getElementById(id);
 		if (e) {
+			e.style.top = Windows.List[id].top;
 			e.style.visibility = '';
-			if (IEversion && IEversion < 7) {
-				selects = e.getElementsByTagName('select');
-				for (i = 0; i < selects.length; i += 1) {
-					if (selects[i].name === 'visible') {
-						selects[i].style.visibility = '';
-					}
-				}
-			}
 			if (typeof Windows.List[id].JS === 'object' && typeof Windows.List[id].JS.Unhide === 'function') {
 				Windows.List[id].JS.Unhide(id);
 			}
