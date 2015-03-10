@@ -83,7 +83,7 @@ function eyeRename_libs_Do($from,$file,$to,$file2,$callback,$replace = 0) {
 		proc('launch',array('restoreTrash',array($file,0,$to[1] . '://' . $to[2])));
 	} elseif ($to[1] == 'trash') {
 		proc('launch',array('eyeDelete',array($from[1] . '://' . $from[2] . '/' . $file)));
-	} elseif ($from[1] !== 'real' && ($from[1] !== 'home' || strtolower(trim($from[2], '/')) !== 'desktop') && strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($from[0] . '/' . $file)) === true) { // utf8
+	} else if (($to[1] !== 'home' || strtolower(trim($to[2], '/')) !== 'desktop') && (vfs('fileExists',array($from[0] . '/' . $file)) === true || strtolower(strrchr($file, '.')) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists',array($from[0] . '/' . $file)) === true)) { // utf8
 		eyex('messageBox',array('content' => 'Links cannot be moved!'));
 	} else if (vfs('isdir',array($from[0] . '/' . $file)) === true && substr(realpath($to[0] . '/'), 0, strlen(realpath($from[0] . '/' . $file . '/'))) === realpath($from[0] . '/' . $file . '/')) { // utf8
 		eyex('messageBox',array('content' => 'Error moving folder!'));
