@@ -27,6 +27,7 @@ $myTab = new Tab(array(
 	'y' => 0
 ));
 $myTab->show();
+$GLOBALS['eyeControl_system_tab'] = $myTab;
 
 $systemTab = $myTab->addTab('System',1);
 $permissionsTab = $myTab->addTab('Permissions',1);
@@ -328,20 +329,24 @@ $myLabel = new Label(array(
 ));
 $myLabel->show();
 $ContentY += 20;
+
+$officeXml = eyeXML('getXMLfile', array(EYE_ROOT . '/' . SYSTEM_DIR . '/' . SYSTEM_CONF_DIR . '/system.xml'));
 $myTextbox = new Textbox(array(
 	'name' => 'eyeControl_system_office_textbox_folder',
 	'father' => $officeTab,
 	'x' => 60,
 	'y' => $ContentY + 2,
-	'text' => OFFICE_PYTHON_PATH,
+	'text' => $officeXml['CONFIG'][0]['OFFICE_PYTHON_PATH'][0],
 	'width' => 360
 ));
 $myTextbox->show();
 $ContentY += 20;
 
-$pythonOut = /* utf8 */ str_replace('""', '"', trim(shell_exec(escapeshellarg(OFFICE_PYTHON_PATH) . ' --version 2>&1')));
-if ( /* utf8 */ strpos($pythonOut, 'not found') > -1) {
-	$pythonOut = 'Python Not Found';
+$pythonOut = exec(escapeshellarg($officeXml['CONFIG'][0]['OFFICE_PYTHON_PATH'][0]) . ' --version 2>&1', $temp, $return_var);
+if ($return_var > 0) {
+	$pythonOut = 'Python not found.';
+} else {
+	$pythonOut = trim($pythonOut);
 }
 $myLabel = new Label(array(
 	'name' => 'eyeControl_system_office_label_python_test',
@@ -351,7 +356,6 @@ $myLabel = new Label(array(
 	'text' => $pythonOut
 ));
 $myLabel->show(0);
-
 
 $ContentY += 40;
 $myLabel = new Label(array(
@@ -365,7 +369,7 @@ $myLabel->show();
 $ContentY += 20;
 
 if ( /* utf8 */ strpos(realpath(EYE_ROOT . '/'), '\\') !== false) {
-	$default = 'C:\\Program Files (x86)\\LibreOffice 3.6\\program\\python.exe';
+	$default = 'C:\\Program Files (x86)\\LibreOffice 4\\program\\python.exe';
 } else {
 	$default = 'python';
 }
