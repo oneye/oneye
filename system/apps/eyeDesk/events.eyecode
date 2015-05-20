@@ -386,10 +386,14 @@ function eyeDesk_on_OpenPath($params = '') {
 function eyeDesk_on_getWallpaper($params = '') {
 	$config = eyeXML('getXMLconfig',array('eyeDesk','conf.xml'));
 	$url = $config['eyeDesk'][0]['wallpaper'][0];
-	header('Content-Type: image/jpeg');
-	header('Content-Length: ' . vfs('filesize',array($url)));
-	header('Accept-Ranges: bytes');
-	vfs('readFile',array($url));
+	
+	if (vfs('fileExists', array($url))) {
+		header('Accept-Ranges: bytes');
+		header('Content-Length: ' . vfs('filesize', array($url)));
+		header('Content-Type: image/jpeg');
+		
+		vfs('readFile', array($url));
+	}
 	exit;
 }
 ?>

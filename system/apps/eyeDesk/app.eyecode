@@ -222,9 +222,12 @@ function eyeDesk_run($params = '') {
 	eyeSessions('setVar', array('usertheme', $theme));
 	eyex('runjs',array('js' => 'USERTHEME = %s;','tokens' => array($theme)));
 
-	if (isset($xml['eyeDesk'][0]['wallpaper']) === true && $xml['eyeDesk'][0]['wallpaper'][0] && vfs('fileExists',array($xml['eyeDesk'][0]['wallpaper'][0]))) {
-		eyex('setWallpaper',array('path' => 'index.php?checknum=' . $checknum . '&msg=getWallpaper','repeat' => $xml['eyeDesk'][0]['wallpaperRepeat'][0],'center' => $xml['eyeDesk'][0]['wallpaperCenter'][0]));
-	}
+	eyex('setWallpaper', array(
+		'center' => $xml['eyeDesk'][0]['wallpaperCenter'][0],
+		'color' => $xml['eyeDesk'][0]['bgColor'][0],
+		'path' => 'index.php?checknum=' . $checknum . '&msg=getWallpaper&' . time(),
+		'repeat' => $xml['eyeDesk'][0]['wallpaperRepeat'][0]
+	));
 
 	include_once(EYE_ROOT . '/' . APP_DIR . '/eyeDesk/events' . EYE_CODE_EXTENSION);
 	eyeDesk_on_OpenPath();
