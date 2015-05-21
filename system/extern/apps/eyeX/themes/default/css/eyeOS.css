@@ -68,8 +68,6 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 #background {
 	background: #eeeeee url('index.php?theme=USERTHEME&extern=images/wallpapers/default.jpg') repeat top center;
 	height: 100%;
-	min-height: 400px;
-	min-width: 500px;
 	position: absolute;
 	width: 100%;
 }
@@ -1654,4 +1652,16 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 .vertical {
 	height: 200px;
 	width: 29px;
+}
+
+@media (max-width: 800px) {
+	.eyeDock_bottom_left_icon_div, .eyeDock_bottom_right_icon_div, .eyeDock_left_top_icon_div, .eyeDock_right_top_icon_div, .eyeDock_top_left_icon_div, .eyeDock_top_right_icon_div, .eyeDock_bottom_left_menu_div, .eyeDock_bottom_right_menu_div, .eyeDock_left_top_menu_div, .eyeDock_right_top_menu_div, .eyeDock_top_left_menu_div, .eyeDock_top_right_menu_div, .eyeWindowMaxButton, .eyeWindowResizeButton {
+		display: none !important;
+	}
+	.eyeWindowMain {
+		height: 100% !important;
+		left: 0 !important;
+		top: 0 !important;
+		width: 100% !important;
+	}
 }
