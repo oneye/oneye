@@ -493,16 +493,18 @@ function eyeDock_on_Message($params = '') {
 function eyeDock_on_MoveDown($params = '') {
 	$xml = eyeXML('getXMLconfig',array('eyeDock','conf.xml'));
 	if ($params['entry'][0]) {
-		$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0][$params['id'][0]][0]['entries'][0] = eyeDock_lib_array_movedown($params['id'][0],$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0][$params['id'][0]][0]['entries'][0]);
+		$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0][$params['id'][0]][0]['entries'][0] = eyeDock_lib_array_movedown($params['entry'][0],$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0][$params['id'][0]][0]['entries'][0]);
 	} else {
-		$array = eyeDock_lib_array_movedown($params['id'][0],$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0]);
-		if ($params['place'][0] == 'left') {
-			$id = array_search($params['id'][0],array_keys($array));
-			if (!$keys[$id - 1]) {
-				$xml['eyeDock'][0][$params['type'][0]][0]['right'][0]['element-' . $xml['eyeDock'][0][$params['type'][0]][0]['right-id'][0]] = $array[$params['id'][0]];
-				$xml['eyeDock'][0][$params['type'][0]][0]['right-id'][0]++;
-				unset($array[$params['id'][0]]);
-			}
+		$array = $xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0];
+		$keys = array_keys($array);
+		if ($params['place'][0] === 'left' && $keys[count($keys) - 1] === $params['id'][0]) {
+			$xml['eyeDock'][0][$params['type'][0]][0]['right'][0]['element-' . $xml['eyeDock'][0][$params['type'][0]][0]['right-id'][0]] = $array[$params['id'][0]];
+			$xml['eyeDock'][0][$params['type'][0]][0]['right-id'][0] += 1;
+			unset($array[$params['id'][0]]);
+		} else if ($params['place'][0] === 'right') {
+			$array = eyeDock_lib_array_moveup($params['id'][0], $array);
+		} else {
+			$array = eyeDock_lib_array_movedown($params['id'][0], $array);
 		}
 		$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0] = $array;
 	}
@@ -514,16 +516,18 @@ function eyeDock_on_MoveDown($params = '') {
 function eyeDock_on_MoveUp($params = '') {
 	$xml = eyeXML('getXMLconfig',array('eyeDock','conf.xml'));
 	if ($params['entry'][0]) {
-		$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0][$params['id'][0]][0]['entries'][0] = eyeDock_lib_array_moveup($params['id'][0],$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0][$params['id'][0]][0]['entries'][0]);
+		$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0][$params['id'][0]][0]['entries'][0] = eyeDock_lib_array_moveup($params['entry'][0], $xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0][$params['id'][0]][0]['entries'][0]);
 	} else {
-		$array = eyeDock_lib_array_moveup($params['id'][0],$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0]);
-		if ($params['place'][0] == 'right') {
-			$id = array_search($params['id'][0],array_keys($array));
-			if (!$keys[$id + 1]) {
-				$xml['eyeDock'][0][$params['type'][0]][0]['left'][0]['element-' . $xml['eyeDock'][0][$params['type'][0]][0]['left-id'][0]] = $array[$params['id'][0]];
-				$xml['eyeDock'][0][$params['type'][0]][0]['left-id'][0]++;
-				unset($array[$params['id'][0]]);
-			}
+		$array = $xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0];
+		$keys = array_keys($array);
+		if ($params['place'][0] === 'right' && $keys[count($keys) - 1] === $params['id'][0]) {
+			$xml['eyeDock'][0][$params['type'][0]][0]['left'][0]['element-' . $xml['eyeDock'][0][$params['type'][0]][0]['left-id'][0]] = $array[$params['id'][0]];
+			$xml['eyeDock'][0][$params['type'][0]][0]['left-id'][0] += 1;
+			unset($array[$params['id'][0]]);
+		} else if ($params['place'][0] === 'right') {
+			$array = eyeDock_lib_array_movedown($params['id'][0], $array);
+		} else {
+			$array = eyeDock_lib_array_moveup($params['id'][0], $array);
 		}
 		$xml['eyeDock'][0][$params['type'][0]][0][$params['place'][0]][0] = $array;
 	}
