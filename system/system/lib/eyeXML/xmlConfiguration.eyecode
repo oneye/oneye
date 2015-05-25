@@ -73,6 +73,9 @@ function lib_eyeXML_getXMLconfig($params) {
 		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
 		return false;
 	}
+	if (um('getCurrentUserDir') === false) {
+		return false;
+	}
 	
 	$path = um('getCurrentUserDir') . '/' . CONF_USER_DIR . '/' . $params[0];
 	if (!is_dir($path)) {
@@ -106,6 +109,9 @@ function lib_eyeXML_getXMLconfig($params) {
 function lib_eyeXML_setXMLconfig($params) {
 	if (!isset($params[0]) || !isset($params[1]) || !isset($params[2])) {
 		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	if (um('getCurrentUserDir') === false) {
 		return false;
 	}
 
