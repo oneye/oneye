@@ -1,5 +1,6 @@
 *.min.css
 *.min.js
 
+system/accounts
 system/tmp
 system/users/rt4/root/conf
