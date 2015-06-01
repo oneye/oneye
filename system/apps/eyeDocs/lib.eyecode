@@ -41,13 +41,19 @@ function eyeDocs_saveFile($content) {
 		} else {
 			$format = 'MS Word 97';
 		}
-		if(!vfs('fileExists',array($file))) {
-			vfs('create',array($file,'eyeDocs'));
-		}
 		
 		eyeConverter('convert',array($tempFile,$tempFolder,$format,1));
 		
 		$src = $tempFolder."/".basename($tempFile,".html").".".$extension;
+		
+		if (!vfs('real_fileExists', array($src))) {
+			eyex('messageBox', array('content' => 'Error saving file.'));
+			return false;
+		}
+		
+		if(!vfs('fileExists',array($file))) {
+			vfs('create',array($file,'eyeDocs'));
+		}
 		$dest = vfs('getRealName',array($file));
 		vfs('real_delete', array($dest));
 		vfs('real_copy', array($src, $dest));
