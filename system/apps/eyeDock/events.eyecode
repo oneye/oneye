@@ -150,6 +150,11 @@ function eyeDock_on_AddElement_Do($params = '') {
 		$currentUser = $oldUser;
 		$xml['eyeDock'][0][$type][0][$place][0][$id][0]['entries'][0]['entry-' . $xml['eyeDock'][0][$type][0][$place][0][$id][0]['entries-id'][0]++][0] = $module['module'][0];
 	} else {
+		if ($element === 'taskbar' && ($type !== 'bottom' || $place !== 'left')) {
+			eyex('messageBox', array('content' => 'Taskbars can be positioned at the bottom left only.'));
+			return;
+		}
+		
 		$oldUser = $currentUser;
 		$currentUser = ROOTUSER;
 		$module = eyeXML('getXMLfile',array(EYE_ROOT. '/' . APP_DIR .'/' . APP_CONF_SHARE . '/eyeDock/modules/' . $element . '.xml'));
