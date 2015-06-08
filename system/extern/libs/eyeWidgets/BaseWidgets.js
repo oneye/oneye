@@ -3309,6 +3309,11 @@ function Window_show(params, id, father, x, y, horiz, vert, checknum, cent) {
 		if (typeof params.image === 'string') {
 			image = document.createElement('img');
 			image.src = params.image;
+			if (params.close) {
+				image.ondblclick = function () {
+					Windows.Close(id);
+				};
+			}
 			document.getElementById(id + '_WindowTitle').appendChild(image);
 		}
 		

@@ -37,6 +37,7 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 	position: absolute;
 	top: 4px;
 	width: 16px;
+	z-index: 1;
 }
 
 .activeWindow > img + .eyeWindowTitle_text, .eyeWindowTitle > img + .eyeWindowTitle_text, .inactiveWindow > img + .eyeWindowTitle_text {
