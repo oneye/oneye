@@ -27,6 +27,13 @@ function eyeNotes_on_Open($params=null) {
 		'',
 		array(
 			'Text files' => '*.txt',
+			'HTML files' => '*.html',
+			'PHP files' => '*.php',
+			'JavaScript files' => '*.js',
+			'CSS files' => '*.css',
+			'Java files' => '*.java',
+			'C# files' => '*.cs',
+			'ASP files' => '*.asp',
 			'All files' => '*'
 		)
 	);
@@ -59,6 +66,13 @@ function eyeNotes_on_Save($params=null) {
 		'',
 		array(
 			'Text files' => '*.txt',
+			'HTML files' => '*.html',
+			'PHP files' => '*.php',
+			'JavaScript files' => '*.js',
+			'CSS files' => '*.css',
+			'Java files' => '*.java',
+			'C# files' => '*.cs',
+			'ASP files' => '*.asp',
 			'All files' => '*.*'
 		)
 	);
@@ -91,6 +105,13 @@ function eyeNotes_on_SaveAs($params=null) {
 		'',
 		array(
 			'Text files' => '*.txt',
+			'HTML files' => '*.html',
+			'PHP files' => '*.php',
+			'JavaScript files' => '*.js',
+			'CSS files' => '*.css',
+			'Java files' => '*.java',
+			'C# files' => '*.cs',
+			'ASP files' => '*.asp',
 			'All files' => '*.*'
 		)
 	);
