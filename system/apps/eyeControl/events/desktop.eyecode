@@ -129,7 +129,7 @@ function eyeControl_on_desktop_save($params=null) {
 	} else {
 		unset($config['eyeDesk'][0]['bgColor'][0]);
 	}
-	$repeat = $GLOBALS['eyeControl_desktop_checkbox_repeat']->checked;
+	$repeat = $GLOBALS['eyeControl_desktop_select_repeat']->selected;
 	$center = $GLOBALS['eyeControl_desktop_checkbox_center']->checked;
 	$config['eyeDesk'][0]['wallpaperRepeat'][0] = $repeat;
 	$config['eyeDesk'][0]['wallpaperCenter'][0] = $center;

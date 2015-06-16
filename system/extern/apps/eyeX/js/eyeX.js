@@ -221,6 +221,11 @@ function setWallpaper(newWllp, repeat, center, color) {
 
 	wllp.style.backgroundImage = "url('" + newWllp + "')";
 
+	if (parseInt(repeat, 10) === 2) {
+		wllp.style.backgroundSize = "cover";
+	} else {
+		wllp.style.backgroundSize = "auto";
+	}
 	if (parseInt(repeat, 10)) {
 		wllp.style.backgroundRepeat = "repeat";
 	} else {

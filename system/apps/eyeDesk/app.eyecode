@@ -226,7 +226,7 @@ function eyeDesk_run($params = '') {
 		'center' => $xml['eyeDesk'][0]['wallpaperCenter'][0],
 		'color' => $xml['eyeDesk'][0]['bgColor'][0],
 		'path' => 'index.php?checknum=' . $checknum . '&msg=getWallpaper&' . time(),
-		'repeat' => $xml['eyeDesk'][0]['wallpaperRepeat'][0]
+		'repeat' => isset($xml['eyeDesk'][0]['wallpaperRepeat'][0]) ? $xml['eyeDesk'][0]['wallpaperRepeat'][0] : '2'
 	));
 
 	include_once(EYE_ROOT . '/' . APP_DIR . '/eyeDesk/events' . EYE_CODE_EXTENSION);

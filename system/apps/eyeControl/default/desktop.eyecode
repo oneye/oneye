@@ -66,11 +66,14 @@ if (eyeControl_lib_getConfigUser() == $currentUser) {
 	} else {
 		$cc = 0;
 	}
-	if (isset($config['eyeDesk'][0]['wallpaperRepeat']) === true && $config['eyeDesk'][0]['wallpaperRepeat'][0] == '1') {
+	if (isset($config['eyeDesk'][0]['wallpaperRepeat']) === true && $config['eyeDesk'][0]['wallpaperRepeat'][0] == '0') {
+		$repeat = 0;
+		$repeatUrl = 'index.php?extern=apps/eyeControl/gfx/norepeat.png';
+	} else if (isset($config['eyeDesk'][0]['wallpaperRepeat']) === true && $config['eyeDesk'][0]['wallpaperRepeat'][0] === '1') {
 		$repeat = 1;
 		$repeatUrl = 'index.php?extern=apps/eyeControl/gfx/repeat.png';
 	} else {
-		$repeat = 0;
+		$repeat = 2;
 		$repeatUrl = 'index.php?extern=apps/eyeControl/gfx/norepeat.png';
 	}
 	if (isset($config['eyeDesk'][0]['wallpaperCenter']) === true && $config['eyeDesk'][0]['wallpaperCenter'][0] == '0') {
@@ -145,16 +148,18 @@ if (eyeControl_lib_getConfigUser() == $currentUser) {
 	$myImagebox->show();
 	$ContentY += 20;
 	// Repeat wallpaper
-	$myCheckbox_repeat = new Checkbox(array(
-		'name' => 'eyeControl_desktop_checkbox_repeat',
+	$mySelect_repeat = new Select(array(
+		'name' => 'eyeControl_desktop_select_repeat',
 		'father' => $wallpaperTab,
+		'width' => 150,
 		'x' => 245,
-		'y' => $ContentY,
-		'text' => 'Repeat Wallpaper',
-		'checked' => $repeat
+		'y' => $ContentY
 	));
-	$myCheckbox_repeat->show();
-	$myCheckbox_repeat->addEvent('onclick','if (this.checked) { document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper").src = "index.php?extern=apps/eyeControl/gfx/repeat.png"; } else { document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper").src = "index.php?extern=apps/eyeControl/gfx/norepeat.png"; } fixPNG("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper");');
+	$mySelect_repeat->show();
+	$mySelect_repeat->addOption('Original Size', '0', $repeat === 0);
+	$mySelect_repeat->addOption('Repeat Wallpaper', '1', $repeat === 1);
+	$mySelect_repeat->addOption('Fit Wallpaper', '2', $repeat === 2);
+	$mySelect_repeat->addEvent('onclick', 'console.log(this); document.getElementById("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper").src = this.value === "1" ? "index.php?extern=apps/eyeControl/gfx/repeat.png" : "index.php?extern=apps/eyeControl/gfx/norepeat.png"; fixPNG("' . $myPid . '_eyeControl_desktop_imagebox_wallpaper");');
 	$ContentY += 60;
 	// Center wallpaper
 	$myCheckbox_center = new Checkbox(array(
@@ -250,7 +255,7 @@ if (eyeControl_lib_getConfigUser() == $currentUser) {
 	$myButton->addFriend($myCheckbox_use_color);
 	$myButton->addFriend($myTextbox);
 	$myButton->addFriend($myTextbox_color);
-	$myButton->addFriend($myCheckbox_repeat);
+	$myButton->addFriend($mySelect_repeat);
 	$myButton->addFriend($myCheckbox_center);
 	$myButton->show();
 }
