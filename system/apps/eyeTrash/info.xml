@@ -5,6 +5,6 @@
 	<description>Utility linking to trash:///</description>
 	<author>oneye Team</author>
 	<license>AGPL</license>
-	<type>Application</type>
+	<type>Utility</type>
 	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/trash.png</icon>
 </package>

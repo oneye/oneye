@@ -5,6 +5,6 @@
 	<description>Utility to start applications</description>
 	<author>oneye Team</author>
 	<license>AGPL</license>
-	<type>Application</type>
+	<type>Utility</type>
 	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/software.png</icon>
 </package>

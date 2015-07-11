@@ -5,6 +5,6 @@
 	<description>Bar at the top of the desktop to access applications</description>
 	<author>oneye Team</author>
 	<license>AGPL</license>
-	<type>Utility</type>
+	<type>System</type>
 	<icon />
 </package>

@@ -1,6 +1,6 @@
 <package>
 	<name>File Manager</name>
-	<category>File Management</category>
+	<category>Utilities</category>
 	<version>1.9</version>
 	<description>Application to browse files</description>
 	<author>oneye Team</author>
