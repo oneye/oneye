@@ -52,6 +52,22 @@ function lib_eyeWidgets_checkTable($params=null){
 }
 
 /**
+ * Checks if a given process ID has any widget running.
+ *
+ * @param $params array($pid)
+ * @param $pid Process ID to check
+ * @return true if given PID has any widget, else false
+ */
+function lib_eyeWidgets_hasWidgets($params = null) {
+	if (!is_array($params) || !isset($params[0])) {
+		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		return false;
+	}
+	
+	return isset($_SESSION[WTABLE][$params[0]]) && is_array($_SESSION[WTABLE][$params[0]]) && count($_SESSION[WTABLE][$params[0]]) > 0;
+}
+
+/**
 * Updates the values of the serialized widgets in the current process.
 *
 * @param $params array(params)
