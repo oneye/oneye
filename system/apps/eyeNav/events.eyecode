@@ -63,18 +63,6 @@ function eyeNav_on_Fullscreen($params = '') {
 	}'));
 }
 
-function eyeNav_on_Back($params = '') {
-	global $myPid;
-	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].history.back();'));
-	$GLOBALS['eyeNav_frame']->focus();
-}
-
-function eyeNav_on_Forward($params = '') {
-	global $myPid;
-	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].history.forward();'));
-	$GLOBALS['eyeNav_frame']->focus();
-}
-
 function eyeNav_on_Refresh($params = '') {
 	global $myPid;
 	$js = 'var obj = document.getElementById("' . $myPid . '_eyeNav_frame");';

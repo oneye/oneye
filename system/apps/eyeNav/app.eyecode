@@ -186,9 +186,6 @@ function eyeNav_run($params = '') {
 		'father' => 'eyeNav_window_Content'
 	));
 	$myToolbar->show();
-	$myToolbar->addItem('Back','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/previous.png','Back',array($myIframe));
-	$myToolbar->addItem('Forward','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/next.png','Forward',array($myIframe));
-	$myToolbar->addLine();
 	$myToolbar->addItem('Refresh','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/refresh.png','Refresh',array($myIframe));
 	$myToolbar->addItem('Startpage','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/home.png','Startpage',array($myTextbox,$myIframe));
 	$myToolbar->addLine();
