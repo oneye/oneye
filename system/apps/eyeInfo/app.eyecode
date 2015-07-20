@@ -159,7 +159,7 @@ function eyeInfo_run($params = '') {
 
 	$projects = array('CodePress','Oxygen Icons','PHP UTF8','TinyMCE (Moxiecode)','X Library (Cross-Browser.com)');
 	shuffle($projects);
-	$y = ($myTab->height - 25) / (count($projects) + 1);
+	$y = ($myTab->height - 25) / (count($projects) + 2);
 
 	$myLabel = new Label(array(
 		'father' => $projectsTab,
@@ -183,6 +183,17 @@ function eyeInfo_run($params = '') {
 		$myLabel->show();
 		$i++;
 	}
+	
+	
+	$myButton = new Button(array(
+		'caption' => 'PHP Info',
+		'father' => $projectsTab,
+		'name' => 'eyeInfo_Button_Projects_PhpInfo',
+		'signal' => 'PhpInfo',
+		'x' => 20,
+		'y' => ($i + 0.5) * $y + 25
+	));
+	$myButton->show();
 }
 
 function eyeInfo_end($params = '') {

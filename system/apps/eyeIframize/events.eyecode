@@ -39,8 +39,6 @@ function eyeIframize_on_Do($params = '') {
 			$myHidden->show();
 			$title = $file . ' - eyeIframize';
 			$url = 'index.php?checknum=' . $checknum . '&msg=getFile';
-		} else {
-			$url = 'http://' . $url;
 		}
 	}
 	

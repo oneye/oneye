@@ -25,4 +25,15 @@ function eyeInfo_on_Message($params = '') {
 function eyeInfo_on_Navigate($params = '') {
 	proc('launch',array('eyeNav','http://oneye-project.org/'));
 }
+
+function eyeInfo_on_PhpInfo($params = null) {
+	global $checknum;
+	
+	proc('launch', array('eyeIframize', array('index.php?checknum=' . $checknum . '&msg=ShowPhpInfo', 'PHP Info')));
+}
+
+function eyeInfo_on_ShowPhpInfo($params = null) {
+	phpinfo();
+	exit;
+}
 ?>
