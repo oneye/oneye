@@ -215,7 +215,9 @@ function eyeFiles_on_Icon_Clicked($params = '') {
 		} elseif (strtolower(substr($path[0], -strlen('.' . EYEOS_LINK_EXT))) === '.' . strtolower(EYEOS_LINK_EXT) && vfs('real_fileExists', array($path[0])) === true) { // utf8
 			$xml = eyeXML('getXMLfile', array($path[0]));
 			eyeFiles('launchCommand', array($xml['eyeLink'][0]['content'][0], $xml['eyeLink'][0]['xArgs'][0]));
-		} elseif ($path[1] != 'real') {
+		} elseif ($path[1] === 'real') {
+			eyex('messageBox', array('content' => 'Opening files in real mode is not allowed.'));
+		} else {
 			$xml = getConfig('filetypes', utf8_strtolower(substr(strrchr($path[0], '.'), 1)) . '.xml'); // utf8
 			if ($xml['fileType'][0]['app'][0]) {
 				proc('launch',array($xml['fileType'][0]['app'][0],$path[0]));
