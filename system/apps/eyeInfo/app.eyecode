@@ -61,7 +61,6 @@ function eyeInfo_run($params = '') {
 	));
 	$myTab->show();
 	$oneyeTab = $myTab->addTab('oneye Team', 1);
-	$eyeosTab = $myTab->addTab('eyeos Team', 1);
 	$supportersTab = $myTab->addTab('Supporters', 1);
 	$projectsTab = $myTab->addTab('Projects', 1);
 	$myTab->selectByName('oneye Team');
@@ -78,7 +77,7 @@ function eyeInfo_run($params = '') {
 	$myImagebox->show();
 
 	$oneye = array('Lars Knickrehm', 'Luca Ferrario', 'Daniel Sousa', 'Matthew Powell');
-	$y = ($myTab->height - 25) / (count($oneye) + 1);
+	$y = ($myTab->height - 35) / (count($oneye) + 1);
 
 	$myLabel = new Label(array(
 		'father' => $oneyeTab,
@@ -105,12 +104,12 @@ function eyeInfo_run($params = '') {
 
 	$eyeos = array('Alejandro Fiestas','Anaël Ollier','Daniel Gil','Jordi Ferrer','José Carlos Norte','Lars Knickrehm','Marc Cercós','Matthew Powell','Pau Garcia-Milà','Pau Peris','Pol Watine','Adrián Norte','Julia Garcia');
 	shuffle($eyeos);
-	$y = ($myTab->height - 25) / (count($eyeos) + 2);
+	$y = ($myTab->height - 35) / (count($eyeos) + 2);
 
 	$myLabel = new Label(array(
-		'father' => $eyeosTab,
+		'father' => $supportersTab,
 		'name' => 'eyeInfo_Label_Team',
-		'text' => 'eyeos Team (randomly displayed)',
+		'text' => 'eyeos Team',
 		'x' => 10,
 		'y' => 10
 	));
@@ -120,7 +119,7 @@ function eyeInfo_run($params = '') {
 	$i = 0;
 	foreach ($eyeos as $value) {
 		$myLabel = new Label(array(
-			'father' => $eyeosTab,
+			'father' => $supportersTab,
 			'name' => 'eyeInfo_Label_Team_' . $i,
 			'text' => $value,
 			'x' => 20,
@@ -132,13 +131,13 @@ function eyeInfo_run($params = '') {
 
 	$supporters = array('Alexandre Mejat','David Comuñas','Edouard Daubin','François Bocquet');
 	shuffle($supporters);
-	$y = ($myTab->height - 25) / (count($supporters) + 1);
+	$y = ($myTab->height - 150) / (count($supporters) + 1);
 
 	$myLabel = new Label(array(
 		'father' => $supportersTab,
 		'name' => 'eyeInfo_Label_Supporters',
 		'text' => 'Community Supporters',
-		'x' => 10,
+		'x' => 200,
 		'y' => 10
 	));
 	$myLabel->show();
@@ -150,16 +149,26 @@ function eyeInfo_run($params = '') {
 			'father' => $supportersTab,
 			'name' => 'eyeInfo_Label_Supporters_' . $i,
 			'text' => $value,
-			'x' => 20,
+			'x' => 210,
 			'y' => ($i + 0.5) * $y + 25
 		));
 		$myLabel->show();
 		$i++;
 	}
+	
+	$myButton = new Button(array(
+		'caption' => 'PHP Info',
+		'father' => $supportersTab,
+		'name' => 'eyeInfo_Button_Projects_PhpInfo',
+		'signal' => 'PhpInfo',
+		'vert' => 1,
+		'x' => 210
+	));
+	$myButton->show();
 
 	$projects = array('CodePress','Oxygen Icons','PHP UTF8','TinyMCE (Moxiecode)','X Library (Cross-Browser.com)');
 	shuffle($projects);
-	$y = ($myTab->height - 25) / (count($projects) + 2);
+	$y = ($myTab->height - 35) / (count($projects) + 1);
 
 	$myLabel = new Label(array(
 		'father' => $projectsTab,
@@ -183,17 +192,6 @@ function eyeInfo_run($params = '') {
 		$myLabel->show();
 		$i++;
 	}
-	
-	
-	$myButton = new Button(array(
-		'caption' => 'PHP Info',
-		'father' => $projectsTab,
-		'name' => 'eyeInfo_Button_Projects_PhpInfo',
-		'signal' => 'PhpInfo',
-		'x' => 20,
-		'y' => ($i + 0.5) * $y + 25
-	));
-	$myButton->show();
 }
 
 function eyeInfo_end($params = '') {
