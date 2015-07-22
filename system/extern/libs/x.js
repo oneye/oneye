@@ -431,32 +431,6 @@ function xOpacity(e, o)
   return isNaN(o) ? 1 : o; // if NaN, should this return an error instead of 1?
 }
 
-// xPageX r2, Copyright 2001-2007 Michael Foster (Cross-Browser.com)
-// Part of X, a Cross-Browser Javascript Library, Distributed under the terms of the GNU LGPL
-function xPageX(e)
-{
-  var x = 0;
-  e = xGetElementById(e);
-  while (e) {
-    if (xDef(e.offsetLeft)) x += e.offsetLeft;
-    e = xDef(e.offsetParent) ? e.offsetParent : null;
-  }
-  return x;
-}
-
-// xPageY r4, Copyright 2001-2007 Michael Foster (Cross-Browser.com)
-// Part of X, a Cross-Browser Javascript Library, Distributed under the terms of the GNU LGPL
-function xPageY(e)
-{
-  var y = 0;
-  e = xGetElementById(e);
-  while (e) {
-    if (xDef(e.offsetTop)) y += e.offsetTop;
-    e = xDef(e.offsetParent) ? e.offsetParent : null;
-  }
-  return y;
-}
-
 // xParent r2, Copyright 2001-2010 Michael Foster (Cross-Browser.com)
 // Part of X, a Cross-Browser Javascript Library, Distributed under the terms of the GNU LGPL
 function xParent(e, s)
@@ -851,7 +825,7 @@ function xWidth(e,w)
 /*
  * MODIFIED
  *
- * xdraginfence, xenabledrag, xenabledrop, xevent
+ * xdraginfence, xenabledrag, xenabledrop, xevent, xpagex, xpagey
  */
 // xDragInFence r2, Copyright 2007-2010 Michael Foster (Cross-Browser.com)
 // Part of X, a Cross-Browser Javascript Library, Distributed under the terms of the GNU LGPL
@@ -1059,6 +1033,48 @@ function xEvent(evt) // object prototype
       }
     }
   }
+}
+
+// xPageX r2, Copyright 2001-2007 Michael Foster (Cross-Browser.com)
+// Part of X, a Cross-Browser Javascript Library, Distributed under the terms of the GNU LGPL
+function xPageX(e)
+{
+  var x = 0;
+  e = xGetElementById(e);
+  while (e) {
+	if (xDef(e.offsetLeft)) {
+		var xDiff = e.offsetLeft - (xDef(e.parentNode) && e.parentNode !== null ? xScrollLeft(e.parentNode) : 0);
+		
+		if (xDiff + xWidth(e) < 0) {
+			return Number.NaN;
+		}
+		
+		x += xDiff;
+	}
+    e = xDef(e.offsetParent) ? e.offsetParent : null;
+  }
+  return x;
+}
+
+// xPageY r4, Copyright 2001-2007 Michael Foster (Cross-Browser.com)
+// Part of X, a Cross-Browser Javascript Library, Distributed under the terms of the GNU LGPL
+function xPageY(e)
+{
+  var y = 0;
+  e = xGetElementById(e);
+  while (e) {
+	if (xDef(e.offsetTop)) {
+		var yDiff = e.offsetTop - (xDef(e.parentNode) && e.parentNode !== null ? xScrollTop(e.parentNode) : 0);
+		
+		if (yDiff + xHeight(e) < 0) {
+			return Number.NaN;
+		}
+		
+		y += yDiff;
+	}
+    e = xDef(e.offsetParent) ? e.offsetParent : null;
+  }
+  return y;
 }
 
 /*
