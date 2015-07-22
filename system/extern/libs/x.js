@@ -1043,7 +1043,7 @@ function xPageX(e)
   e = xGetElementById(e);
   while (e) {
 	if (xDef(e.offsetLeft)) {
-		var xDiff = e.offsetLeft - (xDef(e.parentNode) && e.parentNode !== null ? xScrollLeft(e.parentNode) : 0);
+		var xDiff = e.offsetLeft - (xDef(e.offsetParent) && e.offsetParent !== null ? xScrollLeft(e.offsetParent) : 0);
 		
 		if (xDiff + xWidth(e) < 0) {
 			return Number.NaN;
@@ -1064,7 +1064,7 @@ function xPageY(e)
   e = xGetElementById(e);
   while (e) {
 	if (xDef(e.offsetTop)) {
-		var yDiff = e.offsetTop - (xDef(e.parentNode) && e.parentNode !== null ? xScrollTop(e.parentNode) : 0);
+		var yDiff = e.offsetTop - (xDef(e.offsetParent) && e.offsetParent !== null ? xScrollTop(e.offsetParent) : 0);
 		
 		if (yDiff + xHeight(e) < 0) {
 			return Number.NaN;
