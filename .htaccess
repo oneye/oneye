@@ -2,7 +2,6 @@
 	#
 	# COMPATIBILITY
 	#
-	php_value arg_separator.output        &amp;
 	php_value disable_classes
 	php_value disable_functions
 	php_value display_errors              0
