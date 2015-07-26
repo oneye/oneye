@@ -67,7 +67,10 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 }
 
 #background {
-	background: #eeeeee url('index.php?theme=USERTHEME&extern=images/wallpapers/default.jpg') repeat top center;
+	background-color: #eeeeee;
+	background-image: url('index.php?theme=USERTHEME&extern=images/wallpapers/default.jpg');
+	background-repeat: no-repeat;
+	background-size: cover;
 	height: 100%;
 	position: absolute;
 	width: 100%;
