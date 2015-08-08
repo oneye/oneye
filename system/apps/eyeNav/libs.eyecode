@@ -1132,6 +1132,8 @@ function eyeNav_lib_array_findIdByText($params) {
 function eyeNav_lib_doUrl($params = array()) {
 	global $checknum;
 	global $currentUser;
+	global $myPid;
+	
 	if (!$params['page'][0]) {
 		$config = eyeXML('getXMLconfig',array('eyeNav','conf.xml'));
 		$page = $config['eyeNav'][0]['home'][0];
@@ -1149,8 +1151,15 @@ function eyeNav_lib_doUrl($params = array()) {
 	}
 	$GLOBALS['eyeNav_url']->setText($page);
 	if (!$params['frame'][0]) {
-		$GLOBALS['eyeNav_frame']->setUrl('index.php?checknum=' . $checknum . '&msg=doOutput&page=' . base64_encode($page));
-		$GLOBALS['eyeNav_frame']->focus();
+		eyex('rawjs', array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].contentDocument.getElementsByTagName("iframe")[0].src = "' . 'index.php?checknum=' . $checknum . '&msg=doOutput&page=' . base64_encode($page) . '";'));
+		eyeNav_lib_FocusFrame();
 	}
+}
+
+function eyeNav_lib_FocusFrame() {
+	global $myPid;
+	
+	$GLOBALS['eyeNav_frame']->focus();
+	eyex('rawjs', array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].contentDocument.getElementsByTagName("iframe")[0].focus();'));
 }
 ?>

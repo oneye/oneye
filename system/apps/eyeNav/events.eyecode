@@ -65,22 +65,23 @@ function eyeNav_on_Fullscreen($params = '') {
 
 function eyeNav_on_Back($params = '') {
 	global $myPid;
-	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].history.back();'));
-	$GLOBALS['eyeNav_frame']->focus();
+	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].contentWindow.history.back();'));
+	eyeNav_lib_FocusFrame();
 }
 
 function eyeNav_on_Forward($params = '') {
 	global $myPid;
-	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].history.forward();'));
-	$GLOBALS['eyeNav_frame']->focus();
+	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].contentWindow.history.forward();'));
+	eyeNav_lib_FocusFrame();
 }
 
 function eyeNav_on_Refresh($params = '') {
 	global $myPid;
-	$js = 'var obj = document.getElementById("' . $myPid . '_eyeNav_frame");';
+	
+	$js = 'var obj = parent.frames["' . $myPid . '_eyeNav_frame"].contentDocument.getElementsByTagName("iframe")[0];';
 	$js .= 'obj.parentNode.appendChild(obj)';
 	eyex('rawjs',array('js' => $js));
-	$GLOBALS['eyeNav_frame']->focus();
+	eyeNav_lib_FocusFrame();
 }
 
 function eyeNav_on_Startpage($params = '') {
