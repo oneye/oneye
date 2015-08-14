@@ -20,26 +20,20 @@
 				<url>http://forums.oneye-project.org/</url>
 				<type>url</type>
 			</bookmark>
-			<bookmark>
-				<name>Wiki</name>
-				<id>5</id>
-				<url>http://wiki.oneye-project.org/</url>
-				<type>url</type>
-			</bookmark>
 		</bookmark>
 	</bookmarks>
 	<searches>
 		<title>Search</title>
-		<default>http://www.google.com/search?q=%s</default>
+		<default>http://www.bing.com/search?q=%s</default>
 		<category>
 			<name>Internet</name>
 			<link>
-				<name>Google</name>
-				<url>http://www.google.com/search?q=%s</url>
-			</link>
-			<link>
 				<name>Bing</name>
 				<url>http://www.bing.com/search?q=%s</url>
+			</link>
+			<link>
+				<name>Google</name>
+				<url>http://www.google.com/custom?q=%s</url>
 			</link>
 		</category>
 		<category>
