@@ -79,7 +79,7 @@ function lib_eyeXML_getXMLconfig($params) {
 	
 	$path = um('getCurrentUserDir') . '/' . CONF_USER_DIR . '/' . $params[0];
 	if (!is_dir($path)) {
-		mkdir($path, null, true);
+		mkdir($path, 0777, true);
 	}
 	
 	$path .= '/' . $params[1];
