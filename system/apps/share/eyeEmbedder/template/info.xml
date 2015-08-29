@@ -1,0 +1,10 @@
+<package>
+	<author>%x:ApplicationAuthor%</author>
+	<category>%x:ApplicationCategory%</category>
+	<description>%x:ApplicationDescription%</description>
+	<icon>%x:ApplicationIcon%</icon>
+	<license>%x:ApplicationLicense%</license>
+	<name>%x:ApplicationName%</name>
+	<type>%x:ApplicationType%</type>
+	<version>%x:ApplicationVersion%</version>
+</package>

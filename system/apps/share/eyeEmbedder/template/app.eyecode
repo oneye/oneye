@@ -1,0 +1,13 @@
+<?php
+function %:ApplicationName%_run($params = null) {
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeIframize/events' . EYE_CODE_EXTENSION;
+	
+	eyeIframize_on_Do(array(%s:Address%, %s:Title%, %i:DefaultWidth%, %i:DefaultHeight%, %i:StartMaximized%));
+}
+
+function %:ApplicationName%_end($params = null) {
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeIframize/app' . EYE_CODE_EXTENSION;
+	
+	eyeIframize_end($params);
+}
+?>

@@ -1,0 +1,518 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeEmbedder_run($params = null) {
+	global $currentUser, $myPid;
+	
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeEmbedder/libs' . EYE_CODE_EXTENSION;
+	
+	if ($currentUser !== ROOTUSER) {
+		eyex('messageBox', array('content' => 'Administrator privilegs required.'));
+		
+		proc('end');
+		return;
+	}
+	
+	$namePrefix = 'eyeEmbedder_';
+	
+	$toolbarFriends = array();
+	$toolbarHeight = 57;
+	
+	$rowPadding = 10;
+	$xColumn1 = 10;
+	$xColumn2 = 30;
+	$y = 10;
+	
+	$windowContent = $namePrefix . 'Window_Content';
+	$windowHeight = 380;
+	$windowWidth = 320;
+	$windowInnerWidth = $windowWidth - 12;
+	
+	$boxContentContent = $namePrefix . 'Box_Content';
+	$boxContentHeight = 275;
+	$boxContentInnerY = 24 + $y;
+	$boxContentY = 0;
+	
+	$boxDetailsContent = $namePrefix . 'Box_Details';
+	$boxDetailsHeight = 425;
+	$boxDetailsInnerY = 24 + $y;
+	$boxDetailsY = $boxContentHeight;
+	
+	$checkboxHeight = 19;
+	$checkboxWidth = 20;
+	
+	$imageboxHeight = 24;
+	$imageboxPadding = 3;
+	$imageboxWidth = 24;
+	
+	$labelHeight = 14;
+	$labelMargin = $rowPadding / 4;
+	
+	$selectHeight = 18;
+	$selectWidth = $windowInnerWidth - 2 * $xColumn2;
+	
+	$textboxHeight = 18;
+	$textboxPadding = 4;
+	$textboxWidth = $windowInnerWidth - 2 * $xColumn2 - $textboxPadding;
+	
+	$defaultApplicationCategory = 'Utilities';
+	$defaultApplicationIcon = 'exec';
+	$defaultApplicationType = 'Application';
+	
+	$name = $namePrefix . 'Window';
+	$GLOBALS[$name] = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => $windowHeight,
+		'name' => $name,
+		'savePosition' => RELATIVE,
+		'style' => CLOSE + LISTED + MIN + TITLE,
+		'title' => 'Embedder',
+		'width' => $windowWidth
+	));
+	$GLOBALS[$name]->show();
+	
+	$name = $namePrefix . 'Container';
+	$GLOBALS[$name] = new Container(array(
+		'father' => $windowContent,
+		'name' => $name,
+		'x' => 0,
+		'y' => $toolbarHeight
+	));
+	$GLOBALS[$name]->show();
+	eyex('runjs', array('js' => 'xGetElementById("' . strval($myPid) . '_' . $name . '_Container").style.bottom = "0";'));
+	eyex('runjs', array('js' => 'xGetElementById("' . strval($myPid) . '_' . $name . '_Container").style.overflow = "auto";'));
+	eyex('runjs', array('js' => 'xGetElementById("' . strval($myPid) . '_' . $name . '_Container").style.right = "0";'));
+	
+	$name = $namePrefix . 'Box_Content';
+	$GLOBALS[$name] = new Box(array(
+		'father' => $namePrefix . 'Container',
+		'height' => $boxContentHeight,
+		'name' => $name,
+		'title' => 'Application Content',
+		'x' => 0,
+		'y' => $boxContentY
+	));
+	$GLOBALS[$name]->show();
+	eyex('runjs', array('js' => 'xGetElementById("' . strval($myPid) . '_' . $name . '_Container").style.right = "0";'));
+	eyex('runjs', array('js' => 'xGetElementById("' . strval($myPid) . '_' . $name . '_Container").childNodes[0].style.width = "100%";'));
+	$y = $boxContentInnerY;
+	
+	$name = $namePrefix . 'Label_Title';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'text' => 'Title',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Textbox_Title';
+	$GLOBALS[$name] = new Textbox(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$onchange = 'if (!xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Checkbox_ApplicationName").checked) { xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").value = xGetElementById("' . strval($myPid) . '_' . $name . '").value.replace(/^[^a-zA-Z_]|[^a-zA-Z0-9_]/g, ""); }';
+	$GLOBALS[$name]->addEvent('onchange', $onchange);
+	$GLOBALS[$name]->addEvent('onkeyup', $onchange);
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += $textboxHeight + $rowPadding;
+	
+	$name = $namePrefix . 'Label_Address';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'text' => 'Address',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Textbox_Address';
+	$GLOBALS[$name] = new Textbox(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += $textboxHeight + 2 * $rowPadding;
+	
+	$name = $namePrefix . 'Label_Width';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'text' => 'Default Width',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Checkbox_Width';
+	$GLOBALS[$name] = new Checkbox(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'text' => '',
+		'x' => $xColumn1,
+		'y' => $y + (max($checkboxHeight, $textboxHeight) - $checkboxHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Width").disabled = !this.checked; if (!this.checked) { xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Width").value = "" }');
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	
+	$name = $namePrefix . 'Textbox_Width';
+	$GLOBALS[$name] = new Textbox(array(
+		'enabled' => 0,
+		'father' => $boxContentContent,
+		'name' => $name,
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y + (max($checkboxHeight, $textboxHeight) - $textboxHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += max($checkboxHeight, $textboxHeight) + $rowPadding;
+	
+	$name = $namePrefix . 'Label_Height';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'text' => 'Default Height',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Checkbox_Height';
+	$GLOBALS[$name] = new Checkbox(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'text' => '',
+		'x' => $xColumn1,
+		'y' => $y + (max($checkboxHeight, $textboxHeight) - $checkboxHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Height").disabled = !this.checked; if (!this.checked) { xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Height").value = "" }');
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	
+	$name = $namePrefix . 'Textbox_Height';
+	$GLOBALS[$name] = new Textbox(array(
+		'enabled' => 0,
+		'father' => $boxContentContent,
+		'name' => $name,
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y + (max($checkboxHeight, $textboxHeight) - $textboxHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += max($checkboxHeight, $textboxHeight) + $rowPadding;
+	
+	$name = $namePrefix . 'Label_StartMaximized';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'text' => 'Start Maximized',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Checkbox_StartMaximized';
+	$GLOBALS[$name] = new Checkbox(array(
+		'father' => $boxContentContent,
+		'name' => $name,
+		'text' => '',
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	
+	$name = $namePrefix . 'Box_Details';
+	$GLOBALS[$name] = new Box(array(
+		'father' => $namePrefix . 'Container',
+		'height' => $boxDetailsHeight,
+		'name' => $name,
+		'title' => 'Application Details',
+		'x' => 0,
+		'y' => $boxDetailsY
+	));
+	$GLOBALS[$name]->show();
+	eyex('runjs', array('js' => 'xGetElementById("' . strval($myPid) . '_' . $name . '_Container").style.right = "0";'));
+	eyex('runjs', array('js' => 'xGetElementById("' . strval($myPid) . '_' . $name . '_Container").childNodes[0].style.width = "100%";'));
+	$y = $boxDetailsInnerY;
+	
+	$name = $namePrefix . 'Label_ApplicationAuthor';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'Application Author',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Textbox_ApplicationAuthor';
+	$xml = um('retrieveUser', array($currentUser));
+	$GLOBALS[$name] = new Textbox(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => $xml['eyeUser'][0]['fullname'][0],
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += $textboxHeight + $rowPadding;
+	
+	$name = $namePrefix . 'Label_ApplicationDescription';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'Description',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Textbox_ApplicationDescription';
+	$GLOBALS[$name] = new Textbox(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += $textboxHeight + $rowPadding;
+	
+	$name = $namePrefix . 'Label_ApplicationIcon';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'Icon',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Imagebox_ApplicationIcon';
+	$GLOBALS[$name] = new Imagebox(array(
+		'father' => $boxDetailsContent,
+		'height' => $imageboxHeight,
+		'name' => $name,
+		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/' . $defaultApplicationIcon . '.png',
+		'width' => $imageboxWidth,
+		'x' => $xColumn1 - $imageboxPadding,
+		'y' => $y + (max($imageboxHeight, $selectHeight) - $imageboxHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	
+	$name = $namePrefix . 'Select_ApplicationIcon';
+	$GLOBALS[$name] = new Select(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'width' => $selectWidth - $imageboxWidth + $checkboxWidth,
+		'x' => $xColumn2 + $imageboxWidth - $checkboxWidth,
+		'y' => $y + (max($imageboxHeight, $selectHeight) - $selectHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Imagebox_ApplicationIcon").src = "index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/" + this.value + ".png";');
+	foreach (eyeEmbedder_lib_getIcons() as $icon) {
+		$GLOBALS[$name]->addOption($icon, null, $icon === $defaultApplicationIcon);
+	}
+	eyex('runjs', array('js' => 'setTimeout(function () { var select = xGetElementById("' . strval($myPid) . '_' . $name . '"); var options = select.getElementsByTagName("option"); for (var i = 0; i < options.length; i += 1) { if (options[i].value === "' . $defaultApplicationIcon . '") { select.selectedIndex = options[i].index; break; } } }, 0);'));
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += max($imageboxHeight, $selectHeight) + 2 * $rowPadding;
+	
+	$name = $namePrefix . 'Label_ApplicationType';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'Type',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Checkbox_ApplicationType';
+	$GLOBALS[$name] = new Checkbox(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => '',
+		'x' => $xColumn1,
+		'y' => $y + (max($checkboxHeight, $selectHeight) - $checkboxHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	$GLOBALS[$name]->addEvent('onchange', 'var select = xGetElementById("' . strval($myPid) . '_' . $name . '"); select.disabled = !this.checked; if (!this.checked) { var options = select.getElementsByTagName("option"); for (var i = 0; i < options.length; i += 1) { if (options[i].value === "' . $defaultApplicationType . '") { select.selectedIndex = options[i].index; break; } } }');
+	
+	$name = $namePrefix . 'Select_ApplicationType';
+	$GLOBALS[$name] = new Select(array(
+		'enabled' => 0,
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'width' => $selectWidth,
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$GLOBALS[$name]->addOption('Application', null, 'Application' === $defaultApplicationType);
+	$GLOBALS[$name]->addOption('Utility', null, 'Utility' === $defaultApplicationType);
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += max($checkboxHeight, $selectHeight) + $rowPadding;
+	
+	$name = $namePrefix . 'Label_ApplicationCategory';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'Category',
+		'x' => $xColumn1,
+		'y' => $y + (max($checkboxHeight, $selectHeight) - $selectHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Select_ApplicationCategory';
+	$GLOBALS[$name] = new Select(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'width' => $selectWidth,
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	foreach (eyeEmbedder_lib_GetCategories() as $category) {
+		$GLOBALS[$name]->addOption($category, null, $category === $defaultApplicationCategory);
+	}
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += $selectHeight + 2 * $rowPadding;
+	
+	$name = $namePrefix . 'Label_ApplicationName';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'Technical Name',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Checkbox_ApplicationName';
+	$GLOBALS[$name] = new Checkbox(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => '',
+		'x' => $xColumn1,
+		'y' => $y + (max($checkboxHeight, $textboxHeight) - $checkboxHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").disabled = !this.checked; if (!this.checked) { xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").value = xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Title").value.replace(/^[^a-zA-Z_]|[^a-zA-Z0-9_]/g, ""); }');
+	
+	$name = $namePrefix . 'Textbox_ApplicationName';
+	$GLOBALS[$name] = new Textbox(array(
+		'enabled' => 0,
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y + (max($checkboxHeight, $textboxHeight) - $textboxHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += max($checkboxHeight, $textboxHeight) + $rowPadding;
+	
+	$name = $namePrefix . 'Label_ApplicationVersion';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'Version',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Textbox_ApplicationVersion';
+	$GLOBALS[$name] = new Textbox(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => '1.0',
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	$y += $textboxHeight + $rowPadding;
+	
+	$name = $namePrefix . 'Label_ApplicationLicense';
+	$GLOBALS[$name] = new Label(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'License',
+		'x' => $xColumn1,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	$y += $labelHeight + $labelMargin;
+	
+	$name = $namePrefix . 'Textbox_ApplicationLicense';
+	$GLOBALS[$name] = new Textbox(array(
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'text' => 'AGPL',
+		'width' => $textboxWidth,
+		'x' => $xColumn2,
+		'y' => $y
+	));
+	$GLOBALS[$name]->show();
+	array_push($toolbarFriends, $GLOBALS[$name]);
+	
+	$name = $namePrefix . 'Toolbar';
+	$GLOBALS[$name] = new Toolbar(array(
+		'father' => $windowContent,
+		'name' => $name
+	));
+	$GLOBALS[$name]->show();
+	$GLOBALS[$name]->addItem('Test','index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/launch.png', 'Test', $toolbarFriends);
+	$GLOBALS[$name]->addLine();
+	$GLOBALS[$name]->addItem('Package', 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/archive-extract.png', 'Package', $toolbarFriends);
+}
+
+function eyeEmbedder_end($params = null) {
+	eyeWidgets('unserialize', $params);
+}
+?>

@@ -1,0 +1,122 @@
+<?php
+/*
+  ___  _ __   ___ _   _  ___
+ / _ \| '_ \ / _ \ | | |/ _ \
+| (_) | | | |  __/ |_| |  __/
+ \___/|_| |_|\___|\__, |\___|
+                  |___/
+
+oneye is released under the GNU Affero General Public License Version 3 (AGPL3)
+ -> provided with this release in license.txt
+ -> or via web at www.gnu.org/licenses/agpl-3.0.txt
+
+Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
+             since 2010 Lars Knickrehm (mail@lars-sh.de)
+*/
+
+function eyeEmbedder_on_Close($params = null) {
+	proc('end');
+}
+
+function eyeEmbedder_on_Message($params = null) {
+	eyeWidgets('updateContent', $params);
+}
+
+function eyeEmbedder_on_Package($params = null) {
+	global $checknum;
+	
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeEmbedder/libs' . EYE_CODE_EXTENSION;
+	
+	list($applicationAuthor, $applicationCategory, $applicationDescription, $applicationIcon, $applicationLicense, $applicationName, $applicationType, $applicationVersion, $address, $defaultHeight, $defaultWidth, $title, $startMaximized) = array_values(eyeEmbedder_lib_GetValues());
+	
+	// Validate application name
+	if (!eyeEmbedder_lib_ValidateApplicationName($applicationName)) {
+		return;
+	}
+	
+	// Get eyePackage destination
+	proc('launch', array('eyeDialog', array(EYEDIALOG_TYPE_SAVEFILE, 'Package2', $checknum, $applicationName . '.eyepackage', array(
+		'eyePackage files' => '*.eyepackage',
+		'All files' => '*.*'
+	))));
+}
+
+function eyeEmbedder_on_Package2($params = null) {
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeEmbedder/libs' . EYE_CODE_EXTENSION;
+	
+	list($applicationAuthor, $applicationCategory, $applicationDescription, $applicationIcon, $applicationLicense, $applicationName, $applicationType, $applicationVersion, $address, $defaultHeight, $defaultWidth, $title, $startMaximized) = array_values(eyeEmbedder_lib_GetValues());
+	
+	// Retreive eyePackage destination
+	$eyePackage = um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . $params['arg'][0];
+	
+	// Create new temporary folder
+	$i = 0;
+	do {
+		$temp = um('getCurrentUserDir') . '/' . TMP_USER_DIR . '/eyeEmbedder' . strval($i);
+		$i += 1;
+	} while (!vfs('real_mkDir', array($temp)));
+	
+	// Initialize temporary folder structure
+	$package = $temp . '/' . APP_DIR;
+	vfs('real_mkDir', array($package));
+	
+	$package .= '/' . $applicationName;
+	vfs('real_mkDir', array($package));
+	
+	// Fill temporary package folder with processed template data
+	$template = EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/eyeEmbedder/template';
+	foreach (vfs('real_getDirContent', array($template)) as $file) {
+		$content = vfs('real_getFileContent', array($file));
+		
+		// Replace keys by values
+		foreach (eyeEmbedder_lib_GetValues() as $key => $value) {
+			$replace = array(
+				'%:' . $key . '%' => $value,
+				'%i:' . $key . '%' => $value === null ? 'null' : is_numeric($value) ? strval(intval($value)) : strval($value),
+				'%s:' . $key . '%' => $value === null ? 'null' : '\'' . str_replace(array('\\', '\''), array('\\\\', '\\\''), strval($value)) . '\'',
+				'%x:' . $key . '%' => htmlspecialchars($value, ENT_NOQUOTES, 'UTF-8')
+			);
+			
+			$content = str_replace(array_keys($replace), array_values($replace), $content);
+		}
+		
+		// Replace escape character
+		$content = str_replace('%%', '%', $content);
+		
+		vfs('real_putFileContent', array($package . '/' . basename($file), $content));
+	}
+	
+	// Create eyePackage
+	if (!eyeFileArchive('compress', array(array('simple' => array($temp . '/' . APP_DIR)), $eyePackage, 'eqTypes' => array('eyepackage' => 'tgz')))) {
+		eyex('messageBox', array('content' => 'Failed packaging.'));
+	} else {
+		eyeFiles('update', array(dirname($eyePackage)));
+	}
+	
+	// Remove temporary folder
+	vfs('real_rmdir', array($temp));
+	
+	// Success
+	eyex('messageBox', array('content' => 'Package created.'));
+}
+
+function eyeEmbedder_on_Test($params = null) {
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeEmbedder/libs' . EYE_CODE_EXTENSION;
+	
+	list($applicationAuthor, $applicationCategory, $applicationDescription, $applicationIcon, $applicationLicense, $applicationName, $applicationType, $applicationVersion, $address, $defaultHeight, $defaultWidth, $title, $startMaximized) = array_values(eyeEmbedder_lib_GetValues());
+	
+	// Validate application name
+	if (!eyeEmbedder_lib_ValidateApplicationName($applicationName)) {
+		return;
+	}
+	
+	// Launch eyeIframize
+	proc('launch', array('eyeIframize', array(
+		$address,
+		$title,
+		$defaultWidth,
+		$defaultHeight,
+		$startMaximized
+	)));
+}
+?>

@@ -1,0 +1,19 @@
+<?php
+function %:ApplicationName%_on_Close($params = null) {
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeIframize/events' . EYE_CODE_EXTENSION;
+	
+	eyeIframize_on_Close($params);
+}
+
+function %:ApplicationName%_on_Message($params = null) {
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeIframize/events' . EYE_CODE_EXTENSION;
+	
+	eyeIframize_on_Message($params);
+}
+
+function %:ApplicationName%_on_Resize($params = null) {
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeIframize/events' . EYE_CODE_EXTENSION;
+	
+	eyeIframize_on_Resize($params);
+}
+?>
