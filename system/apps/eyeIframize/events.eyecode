@@ -64,18 +64,19 @@ function eyeIframize_on_Do($params = '') {
 	}
 	
 	$myWindow = new Window(array(
-		'x' => 0,
-		'y' => 0,
+		'cent' => 1,
 		'father' => 'eyeApps',
 		'height' => $window_height,
 		'name' => 'eyeIframize_Window',
-		'savePosition' => 0,
+		'savePosition' => RELATIVE,
 		'sendResizeMsg' => 1,
 		'sigResize' => 'Resize',
 		'title' => $window_title,
 		'width' => $window_width
 	));
 	$myWindow->show();
+	$myWindow->setHeight($window_height);
+	$myWindow->setWidth($window_width);
 	if ($start_maximized == TRUE) {
 		eyex('runjs', array('js' => "Windows.Maximize('".$myPid."_".$myWindow->name."');"));
 	}
