@@ -14,8 +14,86 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
              since 2010 Lars Knickrehm (mail@lars-sh.de)
 */
 
+function eyeEmbedder_on_ChooseApplicationIcon($params = null) {
+	global $checknum, $myPid;
+	
+	proc('launch', array('eyeDialog', array(EYEDIALOG_TYPE_OPENFILE, 'ChooseApplicationIcon2', $checknum, null, array(
+		'Image formats' => '*.bmp|*.gif|*.jpeg|*.jpg|*.png',
+		'BMP files' => '*.bmp',
+		'GIF files' => '*.gif',
+		'JPEG files' => '*.jpeg',
+		'JPG files' => '*.jpg',
+		'PNG files' => '*.png',
+		'All files' => '*.*'
+	))));
+	
+	// Select default application value
+	$GLOBALS['eyeEmbedder_Select_ApplicationIcon']->selectValue('exec');
+	
+	// Update imagebox
+	eyex('runjs', array('js' => 'xGetElementById("' . $myPid . '_eyeEmbedder_Imagebox_ApplicationIcon").src = "index.php?checknum=' . strval($checknum) . '&msg=GetApplicationIcon&icon=exec";'));
+}
+
+function eyeEmbedder_on_ChooseApplicationIcon2($params = null) {
+	global $checknum, $myPid;
+	
+	include_once EYE_ROOT . '/' . SYSTEM_DIR . '/lib/eyeFiles/images' . EYE_CODE_EXTENSION;
+	
+	// Validate image
+	$image = images_imagecreatefromfile(vfs('getRealName', array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . $params['arg'][0])));
+	if ($image === false) {
+		eyex('messageBox', array('content' => 'Selected file is not an image.'));
+		return;
+	}
+	
+	// Destroy image
+	imagedestroy($image);
+	
+	// Update select widget
+	eyex('runjs', array('js' => 'var i, options, select;
+	select = xGetElementById("' . strval($myPid) . '_eyeEmbedder_Select_ApplicationIcon");
+	options = select.getElementsByTagName("option");
+	for (i = 0; i < options.length; i += 1) {
+		if (options[i].value.substr(0, 7) === "custom:") {
+			options[i].label = %s;
+			options[i].value = %s;
+			
+			select.selectedIndex = options[i].index;
+			break;
+		}
+	}', 'tokens' => array(i18n('translate', array('Custom: %s', array(basename($params['arg'][0])))), 'custom:' . $params['arg'][0])));
+	
+	// Update imagebox
+	eyex('runjs', array('js' => 'xGetElementById("' . $myPid . '_eyeEmbedder_Imagebox_ApplicationIcon").src = "index.php?checknum=' . strval($checknum) . '&msg=GetApplicationIcon&icon=custom:' . urlencode($params['arg'][0]) . '";'));
+}
+
 function eyeEmbedder_on_Close($params = null) {
 	proc('end');
+}
+
+function eyeEmbedder_on_GetApplicationIcon($params = null) {
+	include_once EYE_ROOT . '/' . APP_DIR . '/eyeEmbedder/libs' . EYE_CODE_EXTENSION;
+	
+	$icon = isset($_REQUEST['icon']) && is_string($_REQUEST['icon']) ? $_REQUEST['icon'] : 'exec';
+	
+	header('Content-Disposition: inline; filename="' . basename($icon) . '.png"');
+	header('Content-Type: image/png');
+	header('Accept-Ranges: bytes');
+	
+	if (substr($icon, 0, 7) === 'custom:') {
+		eyeEmbedder_lib_ResizeIcon(vfs('getRealName', array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . substr($icon, 7))), null, 22);
+	} else {
+		$oldPath = EYE_ROOT . '/' . EXTERN_DIR . '/' . APP_DIR . '/eyeX/themes/default/icons';
+		$icon = basename($icon) . '.png';
+		
+		if (is_file($oldPath . '/22x22/' . $icon)) {
+			readfile($oldPath . '/22x22/' . $icon);
+		} else {
+			eyeEmbedder_lib_ResizeIcon($oldPath . '/48x48/' . $icon, null, 22);
+		}
+	}
+	
+	exit;
 }
 
 function eyeEmbedder_on_Message($params = null) {
@@ -62,6 +140,29 @@ function eyeEmbedder_on_Package2($params = null) {
 	
 	$package .= '/' . $applicationName;
 	vfs('real_mkDir', array($package));
+	
+	// Create or copy icons
+	$newPath = eyeEmbedder_lib_CreateIconsPath($temp);
+	$icon = $GLOBALS['eyeEmbedder_Select_ApplicationIcon']->selected;
+	
+	if (substr($icon, 0, 7) === 'custom:') {
+		$oldPath = vfs('getRealName', array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . substr($icon, 7)));
+		$icon = basename($icon);
+		
+		eyeEmbedder_lib_ResizeIcon($oldPath, $newPath . '/48x48/' . $icon, 48);
+		eyeEmbedder_lib_ResizeIcon($oldPath, $newPath . '/22x22/' . $icon, 22);
+	} else {
+		$oldPath = EYE_ROOT . '/' . EXTERN_DIR . '/' . APP_DIR . '/eyeX/themes/default/icons';
+		$icon = basename($icon) . '.png';
+		
+		vfs('real_copy', array($oldPath . '/48x48/' . $icon, $newPath . '/48x48/' . $icon));
+		
+		if (is_file($oldPath . '/22x22/' . $icon)) {
+			vfs('real_copy', array($oldPath . '/22x22/' . $icon, $newPath . '/22x22/' . $icon));
+		} else {
+			eyeEmbedder_lib_ResizeIcon($oldPath . '/48x48/' . $icon, $newPath . '/22x22/' . $icon, 22);
+		}
+	}
 	
 	// Fill temporary package folder with processed template data
 	$template = EYE_ROOT . '/' . APP_DIR . '/' . APP_CONF_SHARE . '/eyeEmbedder/template';

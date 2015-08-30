@@ -14,6 +14,31 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
              since 2010 Lars Knickrehm (mail@lars-sh.de)
 */
 
+function eyeEmbedder_lib_CreateIconsPath($path) {
+	$path .= '/' . EXTERN_DIR;
+	vfs('real_mkDir', array($path));
+	
+	$path .= '/' . APP_DIR;
+	vfs('real_mkDir', array($path));
+	
+	$path .= '/eyeX';
+	vfs('real_mkDir', array($path));
+	
+	$path .= '/themes';
+	vfs('real_mkDir', array($path));
+	
+	$path .= '/default';
+	vfs('real_mkDir', array($path));
+	
+	$path .= '/icons';
+	vfs('real_mkDir', array($path));
+	
+	vfs('real_mkDir', array($path . '/48x48'));
+	vfs('real_mkDir', array($path . '/22x22'));
+	
+	return $path;
+}
+
 function eyeEmbedder_lib_GetCategories() {
 	$categories = array();
 	
@@ -62,6 +87,30 @@ function eyeEmbedder_lib_GetValues() {
 		'Title' => $GLOBALS['eyeEmbedder_Textbox_Title']->text,
 		'StartMaximized' => $GLOBALS['eyeEmbedder_Textbox_StartMaximized']->checked
 	);
+}
+
+function eyeEmbedder_lib_ResizeIcon($oldPath, $newPath, $width, $height = null) {
+	include_once EYE_ROOT . '/' . SYSTEM_DIR . '/lib/eyeFiles/images' . EYE_CODE_EXTENSION;
+	
+	if ($height === null) {
+		$height = $width;
+	}
+	
+	// Load old image
+	$oldImage = images_imagecreatefromfile($oldPath);
+	if ($oldImage === false) {
+		return false;
+	}
+	
+	// Resize and save new image
+	$newImage = images_Resize($oldImage, $width, $height);
+	imagepng($newImage, $newPath);
+	
+	// Destroy both images
+	imagedestroy($oldImage);
+	imagedestroy($newImage);
+	
+	return true;
 }
 
 function eyeEmbedder_lib_ValidateApplicationName($applicationName, $showMessage = true) {

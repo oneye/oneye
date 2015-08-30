@@ -15,7 +15,7 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 */
 
 function eyeEmbedder_run($params = null) {
-	global $currentUser, $myPid;
+	global $checknum, $currentUser, $myPid;
 	
 	include_once EYE_ROOT . '/' . APP_DIR . '/eyeEmbedder/libs' . EYE_CODE_EXTENSION;
 	
@@ -51,6 +51,8 @@ function eyeEmbedder_run($params = null) {
 	$boxDetailsInnerY = 24 + $y;
 	$boxDetailsY = $boxContentHeight;
 	
+	$buttonHeight = 19;
+	
 	$checkboxHeight = 19;
 	$checkboxWidth = 20;
 	
@@ -71,6 +73,12 @@ function eyeEmbedder_run($params = null) {
 	$defaultApplicationCategory = 'Utilities';
 	$defaultApplicationIcon = 'exec';
 	$defaultApplicationType = 'Application';
+	
+	$applicationIconButtonWidth = 23;
+	$applicationIconButtonMargin = 5;
+	$applicationIconSelectWidth = $selectWidth - $imageboxWidth + $checkboxWidth - $applicationIconButtonWidth - $applicationIconButtonMargin;
+	$applicationIconSelectX = $xColumn2 + $imageboxWidth - $checkboxWidth;
+	$applicationIconButtonX = $applicationIconSelectX + $applicationIconSelectWidth + $applicationIconButtonMargin;
 	
 	$name = $namePrefix . 'Window';
 	$GLOBALS[$name] = new Window(array(
@@ -115,7 +123,7 @@ function eyeEmbedder_run($params = null) {
 	$GLOBALS[$name] = new Label(array(
 		'father' => $boxContentContent,
 		'name' => $name,
-		'text' => 'Title',
+		'text' => 'Window Title',
 		'x' => $xColumn1,
 		'y' => $y
 	));
@@ -131,7 +139,9 @@ function eyeEmbedder_run($params = null) {
 		'y' => $y
 	));
 	$GLOBALS[$name]->show();
-	$onchange = 'if (!xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Checkbox_ApplicationName").checked) { xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").value = xGetElementById("' . strval($myPid) . '_' . $name . '").value.replace(/^[^a-zA-Z_]|[^a-zA-Z0-9_]/g, ""); }';
+	$onchange = 'if (!xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Checkbox_ApplicationName").checked) {
+		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").value = xGetElementById("' . strval($myPid) . '_' . $name . '").value.replace(/^[^a-zA-Z_]|[^a-zA-Z0-9_]/g, "");
+	}';
 	$GLOBALS[$name]->addEvent('onchange', $onchange);
 	$GLOBALS[$name]->addEvent('onkeyup', $onchange);
 	array_push($toolbarFriends, $GLOBALS[$name]);
@@ -180,7 +190,10 @@ function eyeEmbedder_run($params = null) {
 		'y' => $y + (max($checkboxHeight, $textboxHeight) - $checkboxHeight) / 2
 	));
 	$GLOBALS[$name]->show();
-	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Width").disabled = !this.checked; if (!this.checked) { xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Width").value = "" }');
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Width").disabled = !this.checked;
+	if (!this.checked) {
+		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Width").value = "";
+	}');
 	array_push($toolbarFriends, $GLOBALS[$name]);
 	
 	$name = $namePrefix . 'Textbox_Width';
@@ -216,7 +229,10 @@ function eyeEmbedder_run($params = null) {
 		'y' => $y + (max($checkboxHeight, $textboxHeight) - $checkboxHeight) / 2
 	));
 	$GLOBALS[$name]->show();
-	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Height").disabled = !this.checked; if (!this.checked) { xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Height").value = "" }');
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Height").disabled = !this.checked;
+	if (!this.checked) {
+		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Height").value = "";
+	}');
 	array_push($toolbarFriends, $GLOBALS[$name]);
 	
 	$name = $namePrefix . 'Textbox_Height';
@@ -272,7 +288,7 @@ function eyeEmbedder_run($params = null) {
 	$GLOBALS[$name] = new Label(array(
 		'father' => $boxDetailsContent,
 		'name' => $name,
-		'text' => 'Application Author',
+		'text' => 'Author',
 		'x' => $xColumn1,
 		'y' => $y
 	));
@@ -330,12 +346,10 @@ function eyeEmbedder_run($params = null) {
 	$name = $namePrefix . 'Imagebox_ApplicationIcon';
 	$GLOBALS[$name] = new Imagebox(array(
 		'father' => $boxDetailsContent,
-		'height' => $imageboxHeight,
 		'name' => $name,
-		'url' => 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/' . $defaultApplicationIcon . '.png',
-		'width' => $imageboxWidth,
+		'url' => 'index.php?checknum=' . strval($checknum) . '&msg=GetApplicationIcon&icon=' . $defaultApplicationIcon,
 		'x' => $xColumn1 - $imageboxPadding,
-		'y' => $y + (max($imageboxHeight, $selectHeight) - $imageboxHeight) / 2
+		'y' => $y + (max($imageboxHeight, $selectHeight, $buttonHeight) - $imageboxHeight) / 2
 	));
 	$GLOBALS[$name]->show();
 	
@@ -343,24 +357,66 @@ function eyeEmbedder_run($params = null) {
 	$GLOBALS[$name] = new Select(array(
 		'father' => $boxDetailsContent,
 		'name' => $name,
-		'width' => $selectWidth - $imageboxWidth + $checkboxWidth,
-		'x' => $xColumn2 + $imageboxWidth - $checkboxWidth,
-		'y' => $y + (max($imageboxHeight, $selectHeight) - $selectHeight) / 2
+		'width' => $applicationIconSelectWidth,
+		'x' => $applicationIconSelectX,
+		'y' => $y + (max($imageboxHeight, $selectHeight, $buttonHeight) - $selectHeight) / 2
 	));
 	$GLOBALS[$name]->show();
-	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Imagebox_ApplicationIcon").src = "index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/" + this.value + ".png";');
-	foreach (eyeEmbedder_lib_getIcons() as $icon) {
-		$GLOBALS[$name]->addOption($icon, null, $icon === $defaultApplicationIcon);
-	}
-	eyex('runjs', array('js' => 'setTimeout(function () { var select = xGetElementById("' . strval($myPid) . '_' . $name . '"); var options = select.getElementsByTagName("option"); for (var i = 0; i < options.length; i += 1) { if (options[i].value === "' . $defaultApplicationIcon . '") { select.selectedIndex = options[i].index; break; } } }, 0);'));
+	$GLOBALS[$name]->addEvent('onchange', 'var i, options, select;
+	if (this.value.substr(0, 7) === "custom:") {
+		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Button_ApplicationIcon").click();
+	} else {
+		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Imagebox_ApplicationIcon").src = "index.php?checknum=' . strval($checknum) . '&msg=GetApplicationIcon&icon=" + this.value;
+		
+		select = xGetElementById("' . strval($myPid) . '_' . $name . '");
+		options = select.getElementsByTagName("option");
+		for (i = 0; i < options.length; i += 1) {
+			if (options[i].value.substr(0, 7) === "custom:") {
+				options[i].label = \'' . str_replace(array('\\', '\''), array('\\\\', '\\\''), i18n('translate', array('Choose custom icon…'))) . '\';
+				break;
+			}
+		}
+	}');
+	$GLOBALS[$name]->addOption('Choose custom icon…', 'custom:');
 	array_push($toolbarFriends, $GLOBALS[$name]);
-	$y += max($imageboxHeight, $selectHeight) + 2 * $rowPadding;
+	
+	// Add default application icons
+	$defaultGroup = $namePrefix . 'Select_ApplicationIcon_Group_Default';
+	$GLOBALS[$name]->addGroup('Default Icons', $defaultGroup);
+	foreach (eyeEmbedder_lib_getIcons() as $icon) {
+		$GLOBALS[$name]->addOption($icon, null, $icon === $defaultApplicationIcon, null, $defaultGroup);
+	}
+	eyex('runjs', array('js' => 'setTimeout(function () {
+		var i, options, select;
+		
+		select = xGetElementById("' . strval($myPid) . '_' . $name . '");
+		options = select.getElementsByTagName("option");
+		for (i = 0; i < options.length; i += 1) {
+			if (options[i].value === "' . $defaultApplicationIcon . '") {
+				select.selectedIndex = options[i].index;
+				break;
+			}
+		}
+	}, 0);'));
+	
+	$name = $namePrefix . 'Button_ApplicationIcon';
+	$GLOBALS[$name] = new Button(array(
+		'caption' => '…',
+		'father' => $boxDetailsContent,
+		'name' => $name,
+		'signal' => 'ChooseApplicationIcon',
+		'x' => $applicationIconButtonX,
+		'y' => $y + (max($imageboxHeight, $selectHeight, $buttonHeight) - $buttonHeight) / 2
+	));
+	$GLOBALS[$name]->show();
+	$GLOBALS[$name]->addFriend($namePrefix . 'Select_ApplicationIcon');
+	$y += max($imageboxHeight, $selectHeight, $buttonHeight) + 2 * $rowPadding;
 	
 	$name = $namePrefix . 'Label_ApplicationType';
 	$GLOBALS[$name] = new Label(array(
 		'father' => $boxDetailsContent,
 		'name' => $name,
-		'text' => 'Type',
+		'text' => 'Application Type',
 		'x' => $xColumn1,
 		'y' => $y
 	));
@@ -376,7 +432,18 @@ function eyeEmbedder_run($params = null) {
 		'y' => $y + (max($checkboxHeight, $selectHeight) - $checkboxHeight) / 2
 	));
 	$GLOBALS[$name]->show();
-	$GLOBALS[$name]->addEvent('onchange', 'var select = xGetElementById("' . strval($myPid) . '_' . $name . '"); select.disabled = !this.checked; if (!this.checked) { var options = select.getElementsByTagName("option"); for (var i = 0; i < options.length; i += 1) { if (options[i].value === "' . $defaultApplicationType . '") { select.selectedIndex = options[i].index; break; } } }');
+	$GLOBALS[$name]->addEvent('onchange', 'var i, options, select;
+	select = xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Select_ApplicationType");
+	select.disabled = !this.checked;
+	if (!this.checked) {
+		options = select.getElementsByTagName("option");
+		for (i = 0; i < options.length; i += 1) {
+			if (options[i].value === "' . $defaultApplicationType . '") {
+				select.selectedIndex = options[i].index;
+				break;
+			}
+		}
+	}');
 	
 	$name = $namePrefix . 'Select_ApplicationType';
 	$GLOBALS[$name] = new Select(array(
@@ -389,7 +456,7 @@ function eyeEmbedder_run($params = null) {
 	));
 	$GLOBALS[$name]->show();
 	$GLOBALS[$name]->addOption('Application', null, 'Application' === $defaultApplicationType);
-	$GLOBALS[$name]->addOption('Utility', null, 'Utility' === $defaultApplicationType);
+	$GLOBALS[$name]->addOption('Utility (not in application list)', 'Utility', 'Utility' === $defaultApplicationType);
 	array_push($toolbarFriends, $GLOBALS[$name]);
 	$y += max($checkboxHeight, $selectHeight) + $rowPadding;
 	
@@ -397,7 +464,7 @@ function eyeEmbedder_run($params = null) {
 	$GLOBALS[$name] = new Label(array(
 		'father' => $boxDetailsContent,
 		'name' => $name,
-		'text' => 'Category',
+		'text' => 'Application Category',
 		'x' => $xColumn1,
 		'y' => $y + (max($checkboxHeight, $selectHeight) - $selectHeight) / 2
 	));
@@ -423,7 +490,7 @@ function eyeEmbedder_run($params = null) {
 	$GLOBALS[$name] = new Label(array(
 		'father' => $boxDetailsContent,
 		'name' => $name,
-		'text' => 'Technical Name',
+		'text' => 'Technical Name / Command',
 		'x' => $xColumn1,
 		'y' => $y
 	));
@@ -439,7 +506,10 @@ function eyeEmbedder_run($params = null) {
 		'y' => $y + (max($checkboxHeight, $textboxHeight) - $checkboxHeight) / 2
 	));
 	$GLOBALS[$name]->show();
-	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").disabled = !this.checked; if (!this.checked) { xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").value = xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Title").value.replace(/^[^a-zA-Z_]|[^a-zA-Z0-9_]/g, ""); }');
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").disabled = !this.checked;
+	if (!this.checked) {
+		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_ApplicationName").value = xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Title").value.replace(/^[^a-zA-Z_]|[^a-zA-Z0-9_]/g, "");
+	}');
 	
 	$name = $namePrefix . 'Textbox_ApplicationName';
 	$GLOBALS[$name] = new Textbox(array(
