@@ -248,7 +248,7 @@ class Select {
 		global $myPid;
 		$name = $myPid.'_'.$this->name;
 		$this->selected = $value;
-		eyeX('rawjs', array('js' => 'var mySelect=document.getElementById("'.$name.'");var myOptions=mySelect.childNodes;for(i = 0; i < myOptions.length; i++) {if(myOptions[i].value == "'.$value.'"){mySelect.selectedIndex = myOptions[i].index;break;}}'));
+		eyeX('rawjs', array('js' => 'var mySelect=document.getElementById("'.$name.'");var myOptions=mySelect.getElementsByTagName("option");for(i = 0; i < myOptions.length; i++) {if(myOptions[i].value == "'.$value.'"){mySelect.selectedIndex = myOptions[i].index;break;}}'));
 	}
 
 	function selectValueInGroups($value) {
