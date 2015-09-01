@@ -33,9 +33,9 @@ function eyeCalendar_on_globalConfigureCalendar($params=''){
 	$myToolbar = new Toolbar(array('name'=>'myConfigBar','father'=>'configureCalendar_Content'));
 	$myToolbar->show();
 	$itemIds = array();
-	$itemIds[] = $myToolbar->addItem('generalConfig','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/lin_agt_wrench.png','General');
-	$itemIds[] = $myToolbar->addItem('workViewConfig','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/work.png','Work View');
 	$itemIds[] = $myToolbar->addItem('calendarConfig','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/today.png','Calendars');
+	$itemIds[] = $myToolbar->addItem('generalConfig','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/week.png','Week View');
+	$itemIds[] = $myToolbar->addItem('workViewConfig','index.php?theme=' . $_SESSION['usertheme'] . '&extern=images/toolbar/work.png','Work View');
 	$myToolbar->addGroup($itemIds);
 	if(isset($GLOBALS['hiddenWin'])){
 		$GLOBALS['hiddenWin']->close();
@@ -43,16 +43,16 @@ function eyeCalendar_on_globalConfigureCalendar($params=''){
 	$myHiddenWindow = new Window(array('name'=>'hiddenWin','father'=>'configureCalendar_Content','type'=>INVISIBLE_WINDOW,'y'=>60,'x'=>0,'width'=>398,'height'=>266));
 	$myHiddenWindow->show();
 	if($params == ''){
-		$myToolbar->pressItem(array($itemIds[2]));
+		$myToolbar->pressItem(array($itemIds[0]));
  		eyeCalendar_on_calendarConfig();
 	}elseif($params == 'calendars'){
-		$myToolbar->pressItem(array($itemIds[2]));
+		$myToolbar->pressItem(array($itemIds[0]));
 		eyeCalendar_on_calendarConfig();
 	}elseif($params == 'general'){
-		$myToolbar->pressItem(array($itemIds[0]));
+		$myToolbar->pressItem(array($itemIds[1]));
 		eyeCalendar_on_generalConfig();
 	}elseif($params == 'work'){
-		$myToolbar->pressItem(array($itemIds[1]));
+		$myToolbar->pressItem(array($itemIds[2]));
 		eyeCalendar_on_workViewConfig();
 	}
 }
@@ -61,7 +61,7 @@ function eyeCalendar_on_globalConfigureCalendar($params=''){
 */
 function eyeCalendar_on_calendarConfig($params=""){
 	if(!isset($GLOBALS['configureCalendar'])) {
-		eyeCalendar_on_globalConfigureCalendar('calednars');
+		eyeCalendar_on_globalConfigureCalendar('calendars');
 		return true;
 	}
 	if(isset($GLOBALS['hiddenWin'])){
@@ -136,6 +136,8 @@ function eyeCalendar_on_calendarConfig($params=""){
 *This dialog allow configure the work view
 */
 function eyeCalendar_on_workViewConfig(){
+	global $myPid;
+	
 	if(!isset($GLOBALS['configureCalendar'])) {
 		eyeCalendar_on_globalConfigureCalendar('work');
 		return true;
@@ -145,7 +147,11 @@ function eyeCalendar_on_workViewConfig(){
 	}
 	$myHiddenWindow = new Window(array('name'=>'hiddenWin','father'=>'configureCalendar_Content','type'=>INVISIBLE_WINDOW,'y'=>60,'x'=>0,'width'=>398,'height'=>266));
 	$myHiddenWindow->show();
-	global $myPid;
+	
+	$xml = eyeCalendar('getConfig');
+	$workStartDay = (intval($xml['eyeCalendar'][0]['workStartDay'][0]) + intval($xml['eyeCalendar'][0]['workStartMonday'][0])) % 7;
+	$workEndDay = (intval($xml['eyeCalendar'][0]['workEndDay'][0]) + intval($xml['eyeCalendar'][0]['workStartMonday'][0])) % 7;
+	
 	$title = new Label(array('name'=>'TittleConfig','father'=>'hiddenWin','text'=>'Work View Configuration:','x'=>15,'y'=>10));
 	$title->show();
 	$title->setCSS(array('font-weight'=>'bold','font-size'=>15));
@@ -161,13 +167,13 @@ function eyeCalendar_on_workViewConfig(){
 	$mySelect = new Select(array('name'=>'weekStartSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
 	$mySelect->show();
 	$myButton->addFriend($mySelect);
-	$mySelect->addOption('Sunday','0',false);
-	$mySelect->addOption('Monday','1',true);
-	$mySelect->addOption('Tuesday','2',false);
-	$mySelect->addOption('Wednesday','3',false);
-	$mySelect->addOption('ThursDay','4',false);
-	$mySelect->addOption('Friday','5',false);
-	$mySelect->addOption('Saturday','6',false);
+	$mySelect->addOption('Sunday', '0', $workStartDay === 0);
+	$mySelect->addOption('Monday', '1', $workStartDay === 1);
+	$mySelect->addOption('Tuesday', '2', $workStartDay === 2);
+	$mySelect->addOption('Wednesday', '3', $workStartDay === 3);
+	$mySelect->addOption('Thursday', '4', $workStartDay === 4);
+	$mySelect->addOption('Friday', '5', $workStartDay === 5);
+	$mySelect->addOption('Saturday', '6', $workStartDay === 6);
 
 	$y += 30;
 	$yForm += 30;
@@ -176,13 +182,13 @@ function eyeCalendar_on_workViewConfig(){
 	$mySelect = new Select(array('name'=>'weekEndSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
 	$mySelect->show();
 	$myButton->addFriend($mySelect);
-	$mySelect->addOption('Sunday','0',true);
-	$mySelect->addOption('Monday','1',false);
-	$mySelect->addOption('Tuesday','2',false);
-	$mySelect->addOption('Wednesday','3',false);
-	$mySelect->addOption('ThursDay','4',false);
-	$mySelect->addOption('Friday','5',false);
-	$mySelect->addOption('Saturday','6',false);
+	$mySelect->addOption('Sunday', '0', $workEndDay === 0);
+	$mySelect->addOption('Monday', '1', $workEndDay === 1);
+	$mySelect->addOption('Tuesday', '2', $workEndDay === 2);
+	$mySelect->addOption('Wednesday', '3', $workEndDay === 3);
+	$mySelect->addOption('Thursday', '4', $workEndDay === 4);
+	$mySelect->addOption('Friday', '5', $workEndDay === 5);
+	$mySelect->addOption('Saturday', '6', $workEndDay === 6);
 
 	$y += 30;
 	$yForm += 30;
@@ -197,7 +203,7 @@ function eyeCalendar_on_workViewConfig(){
 		if($xy < 10){
 			$xy = '0'.$xy;
 		}
-		$mySelect->addOption($xy.':00',$xy,false);
+		$mySelect->addOption($xy . ':00', $xy, $xml['eyeCalendar'][0]['workStartHour'][0] == $xy);
 	}
 
 	$y += 30;
@@ -212,7 +218,7 @@ function eyeCalendar_on_workViewConfig(){
 		if($x < 10){
 			$x = '0'.$x;
 		}
-		$mySelect->addOption($x.':00',$x,false);
+		$mySelect->addOption($x . ':00', $x, $xml['eyeCalendar'][0]['workEndHour'][0] == $x);
 	}
 	$myButton->show();
 	$cancelBtn = new Button(array('name'=>'configureCalendarSave2','father'=>'hiddenWin','x'=>120,'y'=>5,'horiz'=>1,'vert'=>1,'caption'=>'Cancel','width'=>100,'signal'=>'configure_Closed'));
@@ -222,6 +228,8 @@ function eyeCalendar_on_workViewConfig(){
 *This dialgo let configure the general optiosn of the calendar
 */
 function eyeCalendar_on_generalConfig(){
+	global $myPid;
+	
 	if(!isset($GLOBALS['configureCalendar'])) {
 		eyeCalendar_on_globalConfigureCalendar('general');
 		return true;
@@ -231,7 +239,11 @@ function eyeCalendar_on_generalConfig(){
 	}
 	$myHiddenWindow = new Window(array('name'=>'hiddenWin','father'=>'configureCalendar_Content','type'=>INVISIBLE_WINDOW,'y'=>60,'x'=>0,'width'=>398,'height'=>266));
 	$myHiddenWindow->show();
-	global $myPid;
+	
+	$xml = eyeCalendar('getConfig');
+	$generalStartDay = (intval($xml['eyeCalendar'][0]['generalStartDay'][0]) + intval($xml['eyeCalendar'][0]['startMonday'][0])) % 7;
+	$generalEndDay = (intval($xml['eyeCalendar'][0]['generalEndDay'][0]) + intval($xml['eyeCalendar'][0]['startMonday'][0])) % 7;
+	
 	$title = new Label(array('name'=>'TittleConfig','father'=>'hiddenWin','text'=>'General Configuration:','x'=>15,'y'=>10));
 	$title->show();
 	$title->setCSS(array('font-weight'=>'bold','font-size'=>15));
@@ -247,13 +259,13 @@ function eyeCalendar_on_generalConfig(){
 	$mySelect = new Select(array('name'=>'weekStartSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
 	$mySelect->show();
 	$myButton->addFriend($mySelect);
-	$mySelect->addOption('Sunday','0',false);
-	$mySelect->addOption('Monday','1',true);
-	$mySelect->addOption('Tuesday','2',false);
-	$mySelect->addOption('Wednesday','3',false);
-	$mySelect->addOption('ThursDay','4',false);
-	$mySelect->addOption('Friday','5',false);
-	$mySelect->addOption('Saturday','6',false);
+	$mySelect->addOption('Sunday', '0', $generalStartDay === 0);
+	$mySelect->addOption('Monday', '1', $generalStartDay === 1);
+	$mySelect->addOption('Tuesday', '2', $generalStartDay === 2);
+	$mySelect->addOption('Wednesday', '3', $generalStartDay === 3);
+	$mySelect->addOption('Thursday', '4', $generalStartDay === 4);
+	$mySelect->addOption('Friday', '5', $generalStartDay === 5);
+	$mySelect->addOption('Saturday', '6', $generalStartDay === 6);
 	//Rawjs, sytling the options
 	$js = 'var nodes = xGetElementById("'.$myPid.'_daysSelect").childNodes;
 			for(var x=0;x < nodes.length;x++){
@@ -269,13 +281,13 @@ function eyeCalendar_on_generalConfig(){
 	$mySelect = new Select(array('name'=>'weekEndSelect','father'=>'hiddenWin','x'=>$xForm,'y'=>$yForm,'width'=>100));
 	$mySelect->show();
 	$myButton->addFriend($mySelect);
-	$mySelect->addOption('Sunday','0',true);
-	$mySelect->addOption('Monday','1',false);
-	$mySelect->addOption('Tuesday','2',false);
-	$mySelect->addOption('Wednesday','3',false);
-	$mySelect->addOption('ThursDay','4',false);
-	$mySelect->addOption('Friday','5',false);
-	$mySelect->addOption('Saturday','6',false);
+	$mySelect->addOption('Sunday', '0', $generalEndDay === 0);
+	$mySelect->addOption('Monday', '1', $generalEndDay === 1);
+	$mySelect->addOption('Tuesday', '2', $generalEndDay === 2);
+	$mySelect->addOption('Wednesday', '3', $generalEndDay === 3);
+	$mySelect->addOption('Thursday', '4', $generalEndDay === 4);
+	$mySelect->addOption('Friday', '5', $generalEndDay === 5);
+	$mySelect->addOption('Saturday', '6', $generalEndDay === 6);
 
 	$y += 30;
 	$yForm += 30;
@@ -288,7 +300,7 @@ function eyeCalendar_on_generalConfig(){
 		if($xy < 10){
 			$xy = '0'.$xy;
 		}
-		$mySelect->addOption($xy.':00',$xy,false);
+		$mySelect->addOption($xy . ':00', $xy, $xml['eyeCalendar'][0]['generalStartHour'][0] == $xy);
 	}
 
 	$y += 30;
@@ -302,7 +314,7 @@ function eyeCalendar_on_generalConfig(){
 		if($x < 10){
 			$x = '0'.$x;
 		}
-		$mySelect->addOption($x.':00',$x,false);
+		$mySelect->addOption($x . ':00', $x, $xml['eyeCalendar'][0]['generalEndHour'][0] == $x);
 	}
 	$myButton->show();
 	$cancelBtn = new Button(array('name'=>'configureCalendarSave2','father'=>'hiddenWin','x'=>120,'y'=>5,'horiz'=>1,'vert'=>1,'caption'=>'Cancel','width'=>100,'signal'=>'configure_Closed'));
@@ -452,7 +464,6 @@ function eyeCalendar_on_workViewSave($params=''){
 	$info['eyeCalendar'][0]['workEndHour'][0] = $workEndHour;
 
 	eyeCalendar('setConfig',array($info));
-	$GLOBALS['configureCalendar']->close();
 	eyeX('messageBox',array('content'=>'Configuration saved correctly'));
 	if($GLOBALS['calendarView']->text == 'work'){
 		_changeView($GLOBALS['calendarView']->text);
@@ -513,7 +524,6 @@ function eyeCalendar_on_generalViewSave($params=''){
 	$info['eyeCalendar'][0]['generalEndHour'][0] = $workEndHour;
 
 	eyeCalendar('setConfig',array($info));
-	$GLOBALS['configureCalendar']->close();
 	eyeX('messageBox',array('content'=>'Configuration saved correctly'));
 	if($GLOBALS['calendarView']->text == 'work'){
 		_changeView($GLOBALS['calendarView']->text);
