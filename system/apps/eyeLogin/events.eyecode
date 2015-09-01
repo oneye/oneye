@@ -82,7 +82,7 @@ function eyeLogin_on_Login($params = '') {
 		$currentUser = $oldUser;
 		$password = $GLOBALS['eyeLogin_Textbox_1_Password']->text;
 		$password2 = md5($_SESSION['sawasc'] . $xml['eyeUser'][0]['password'][0]);
-		if ($password == $password2 && um('loginWidthHash',array($user,$xml['eyeUser'][0]['password'][0]))) {
+		if (hash_equals($password2, $password) && um('loginWidthHash',array($user,$xml['eyeUser'][0]['password'][0]))) {
 			$loginCorrect = true;
 		}
 	//If not, just use the classic plain text

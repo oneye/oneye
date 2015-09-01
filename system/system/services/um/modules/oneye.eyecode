@@ -551,7 +551,7 @@ function service_um_login ($params = null) {
 			return false;
 		}
 	}
-	if ($info['eyeUser'][0]['password'][0] == $password) {
+	if (hash_equals($info['eyeUser'][0]['password'][0], $password)) {
 		//If the user is disabled, set error and return false
 		if(service_um_checkDisabled(array($info))){
 			errorCodes('setErrorCode', array(UM_USER_IS_DISABLED));

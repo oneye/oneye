@@ -43,6 +43,12 @@ function ini_get_size($sName)
     return $iSize;
 }
 
+if (!function_exists('hash_equals')) {
+	function hash_equals($known_string, $user_string) {
+		return $known_string === $user_string;
+	}
+}
+
 if (!function_exists('json_encode')) {
 	function json_encode($a=false) {
 		if (is_null($a)) {

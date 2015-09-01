@@ -86,7 +86,7 @@ function eyeControl_on_system_uninstall($params = '') {
 	global $currentUser;
 	$password = base64_decode($GLOBALS['eyeControl_system_uninstall_textbox_password']->text);
 	$userInfo = um('retrieveUser',array($currentUser));
-	if ($currentUser == REAL_ROOTUSER && md5($password . md5($password)) == $userInfo['eyeUser'][0]['password'][0]) {
+	if ($currentUser == REAL_ROOTUSER && hash_equals($userInfo['eyeUser'][0]['password'][0], md5($password . md5($password)))) {
 		eyex('messageBox',array(
 			'buttons' => array(array('system_uninstall_yes','Yes'),array('system_uninstall_no','No')),
 			'content' => 'Do you really want to delete the oneye system? This removes all data from the oneye directory!',
