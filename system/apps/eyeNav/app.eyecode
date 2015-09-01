@@ -180,7 +180,21 @@ function eyeNav_run($params = '') {
 	));
 	$myIframe->show();
 	$GLOBALS['eyeNav_frame'] = $myIframe;
-	eyex('rawjs', array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].contentDocument.body.innerHTML = \'<iframe style="border: 0; height: 100%; left: 0; position: absolute; top: 0; width: 100%;" />\';'));
+	eyex('runjs', array('js' => 'var frame, init;
+	
+	init = function () {
+		var contentDocument;
+		
+		contentDocument = frame.contentDocument ? frame.contentDocument : frame.document;
+		contentDocument.body.innerHTML = \'<iframe style="border: 0; height: 100%; left: 0; position: absolute; top: 0; width: 100%;" />\';
+	};
+	
+	frame = parent.frames["' . strval($myPid) . '_eyeNav_frame"];
+	if (frame.contentDocument) {
+		init();
+	} else {
+		setTimeout(init, 100);
+	}'));
 
 	$myToolbar = new Toolbar(array(
 		'name' => 'eyeNav_toolbar',

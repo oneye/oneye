@@ -63,24 +63,37 @@ function eyeNav_on_Fullscreen($params = '') {
 	}'));
 }
 
-function eyeNav_on_Back($params = '') {
-	global $myPid;
-	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].contentWindow.history.back();'));
-	eyeNav_lib_FocusFrame();
-}
-
-function eyeNav_on_Forward($params = '') {
-	global $myPid;
-	eyex('rawjs',array('js' => 'parent.frames["' . $myPid . '_eyeNav_frame"].contentWindow.history.forward();'));
-	eyeNav_lib_FocusFrame();
-}
-
-function eyeNav_on_Refresh($params = '') {
+function eyeNav_on_Back($params = null) {
 	global $myPid;
 	
-	$js = 'var obj = parent.frames["' . $myPid . '_eyeNav_frame"].contentDocument.getElementsByTagName("iframe")[0];';
-	$js .= 'obj.parentNode.appendChild(obj)';
-	eyex('rawjs',array('js' => $js));
+	eyex('runjs', array('js' => 'var contentWindow, frame;
+	frame = parent.frames["' . strval($myPid) . '_eyeNav_frame"];
+	contentWindow = frame.contentWindow ? frame.contentWindow : frame.window;
+	contentWindow.history.back();'));
+	
+	eyeNav_lib_FocusFrame();
+}
+
+function eyeNav_on_Forward($params = null) {
+	global $myPid;
+	
+	eyex('runjs', array('js' => 'var contentWindow, frame;
+	frame = parent.frames["' . strval($myPid) . '_eyeNav_frame"];
+	contentWindow = frame.contentWindow ? frame.contentWindow : frame.window;
+	contentWindow.history.forward();'));
+	
+	eyeNav_lib_FocusFrame();
+}
+
+function eyeNav_on_Refresh($params = null) {
+	global $myPid;
+	
+	eyex('runjs', array('js' => 'var contentDocument, frame, iframe;
+	frame = parent.frames["' . strval($myPid) . '_eyeNav_frame"];
+	contentDocument = frame.contentDocument ? frame.contentDocument : frame.document;
+	iframe = contentDocument.getElementsByTagName("iframe")[0];
+	iframe.parentNode.appendChild(iframe);'));
+	
 	eyeNav_lib_FocusFrame();
 }
 
