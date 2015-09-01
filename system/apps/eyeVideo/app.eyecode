@@ -36,7 +36,7 @@ function eyeVideo_run($params = '') {
 			'text' => $params[0]
 		));
 		$myHidden->show();
-		eyex('loadScript',array('url' => 'index.php?extern=apps/eyeVideo/flowplayer.min.js&type=text'));
+		eyex('loadScript',array('url' => 'index.php?extern=apps/eyeVideo/flowplayer.js&type=text'));
 		
 		addShortUrl($myPid . '_eyeVideo','getFile');
 		eyex('rawjs',array('js' => 'var func = function () { if (typeof flowplayer === "function") { flowplayer("' . $myPid . '_eyeVideo_Window_Content", {src: "index.php?extern=apps/eyeVideo/flowplayer.swf", wmode: "opaque"}, "index.php/' . $myPid . '_eyeVideo"); } else { setTimeout(func, 100); } }; func();'));
