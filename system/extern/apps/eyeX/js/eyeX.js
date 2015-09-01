@@ -887,10 +887,7 @@ function localEngine(msg) {
 						document.getElementById(widget).innerHTML = document.getElementById(widget).innerHTML + content;
 					}
 				} else if (task === 'rawjs') {
-					js = getNodeValue(actions[count].getElementsByTagName('js')[0]);
-					js = js.replace(/\n/, "");
-					js = js.replace(/\r/, "");
-					evilEval(js);
+					evilEval(getNodeValue(actions[count].getElementsByTagName('js')[0]));
 				} else if (task === 'setDiv') {
 					content = getNodeValue(actions[count].getElementsByTagName('content')[0]);
 					name = getNodeValue(actions[count].getElementsByTagName('name')[0]);

@@ -1083,13 +1083,9 @@ function service_eyex_rawjs($params) { //useful for widgets
 		return false;
 	}
 
-	$js = $params['js'];
-	$js = str_replace("\n","",$js);
-	$js = str_replace("\r","",$js);
-
 	$atribs = array(
 		'task' => array('rawjs'),
-		'js' => array($js)
+		'js' => array($params['js'])
 	);
 
 	$task = array(
@@ -1125,8 +1121,6 @@ function service_eyex_runjs($params) { //util for widgets
 		$tokens = null;
 	}
 	$js = $params['js'];
-	$js = str_replace("\n","",$js);
-	$js = str_replace("\r","",$js);
 
 	if(isset($tokens) && is_array($tokens)) {
 		$pieces = /* utf8 */ explode("%s",$js);
