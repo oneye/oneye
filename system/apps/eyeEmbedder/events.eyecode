@@ -124,6 +124,11 @@ function eyeEmbedder_on_Package2($params = null) {
 	
 	list($applicationAuthor, $applicationCategory, $applicationDescription, $applicationIcon, $applicationLicense, $applicationName, $applicationType, $applicationVersion, $address, $defaultHeight, $defaultWidth, $title, $startMaximized) = array_values(eyeEmbedder_lib_GetValues());
 	
+	// Validate application name
+	if (!eyeEmbedder_lib_ValidateApplicationName($applicationName)) {
+		return;
+	}
+	
 	// Retreive eyePackage destination
 	$eyePackage = um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . $params['arg'][0];
 	
@@ -147,20 +152,19 @@ function eyeEmbedder_on_Package2($params = null) {
 	
 	if (substr($icon, 0, 7) === 'custom:') {
 		$oldPath = vfs('getRealName', array(um('getCurrentUserDir') . '/' . FILES_USER_DIR . '/' . substr($icon, 7)));
-		$icon = basename($icon);
 		
-		eyeEmbedder_lib_ResizeIcon($oldPath, $newPath . '/48x48/' . $icon, 48);
-		eyeEmbedder_lib_ResizeIcon($oldPath, $newPath . '/22x22/' . $icon, 22);
+		eyeEmbedder_lib_ResizeIcon($oldPath, $newPath . '/48x48/' . $applicationName . '.png', 48);
+		eyeEmbedder_lib_ResizeIcon($oldPath, $newPath . '/22x22/' . $applicationName . '.png', 22);
 	} else {
 		$oldPath = EYE_ROOT . '/' . EXTERN_DIR . '/' . APP_DIR . '/eyeX/themes/default/icons';
 		$icon = basename($icon) . '.png';
 		
-		vfs('real_copy', array($oldPath . '/48x48/' . $icon, $newPath . '/48x48/' . $icon));
+		vfs('real_copy', array($oldPath . '/48x48/' . $icon, $newPath . '/48x48/' . $applicationName . '.png'));
 		
 		if (is_file($oldPath . '/22x22/' . $icon)) {
-			vfs('real_copy', array($oldPath . '/22x22/' . $icon, $newPath . '/22x22/' . $icon));
+			vfs('real_copy', array($oldPath . '/22x22/' . $icon, $newPath . '/22x22/' . $applicationName . '.png'));
 		} else {
-			eyeEmbedder_lib_ResizeIcon($oldPath . '/48x48/' . $icon, $newPath . '/22x22/' . $icon, 22);
+			eyeEmbedder_lib_ResizeIcon($oldPath . '/48x48/' . $icon, $newPath . '/22x22/' . $applicationName . '.png', 22);
 		}
 	}
 	
@@ -173,7 +177,7 @@ function eyeEmbedder_on_Package2($params = null) {
 		foreach (eyeEmbedder_lib_GetValues() as $key => $value) {
 			$replace = array(
 				'%:' . $key . '%' => $value,
-				'%i:' . $key . '%' => $value === null ? 'null' : is_numeric($value) ? strval(intval($value)) : strval($value),
+				'%i:' . $key . '%' => $value === null ? 'null' : (is_numeric($value) ? strval(intval($value)) : strval($value)),
 				'%s:' . $key . '%' => $value === null ? 'null' : '\'' . str_replace(array('\\', '\''), array('\\\\', '\\\''), strval($value)) . '\'',
 				'%x:' . $key . '%' => htmlspecialchars($value, ENT_NOQUOTES, 'UTF-8')
 			);
@@ -187,8 +191,13 @@ function eyeEmbedder_on_Package2($params = null) {
 		vfs('real_putFileContent', array($package . '/' . basename($file), $content));
 	}
 	
+	// Remove existing eyePackage
+	if (vfs('fileExists', array($eyePackage))) {
+		vfs('delete', array($eyePackage));
+	}
+	
 	// Create eyePackage
-	if (!eyeFileArchive('compress', array(array('simple' => array($temp . '/' . APP_DIR)), $eyePackage, 'eqTypes' => array('eyepackage' => 'tgz')))) {
+	if (!eyeFileArchive('compress', array(array('simple' => array($temp . '/' . APP_DIR, $temp . '/' . EXTERN_DIR)), $eyePackage, 'eqTypes' => array('eyepackage' => 'tgz')))) {
 		eyex('messageBox', array('content' => 'Failed packaging.'));
 	} else {
 		eyeFiles('update', array(dirname($eyePackage)));

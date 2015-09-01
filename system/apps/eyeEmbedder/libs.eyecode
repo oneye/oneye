@@ -72,13 +72,15 @@ function eyeEmbedder_lib_GetIcons() {
 }
 
 function eyeEmbedder_lib_GetValues() {
+	$applicationName = $GLOBALS['eyeEmbedder_Textbox_ApplicationName']->text;
+	
 	return array(
 		'ApplicationAuthor' => $GLOBALS['eyeEmbedder_Textbox_ApplicationAuthor']->text,
 		'ApplicationCategory' => $GLOBALS['eyeEmbedder_Select_ApplicationCategory']->selected,
 		'ApplicationDescription' => $GLOBALS['eyeEmbedder_Textbox_ApplicationDescription']->text,
-		'ApplicationIcon' => 'index.php?theme=USERTHEME&extern=icons/48x48/' . $GLOBALS['eyeEmbedder_Select_ApplicationIcon']->selected . '.png',
+		'ApplicationIcon' => 'index.php?theme=USERTHEME&extern=icons/48x48/' . $applicationName . '.png',
 		'ApplicationLicense' => $GLOBALS['eyeEmbedder_Textbox_ApplicationLicense']->text,
-		'ApplicationName' => $GLOBALS['eyeEmbedder_Textbox_ApplicationName']->text,
+		'ApplicationName' => $applicationName,
 		'ApplicationType' => $GLOBALS['eyeEmbedder_Select_ApplicationType']->selected,
 		'ApplicationVersion' => $GLOBALS['eyeEmbedder_Textbox_ApplicationVersion']->text,
 		'Address' => $GLOBALS['eyeEmbedder_Textbox_Address']->text,

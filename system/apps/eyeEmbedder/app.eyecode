@@ -170,7 +170,7 @@ function eyeEmbedder_run($params = null) {
 	array_push($toolbarFriends, $GLOBALS[$name]);
 	$y += $textboxHeight + 2 * $rowPadding;
 	
-	$name = $namePrefix . 'Label_Width';
+	$name = $namePrefix . 'Label_DefaultWidth';
 	$GLOBALS[$name] = new Label(array(
 		'father' => $boxContentContent,
 		'name' => $name,
@@ -181,7 +181,7 @@ function eyeEmbedder_run($params = null) {
 	$GLOBALS[$name]->show();
 	$y += $labelHeight + $labelMargin;
 	
-	$name = $namePrefix . 'Checkbox_Width';
+	$name = $namePrefix . 'Checkbox_DefaultWidth';
 	$GLOBALS[$name] = new Checkbox(array(
 		'father' => $boxContentContent,
 		'name' => $name,
@@ -190,13 +190,13 @@ function eyeEmbedder_run($params = null) {
 		'y' => $y + (max($checkboxHeight, $textboxHeight) - $checkboxHeight) / 2
 	));
 	$GLOBALS[$name]->show();
-	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Width").disabled = !this.checked;
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_DefaultWidth").disabled = !this.checked;
 	if (!this.checked) {
-		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Width").value = "";
+		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_DefaultWidth").value = "";
 	}');
 	array_push($toolbarFriends, $GLOBALS[$name]);
 	
-	$name = $namePrefix . 'Textbox_Width';
+	$name = $namePrefix . 'Textbox_DefaultWidth';
 	$GLOBALS[$name] = new Textbox(array(
 		'enabled' => 0,
 		'father' => $boxContentContent,
@@ -209,7 +209,7 @@ function eyeEmbedder_run($params = null) {
 	array_push($toolbarFriends, $GLOBALS[$name]);
 	$y += max($checkboxHeight, $textboxHeight) + $rowPadding;
 	
-	$name = $namePrefix . 'Label_Height';
+	$name = $namePrefix . 'Label_DefaultHeight';
 	$GLOBALS[$name] = new Label(array(
 		'father' => $boxContentContent,
 		'name' => $name,
@@ -220,7 +220,7 @@ function eyeEmbedder_run($params = null) {
 	$GLOBALS[$name]->show();
 	$y += $labelHeight + $labelMargin;
 	
-	$name = $namePrefix . 'Checkbox_Height';
+	$name = $namePrefix . 'Checkbox_DefaultHeight';
 	$GLOBALS[$name] = new Checkbox(array(
 		'father' => $boxContentContent,
 		'name' => $name,
@@ -229,13 +229,13 @@ function eyeEmbedder_run($params = null) {
 		'y' => $y + (max($checkboxHeight, $textboxHeight) - $checkboxHeight) / 2
 	));
 	$GLOBALS[$name]->show();
-	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Height").disabled = !this.checked;
+	$GLOBALS[$name]->addEvent('onchange', 'xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_DefaultHeight").disabled = !this.checked;
 	if (!this.checked) {
-		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_Height").value = "";
+		xGetElementById("' . strval($myPid) . '_' . $namePrefix . 'Textbox_DefaultHeight").value = "";
 	}');
 	array_push($toolbarFriends, $GLOBALS[$name]);
 	
-	$name = $namePrefix . 'Textbox_Height';
+	$name = $namePrefix . 'Textbox_DefaultHeight';
 	$GLOBALS[$name] = new Textbox(array(
 		'enabled' => 0,
 		'father' => $boxContentContent,
