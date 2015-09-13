@@ -75,7 +75,7 @@ function eyeLogin_on_Login($params = '') {
 	$user = basename($GLOBALS['eyeLogin_Textbox_1_User']->text);
 	$loginCorrect = false;
 	//If secure login is enabled, and the UM module have the needed function to login with hash, use it (SAWASC)
-	if (SECURE_LOGIN == 1 && function_exists('service_um_loginWidthHash')) {
+	if (SECURE_LOGIN == 1 && function_exists('service_um_loginWithHash')) {
 		$oldUser = $currentUser;
 		$currentUser = ROOTUSER;
 		$xml = um('retrieveUser',array($user));

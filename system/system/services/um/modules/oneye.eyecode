@@ -30,7 +30,7 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
  * <disabled>
  */
 
-function service_um_isValidUsername ($params = null) {
+function service_um_isValidUsername($params = null) {
 	if (isset($params[0]) === true
 	&& /* utf8 */ preg_match('/^[-_a-zA-Z0-9][-_\\.a-zA-Z0-9]*$/', $params[0]) === 1
 	&& /* utf8 */ strlen($params[0]) >= 2
@@ -61,7 +61,7 @@ function service_um_isValidUsername ($params = null) {
 * @exception UM_USER_ALREADY_EXISTS There already exists a username with the same name.
 * @date 2008/03/11
 */
-function service_um_createUser ($params = null){
+function service_um_createUser($params = null){
 	global $currentUser;
 	
 	// Check arguments
@@ -94,7 +94,7 @@ function service_um_createUser ($params = null){
 	
 	//handling userInfo.
 	$array['username'][0] = $username;
-	$array['password'][0] = md5($params['password'] . md5($params['password']));
+	_service_um_hashPassword($array, $params['password']);
 	$array['email'][0] = $params['email'];
 	$array['quota'][0] = $params['quota'];
 	$array['fullname'][0] = $params['fullname'];
@@ -161,7 +161,7 @@ function service_um_createUser ($params = null){
 * @exception INCORRECT_PARAMS No username is specified.
 * @date 2008/03/11
 */
-function service_um_retrieveUser ($params = null){
+function service_um_retrieveUser($params = null){
 	if($params == null || count($params) < 1){
 		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
@@ -185,13 +185,13 @@ function service_um_retrieveUser ($params = null){
 	return $userconfig;
 }
 
-function service_um_retriveUser ($params = '') {
+function service_um_retriveUser($params = '') {
 	return um('retrieveUser', $params);
 }
 
-function service_um_UserIsAdmin ($params=null) {
+function service_um_UserIsAdmin($params=null) {
 	if ($params == null || count($params) < 1) {
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
 	}
 	
@@ -216,7 +216,7 @@ function service_um_UserIsAdmin ($params=null) {
 * @exception INCORRECT_PARAMS No username is specified.
 * @date 2008/03/11
 */
-function service_um_userExist ($params = null){
+function service_um_userExist($params = null){
 	 
 	if ($params == null || count($params) < 1){
 		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
@@ -259,7 +259,7 @@ function service_um_userExists($params = null) {
 * @exception INCORRECT_PARAMS No group is specified.
 * @date 2009/05/04
 */
-function service_um_groupExists ($params = null) {
+function service_um_groupExists($params = null) {
 	if($params == null || count($params) < 1){
 		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
@@ -294,7 +294,7 @@ function service_um_groupExists ($params = null) {
 * @exception INCORRECT_PARAMS No username is specified.
 * @date 2008/03/11
 */
-function service_um_updateUser ($params = null){
+function service_um_updateUser($params = null){
 	//TODO: really admin? currentuser?
 	if ($params == null || count($params) < 1){
 		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
@@ -318,7 +318,7 @@ function service_um_updateUser ($params = null){
 	$array = $userInfo['eyeUser'][0];
 	
 	if (isset($params['password'])) {
-		$array['password'][0] = md5($params['password'] . md5($params['password']));
+		_service_um_hashPassword($array, $params['password']);
 	}
 	if (isset($params['email'])) {
 		$array['email'][0] = $params['email'];
@@ -420,7 +420,7 @@ function service_um_updateUser ($params = null){
 * @exception INCORRECT_PARAMS No username is specified.
 * @date 2008/03/11
 */
-function service_um_deleteUser ($params = null){
+function service_um_deleteUser($params = null){
 	global $currentUser;
 
 	// Argument handling.
@@ -463,12 +463,12 @@ function service_um_deleteUser ($params = null){
 *	root user or not.
 * @date 2008/03/11
 */
-function service_um_checkMaintainer ($params = '') {
+function service_um_checkMaintainer($params = '') {
 	if (!$params[0]) {
 		global $currentUser;
 		$params[0] = $currentUser;
 	}
-	$userinfo = um('retrieveUser',array($params[0]));
+	$userinfo = um('retrieveUser', array($params[0]));
 	if ($userinfo['eyeUser'][0]['maintainer'][0] == '1') {
 		return true;
 	} else {
@@ -483,11 +483,11 @@ function service_um_checkMaintainer ($params = '') {
 *	disabled or not
 * @date 2008/04/12
 */
-function service_um_checkDisabled ($params = '') {
+function service_um_checkDisabled($params = '') {
 	global $currentUser;
 	if (isset($params[0]) && !is_array($params[0])) {
 		$userinfo = um('retrieveUser', array($params[0]));
-	} elseif (isset($params[0]) && is_array($params[0])) {
+	} else if (isset($params[0]) && is_array($params[0])) {
 		$userinfo = $params[0];
 	}
 
@@ -516,7 +516,7 @@ function service_um_checkDisabled ($params = '') {
 * @exception UM_USER_IS_DISABLED The user is currently disabled.
 * @date 2008/03/11
 */
-function service_um_login ($params = null) {
+function service_um_login($params = null) {
 	
 	if ($params == null || count($params) < 2) {
 		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
@@ -524,7 +524,6 @@ function service_um_login ($params = null) {
 	}
 	$username = basename($params[0]);
 	$password = $params[1];
-	$password = md5($password . md5($password));
 
 	global $currentUser;
 	if (um('UserIsAdmin', array($currentUser))) {
@@ -551,7 +550,9 @@ function service_um_login ($params = null) {
 			return false;
 		}
 	}
-	if (hash_equals($info['eyeUser'][0]['password'][0], $password)) {
+	if (_service_um_validatePassword($info['eyeUser'][0], $password)) {
+		_service_um_rehashPassword($info['eyeUser'][0], $password);
+		
 		//If the user is disabled, set error and return false
 		if(service_um_checkDisabled(array($info))){
 			errorCodes('setErrorCode', array(UM_USER_IS_DISABLED));
@@ -588,10 +589,10 @@ function service_um_login ($params = null) {
 * @exception UM_USER_IS_DISABLED The user is currently disabled.
 * @date 2008/03/11
 */
-function service_um_loginWidthHash($params = null) {
+function service_um_loginWithHash($params = null) {
 	
 	if($params == null || count($params) < 2){
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
 	}
 	$username = basename($params[0]);
@@ -617,7 +618,7 @@ function service_um_loginWidthHash($params = null) {
 			return false;
 		}
 	}
-	if ($info['eyeUser'][0]['password'][0] == $password) {
+	if (hash_equals($info['eyeUser'][0]['password'][0], $password)) {
 		//If the user is disabled, set error and return false
 		if(service_um_checkDisabled(array($info))){
 			errorCodes('setErrorCode', array(UM_USER_IS_DISABLED));
@@ -647,7 +648,7 @@ function service_um_loginWidthHash($params = null) {
 * @return Returns the session variable that stores the group list.
 * @date 2008/03/11
 */
-function service_um_getCurrentGroups () {
+function service_um_getCurrentGroups() {
 	global $currentUser;
 	$userinfo = um('retrieveUser', array($currentUser));
 	$return = array();
@@ -677,7 +678,7 @@ function service_um_getAllUsers ($params = '') {
 * @return Returns an array containing the names of the users.
 * @date 2008/07/29
 */
-function service_um_getAllUsersBy ($params = '') {
+function service_um_getAllUsersBy($params = '') {
 	if (isset($params['after'])) {
 		$after = /* utf8 */ strtolower($params['after']);
 	} else {
@@ -693,7 +694,7 @@ function service_um_getAllUsersBy ($params = '') {
 	}
 	$allUsers = array();
 	$counted = 0;
-	$acronyms = vfs('real_getDirContent',array(EYE_ROOT . '/' . USERS_DIR));
+	$acronyms = vfs('real_getDirContent', array(EYE_ROOT . '/' . USERS_DIR));
 	foreach ($acronyms as $acronymUrl) {
 		if (is_dir($acronymUrl)) {
 			$acronym = basename($acronymUrl);
@@ -701,7 +702,7 @@ function service_um_getAllUsersBy ($params = '') {
 					|| ($beginning !== '' && $after === '' && strtolower(substr($acronym, 0, 1)) === substr($beginning, 0, 1)) // utf8
 					|| ($beginning === '' && $after !== '' && strtolower(substr($acronym, 1, 1)) === substr($after, -1)) // utf8
 					|| ($beginning !== '' && $after !== '' && strtolower(substr($acronym, 0, 1)) === substr($beginning, 0, 1)) && strtolower(substr($acronym, 1, 1)) === substr($after, -1)) { // utf8
-				$users = vfs('real_getDirContent',array($acronymUrl));
+				$users = vfs('real_getDirContent', array($acronymUrl));
 				foreach ($users as $userUrl) {
 					$user = basename($userUrl);
 					if (isset($count) && $count <= $counted) {
@@ -727,7 +728,7 @@ function service_um_getAllUsersBy ($params = '') {
 * @return Returns an array containing the names of all the users of the group.
 * @date 2009/05/04
 */
-function service_um_getAllUsersByGroup ($params = null) {
+function service_um_getAllUsersByGroup($params = null) {
 	//I am forcing the group to be specified in the 'group' key in
 	//case this function is expanded in the future
 	if(!is_array($params) || empty($params['group'])) {
@@ -741,12 +742,12 @@ function service_um_getAllUsersByGroup ($params = null) {
 
 	$allUsers = array();
 	$group = $params['group'];
-	$acronyms = vfs('real_getDirContent',array(EYE_ROOT . '/' . USERS_DIR . '/'));
+	$acronyms = vfs('real_getDirContent', array(EYE_ROOT . '/' . USERS_DIR . '/'));
 	foreach($acronyms as $acronymUrl) {
 		if (is_dir($acronymUrl)) {
 			$acronym = basename($acronymUrl);
 
-			$users = vfs('real_getDirContent',array($acronymUrl));
+			$users = vfs('real_getDirContent', array($acronymUrl));
 			foreach ($users as $userUrl) {
 				$user = basename($userUrl);
 				$userInfo = eyeConfig('getUserConfig', array($user));
@@ -768,12 +769,12 @@ function service_um_getAllUsersByGroup ($params = null) {
 * @return Returns an string containing the path.
 * @date 2008/03/11
 */
-function service_um_getCurrentUserDir () {
+function service_um_getCurrentUserDir() {
 	global $currentUser;
 	if(!$currentUser) { //if something fails, this is secure
 		return false;
 	}
-	return um('getUserDir',array($currentUser));
+	return um('getUserDir', array($currentUser));
 }
 
 /**
@@ -803,7 +804,7 @@ function service_um_checkAdminPermissions() {
 * @exception INCORRECT_PARAMS No username is specified.
 * @date 2008/03/11
 */
-function service_um_getUserDir ($params=null) {
+function service_um_getUserDir($params=null) {
 	if($params == null || count($params) < 1){
 		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
@@ -830,7 +831,7 @@ function service_um_getUserDir ($params=null) {
 */
 function service_um_getUserFilePath($params=null) {
 	if($params == null || count($params) < 1){
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
 	}
 	
@@ -864,11 +865,11 @@ function service_um_getUserFilePath($params=null) {
 *
 * Last update 2007-06-3
 ***/
-function getAcronim ($params){
+function getAcronim($params) {
 	 
 	$username = $params[0];
 	if(!$username) {
-		errorCodes('setErrorCode',array(INCORRECT_PARAMS));
+		errorCodes('setErrorCode', array(INCORRECT_PARAMS));
 		return false;
 	}
 	//Generate de dir, remove $userDir ? maybe.
@@ -876,7 +877,7 @@ function getAcronim ($params){
 }
 
 //TODO: shall we put this function in eyeLib ?
-function recursiveCopy ($from, $to, $include_hidden = FALSE) {
+function recursiveCopy($from, $to, $include_hidden = FALSE) {
 	global $currentUser;
 	if($currentUser != ROOTUSER) {
 		return false;
@@ -897,5 +898,35 @@ function recursiveCopy ($from, $to, $include_hidden = FALSE) {
 		}
 		closedir($gestor);
 	}
+}
+
+function _service_um_hashPassword(&$array, $password) {
+	if (isset($array['password'])) {
+		unset($array['password']);
+	}
+	if (function_exists('password_hash') && !SECURE_LOGIN) {
+		$array['password_hash'] = array(password_hash($password, PASSWORD_DEFAULT, array('cost' => PASSWORD_HASH_COST)));
+	} else {
+		$array['password'] = array(md5($password . md5($password)));
+	}
+}
+
+function _service_um_rehashPassword($array, $password) {
+	global $currentUser;
+	
+	if (isset($array['password_hash']) && password_needs_rehash($array['password_hash'][0], PASSWORD_DEFAULT, array('cost' => PASSWORD_HASH_COST)) || !isset($array['password_hash']) && function_exists('password_hash') && !SECURE_LOGIN) {
+		$oldUser = $currentUser;
+		$currentUser = ROOTUSER;
+		um('updateUser', array(
+			'username' => $array['username'][0],
+			'password' => $password
+		));
+		$currentUser = $oldUser;
+	}
+}
+
+function _service_um_validatePassword($array, $password) {
+	return isset($array['password_hash']) && password_verify($password, $array['password_hash'][0])
+		|| isset($array['password']) && hash_equals($array['password'][0], md5($password . md5($password)));
 }
 ?>
