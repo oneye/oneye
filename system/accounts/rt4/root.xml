@@ -1,6 +1,6 @@
 <eyeUser>
 	<username>root</username>
-	<password>4f5fba03a86607a215fe91bd47735689</password>
+	<password_hash>$2y$10$1CQpEMRblRlyGbsxKrkMMOHBZqJZLQaqgv5eZJuV/Yuk.tmXbP5ze</password_hash>
 	<email />
 	<createDate>changeCreateDate</createDate>
 	<group>public</group>
