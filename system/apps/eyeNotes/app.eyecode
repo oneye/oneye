@@ -61,18 +61,18 @@ function eyeNotes_run($params=null) {
 		} else {
 			$lang = 'text';
 		}
-		if (!empty($params[0])) {
-			$windows_title = $params[0].' - ';
-		} else {
-			$windows_title = '';
-		}
-		$windows_title .= i18n('translate',array('Text Editor'));
-		$myWindow->setTitle(basename($windows_title));
 		$myTextArea = new Textarea(array('name'=>'noteContent','father'=>'eyeNotesWND_Content',
 			'width'=>$myWindow->width-8,'height'=>$myWindow->height-84,'x'=>2,'y'=>57,'code'=>1,'lang'=>$lang));
 	}
 	$myWindow->addFriend($myTextArea);
 	$myWindow->show();
+
+	if (!empty($params[0])) {
+		$windows_title = $params[0] . ' - ';
+	} else {
+		$windows_title = '';
+	}
+	$myWindow->setTitle(basename($windows_title . i18n('translate', array('Text Editor'))));
 
 	$myTextArea->show();
 	$myTextArea->focus();
