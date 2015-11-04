@@ -57,7 +57,17 @@ define('EYEFTP_WINSIZE_HEIGHT', 600);
 function eyeFTP_run($params=null) {
 	global $checknum, $myPid;
 
-	eyeX('messageBox',array('content'=>'Welcome to eyeFTP!'));
+	if (!function_exists('ftp_connect')) {
+		eyex('messageBox', array(
+			'content' => 'You cannot run eyeFTP. The server\'s administrator needs to activate the PHP extension for FTP first.',
+			'img' => 'x',
+			'title' => 'eyeFTP',
+			'type' => 3,
+			'win_name' => 'eyeFTP_Window',
+			'win_style' => CLOSE + LISTED + MIN + TITLE
+		));
+		return;
+	}
 
 	$mainWindow = new Window(array(
 		'name' => 'eyeFTP_WND',
