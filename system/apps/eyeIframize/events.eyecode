@@ -75,8 +75,12 @@ function eyeIframize_on_Do($params = '') {
 		'width' => $window_width
 	));
 	$myWindow->show();
-	$myWindow->setHeight($window_height);
-	$myWindow->setWidth($window_width);
+	if (!empty($params[3])) {
+		$myWindow->setHeight($window_height);
+	}
+	if (!empty($params[2])) {
+		$myWindow->setWidth($window_width);
+	}
 	if ($start_maximized == TRUE) {
 		eyex('runjs', array('js' => "Windows.Maximize('".$myPid."_".$myWindow->name."');"));
 	}
