@@ -102,7 +102,7 @@ function editLink_run($params = '') {
 		));
 		$mySelect1->show();
 		$mySelect1->addEvent('onchange','document.getElementById("' . $myPid . '_editLink_Imagebox").src="index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/48x48/" + this.value + ".png";');
-		$files = scandir(eyex('getThemeImage',array('icons/48x48/',2)));
+		$files = scandir(EYE_ROOT . '/' . EXTERN_DIR . '/' . THEMES_DIR . '/default/icons/48x48');
 		foreach ($files as $file) {
 			if (strtolower(substr($file, -4)) === '.png') { // utf8
 				if ($file == $xml['eyeLink'][0]['icon'][0] . '.png') {
