@@ -318,7 +318,7 @@ function eyeDock_on_ChangeImage($params = '') {
 
 	eyex('rawjs', array('js' => 'var e = document.getElementById("' . $myPid . '_ChangeImage_window_Imagebox"); e.style.height = "22px"; e.style.marginLeft = "14px"; e.style.marginTop = "14px"; e.style.width = "22px";'));
 	$mySelect->addEvent('onchange','document.getElementById("' . $myPid . '_ChangeImage_window_Imagebox").src = this.value;');
-	foreach (vfs('real_getDirContent', array(eyex('getThemeImage',array('icons/22x22/', 2)))) as $file) {
+	foreach (vfs('real_getDirContent', array(EYE_ROOT . '/' . EXTERN_DIR . '/' . THEMES_DIR . '/default/icons/22x22')) as $file) {
 		if (strtolower(substr($file, -4)) === '.png') { // utf8
 			$url = 'index.php?theme=' . $_SESSION['usertheme'] . '&extern=icons/22x22/' . basename($file);
 			if ($url == $text) {
