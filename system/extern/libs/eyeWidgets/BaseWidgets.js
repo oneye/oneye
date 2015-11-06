@@ -2471,7 +2471,7 @@ function Textarea_show(params, name, father, x, y, horiz, vert, checknum, cent) 
 			title: params.i18nOpenFile || 'Open File',
 			image: 'index.php?extern=libs/eyeWidgets/tiny_mce/themes/advanced/img/open.png',
 			onclick: function () {
-				sendMsg(checknum, 'Open', '');
+				sendMsg(checknum, 'Open', eyeParam(name.substring(6), Base64.encode(txtAreas[name + '_objTxt'].getContent())) + eyeParam('md5', md5(txtAreas[name + '_objTxt'].getContent())));
 			}
 		});
 		txtAreas[name + '_objTxt'].addButton('saveAs', {

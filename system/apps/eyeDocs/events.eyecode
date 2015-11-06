@@ -17,20 +17,68 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 require_once(EYE_ROOT.'/'.APP_DIR.'/eyeDocs/lib'.EYE_CODE_EXTENSION);
 
 function eyeDocs_on_Open($params=null) {
+	/*$content = $GLOBALS['fileContent']->text;
+	$crc = $params['md5'][0];
+	$filecrc = md5($content);
+	if($filecrc != $crc) {
+		eyeX('messageBox',array('content' => 'Error - Document not saved. Please try again.'));
+		return;
+	}*/
+	$md5 = md5($GLOBALS['fileContent']->text);
+	if ((isset($GLOBALS['fileMD5']) === false || $md5 != $GLOBALS['fileMD5']->text) && !empty($GLOBALS['fileContent']->text)) {
+		eyex('messageBox',array(
+			'content' => 'Do you want to save changes?',
+			'type' => 3,
+			'title' => 'Delete warning',
+			'win_name' => 'delete_warning',
+			'win_style' => TITLE + MIN + CLOSE,
+			'btn1_capt' => 'Save',
+			'btn1_name' => 'Open_Save',
+			'btn2_capt' => 'Don\'t save',
+			'btn2_name' => 'Open_DoNotSave',
+			'btn3_capt' => 'Cancel',
+			'btn3_name' => 'Open_Cancel',
+			'img' => '?',
+			'win_removepid' => 0
+		));
+	} else {
+		eyeDocs_on_Open_DoNotSave();
+	}
+}
+
+function eyeDocs_on_Open_Cancel() {
+	if (is_object($GLOBALS['delete_warning'])) {
+		$GLOBALS['delete_warning']->close();
+	}
+}
+
+function eyeDocs_on_Open_DoNotSave() {
 	global $checknum;
-	$options = array(
+	
+	eyeDocs_on_Open_Cancel();
+	
+	proc('launch', array('eyeDialog', array(
 		EYEDIALOG_TYPE_OPENFILE,
 		'SelectFileOpen',
 		$checknum,
 		'',
-		array(
+		array (
 			'All files' => '*.*',
 			'oneye document file' => '*.eyedoc',
 			'MS Word document file' => '*.doc',
 			'Open Document Text file' => '*.odt'
 		)
-	);
-	proc('launch',array('eyeDialog',$options));
+	)));
+}
+
+function eyeDocs_on_Open_Save() {
+	eyeDocs_on_Open_Cancel();
+	
+	if (is_object($GLOBALS['filePath']) && $GLOBALS['filePath']->text) {
+		eyeDocs_saveFile($GLOBALS['fileContent']->text);
+	}
+	
+	eyeDocs_on_Open_DoNotSave();
 }
 
 function eyeDocs_on_SelectFileOpen($params=null) {

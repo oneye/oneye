@@ -17,26 +17,6 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 require_once(EYE_ROOT.'/'.APP_DIR.'/eyeDocs/lib'.EYE_CODE_EXTENSION);
 
 function eyeDocs_run($params=null) {
-	//create the title, executing translate over it because its a dinamyc string.
-	$title = i18n('translate',array('Word Processor'));
-	//check if a file has been passed as an argument
-	$content = '';
-	if (isset($params[0]) === true) {
-		//get the filename
-		$file = $params[0];
-
-		//if the file doesn't exists, show a messagebox informing the user, else
-		//read the file etc.
-		if(!vfs('fileExists',array($file))) {
-			eyeX('messageBox',array('content' => 'The file does not exist.'));
-		} else {
-			//set the filename in the title
-			$title = basename($file).' - '.$title;
-
-			//open the file, get the contents, and save the path
-			$content = eyeDocs_openFile($file);
-		}
-	}
 	//create the main window
 	$myWindow = new Window(array(
 		'name'=>'eyeDocsWND',
@@ -44,7 +24,7 @@ function eyeDocs_run($params=null) {
 		'cent'=>1,
 		'width'=>780,
 		'height'=>550,
-		'title'=>$title,
+		'title' => i18n('translate', array('Word Processor')),
 		'sendResizeMsg'=>1,
 		'sigResize'=>'Resize',
 		'removeWin'=>2,
@@ -61,8 +41,7 @@ function eyeDocs_run($params=null) {
 		'height'=>$myWindow->height-34,
 		'x'=>0,
 		'y'=>0,
-		'rich'=>2,
-		'text'=>$content
+		'rich'=>2
 	));
 
 	//the window should be friend of the textarea, to get the final contents when closing
@@ -73,6 +52,24 @@ function eyeDocs_run($params=null) {
 
 	$myWindow->show();
 	$myTextArea->show();
+
+	$GLOBALS['eyeDocsWND'] = $myWindow;
+
+	//check if a file has been passed as an argument
+	$content = '';
+	if (isset($params[0]) === true) {
+		//get the filename
+		$file = $params[0];
+
+		//if the file doesn't exists, show a messagebox informing the user, else
+		//read the file etc.
+		if(!vfs('fileExists',array($file))) {
+			eyeX('messageBox',array('content' => 'The file does not exist.'));
+		} else {
+			//open the file, get the contents, and save the path
+			$myTextArea->setText(eyeDocs_openFile($file));
+		}
+	}
 
 	eyeDocs_updateServerContent();
 
