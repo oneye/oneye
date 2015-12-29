@@ -52,7 +52,7 @@ class weekPlanner {
 	var $defaultEvenText;
 	var $calendarsText;
 	var $notes = array();
-	function weekPlanner($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

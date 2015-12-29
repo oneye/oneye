@@ -50,7 +50,7 @@ class Tab {
 
 	var $myTabs=array();
 	//constructor
-	function Tab($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

@@ -52,7 +52,7 @@ class Imagebox {
 	var $signal;
 
 	//constructor
-	function Imagebox($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

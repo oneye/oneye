@@ -60,7 +60,7 @@ class Button {
 	var $imgHeight;
 
 	//constructor
-	function Button($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

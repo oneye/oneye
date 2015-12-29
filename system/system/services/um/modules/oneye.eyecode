@@ -526,10 +526,12 @@ function service_um_login($params = null) {
 	$password = $params[1];
 
 	global $currentUser;
-	if (um('UserIsAdmin', array($currentUser))) {
-		define('ROOTUSER', $currentUser);
-	} else {
-		define('ROOTUSER', REAL_ROOTUSER);
+	if (!defined('ROOTUSER')) {
+		if (um('UserIsAdmin', array($currentUser))) {
+			define('ROOTUSER', $currentUser);
+		} else {
+			define('ROOTUSER', REAL_ROOTUSER);
+		}
 	}
 
 	//special suid

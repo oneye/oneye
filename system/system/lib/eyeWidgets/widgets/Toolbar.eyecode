@@ -38,7 +38,7 @@ class Toolbar {
 	var $friends = array();
 	var $showed = 0;
 
-	function Toolbar($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

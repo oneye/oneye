@@ -40,7 +40,7 @@ class Flash {
 	var $flashParamsNames;
 	var $flashParamsValues;
 	//constructor
-	function Flash($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

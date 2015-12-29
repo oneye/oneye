@@ -25,7 +25,7 @@ class ContextMenu {
 	var $sFather;
 	var $mFather;
 
-	function ContextMenu($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

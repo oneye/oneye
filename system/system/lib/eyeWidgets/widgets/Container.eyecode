@@ -42,7 +42,7 @@ class Container {
 	var $height;
 	var $unit;
 
-	function Container($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

@@ -38,7 +38,7 @@ class widgetDrop {
 	var $sender;
 	var $mySelf;
 
-	function widgetDrop($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 

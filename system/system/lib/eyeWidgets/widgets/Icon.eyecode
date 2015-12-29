@@ -59,7 +59,7 @@ class Icon {
 	var $overClass;
 	var $useClass;
 
-	function Icon($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

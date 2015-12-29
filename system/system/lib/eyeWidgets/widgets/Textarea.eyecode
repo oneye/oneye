@@ -47,7 +47,7 @@ class Textarea {
 	var $cols;
 	var $cssClass;
 
-	function Textarea($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

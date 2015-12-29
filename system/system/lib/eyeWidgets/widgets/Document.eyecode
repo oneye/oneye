@@ -19,7 +19,7 @@ class Document {
 	var $docType;
 	var $name;
 
-	function Document($params) {
+	function __construct($params) {
 		$this->name=$params['name'];
 		isset($params['docType']) ? $this->docType = $params['docType'] : $this->docType='';
 	}

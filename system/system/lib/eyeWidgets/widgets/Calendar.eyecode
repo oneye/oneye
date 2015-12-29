@@ -58,7 +58,7 @@ class Calendar{
 	var $drawServerDate;
 	var $drawHighlight;
 	var $startMonday;
-	function Calendar($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

@@ -44,7 +44,7 @@ class Tree {
 	//firends abstraction
 	var $friends="''";
 
-	function Tree($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default
@@ -252,7 +252,7 @@ class TreeSelected {
 	var $selected;
 	var $name;
 
-	function TreeSelected($params) {
+	function __construct($params) {
 		$this->name = $params['name'];
 		$this->selected="";
 	}

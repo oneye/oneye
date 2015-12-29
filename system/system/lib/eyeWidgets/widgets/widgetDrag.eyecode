@@ -41,7 +41,7 @@ class widgetDrag {
 	var $x;
 	var $y;
 
-	function widgetDrag($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 

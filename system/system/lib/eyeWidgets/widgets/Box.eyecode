@@ -43,7 +43,7 @@ class Box {
 	var $fixed;
 	var $titleCss;
 
-	function Box($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

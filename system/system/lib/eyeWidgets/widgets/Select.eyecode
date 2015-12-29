@@ -47,7 +47,7 @@ class Select {
 	var $events;
 	var $selected;
 
-	function Select($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

@@ -18,8 +18,6 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 if (defined('UTF8_TYPE') === false) {
 	if (extension_loaded('mbstring') === true) {
 		define('UTF8_TYPE', 'mbstring');
-	} else if (extension_loaded('iconv') === true) {
-		define('UTF8_TYPE', 'iconv');
 	} else {
 		define('UTF8_TYPE', 'native');
 	}

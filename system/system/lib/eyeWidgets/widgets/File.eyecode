@@ -38,7 +38,7 @@ class File {
 	var $callback;
 	var $multiple;
 	//constructor
-	function File($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

@@ -73,7 +73,7 @@ class System_SharedMemory_File extends System_SharedMemory_Common
      *
      * @access public
      */
-    function System_SharedMemory_File($options)
+    function __construct($options)
     {
         $this->_options = $this->_default($options, array
         (

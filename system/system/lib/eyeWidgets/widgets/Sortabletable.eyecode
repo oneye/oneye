@@ -49,7 +49,7 @@ class Sortabletable {
 	var $sizeUnit;
 	var $master;
 	var $signal;
-	function Sortabletable($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default
@@ -281,7 +281,7 @@ class SortabletableSelected {
 	var $sortypes;
 	var $x;
 	var $y;
-	function SortabletableSelected($params) {
+	function __construct($params) {
 		$this->name = $params['name'];
 		$this->width = $params['width'];
 		$this->height = $params['height'];

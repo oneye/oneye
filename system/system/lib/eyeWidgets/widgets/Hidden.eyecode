@@ -39,7 +39,7 @@ class Hidden {
 	//custom widget options
 	var $text;
 
-	function Hidden($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

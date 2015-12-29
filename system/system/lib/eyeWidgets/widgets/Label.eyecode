@@ -51,7 +51,7 @@ class Label {
 	var $signal;
 
 	//function Label($name,$content,$father,$cent=0,$x=40,$y=40,$horiz=0,$vert=0,$visible=1,$color="") {
-	function Label($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

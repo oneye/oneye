@@ -47,7 +47,7 @@ class Listbox {
     var $disableMsg;
     var $selected;
     
-	function Listbox($params) {
+	function __construct($params) {
 		if(!is_array($params)){
 			//TODO: put this error handler in all widgets an use errorLib
 			return false;

@@ -115,7 +115,7 @@ class Window {
 	var $x;
 	var $y;
 
-	function Window($params) {
+	function __construct($params) {
 		global $myPid;
 		global $procInfo;
 		$this->creatorPid = $myPid;

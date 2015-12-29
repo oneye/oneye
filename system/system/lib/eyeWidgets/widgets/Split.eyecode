@@ -47,7 +47,7 @@ class Split {
 	var $sendResizeMsg;
 	var $sigResize;
 
-	function Split($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

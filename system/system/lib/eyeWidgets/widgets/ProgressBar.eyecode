@@ -41,7 +41,7 @@ class ProgressBar {
 	var $visible;
 	var $progress;
 
-	function ProgressBar($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

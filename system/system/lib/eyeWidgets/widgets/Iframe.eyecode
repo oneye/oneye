@@ -42,7 +42,7 @@ class Iframe {
 	var $height;
 	var $scroll;
 
-	function iFrame($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default

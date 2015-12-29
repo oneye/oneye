@@ -46,7 +46,7 @@ class Textbox {
 	var $text;
 	var $noborder;
 	var $align='left';
-	function Textbox($params) {
+	function __construct($params) {
 		global $myPid;
 		$this->creatorPid = $myPid;
 		//generic widget options without default
