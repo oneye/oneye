@@ -990,23 +990,26 @@ function service_vfs_getDirContent($params) {
 	if(isset($params[1])) {
 		$exp = $params[1];
 	} else {
-		$exp = '*';
+		$exp = '{,.}*';
 	}
 	$dirFiles = array();
 
-		$files = glob($dirToRead."/$exp");
-		if($files != false && is_array($files)){
-			foreach ($files as $fileName) {
-				$info = pathinfo($fileName);
+	$files = glob($dirToRead . "/$exp", GLOB_BRACE);
+	if ($files != false && is_array($files)) {
+		foreach ($files as $path) {
+			$file = basename($path); // utf8
+			if ($file !== '.' && $file !== '..') {
+				$info = pathinfo($path);
 				if (isset($info['extension']) === true && $info['extension'] === EYEOS_INFO_EXT) {
-					$xml = eyeXML('xml2array',array(file_get_contents($fileName)));
+					$xml = eyeXML('xml2array',array(file_get_contents($path)));
 					if($xml['eyeFile'][0]['filename'][0]) {
 						$dirFiles[] = $info['dirname'].'/'.$xml['eyeFile'][0]['filename'][0];
 					}
-				} else if ((is_dir($fileName) === true || isset($info['extension']) === true && $info['extension'] === EYEOS_LINK_EXT) && $fileName !== '.') {
-					$dirFiles[] = $fileName;
+				} else if ((is_dir($path) === true || isset($info['extension']) === true && $info['extension'] === EYEOS_LINK_EXT) && $path !== '.') {
+					$dirFiles[] = $path;
 				}
 			}
+		}
 	}
 	return $dirFiles;
 }
@@ -1642,13 +1645,16 @@ function service_vfs_real_getDirContent($params) {
 		return false;
 	}
 
-	isset($params[1]) ? $exp = $params[1] : $exp = '*';
+	isset($params[1]) ? $exp = $params[1] : $exp = '{,.}*';
 	$dirFiles = array();
 
-	$files = glob($dirToRead."/$exp");
+	$files = glob($dirToRead."/$exp", GLOB_BRACE);
 	if($files != false && is_array($files)){
-		foreach ($files as $fileName) {
-			$dirFiles[] = $fileName;
+		foreach ($files as $path) {
+			$file = basename($path); // utf8
+			if ($file !== '.' && $file !== '..') {
+				$dirFiles[] = $path;
+			}
 		}
 	}
 	return $dirFiles;
@@ -1693,13 +1699,16 @@ function service_vfs_real_getDirContent_group($params) {
 		return false;
 	}
 	//If we don't have regular expresion param, set * as default.
-	isset($params[1]) ? $exp = $params[1] : $exp = '*';
+	isset($params[1]) ? $exp = $params[1] : $exp = '{,.}*';
 	$dirFiles = array();
 
-	$files = glob($dirToRead."/$exp");
+	$files = glob($dirToRead . "/$exp", GLOB_BRACE);
 	if($files != false && is_array($files)){
-		foreach ($files as $fileName) {
-			$dirFiles[] = $fileName;
+		foreach ($files as $path) {
+			$file = basename($path); // utf8
+			if ($file !== '.' && $file !== '..') {
+				$dirFiles[] = $path;
+			}
 		}
 	}
 	return $dirFiles;
