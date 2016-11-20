@@ -32,17 +32,12 @@ function eyeSoft_on_Update($params=""){
 	// start with downloading script
 	$config = eyeXML('getXMLfile',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports.xml'));
 	foreach($config['eyePorts'][0]['mirrors'][0]['mirror'] as $value) {
-		$httpClient = eyeURL('getHTTPClient');
-		$httpClient->setURL($value);
-		$httpClient->sendRequest();
-		$content = $httpClient->getResponseBody();
+		$content = eyeURL('getRawFile', array('url' => $value));
 		$myServer = eyeXML('xml2array',array($content));
 		if (is_array($myServer) === true) {
 			foreach($myServer['eyePorts'][0]['portServer'] as $pValue) {
 				$myPname = basename($pValue['name'][0]);
-				$httpClient->setURL('http://'.$pValue['address'][0].$pValue['path'][0]);
-				$httpClient->sendRequest();
-				$pContent = $httpClient->getResponseBody();
+				$pContent = eyeURL('getRawFile', array('url' => 'https://' . $pValue['address'][0] . $pValue['path'][0]));
 				if(!file_exists(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/cache/'.$myPname.'.xml')) {
 					vfs('real_create',array(EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/cache/'.$myPname.'.xml'));
 				}
@@ -242,7 +237,7 @@ function eyeSoft_on_stepInstall($params=null) {
 	$info = getAppInformation($myApp);
 	$host = $info['address'][0];
 	$path = $info['path'][0].'/'.$info['filename'][0];
-	$url = "http://".$host.$path;
+	$url = "https://".$host.$path;
 	$fpath = EYE_ROOT.'/'.SYSTEM_DIR.'/'.SYSTEM_CONF_DIR.'/ports/swap/'.basename($info['filename'][0]);
 	vfs('real_putFileContent', array($fpath, eyeURL('getRawFile', array('url' => $url))));
 	if(md5_file($fpath) != $info['key'][0]) {

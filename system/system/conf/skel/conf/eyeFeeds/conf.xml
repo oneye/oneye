@@ -8,13 +8,13 @@
 				<id>2</id>
 				<type>feed</type>
 				<name>Blog</name>
-				<url>http://oneye-project.org/feed/</url>
+				<url>https://oneye-project.org/feed/</url>
 			</feed>
 			<feed>
 				<id>3</id>
 				<type>feed</type>
 				<name>Forums</name>
-				<url>http://forums.oneye-project.org/extern.php?action=feed&type=atom</url>
+				<url>https://forums.oneye-project.org/extern.php?action=feed&type=atom</url>
 			</feed>
 		</feed>
 	</base>
