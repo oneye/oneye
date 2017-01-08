@@ -168,6 +168,7 @@ function indexRequested(){
 function clientMobile(){
 	if(CHECK_MOBILE == 1) {
 		$mobileClients = array(
+			"android",
 			"midp",
 			"240x320",
 			"blackberry",
