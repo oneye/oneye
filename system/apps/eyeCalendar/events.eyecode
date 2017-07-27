@@ -439,8 +439,12 @@ function eyeCalendar_on_mainResize($params){
 function eyeCalendar_on_addNote($params="") {
 	//Creating the noteTime
 	$id = $params['id'][0];
-	if(!is_numeric($id)){
-		//TODO: send a remove command
+	if (!is_numeric($id)) {
+		eyeX('messageBox', array('content' => 'Failed technically. ID is not given or not numeric.'));
+		return false;
+	}
+	if (eyeCalendar('getCalendarName', array($params['calendar'][0])) === false) {
+		eyeX('messageBox', array('content' => 'Failed. You need to select a calendar first.'));
 		return false;
 	}
 	$date = getDate($GLOBALS['weekPlanner']->date);

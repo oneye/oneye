@@ -79,7 +79,7 @@ class weekPlanner {
 		isset($params['startMonday']) ? $this->startMonday = $params['startMonday'] : $this->startMonday = 1;
 		isset($params['parts']) ? $this->parts = $params['parts'] : $this->parts = 4;
 		isset($params['date']) ? $this->date = $params['date'] : $this->date = time();
-		isset($params['selectedCalendar']) ? $this->selectedCalendar = $params['selectedCalendar'] : $this->selectedCalendar = 'noCalendar';
+		isset($params['selectedCalendar']) && is_numeric($params['selectedCalendar']) ? $this->selectedCalendar = $params['selectedCalendar'] : $this->selectedCalendar = 'noCalendar';
 		isset($params['defaultEvenText']) ? $this->defaultEvenText = $params['defaultEvenText'] : $this->defaultEvenText = 'Add your event!';
 		isset($params['calendarsText']) ? $this->calendarsText = $params['calendarsText'] : $this->calendarsText = 'Calendars';
 		/*if($this->dayEven == $this->dayFrom+1 && $this->startMonday == 1 && $this->dayFrom != 0){

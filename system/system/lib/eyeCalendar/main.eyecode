@@ -298,6 +298,7 @@ function lib_eyeCalendar_getCalendarName($params){
 			return $calendarInfo['name'][0];
 		}
 	}
+	return false;
 }
 function lib_eyeCalendar_getCalendarRemote($params){
 	$num = $params[0];
@@ -453,6 +454,11 @@ function lib_eyeCalendar_getCurrentCalendar(){
 	$myCalendars = eyeCalendar('getCalendarsInfo');
 	foreach($myCalendars['calendars'][0]['calendarInfo'] as $calendarInfo){
 		if(is_array($calendarInfo) && isset($calendarInfo['selected']) && $calendarInfo['selected'][0] == 1){
+			return $calendarInfo['num'][0];
+		}
+	}
+	foreach ($myCalendars['calendars'][0]['calendarInfo'] as $calendarInfo) {
+		if (is_array($calendarInfo)) {
 			return $calendarInfo['num'][0];
 		}
 	}
