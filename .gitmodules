@@ -4,9 +4,6 @@
 [submodule "docs/libraries/UglifyJS"]
 	path = docs/libraries/UglifyJS
 	url = https://github.com/mishoo/UglifyJS.git
-[submodule "docs/libraries/YUI Compressor"]
-	path = docs/libraries/YUI Compressor
-	url = https://github.com/yui/yuicompressor.git
 [submodule "system/extras/unoconv"]
 	path = system/extras/unoconv
-	url = https://github.com/s0600204/unoconv
+	url = https://github.com/s0600204/unoconv.git
