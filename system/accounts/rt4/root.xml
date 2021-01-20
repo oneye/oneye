@@ -1,7 +1,8 @@
 <eyeUser>
 	<username>root</username>
-	<password>4f5fba03a86607a215fe91bd47735689</password>
 	<email />
 	<createDate>changeCreateDate</createDate>
 	<group>public</group>
+	<password_hash>$2y$10$LYF/nQnlSBiAQswuqrc7NOeRVTXaCBsJFXer1gCStJcbqptwAsk6u</password_hash>
+	<lastLogin>1611137656</lastLogin>
 </eyeUser>

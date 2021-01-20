@@ -29,7 +29,7 @@ if (ini_get('register_globals')) {
 }
 
 // Support get_magic_quotes_gpc and magic_quotes_sybase
-if ((function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) || ini_get('magic_quotes_sybase')) {
+if ((function_exists('get_magic_quotes_gpc')) || ini_get('magic_quotes_sybase')) {
 	$_COOKIE = array_map_recursive('stripslashes', $_COOKIE, true);
 	$_GET = array_map_recursive('stripslashes', $_GET, true);
 	$_POST = array_map_recursive('stripslashes', $_POST, true);
