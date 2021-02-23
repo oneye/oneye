@@ -69,7 +69,7 @@ define('XML_COMPAT',1);
 define('XML_PARSER','pure');
 define('ACL_SUPPORT',1);
 define('TIMEZONE','UTC'); // It must be a valid timezone identifier: http://www.php.net/manual/en/timezones.php
-//eyeDialog that defines should be moved to another place desinged for it.
+//eyeDialog that defines should be moved to another place designed for it.
 define('EYEDIALOG_TYPE_OPENFILE', 0);
 define('EYEDIALOG_TYPE_SAVEFILE', 1);
 define('EYEDIALOG_TYPE_SELECTFOLDER', 2);
