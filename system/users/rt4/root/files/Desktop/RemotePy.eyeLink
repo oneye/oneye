@@ -1,0 +1,7 @@
+<eyeLink>
+	<content>eyeIframize.app http://192.168.0.102:5000 900  500 1</content>
+	<icon>eyeFTP</icon>
+	<xArgs>
+		<winState>def</winState>
+	</xArgs>
+</eyeLink>

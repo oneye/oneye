@@ -31,7 +31,6 @@
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -39,6 +38,20 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="vue.rearranger.settings.migration" value="true" />
+  </component>
+  <component name="RunManager" selected="PHP Script.index.php">
+    <configuration name="index.php" type="JavascriptDebugType" temporary="true" nameIsGenerated="true" uri="http://localhost:63343/oneye/index.php" useBuiltInWebServerPort="true">
+      <method v="2" />
+    </configuration>
+    <configuration name="index.php" type="PhpLocalRunConfigurationType" factoryName="PHP Console" temporary="true" path="$PROJECT_DIR$/index.php">
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="PHP Script.index.php" />
+        <item itemvalue="JavaScript Debug.index.php" />
+      </list>
+    </recent_temporary>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -49,35 +62,9 @@
       <option name="presentableId" value="Default" />
       <updated>1611571707080</updated>
       <workItem from="1611571717325" duration="940000" />
-      <workItem from="1611902092843" duration="1219000" />
-      <workItem from="1613644324922" duration="1444000" />
-      <workItem from="1613718991212" duration="1223000" />
-      <workItem from="1614354356495" duration="649000" />
-      <workItem from="1614362738989" duration="1258000" />
-      <workItem from="1614405768899" duration="1906000" />
-      <workItem from="1614578164009" duration="5947000" />
-      <workItem from="1614609122241" duration="7471000" />
-      <workItem from="1614669880624" duration="5085000" />
-      <workItem from="1614697601464" duration="7102000" />
-      <workItem from="1614754155721" duration="3993000" />
-      <workItem from="1614782082552" duration="3128000" />
-      <workItem from="1614785390009" duration="2059000" />
-      <workItem from="1614840073991" duration="1602000" />
-      <workItem from="1614844349638" duration="705000" />
-      <workItem from="1614873079279" duration="1518000" />
-      <workItem from="1615106426302" duration="7162000" />
-      <workItem from="1615229870323" duration="2344000" />
-      <workItem from="1615388135476" duration="709000" />
-      <workItem from="1615476172993" duration="1941000" />
-      <workItem from="1615478172141" duration="2996000" />
-      <workItem from="1615908900339" duration="598000" />
-      <workItem from="1615909872312" duration="1911000" />
-      <workItem from="1615991419662" duration="4002000" />
-      <workItem from="1616078267490" duration="693000" />
-      <workItem from="1621411435426" duration="154000" />
-      <workItem from="1621411649636" duration="5795000" />
-      <workItem from="1621491965142" duration="10821000" />
-      <workItem from="1621515784282" duration="2686000" />
+      <workItem from="1614066135642" duration="1823000" />
+      <workItem from="1614068020361" duration="2457000" />
+      <workItem from="1614075618634" duration="62000" />
     </task>
     <servers />
   </component>
