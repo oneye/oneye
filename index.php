@@ -128,13 +128,16 @@ serviceLoading();
 $index = indexRequested();
 if($index !== false){
 	loadIndex($index);
-}elseif(clientMobile()){
+}
+/*
+elseif(clientMobile()){
 	if (mobileWithWebkit()) {
 		loadIndex('iphone');
 	} else {
 		loadIndex('mobile');
 	}
-}else{
+}*/
+else{
 	loadIndex('browser');
 }
 

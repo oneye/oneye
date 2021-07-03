@@ -1,0 +1,23 @@
+HelloWorld
+Contact
+Public Board
+Catching game
+eyeConsole
+Word Process
+FTP
+RSS
+File Manager
+Help
+Media Player
+internal message
+Navigator
+Text editor
+process manager
+spreadsheet
+presentation
+17/32
+
+type:
+NORMAL_WINDOW
+NOCLOSE 
+-> MAX cause (Window.eyecode)

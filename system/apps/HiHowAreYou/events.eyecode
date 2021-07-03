@@ -17,15 +17,8 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 // First we create the NAMEOFAPP_on_NAMEOFBUTTON function.
 // In this case, the application is HelloWorld and the
 // button is called "HelloWorld_Button":
-
-function HelloWorld_on_HelloWorld_Button($params = '') {
-	// Now we grab the current text from the Textbox...
-	$myCurrentText = $GLOBALS['HelloWorld_Textbox']->text;
-	// ... and we set it into the Label:
-	$GLOBALS['HelloWorld_Label']->setText($myCurrentText);
-	// Finally we clean the Textbox and focus at it again:
-	$GLOBALS['HelloWorld_Textbox']->setText('');
-	$GLOBALS['HelloWorld_Textbox']->focus();
+function HiHowAreYou_on_HiHowAreYou_Button($params = '') {
+	proc('end');
 }
 
 // If the application we are developing needs to send / receive
@@ -34,14 +27,14 @@ function HelloWorld_on_HelloWorld_Button($params = '') {
 // It is an automatic function and you can just copy it tp
 // your applications, which use messages by simply changing the
 // app's name in the function:
-function HelloWorld_on_Message($params = '') {
+function HiHowAreYou_on_Message($params = '') {
 	eyeWidgets('updateContent',$params);
 }
 
 // The NAMEOFAPP_on_Close() function will be executed every time
 // the user closes the application. We recommended you to always send
 // the close message to remove the application from the processes table.
-function HelloWorld_on_Close($params = '') {
+function HiHowAreYou_on_Close($params = '') {
 	proc('end');
 }
 ?>

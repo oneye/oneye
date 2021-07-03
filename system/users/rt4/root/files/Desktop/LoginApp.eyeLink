@@ -1,0 +1,7 @@
+<eyeLink>
+	<content>LoginApp.app</content>
+	<icon>eyeContacts</icon>
+	<xArgs>
+		<winState>def</winState>
+	</xArgs>
+</eyeLink>

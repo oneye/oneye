@@ -1,0 +1,10 @@
+<package>
+	<name>RegisterApp</name>
+	<category>Utilities</category>
+	<version>1.9</version>
+	<description>Test</description>
+	<author>me</author>
+	<license>AGPL</license>
+	<type>Application</type>
+	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/q.png</icon>
+</package>

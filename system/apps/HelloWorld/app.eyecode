@@ -22,7 +22,8 @@ function HelloWorld_run($params = '') {
 		'height' => 150,
 		'name' => 'HelloWorld_Window',
 		'title' => 'Example Application',
-		'width' => 250
+		'width' => 250,
+		'type' => NOCLOSE_WINDOW
 	));
 	$myWindow->show();
 

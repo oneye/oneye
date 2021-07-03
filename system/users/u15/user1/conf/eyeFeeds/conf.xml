@@ -1,0 +1,21 @@
+<eyeFeeds>
+	<base>
+		<feed>
+			<id>1</id>
+			<type>folder</type>
+			<name>oneye</name>
+			<feed>
+				<id>2</id>
+				<type>feed</type>
+				<name>Blog</name>
+				<url>https://oneye-project.org/feed/</url>
+			</feed>
+			<feed>
+				<id>3</id>
+				<type>feed</type>
+				<name>Forums</name>
+				<url>https://forums.oneye-project.org/extern.php?action=feed&type=atom</url>
+			</feed>
+		</feed>
+	</base>
+</eyeFeeds>

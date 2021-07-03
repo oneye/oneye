@@ -1,0 +1,82 @@
+<?php
+//if application folder name is HiHowAreYou (also name of this application)
+//then this function must be HiHowAreYou_run
+function HiHowAreYou_run($params = '') {
+	// First we create a new Window:
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => 100,
+		'name' => 'HiHowAreYou_Window',
+		'title' => 'Login',
+		'width' => 150,
+		'style' => TITLE + CLOSE +  MIN
+	));
+	$myWindow->show();
+	// Now we create the initial "Hello World!" Label:
+    	$mainLabel = new Label(array(
+    		'father' => 'HiHowAreYou_Window_Content',
+    		'name' => 'HiHowAreYou_Label',
+    		'text' => 'Login with username and password!',
+    		'x' => 20,
+    		'y' => 20
+    	));
+    	$mainLabel->show(0);
+
+    /* USER LABEL/TEXTBOX */
+    	$usernameLabel = new Label(array(
+    		'name' => 'username_LBL',
+    		'father' => 'HiHowAreYou_Window_Content',
+    		'x' => 20,//Increase = right move
+    		'y' => 50, //Increase = down move
+    		'text' => 'Username: '
+    	));
+    	$usernameLabel->show();
+    	$usernameTextbox = new Textbox(array(
+    		'name' => 'HiHowAreYou_username_textbox',
+    		'father' => 'HiHowAreYou_Window_Content',
+    		'x' => 90,
+    		'y' => 47,
+    		'width' => 110,
+    		'text' => 'anonymous'
+    	));
+    	$usernameTextbox->show();
+
+    	/* PASSWORD LABEL/TEXTBOX */
+    	$passwordLabel = new Label(array(
+    		'name' => 'password_LBL',
+    		'father' => 'HiHowAreYou_Window_Content',
+    		'x' => 20,
+    		'y' => 90,
+    		'text' => 'Password: '
+    	));
+    	$passwordLabel->show();
+
+    	$passwordTextbox = new Textbox(array(
+    		'name' => 'password_TXTBOX',
+    		'father' => 'HiHowAreYou_Window_Content',
+    		'x' => 90,
+    		'y' => 87,
+    		'width' => 80,
+    		'text' => 'eyeftp@eyeos.org',
+    		'password' => 1 //make text become dot to hide
+    	));
+    	$passwordTextbox->show();
+
+    	$myButton = new Button(array(
+            'caption' => 'Close',
+            'father' => 'HiHowAreYou_Window_Content',
+            'name' => 'HiHowAreYou_Button',
+            'x' => 20,
+            'y' => 80
+        ));
+        $myButton->show();
+        $myButton->addFriend($usernameTextbox);
+        $myButton->addFriend($passwordTextbox);
+
+}
+
+function HiHowAreYou_end($params = '') {
+	eyeWidgets('unserialize',$params);
+}
+?>
