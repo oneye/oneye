@@ -1,0 +1,157 @@
+<?php
+
+function RegisterApp_on_RegisterApp_connect_Button($params = '') {
+/*
+        //Define variables and initialize with empty values
+        $username_err = $password_err = $confirm_password_err = $address_err = "";
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        //Take variable from text box
+        $username = $GLOBALS['RegisterApp_username_textbox']->text;
+        $password = base64_decode($GLOBALS['RegisterApp_password_textbox']->text);
+        $confirm_password = base64_decode($GLOBALS['RegisterApp_confirm_password_textbox']->text);
+        $address = $GLOBALS['RegisterApp_address_textbox']->text;
+
+        // Attempt to connect to MySQL database
+        define('DB_SERVER', 'localhost:3306');
+        define('DB_USERNAME', 'root');
+        define('DB_PASSWORD', 'mysql');
+        define('DB_NAME', 'accounts');
+        $link = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
+        // Validate username
+        if(empty(trim($username))){
+            $username_err = "Please enter a username.";
+        }
+        else
+        {
+            // Prepare a select statement
+            $sql = "SELECT id FROM users WHERE username = ?";
+
+            if($stmt = mysqli_prepare($link, $sql))
+            {
+                // Bind variables to the prepared statement as parameters
+                mysqli_stmt_bind_param($stmt, "s", $param_username);
+
+                // Set parameters
+                $param_username = trim($username);
+
+                // Attempt to execute the prepared statement
+                if(mysqli_stmt_execute($stmt))
+                {
+                    // store result
+                    mysqli_stmt_store_result($stmt);
+
+                    if(mysqli_stmt_num_rows($stmt) == 1){
+                        $username_err = "This username is already taken.";
+                    } else{
+                        $username = trim($GLOBALS['RegisterApp_username_textbox']->text);
+                    }
+                }
+                else
+                {
+                    echo "Oops! Something went wrong. Please try again later.";
+                }
+
+                // Close statement
+                mysqli_stmt_close($stmt);
+            }
+        }
+
+        // Validate address
+        if(empty(trim($_POST["address"]))){
+            $address_err = "Please enter an IP address.";
+        }
+        else{
+            $address = trim($GLOBALS['RegisterApp_address_textbox']->text);
+        }
+
+        // Validate password
+        if(empty(trim($_POST["password"]))){
+            $password_err = "Please enter a password.";
+        } elseif(strlen(trim(base64_decode($GLOBALS['RegisterApp_password_textbox']->text))) < 6){
+            $password_err = "Password must have at least 6 characters.";
+        } else{
+            $password = trim(base64_decode($GLOBALS['RegisterApp_password_textbox']->text);
+        }
+
+        // Validate confirm password
+        if(empty(trim(base64_decode($GLOBALS['RegisterApp_password_textbox']->text))){
+            $confirm_password_err = "Please confirm password.";
+        } else{
+            $confirm_password = trim(base64_decode($GLOBALS['RegisterApp_password_textbox']->text);
+            if(empty($password_err) && ($password != $confirm_password)){
+                $confirm_password_err = "Password did not match.";
+            }
+        }
+
+        // Check input errors before inserting in database
+        if(empty($username_err) && empty($password_err) && empty($confirm_password_err)&& empty($address_err)){
+
+            // Prepare an insert statement
+            $sql = "INSERT INTO users (username, password, address) VALUES (?, ?, ?)";
+
+            if($stmt = mysqli_prepare($link, $sql)){
+                // Bind variables to the prepared statement as parameters
+                mysqli_stmt_bind_param($stmt, "sss", $param_username, $param_password, $param_address);
+
+                // Set parameters
+                $param_username = $username;
+                $param_password = password_hash($password, PASSWORD_DEFAULT); // Creates a password hash
+                $param_address  = $address;
+                // Attempt to execute the prepared statement
+                if(mysqli_stmt_execute($stmt)){
+                    // Redirect to login page
+                    header("location: login.php");
+                } else{
+                    echo "Something went wrong. Please try again later.";
+                }
+
+                // Close statement
+                mysqli_stmt_close($stmt);
+            }
+        }
+
+        // Close connection
+        mysqli_close($link);
+*/
+}
+
+
+function RegisterApp_on_getFile($params = '') {
+	$url = $GLOBALS['RegisterApp_Hidden']->text;
+	$file = basename($url);
+	$path = eyeFiles('cleanPath', array(substr(trim($url, '/\\'), 0, -strlen($file)))); // utf8
+	if (strtolower(substr($file, -4)) == '.swf') { // utf8
+		header('Content-type: application/x-shockwave-flash');
+	}
+	if ($path[1] == 'real') {
+		header('Content-Length: ' . vfs('real_filesize',array($path[0] . '/' . $file)));
+	} else {
+		header('Content-Length: ' . vfs('filesize',array($path[0] . '/' . $file)));
+	}
+	header('Accept-Ranges: bytes');
+	if ($path[1] == 'real') {
+		vfs('printFile',array($path[0] . '/' . $file));
+	} else {
+		vfs('readFile',array($path[0] . '/' . $file));
+	}
+	exit;
+}
+
+function RegisterApp_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function RegisterApp_on_Resize($params = '') {
+	$GLOBALS['RegisterApp_Window']->width = intval($params['arg'][0]);
+	$GLOBALS['RegisterApp_Window']->height = intval($params['arg'][1]);
+	$GLOBALS['RegisterApp_Iframe']->setHeight($GLOBALS['RegisterApp_Window']->height - 24);
+	$GLOBALS['RegisterApp_Iframe']->setWidth($GLOBALS['RegisterApp_Window']->width - 3);
+}
+
+function RegisterApp_on_RegisterApp_close_Button($params = ''){
+	proc('end');
+}
+
+?>

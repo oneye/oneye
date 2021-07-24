@@ -1,0 +1,135 @@
+<?php
+include_once(EYE_ROOT.'/'.APP_DIR.'/LoginApp/MeekroDB'.EYE_CODE_EXTENSION);
+
+
+function LoginApp_on_LoginApp_connect_Button($params = '') {
+    global $checknum,$myPid;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    DB::$user = 'root';
+    DB::$password = 'mysql';
+    DB::$dbName = 'accounts';
+    $username = $GLOBALS['LoginApp_username_textbox']->text;
+    $password = base64_decode($GLOBALS['LoginApp_password_textbox']->text);
+    $results = DB::query("SELECT id, username, password, address FROM users WHERE username = %s", $username);
+    if($results){
+        foreach ($results as $row) {}
+
+        if(password_verify($password, $row['password'])){
+            $GLOBALS['LoginApp_Window']->close();
+
+            $url = $row['address'];
+
+            if ((strtolower(substr($url, 0, 6)) !== 'ftp://')
+            && (strtolower(substr($url, 0, 7))  !== 'http://')
+            && (strtolower(substr($url, 0, 8))  !== 'https://'))
+            { // utf8
+                $file = basename($url);
+                $path = eyeFiles('cleanPath', array(substr(trim($url, '/\\'), 0, -strlen($file)))); // utf8
+                if (vfs('fileExists',array($path[0] . '/' . $file)) || $path[1] == 'real' && vfs('real_fileExists',array($path[0] . '/' . $file)))
+                {
+                    $myHidden = new Hidden(array(
+                        'father' => 'LoginApp_Window_Content',
+                        'name' => 'LoginApp_Hidden',
+                        'text' => $path[1] . '://' . $path[2] . '/' . $file
+                    ));
+                    $myHidden->show();
+                    $title = $file . ' - LoginApp';
+                    $url = 'index.php?checknum=' . $checknum . '&msg=getFile';
+                }
+            }
+
+            $window_width = $_SESSION['SCREEN']['eyeApps']['width'];
+            $window_height = $_SESSION['SCREEN']['eyeApps']['height'];
+
+            $newWindow = new Window(array(
+                'cent' => 1,
+                'father' => 'eyeApps',
+                'name' => 'LoginApp_Window',
+                'savePosition' => RELATIVE,
+                'sendResizeMsg' => 1,
+                'sigResize' => 'Resize',
+                'title' => 'Login App',
+                //'height' => $window_height,
+                //'width' => $window_width
+                'height' => maxHeight,
+                'width' => maxWidth
+            ));
+            $newWindow->show();
+
+            eyex('runjs', array('js' => "Windows.Maximize('".$myPid."_".$newWindow->name."');"));
+
+            $myIframe = new Iframe(array(
+                'father' => 'LoginApp_Window_Content',
+                'name' => 'LoginApp_Iframe',
+                //'height' => $newWindow->height - 24,
+                //'width' => $newWindow->width - 3,
+                'height' => $newWindow->height,
+                'width' => $newWindow->width,
+                'url' => $url,
+                'x' => 0,
+                'y' => 0
+            ));
+            $myIframe->show();
+            $myIframe->focus();
+        }
+        else
+        {
+            $GLOBALS['LoginApp_Label']->setText('Wrong Password, try again!');
+            $GLOBALS['LoginApp_password_textbox']->setText('');
+            $GLOBALS['LoginApp_username_textbox']->setText('');
+            $GLOBALS['LoginApp_username_textbox']->focus();
+
+
+        }
+    }
+    else
+    {
+        $GLOBALS['LoginApp_Label']->setText('Username is not available, try again!');
+        $GLOBALS['LoginApp_password_textbox']->setText('');
+        $GLOBALS['LoginApp_username_textbox']->setText('');
+        $GLOBALS['LoginApp_username_textbox']->focus();
+    }
+
+
+
+}
+
+
+function LoginApp_on_getFile($params = '') {
+	$url = $GLOBALS['LoginApp_Hidden']->text;
+	$file = basename($url);
+	$path = eyeFiles('cleanPath', array(substr(trim($url, '/\\'), 0, -strlen($file)))); // utf8
+	if (strtolower(substr($file, -4)) == '.swf') { // utf8
+		header('Content-type: application/x-shockwave-flash');
+	}
+	if ($path[1] == 'real') {
+		header('Content-Length: ' . vfs('real_filesize',array($path[0] . '/' . $file)));
+	} else {
+		header('Content-Length: ' . vfs('filesize',array($path[0] . '/' . $file)));
+	}
+	header('Accept-Ranges: bytes');
+	if ($path[1] == 'real') {
+		vfs('printFile',array($path[0] . '/' . $file));
+	} else {
+		vfs('readFile',array($path[0] . '/' . $file));
+	}
+	exit;
+}
+
+function LoginApp_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function LoginApp_on_Resize($params = '') {
+	$GLOBALS['LoginApp_Window']->width = intval($params['arg'][0]);
+	$GLOBALS['LoginApp_Window']->height = intval($params['arg'][1]);
+	$GLOBALS['LoginApp_Iframe']->setHeight($GLOBALS['LoginApp_Window']->height - 24);
+	$GLOBALS['LoginApp_Iframe']->setWidth($GLOBALS['LoginApp_Window']->width - 3);
+}
+
+function LoginApp_on_LoginApp_close_Button($params = ''){
+	proc('end');
+}
+
+?>

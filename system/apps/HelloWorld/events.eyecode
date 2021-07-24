@@ -17,6 +17,7 @@ Copyright © 2005 - 2010 eyeos Team (team@eyeos.org)
 // First we create the NAMEOFAPP_on_NAMEOFBUTTON function.
 // In this case, the application is HelloWorld and the
 // button is called "HelloWorld_Button":
+
 function HelloWorld_on_HelloWorld_Button($params = '') {
 	// Now we grab the current text from the Textbox...
 	$myCurrentText = $GLOBALS['HelloWorld_Textbox']->text;

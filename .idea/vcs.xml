@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/docs/libraries/JSLint" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/docs/libraries/UglifyJS" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/system/extras/unoconv" vcs="Git" />
+  </component>
+</project>

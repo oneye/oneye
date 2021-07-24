@@ -136,6 +136,7 @@ class Textbox {
 		} else {
 			return 'eyeParam("' . $this->name . '",xGetElementById("' . $myPid . '_' . $this->name . '").value)';
 		}
+
 	}
 
 	//set properties functions

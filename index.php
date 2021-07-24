@@ -29,17 +29,17 @@ if (ini_get('register_globals')) {
 }
 
 // Support get_magic_quotes_gpc and magic_quotes_sybase
-if ((function_exists('get_magic_quotes_gpc') && get_magic_quotes_gpc()) || ini_get('magic_quotes_sybase')) {
-	$_COOKIE = array_map_recursive('stripslashes', $_COOKIE, true);
-	$_GET = array_map_recursive('stripslashes', $_GET, true);
-	$_POST = array_map_recursive('stripslashes', $_POST, true);
-	$_REQUEST = array_map_recursive('stripslashes', $_REQUEST, true);
-}
+//if ((function_exists('get_magic_quotes_gpc')) || ini_get('magic_quotes_sybase')) {
+//	$_COOKIE = array_map_recursive('stripslashes', $_COOKIE, true);
+//	$_GET = array_map_recursive('stripslashes', $_GET, true);
+//	$_POST = array_map_recursive('stripslashes', $_POST, true);
+//	$_REQUEST = array_map_recursive('stripslashes', $_REQUEST, true);
+//}
 
 // Support magic_quotes_runtime
-if (ini_get('magic_quotes_runtime') && function_exists('set_magic_quotes_runtime')) {
-	@set_magic_quotes_runtime(0);
-}
+//if (ini_get('magic_quotes_runtime') && function_exists('set_magic_quotes_runtime')) {
+//	@set_magic_quotes_runtime(0);
+//}
 
 /**
  * Applies the callback to the elements of the given arrays recursive
@@ -128,14 +128,18 @@ serviceLoading();
 $index = indexRequested();
 if($index !== false){
 	loadIndex($index);
-}elseif(clientMobile()){
+}
+/* If want to use remote control on mobile, need to open browser user interface
+elseif(clientMobile()){
 	if (mobileWithWebkit()) {
 		loadIndex('iphone');
-	} else {
+	}
+	else {
 		loadIndex('mobile');
 	}
-}else{
-	loadIndex('browser');
+}*/
+else{
+	loadIndex('browser'); // Always open browser front-end to use remote control
 }
 
 
@@ -225,7 +229,7 @@ function loadStringLibrary(){
 }
 
 /*
-*Set the oneye debuggin, at the moment only changes
+*Set the oneye debugging, at the moment only changes
 *the error_reporting, but may change more things in the future.
 */
 function setPhpInitDebug(){

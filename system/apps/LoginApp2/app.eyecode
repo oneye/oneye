@@ -1,0 +1,97 @@
+<?php
+//if application folder name is LoginApp2 (also name of this application)
+//then this function must be LoginApp2_run
+function LoginApp2_run($params = '') {
+	// First we create a new Window:
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => 200,
+		'name' => 'LoginApp2_Window',
+		'title' => 'Login',
+		'width' => 250,
+		'type' => FIXED_WINDOW
+	));
+	$myWindow->show();
+	// Now we create the initial "Hello World!" Label:
+    	$mainLabel = new Label(array(
+    		'father' => 'LoginApp2_Window_Content',
+    		'name' => 'LoginApp2_Label',
+    		'text' => 'Login with username and password!',
+    		'x' => 20,
+    		'y' => 20
+    	));
+    	$mainLabel->show(0);
+
+    /* USER LABEL/TEXTBOX */
+    	$usernameLabel = new Label(array(
+    		'name' => 'username_LBL',
+    		'father' => 'LoginApp2_Window_Content',
+    		'x' => 20,//Increase = right move
+    		'y' => 50, //Increase = down move
+    		'text' => 'Username: '
+    	));
+    	$usernameLabel->show();
+
+    	$usernameTextbox = new Textbox(array(
+    		'name' => 'LoginApp2_username_textbox',
+    		'father' => 'LoginApp2_Window_Content',
+    		'x' => 90,
+    		'y' => 47,
+    		'width' => 110,
+    		'text' => ''
+    	));
+    	$usernameTextbox->show();
+
+    	/* PASSWORD LABEL/TEXTBOX */
+    	$passwordLabel = new Label(array(
+    		'name' => 'password_LBL',
+    		'father' => 'LoginApp2_Window_Content',
+    		'x' => 20,
+    		'y' => 90,
+    		'text' => 'Password: '
+    	));
+    	$passwordLabel->show();
+
+    	$passwordTextbox = new Textbox(array(
+    		'name' => 'LoginApp2_password_textbox',
+    		'father' => 'LoginApp2_Window_Content',
+    		'x' => 90,
+    		'y' => 87,
+    		'width' => 110,
+    		'text' => '',
+    		'password' => 2 //make text become dot and hash it to hide
+    	));
+    	$passwordTextbox->show();
+
+    	$connectButton = new Button(array(
+            'caption' => 'Connect',
+            'father' => 'LoginApp2_Window_Content',
+            'name' => 'LoginApp2_connect_Button',
+            'x' => 50,
+            'y' => 120,
+            'width' => 60
+        ));
+        // The Textbox need to be a friend of the Button:
+        // So every time the user clicks the Button the Textbox
+        // text will be sent.
+        // A button can have as many friends as you want.
+        $connectButton->addFriend($usernameTextbox);
+        $connectButton->addFriend($passwordTextbox);
+        $connectButton->show();
+
+        $closeButton = new Button(array(
+            'caption' => 'Close',
+            'father' => 'LoginApp2_Window_Content',
+            'name' => 'LoginApp2_close_Button',
+            'x' => 140,
+            'y' => 120,
+            'width' => 60
+        ));
+        $closeButton->show();
+}
+
+function LoginApp2_end($params = '') {
+	eyeWidgets('unserialize',$params);
+}
+?>

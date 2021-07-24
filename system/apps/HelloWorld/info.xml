@@ -5,6 +5,6 @@
 	<description>Utility to show how to use the oneye Toolkit</description>
 	<author>oneye Team</author>
 	<license>AGPL</license>
-	<type>Utility</type>
+	<type>Application</type>
 	<icon>index.php?theme=USERTHEME&amp;extern=icons/48x48/rename.png</icon>
 </package>

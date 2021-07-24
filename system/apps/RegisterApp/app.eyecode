@@ -1,0 +1,135 @@
+<?php
+//if application folder name is RegisterApp (also name of this application)
+//then this function must be RegisterApp_run
+function RegisterApp_run($params = '') {
+	// First we create a new Window:
+	$myWindow = new Window(array(
+		'cent' => 1,
+		'father' => 'eyeApps',
+		'height' => 300,
+		'name' => 'RegisterApp_Window',
+		'title' => 'Register New Remote PC',
+		'width' => 350,
+		'type' => FIXED_WINDOW
+	));
+	$myWindow->show();
+	// Now we create the initial "Hello World!" Label:
+    	$mainLabel = new Label(array(
+    		'father' => 'RegisterApp_Window_Content',
+    		'name' => 'RegisterApp_Label',
+    		'text' => 'Register New Remote PC',
+    		'x' => 100,
+    		'y' => 20
+    	));
+    	$mainLabel->show(0);
+
+    /* USER LABEL/TEXTBOX */
+    	$usernameLabel = new Label(array(
+    		'name' => 'username_LBL',
+    		'father' => 'RegisterApp_Window_Content',
+    		'x' => 20,//Increase = right move
+    		'y' => 60, //Increase = down move
+    		'text' => 'Username: '
+    	));
+    	$usernameLabel->show();
+
+    	$usernameTextbox = new Textbox(array(
+    		'name' => 'RegisterApp_username_textbox',
+    		'father' => 'RegisterApp_Window_Content',
+    		'x' => 140,
+    		'y' => 57,
+    		'width' => 180,
+    		'text' => ''
+    	));
+    	$usernameTextbox->show();
+
+    	/* PASSWORD LABEL/TEXTBOX */
+    	$passwordLabel = new Label(array(
+    		'name' => 'password_LBL',
+    		'father' => 'RegisterApp_Window_Content',
+    		'x' => 20,
+    		'y' => 100,
+    		'text' => 'Password: '
+    	));
+    	$passwordLabel->show();
+
+    	$passwordTextbox = new Textbox(array(
+    		'name' => 'RegisterApp_password_textbox',
+    		'father' => 'RegisterApp_Window_Content',
+    		'x' => 140,
+    		'y' => 97,
+    		'width' => 180,
+    		'text' => '',
+    		'password' => 2 //make text become dot and hash it to hide
+    	));
+    	$passwordTextbox->show();
+
+    	/* CONFIRM PASSWORD LABEL/TEXTBOX */
+        $confirmpasswordLabel = new Label(array(
+            'name' => 'confirm_password_LBL',
+            'father' => 'RegisterApp_Window_Content',
+            'x' => 20,
+            'y' => 140,
+            'text' => 'Confirm Password: '
+        ));
+        $confirmpasswordLabel->show();
+
+        $confirmpasswordTextbox = new Textbox(array(
+            'name' => 'RegisterApp_confirm_password_textbox',
+            'father' => 'RegisterApp_Window_Content',
+            'x' => 140,
+            'y' => 137,
+            'width' => 180,
+            'text' => '',
+            'password' => 2 //make text become dot and hash it to hide
+        ));
+        $confirmpasswordTextbox->show();
+
+    	/* ADDRESS LABEL/TEXTBOX */
+        $addressLabel = new Label(array(
+            'name' => 'address_LBL',
+            'father' => 'RegisterApp_Window_Content',
+            'x' => 20,
+            'y' => 180,
+            'text' => 'Address: '
+        ));
+        $addressLabel->show();
+
+        $addressTextbox = new Textbox(array(
+            'name' => 'RegisterApp_address_textbox',
+            'father' => 'RegisterApp_Window_Content',
+            'x' => 140,
+            'y' => 177,
+            'width' => 180,
+            'text' => 'http://'
+        ));
+        $addressTextbox->show();
+
+    	$connectButton = new Button(array(
+            'caption' => 'Connect',
+            'father' => 'RegisterApp_Window_Content',
+            'name' => 'RegisterApp_connect_Button',
+            'x' => 80,
+            'y' => 225,
+            'width' => 80
+        ));
+
+        $connectButton->addFriend($usernameTextbox);
+        $connectButton->addFriend($passwordTextbox);
+        $connectButton->show();
+
+        $closeButton = new Button(array(
+            'caption' => 'Close',
+            'father' => 'RegisterApp_Window_Content',
+            'name' => 'RegisterApp_close_Button',
+            'x' => 190,
+            'y' => 225,
+            'width' => 80
+        ));
+        $closeButton->show();
+}
+
+function RegisterApp_end($params = '') {
+	eyeWidgets('unserialize',$params);
+}
+?>

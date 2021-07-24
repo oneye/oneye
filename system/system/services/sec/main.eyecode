@@ -84,13 +84,6 @@ function service_sec_start($params=null){
 	        }
 	    }
 	}
-
-	if (@get_magic_quotes_gpc() == 1) {
-		$_POST =multidimensionalArrayMap('stripslashes', $_POST);
-		$_REQUEST =multidimensionalArrayMap('stripslashes', $_REQUEST);
-		$_GET = multidimensionalArrayMap('stripslashes', $_GET);
-		$_COOKIE = multidimensionalArrayMap('stripslashes', $_COOKIE);
-	}
 }
 
 function multidimensionalArrayMap($func, $arr) {

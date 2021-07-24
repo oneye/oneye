@@ -1,0 +1,164 @@
+<?php
+
+
+
+function LoginApp2_on_LoginApp2_connect_Button($params = '') {
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //Take variable from text box
+    $username = $GLOBALS['LoginApp2_username_textbox']->text;
+    $password = base64_decode($GLOBALS['LoginApp2_password_textbox']->text);
+    /* Attempt to connect to MySQL database */
+    define('DB_SERVER', 'localhost:3306');
+    define('DB_USERNAME', 'root');
+    define('DB_PASSWORD', 'mysql');
+    define('DB_NAME', 'accounts');
+    $link = new mysqli(DB_SERVER, DB_USERNAME, DB_PASSWORD, DB_NAME);
+
+
+    // Prepare a select statement
+    $sql = "SELECT id, username, password, address FROM users WHERE username = ?";
+
+    if($stmt = mysqli_prepare($link, $sql)){
+        // Bind variables to the prepared statement as parameters
+        mysqli_stmt_bind_param($stmt, "s", $param_username);
+
+        // Set parameters
+        $param_username = $username;
+
+        // Attempt to execute the prepared statement
+        if(mysqli_stmt_execute($stmt)){
+            // Store result
+            mysqli_stmt_store_result($stmt);
+
+            // Check if username exists, if yes then verify password
+            if(mysqli_stmt_num_rows($stmt) == 1)
+            {
+                // Bind result variables
+                mysqli_stmt_bind_result($stmt, $id, $username, $hashed_password, $address);
+                if(mysqli_stmt_fetch($stmt))
+                {
+                    if(password_verify($password, $hashed_password)){
+                       $GLOBALS['LoginApp2_Window']->close(); //Close log in window
+                       global $checknum,$myPid;
+                       $url = $address;
+
+                       if ((strtolower(substr($url, 0, 6)) !== 'ftp://')
+                       && (strtolower(substr($url, 0, 7))  !== 'http://')
+                       && (strtolower(substr($url, 0, 8))  !== 'https://'))
+                       { // utf8
+                           $file = basename($url);
+                           $path = eyeFiles('cleanPath', array(substr(trim($url, '/\\'), 0, -strlen($file)))); // utf8
+                           if (vfs('fileExists',array($path[0] . '/' . $file)) || $path[1] == 'real' && vfs('real_fileExists',array($path[0] . '/' . $file)))
+                           {
+                               $myHidden = new Hidden(array(
+                                   'father' => 'LoginApp2_Window_Content',
+                                   'name' => 'LoginApp2_Hidden',
+                                   'text' => $path[1] . '://' . $path[2] . '/' . $file
+                               ));
+                               $myHidden->show();
+                               $title = $file . ' - LoginApp2';
+                               $url = 'index.php?checknum=' . $checknum . '&msg=getFile';
+                           }
+                       }
+
+                       $window_width = $_SESSION['SCREEN']['eyeApps']['width'];
+                       $window_height = $_SESSION['SCREEN']['eyeApps']['height'];
+
+                       $newWindow = new Window(array(
+                           'cent' => 1,
+                           'father' => 'eyeApps',
+                           'height' => $window_height,
+                           'name' => 'LoginApp2_Window',
+                           'savePosition' => RELATIVE,
+                           'sendResizeMsg' => 1,
+                           'sigResize' => 'Resize',
+                           'title' => 'Login App',
+                           'width' => $window_width
+                       ));
+                       $newWindow->show();
+
+                       eyex('runjs', array('js' => "Windows.Maximize('".$myPid."_".$newWindow->name."');"));
+
+                       $myIframe = new Iframe(array(
+                           'father' => 'LoginApp2_Window_Content',
+                           'name' => 'LoginApp2_Iframe',
+                           'height' => $newWindow->height - 24,
+                           'url' => $url,
+                           'width' => $newWindow->width - 3,
+                           'x' => 0,
+                           'y' => 0
+                       ));
+                       $myIframe->show();
+                       $myIframe->focus();
+
+
+                    } else
+                    {
+                         $GLOBALS['LoginApp2_Label']->setText('Wrong Password, try again!');
+                         $GLOBALS['LoginApp2_password_textbox']->setText('');
+                         $GLOBALS['LoginApp2_username_textbox']->setText('');
+                         $GLOBALS['LoginApp2_username_textbox']->focus();
+                    }
+                }
+            }
+            else
+            {
+                $GLOBALS['LoginApp2_Label']->setText('Username is not available, try again!');
+                $GLOBALS['LoginApp2_password_textbox']->setText('');
+                $GLOBALS['LoginApp2_username_textbox']->setText('');
+                $GLOBALS['LoginApp2_username_textbox']->focus();
+            }
+        }
+        else
+        {
+            $GLOBALS['LoginApp2_Label']->setText('Database is in maintenance, try again later!');
+            $GLOBALS['LoginApp2_password_textbox']->setText('');
+            $GLOBALS['LoginApp2_username_textbox']->setText('');
+            $GLOBALS['LoginApp2_username_textbox']->focus();
+        }
+
+        // Close statement
+        mysqli_stmt_close($stmt);
+    }
+    mysqli_close($link);
+}
+
+
+function LoginApp2_on_getFile($params = '') {
+	$url = $GLOBALS['LoginApp2_Hidden']->text;
+	$file = basename($url);
+	$path = eyeFiles('cleanPath', array(substr(trim($url, '/\\'), 0, -strlen($file)))); // utf8
+	if (strtolower(substr($file, -4)) == '.swf') { // utf8
+		header('Content-type: application/x-shockwave-flash');
+	}
+	if ($path[1] == 'real') {
+		header('Content-Length: ' . vfs('real_filesize',array($path[0] . '/' . $file)));
+	} else {
+		header('Content-Length: ' . vfs('filesize',array($path[0] . '/' . $file)));
+	}
+	header('Accept-Ranges: bytes');
+	if ($path[1] == 'real') {
+		vfs('printFile',array($path[0] . '/' . $file));
+	} else {
+		vfs('readFile',array($path[0] . '/' . $file));
+	}
+	exit;
+}
+
+function LoginApp2_on_Message($params = '') {
+	eyeWidgets('updateContent',$params);
+}
+
+function LoginApp2_on_Resize($params = '') {
+	$GLOBALS['LoginApp2_Window']->width = intval($params['arg'][0]);
+	$GLOBALS['LoginApp2_Window']->height = intval($params['arg'][1]);
+	$GLOBALS['LoginApp2_Iframe']->setHeight($GLOBALS['LoginApp2_Window']->height - 24);
+	$GLOBALS['LoginApp2_Iframe']->setWidth($GLOBALS['LoginApp2_Window']->width - 3);
+}
+
+function LoginApp2_on_LoginApp2_close_Button($params = ''){
+	proc('end');
+}
+
+?>
